@@ -5,7 +5,7 @@ import { useWindowSize } from "@/hooks/useWindowSize";
 
 const Square = ({ text, bottomText }: { text: string; bottomText: string }) => {
   return (
-    <div className="w-[65px] h-[65px] text-center rounded-md bg-[#8f7022] flex flex-col justify-center items-center drop-shadow-[4px_4px_2px_rgba(0,0,0,0.25)]">
+    <div className="w-[65px] h-[65px] text-center rounded-md bg-primary bg-opacity-95 flex flex-col justify-center items-center drop-shadow-[4px_4px_2px_rgba(0,0,0,0.25)]">
       <p className="leading-6 text-xl">{text}</p>
       <p className="text-xs">{bottomText}</p>
     </div>

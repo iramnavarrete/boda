@@ -27,10 +27,13 @@ const getReturnValues = (countDown: number) => {
   let minutes = Math.floor((countDown % (1000 * 60 * 60)) / (1000 * 60));
   let seconds = Math.floor((countDown % (1000 * 60)) / 1000);
 
-  const daysFormatted = days < 10 ? `0${days}` : `${days}`;
-  const hoursFormatted = hours < 10 ? `0${hours}` : `${hours}`;
-  const minutesFormatted = minutes < 10 ? `0${minutes}` : `${minutes}`;
-  const secondsFormatted = seconds < 10 ? `0${seconds}` : `${seconds}`;
+  const daysFormatted = days < 0 ? "00" : days < 10 ? `0${days}` : `${days}`;
+  const hoursFormatted =
+    hours < 0 ? "00" : hours < 10 ? `0${hours}` : `${hours}`;
+  const minutesFormatted =
+    minutes < 0 ? "00" : minutes < 10 ? `0${minutes}` : `${minutes}`;
+  const secondsFormatted =
+    seconds < 0 ? "00" : seconds < 10 ? `0${seconds}` : `${seconds}`;
 
   return [daysFormatted, hoursFormatted, minutesFormatted, secondsFormatted];
 };

@@ -6,7 +6,7 @@ const config: Config = {
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./node_modules/@nextui-org/theme/dist/components/(checkbox|link|navbar).js"
+    "./node_modules/@nextui-org/theme/dist/components/(checkbox|link|navbar).js",
   ],
   theme: {
     extend: {
@@ -16,7 +16,7 @@ const config: Config = {
         sacramento: ["var(--font-sacramento)"],
       },
       colors: {
-        primary: "#956E0D",
+        primary: "#58624F",
         accent: "#FCCB7E",
         "cool-gray": "#5D5D5D",
       },
