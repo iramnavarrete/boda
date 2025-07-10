@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+}
+
+@supports (-webkit-clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0)) or
+  (clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0)) {
+  .bg_fixed {
+    -webkit-clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0);
+    clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0);
+    overflow: hidden;
+  }
+  .bg_fixed .overlay {
+    position: fixed;
+    top: 0;
+    height: 100vh;
+    pointer-events: none;
+    width: 100%;
+    background-size: cover;
+    background-position: center;
+    max-width: 500px;
+  }
+}
+
+@supports (-webkit-clip-path: polygon(0 0, 0 10%, 10% 10%)) or
+  (clip-path: polygon(0 0, 0 10%, 10% 10%)) {
+  .bg_fixed {
+    -webkit-clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0);
+    clip-path: polygon(0 0, 0 100%, 100% 100%, 100% 0);
+    overflow: hidden;
+  }
+  .bg_fixed::before {
+    position: fixed;
+    top: 0;
+    height: 100vh;
+    pointer-events: none;
+  }
+}
+
+.slick-dots {
+  bottom: -35px !important;
+}
+
+.slick-thumb li {
+  width: 20% !important;
+  filter: grayscale(80%);
+  opacity: 0.9;
+  transition: all 0.5s ease;
+}
+
+.slick-thumb img {
+  height: 50px;
+  width: 100%;
+  object-fit: cover;
+  object-position: center;
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  -ms-transform: translate3d(0, 0, 0);
+  -o-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+}
+
+.slick-thumb li.slick-active {
+  filter: none;
+  opacity: 1;
+}
+
+.slide-img {
+  width: 100%;
+  height: 60vh;
+  object-fit: cover;
+  object-position: center;
+}
+
+.slider-root {
+  max-width: 80vw;
+}
+
+img.slide-4 {
+  object-position: 0 20%;
+}
+
+img.slide-2 {
+  object-position: 0 40%;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.sello {
+  width: 130px;
+  height: 130px;
+}
