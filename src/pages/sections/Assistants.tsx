@@ -5,7 +5,7 @@ import Input from "@/components/Input";
 import { sendFormData } from "@/controllers/formAssistance";
 import assistanceSchema from "@/validation/yupSchema";
 import { Formik } from "formik";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Lottie, { Options as LottieOptions } from "react-lottie";
 import animationData from "../../lottie/heart.json";
 import { AnimatePresence, motion } from "framer-motion";
@@ -21,6 +21,11 @@ function Assistants() {
   const [isDisabled, setIsDisabled] = useState(false);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [isAssistant, setIsAssistant] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   return (
     <div>
@@ -91,31 +96,38 @@ function Assistants() {
                     </motion.div>
                   </AnimatePresence>
                 ) : (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                    <div className="px-7 py-6 bg-white font-handlee text-center w-full h-full flex flex-col justify-center items-center">
-                      <Lottie
-                        ref={lottieRef}
-                        options={defaultOptions}
-                        height={150}
-                        width={150}
-                      />
-                      <div className="text-center font-handlee">
-                        {isAssistant ? (
-                          <p>
-                            Muchas gracias por tu confirmación
-                            <br />
-                            ¡Te esperamos el gran día!
-                          </p>
-                        ) : (
-                          <p>
-                            Lamentamos que no puedas acompañarnos
-                            <br />
-                            ¡Nos vemos en otra ocasión!
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </motion.div>
+                  <>
+                    {isClient && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                      >
+                        <div className="px-7 py-6 bg-white font-handlee text-center w-full h-full flex flex-col justify-center items-center">
+                          <Lottie
+                            ref={lottieRef}
+                            options={defaultOptions}
+                            height={150}
+                            width={150}
+                          />
+                          <div className="text-center font-handlee">
+                            {isAssistant ? (
+                              <p>
+                                Muchas gracias por tu confirmación
+                                <br />
+                                ¡Te esperamos el gran día!
+                              </p>
+                            ) : (
+                              <p>
+                                Lamentamos que no puedas acompañarnos
+                                <br />
+                                ¡Nos vemos en otra ocasión!
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </>
                 )}
               </div>
             </div>
