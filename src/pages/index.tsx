@@ -12,7 +12,7 @@ import Music from "./sections/music";
 import { motion } from "framer-motion";
 import Lottie, { Options as LottieOptions } from "react-lottie";
 import animationData from "../../public/lottie/envolpe.json";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import localFont from "next/font/local";
 
@@ -54,6 +54,12 @@ export default function Home() {
   const [isVisible, setIsVisible] = useState(true);
   const [envolpeDivHidden, setEnvolpeDivHidden] = useState(false);
 
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
     <main
       className={`${newIconScript.variable} ${nourdLight.variable} ${nourdMedium.variable}`}
@@ -62,11 +68,13 @@ export default function Home() {
         className="fixed z-20 w-full h-full overflow-hidden"
         style={envolpeDivHidden ? { display: "none" } : {}}
       >
-        <Lottie
-          ref={lottieRef}
-          isClickToPauseDisabled
-          options={defaultOptions}
-        />
+        {isClient && (
+          <Lottie
+            ref={lottieRef}
+            isClickToPauseDisabled
+            options={defaultOptions}
+          />
+        )}
         <motion.div
           variants={variants}
           initial={{
