@@ -24,7 +24,7 @@ export default function Cover() {
               <FlowersCoverDown className="w-[80%]" />
             </div>
           </div>
-          <GreenWaves className="w-full absolute bottom-[-20px]" />
+          {/* <GreenWaves className="w-full absolute bottom-[-20px]" /> */}
         </div>
       </AnimatedEntrance>
     </div>
