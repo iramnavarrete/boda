@@ -14,21 +14,21 @@ import Lottie, { Options as LottieOptions } from "react-lottie";
 import animationData from "../../public/lottie/envolpe.json";
 import { useRef, useState } from "react";
 import Image from "next/image";
+import localFont from "next/font/local";
 
-const handlee = Handlee({
-  variable: "--font-handlee",
-  subsets: ["latin"],
-  weight: "400",
+const newIconScript = localFont({
+  src: "../fonts/New-Icon-Script.otf",
+  variable: "--font-new-icon-script",
 });
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  weight: "400",
+
+const nourdLight = localFont({
+  src: "../fonts/nourd_light.ttf",
+  variable: "--font-nourd-light",
 });
-const sacramento = Sacramento({
-  variable: "--font-sacramento",
-  subsets: ["latin"],
-  weight: "400",
+
+const nourdMedium = localFont({
+  src: "../fonts/nourd_medium.ttf",
+  variable: "--font-nourd-medium",
 });
 
 const variants = {
@@ -56,7 +56,7 @@ export default function Home() {
 
   return (
     <main
-      className={`${handlee.variable} ${outfit.variable} ${sacramento.variable}`}
+      className={`${newIconScript.variable} ${nourdLight.variable} ${nourdMedium.variable}`}
     >
       <div
         className="fixed z-20 w-full h-full overflow-hidden"
@@ -117,7 +117,7 @@ export default function Home() {
         <div className="flex flex-col items-center bg-[#fff2e0] overflow-hidden">
           <div className="max-w-[500px] relative min-[500px]:border-x-1 border-primary overflow-hidden">
             <Cover />
-            <Music />
+            {/* <Music /> */}
             <Quote />
             <ParentsGodFathers />
             <CountDown />

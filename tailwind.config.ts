@@ -11,17 +11,17 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        handlee: ["var(--font-handlee)"],
-        outfit: ["var(--font-outfit)"],
-        sacramento: ["var(--font-sacramento)"],
+        newIconScript: ["var(--font-new-icon-script)"],
+        nourdLight: ["var(--font-nourd-light)"],
+        nourdMedium: ["var(--font-nourd-medium)"],
       },
       colors: {
         primary: "#58624F",
-        accent: "#FCCB7E",
+        accent: "#f5efe6",
         "cool-gray": "#5D5D5D",
       },
       backgroundImage: {
-        main: 'url("/img/bg-1.webp")',
+        main: 'url("/img/principal.jpg")',
         countdown: 'url("/img/bg-2.webp")',
       },
     },

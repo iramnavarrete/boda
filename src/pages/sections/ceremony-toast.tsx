@@ -1,8 +1,8 @@
-import ChurchIcon from "@/icons/church-icon";
 import CheersIcon from "@/icons/cheers-icon";
 import { useEffect, useRef, useState } from "react";
 import AnimatedEntrance from "@/components/AnimatedEntrance";
 import { motion, animate, useInView, AnimationSequence } from "framer-motion";
+import ChurchIcon from "@/icons/church-icon";
 
 interface CardEventProps {
   date: string;

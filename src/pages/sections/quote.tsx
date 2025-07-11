@@ -1,26 +1,14 @@
-import AnimatedEntrance from "@/components/AnimatedEntrance";
 import ElegantText from "@/components/ElegantText";
-import SquareFrameIcon from "@/icons/square-frame";
 
 export default function Quote() {
   return (
-    <article className="bg-white w-full flex flex-col items-center justify-center py-28 px-2">
-      <SquareFrameIcon className="drop-shadow-[2px_2px_4px_rgba(0,0,0,0.7)] text-primary" />
-      <div className="absolute max-w-[35ch] text-sm">
-        <div className="text-cool-gray font-handlee text-center">
+    <article className="bg-primary w-full flex flex-col items-center justify-center pt-24 pb-32 px-2">
+      <div className="absolute max-w-[32ch] text-md">
+        <div className="text-white font-nourdLight text-center">
           <ElegantText
-            text="Hay momentos en la vida que son especiales por si solos, pero
-            compartirlos con personas tan especiales como tú, se convierten en
-            momentos imposibles de olvidar."
+            text='"Ves que no es casualidad que estemos aquí de pie, jurándonos amor eterno con tanta fe. Que un para siempre es poco estando a tu lado amándote"'
             duration={0.2}
             delay={0}
-          />
-          <br />
-          <br />
-          <ElegantText
-            delay={1.82}
-            text="¡Me hará muy feliz que puedas acompañarme en este día tan especial!"
-            duration={0.2}
           />
         </div>
       </div>
