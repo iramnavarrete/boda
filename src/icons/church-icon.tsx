@@ -18,7 +18,7 @@ const ChurchIcon = (props: React.SVGProps<SVGSVGElement>) => (
     fill="none"
     {...props}
   >
-    <g clip-path="url(#clip0_2017_82)">
+    <g clipPath="url(#clip0_2017_82)">
       <motion.path
         {...propsShared}
         d="M52.5 104.674C23.7275 104.674 0.325439 81.2724 0.325439 52.5C0.325439 23.7275 23.7275 0.325439 52.5 0.325439C81.2724 0.325439 104.674 23.76 104.674 52.5325C104.674 81.2724 81.2724 104.674 52.5 104.674ZM52.5 0.683468C23.9228 0.683468 0.65092 23.9553 0.65092 52.5325C0.65092 81.1097 23.9228 104.382 52.5 104.382C81.0771 104.382 104.349 81.1097 104.349 52.5325C104.349 23.9553 81.0771 0.683468 52.5 0.683468Z"
@@ -41,8 +41,8 @@ const ChurchIcon = (props: React.SVGProps<SVGSVGElement>) => (
       />
       <motion.path
         {...propsShared}
-        fill-rule="evenodd"
-        clip-rule="evenodd"
+        fillRule="evenodd"
+        clipRule="evenodd"
         d="M48.1385 13.6377H51.133V9.53662H53.3137V13.6377H56.3081V15.8509H53.3137L53.2811 23.7927L52.2071 23.2068L51.1004 23.7927L51.133 15.8509H48.1385V13.6377Z"
         fill="#58624F"
       />
