@@ -10,11 +10,15 @@ import Gallery from "./sections/gallery";
 import Assistants from "./sections/Assistants";
 import Music from "./sections/music";
 import { motion } from "framer-motion";
-import Lottie, { Options as LottieOptions } from "react-lottie";
 import animationData from "../../public/lottie/envolpe.json";
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import localFont from "next/font/local";
+import dynamic from "next/dynamic";
+
+const Lottie = dynamic(() => import("react-lottie"), {
+  ssr: false
+});
 
 const newIconScript = localFont({
   src: "../fonts/New-Icon-Script.otf",
@@ -39,10 +43,11 @@ const variants = {
   loop: { scale: 1.15 },
 };
 
-const defaultOptions: LottieOptions = {
+const defaultOptions = {
   loop: false,
+  animationData,
   autoplay: false,
-  animationData: animationData,
+  play: false,
   rendererSettings: {
     preserveAspectRatio: "xMidYMid slice",
     className: "cursor-default",
@@ -50,15 +55,9 @@ const defaultOptions: LottieOptions = {
 };
 
 export default function Home() {
-  const lottieRef = useRef<Lottie>(null);
+  // const lottieRef = useRef<Lottie>(null);
   const [isVisible, setIsVisible] = useState(true);
   const [envolpeDivHidden, setEnvolpeDivHidden] = useState(false);
-
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   return (
     <main
@@ -68,13 +67,10 @@ export default function Home() {
         className="fixed z-20 w-full h-full overflow-hidden"
         style={envolpeDivHidden ? { display: "none" } : {}}
       >
-        {isClient && (
-          <Lottie
-            ref={lottieRef}
-            isClickToPauseDisabled
-            options={defaultOptions}
-          />
-        )}
+        <Lottie
+          isClickToPauseDisabled
+          options={defaultOptions}
+        />
         <motion.div
           variants={variants}
           initial={{
