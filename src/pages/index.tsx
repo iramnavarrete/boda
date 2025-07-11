@@ -16,10 +16,10 @@ import Image from "next/image";
 import localFont from "next/font/local";
 import dynamic from "next/dynamic";
 
-// const Lottie = dynamic(() => import("react-lottie"), {
-//   ssr: false,
-//   loading: () => <div className="w-screen h-screen bg-accent" />,
-// });
+const Lottie = dynamic(() => import("react-lottie"), {
+  ssr: false,
+  loading: () => <div className="w-screen h-screen bg-accent" />,
+});
 
 const newIconScript = localFont({
   src: "../fonts/New-Icon-Script.otf",
@@ -68,7 +68,7 @@ export default function Home() {
         className="fixed z-20 w-full h-full overflow-hidden"
         style={envolpeDivHidden ? { display: "none" } : {}}
       >
-        {/* <Lottie isClickToPauseDisabled options={defaultOptions} /> */}
+        <Lottie isClickToPauseDisabled options={defaultOptions} />
         <motion.div
           variants={variants}
           initial={{
