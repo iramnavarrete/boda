@@ -10,10 +10,11 @@ export default function Document() {
           content="Te invitamos celebrar la unión de Josué & Yaneth"
         />
         <link rel="canonical" href="https://bodajy.info" />
+        {/*
         <link rel="preload" href="/img/sello.png" as="image" />
         <link rel="preload" href="/lottie/envolpe.json" as="json" />
         <link rel="preload" href="/img/principal.jpg" as="image" />
-        {/* <link rel="preload" href="/img/gallery/1.webp" as="image" />
+         <link rel="preload" href="/img/gallery/1.webp" as="image" />
         <link rel="preload" href="/img/gallery/2.webp" as="image" />
         <link rel="preload" href="/img/gallery/3.webp" as="image" />
         <link rel="preload" href="/img/gallery/4.webp" as="image" /> */}
