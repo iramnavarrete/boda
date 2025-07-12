@@ -6,7 +6,7 @@ import { useWindowSize } from "@/hooks/useWindowSize";
 const Square = ({ text, bottomText }: { text: string; bottomText: string }) => {
   return (
     <div className="w-[50px] h-[65px] text-center rounded-md flex flex-col justify-center items-center">
-      <p className="leading-6 text-3xl font-nourdBold text-primary ">{text}</p>
+      <p className="leading-6 text-2xl font-nourdBold text-primary ">{text}</p>
       <p className="text-xs font-nourdMedium text-primary mt-1">
         {bottomText}
       </p>
@@ -23,7 +23,7 @@ const CountdownTimer = ({ targetDate }: { targetDate: Date }) => {
   }, []);
 
   return (
-    <div className="relative w-full mt-10">
+    <div className="relative w-full mt-10 mb-3">
       {isClient ? (
         <motion.div
           whileTap={{ scale: 1.2 }}
@@ -39,11 +39,10 @@ const CountdownTimer = ({ targetDate }: { targetDate: Date }) => {
           }}
           viewport={{ once: true, amount: "some" }}
         >
-          <div className="h-20 absolute" />
-          <p className="relative flex flex-row font-newIconScript text-primary text-4xl items-center justify-center mb-2 drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]">
+          <p className="relative flex flex-row font-newIconScript text-primary text-3xl items-center justify-center mb-2 drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]">
             Falta poco:
           </p>
-          <div className="flex flex-row justify-center items-center gap-1 font-handlee">
+          <div className="flex flex-row justify-center items-center gap-1">
             <Square bottomText="DÍAS" text={days} />
             <div className="h-[50px] flex flex-col items-center">
               <p className="leading-6 text-xl font-nourdBold text-primary">
