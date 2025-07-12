@@ -44,7 +44,7 @@ export default function SimpleSlider() {
     },
   };
   return (
-    <div className="relative py-20 w-5/6 h-full">
+    <div className="relative py-12 w-5/6 h-full">
       <AnimatedEntrance>
         <Slider
           ref={sliderRef}
