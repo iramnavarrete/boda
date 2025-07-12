@@ -22,7 +22,7 @@ export default function Document() {
           property="article:modified_time"
           content="2025-07-10T19:54:01-06:00"
         />
-        <meta property="og:image" content="https://boda-gamma.vercel.app/img/cover.png" />
+        <meta property="og:image" content="https://boda-gamma.vercel.app/cover.png" />
         <meta property="og:image:width" content="630" />
         <meta property="og:image:height" content="420" />
         <meta property="og:image:type" content="image/jpeg" />
