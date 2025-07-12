@@ -103,18 +103,14 @@ input[type="number"] {
   height: 130px;
 }
 
-/* Por defecto (todos los navegadores) */
-.lottie-envolpe.no-safari svg g {
+/* 
+.lottie-envolpe svg g {
   filter: drop-shadow(0 1px 5px rgba(0, 0, 0, 0.5));
 }
 
-/* Resetear solo en Safari */
-@supports (-webkit-appearance: none) and (not (contain: paint)) {
+@supports (hanging-punctuation: first) and (font: -apple-system-body) and
+  (-webkit-appearance: none) {
   .lottie-envolpe svg g {
     filter: none;
   }
-  /* Aplicar al contenedor en Safari */
-  .lottie-envolpe {
-    filter: drop-shadow(0 1px 5px rgba(0, 0, 0, 0.5));
-  }
-}
+} */
