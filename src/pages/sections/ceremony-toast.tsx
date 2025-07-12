@@ -5,6 +5,7 @@ import { motion, animate, useInView, AnimationSequence } from "framer-motion";
 import ChurchIcon from "@/icons/church-icon";
 import DressCodeIcon from "@/icons/church-icon copy";
 import FlowersBackground1 from "@/icons/flowers-background-1";
+import AddToCalendarButton from "@/components/AddToCalendar";
 
 interface CardEventProps {
   time: string;
@@ -128,53 +129,55 @@ export default function CeremonyToast() {
   ];
 
   return (
-    <div className="w-full relative text-medium bg-accent mt-[-100%]">
-      <div className="px-5 relative">
-      <FlowersBackground1 className="absolute h-[80%] w-full left-0" />
-        <div className="px-8 py-20 flex flex-col gap-16 z-20">
-          <CardEvent
-            IconComponent={() => (
-              <ChurchIcon className="w-[70px] h-[70px] animated-church" />
-            )}
-            sequence={churchSequence}
-            address1="Juan de Dios Martin Barba Antes #6112,"
-            address2="Nombre de Dios, 31110,"
-            address3="Chihuahua, Chih."
-            link="https://maps.app.goo.gl/6tZo4PFqmskX2nsa8"
-            place="Parroquia San Juan Bautista"
-            time="6:30 pm"
-            title="Ceremonia"
-          />
-          <CardEvent
-            IconComponent={() => (
-              <CheersIcon className="w-[70px] h-[70px] animated-glasses" />
-            )}
-            sequence={glassesSequence}
-            address1="Ctra. Chihuahua-Aldama Km 1 #6902,"
-            address2="Privada Ejido Robinson, 31313"
-            address3="Chihuahua, Chih."
-            link="https://maps.app.goo.gl/dgtiBetWv66uCrRi6"
-            place="Hacienda el refugio"
-            time="9:00 pm"
-            title="Recepción"
-          />
+    <div className="mt-[-100%]">
+      <div className="w-full relative text-medium bg-accent">
+        <div className="px-5 relative">
+          <FlowersBackground1 className="absolute h-[80%] w-full left-0" />
+          <div className="px-8 py-20 flex flex-col gap-16 z-20">
+            <CardEvent
+              IconComponent={() => (
+                <ChurchIcon className="w-[70px] h-[70px] animated-church" />
+              )}
+              sequence={churchSequence}
+              address1="Juan de Dios Martin Barba Antes #6112,"
+              address2="Nombre de Dios, 31110,"
+              address3="Chihuahua, Chih."
+              link="https://maps.app.goo.gl/6tZo4PFqmskX2nsa8"
+              place="Parroquia San Juan Bautista"
+              time="6:30 pm"
+              title="Ceremonia"
+            />
+            <CardEvent
+              IconComponent={() => (
+                <CheersIcon className="w-[70px] h-[70px] animated-glasses" />
+              )}
+              sequence={glassesSequence}
+              address1="Ctra. Chihuahua-Aldama Km 1 #6902,"
+              address2="Privada Ejido Robinson, 31313"
+              address3="Chihuahua, Chih."
+              link="https://maps.app.goo.gl/dgtiBetWv66uCrRi6"
+              place="Hacienda el refugio"
+              time="9:00 pm"
+              title="Recepción"
+            />
+          </div>
         </div>
-      </div>
-      <div className="px-5 bg-primary w-full py-20">
-        <div className=" flex flex-col gap-16">
-          <DressCode
-            IconComponent={() => (
-              <DressCodeIcon className="w-[70px] h-[70px] animated-church" />
-            )}
-            sequence={churchSequence}
-            title="Código de vestimenta"
-            text="Formal"
-          >
-            <div className="text-accent text-center leading-7 text-md font-nourdBold">
-              <p>¡NO BLANCO!</p>
-              <p>¡NO VERDE OLIVA!</p>
-            </div>
-          </DressCode>
+        <div className="px-5 bg-primary w-full py-20">
+          <div className=" flex flex-col gap-16">
+            <DressCode
+              IconComponent={() => (
+                <DressCodeIcon className="w-[70px] h-[70px] animated-church" />
+              )}
+              sequence={churchSequence}
+              title="Código de vestimenta"
+              text="Formal"
+            >
+              <div className="text-accent text-center leading-7 text-md font-nourdBold">
+                <p>¡NO BLANCO!</p>
+                <p>¡NO VERDE OLIVA!</p>
+              </div>
+            </DressCode>
+          </div>
         </div>
       </div>
     </div>

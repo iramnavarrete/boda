@@ -1,3 +1,4 @@
+import AddToCalendar from "@/components/AddToCalendar";
 import CountdownTimer from "@/components/CountDownTimer";
 import ElegantText from "@/components/ElegantText";
 import BeigeWaves from "@/icons/beige-waves";

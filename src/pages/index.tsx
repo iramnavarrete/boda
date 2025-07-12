@@ -11,7 +11,8 @@ import Assistants from "./sections/Assistants";
 import Music from "./sections/music";
 import { motion } from "framer-motion";
 import animationData from "../../public/lottie/envolpe.json";
-import { useState } from "react";
+import animationDataSafari from "../../public/lottie/envolpe-safari.json";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import localFont from "next/font/local";
 import dynamic from "next/dynamic";
@@ -74,7 +75,7 @@ export default function Home() {
         style={envolpeDivHidden ? { display: "none" } : {}}
       >
         <div className="lottie-envolpe h-full w-full">
-          <Lottie isClickToPauseDisabled options={defaultOptions} />
+          <LottieElement />
         </div>
         <motion.div
           variants={variants}
@@ -139,3 +140,24 @@ export default function Home() {
     </main>
   );
 }
+
+const LottieElement = () => {
+  const [esSafari, setEsSafari] = useState(false);
+
+  useEffect(() => {
+    const ua = navigator.userAgent.toLowerCase();
+    setEsSafari(
+      ua.includes("safari") && !ua.includes("chrome") && !ua.includes("android")
+    );
+  }, []);
+  return (
+    <Lottie
+      isClickToPauseDisabled
+      options={
+        esSafari
+          ? { ...defaultOptions, animationData: animationDataSafari }
+          : defaultOptions
+      }
+    />
+  );
+};

@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useCountdown } from "@/hooks/useCountDown";
 import { useEffect, useState } from "react";
 import { useWindowSize } from "@/hooks/useWindowSize";
+import AddToCalendar from "./AddToCalendar";
 
 const Square = ({ text, bottomText }: { text: string; bottomText: string }) => {
   return (
@@ -32,7 +33,7 @@ const CountdownTimer = ({ targetDate }: { targetDate: Date }) => {
           whileInView={{
             opacity: 1,
             transition: {
-              duration: 1.5
+              duration: 1.5,
             },
           }}
           viewport={{ once: true, amount: "some" }}
@@ -43,26 +44,21 @@ const CountdownTimer = ({ targetDate }: { targetDate: Date }) => {
           <div className="flex flex-row justify-center items-center gap-1">
             <Square bottomText="DÍAS" text={days} />
             <div className="h-[50px] flex flex-col items-center">
-              <p className="leading-6 text-xl font-nourdBold text-primary">
-                :
-              </p>
+              <p className="leading-6 text-xl font-nourdBold text-primary">:</p>
             </div>
             <Square bottomText="HORAS" text={hours} />
             <div className="h-[50px] flex flex-col items-center">
-              <p className="leading-6 text-xl font-nourdBold text-primary">
-                :
-              </p>
+              <p className="leading-6 text-xl font-nourdBold text-primary">:</p>
             </div>
             <Square bottomText="MIN" text={minutes} />
             <div className="h-[50px] flex flex-col items-center">
-              <p className="leading-6 text-xl font-nourdBold text-primary">
-                :
-              </p>
+              <p className="leading-6 text-xl font-nourdBold text-primary">:</p>
             </div>
             <Square bottomText="SEG" text={seconds} />
           </div>
         </motion.div>
       ) : null}
+      <AddToCalendar />
     </div>
   );
 };
