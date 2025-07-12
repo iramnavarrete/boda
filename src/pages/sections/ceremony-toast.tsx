@@ -5,10 +5,11 @@ import { motion, animate, useInView, AnimationSequence } from "framer-motion";
 import ChurchIcon from "@/icons/church-icon";
 
 interface CardEventProps {
-  date: string;
   time: string;
   place: string;
-  address: string;
+  address1: string;
+  address2: string;
+  address3: string;
   link: string;
   IconComponent: () => React.ReactNode;
   title: string;
@@ -16,8 +17,9 @@ interface CardEventProps {
 }
 
 const CardEvent: React.FC<CardEventProps> = ({
-  date,
-  address,
+  address1,
+  address2,
+  address3,
   place,
   time,
   link,
@@ -39,25 +41,27 @@ const CardEvent: React.FC<CardEventProps> = ({
       </motion.div>
       <AnimatedEntrance>
         <div className="flex flex-col items-center justify-center">
-          <p className="pt-2 text-xl">{title}</p>
-          <hr className="m-4 w-3/5 h-[2px]primary border-primary" />
-          <div className="text-cool-gray text-center leading-6">
-            <p>{date}</p>
+          <p className="pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript">
+            {title}
+          </p>
+          <div className="text-primary text-center leading-6 pt-5 text-lg font-nourdMedium">
             <p>{time}</p>
           </div>
-          <div className="my-4 text-black text-center">
+          <div className="my-3 text-primary text-center text-lg font-nourdMedium">
             <p>{place}</p>
           </div>
-          <div className="text-cool-gray text-center leading-6">
-            <p>{address}</p>
+          <div className="text-cool-gray text-center leading-5 text-sm">
+            <p>{address1}</p>
+            <p>{address2}</p>
+            <p>{address3}</p>
           </div>
           <a
-            className="border-primary border-1 mt-4 p-3 rounded-2xl bg-[#fff2e0]"
+            className="border-border-button border-1 mt-8 px-8 py-3 rounded-2xl bg-button font-nourdMedium text-primary"
             href={link}
             target="_blank"
             rel="noopener noreferrer"
           >
-            Abrir mapa
+            Ver mapa
           </a>
         </div>
       </AnimatedEntrance>
@@ -66,14 +70,6 @@ const CardEvent: React.FC<CardEventProps> = ({
 };
 
 export default function CeremonyToast() {
-  const [height, setHeight] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (ref.current) {
-      setHeight(ref.current.clientHeight);
-    }
-  });
 
   const churchSequence: AnimationSequence = [
     [".animated-church", { opacity: 1 }, { duration: 0.2 }],
@@ -90,22 +86,20 @@ export default function CeremonyToast() {
   ];
 
   return (
-    <div className="w-full relative text-medium bg-white" style={{ height }}>
-      <div
-        className="absolute border-primary border-1 m-5 mt-[-50px]"
-        ref={ref}
-      >
-        <div className="p-12 bg-white font-handlee flex flex-col gap-16">
+    <div className="w-full relative text-medium bg-accent mt-[-100%]">
+      <div className=" border-primary mx-5">
+        <div className="px-8 py-14 flex flex-col gap-16">
           <CardEvent
             IconComponent={() => (
               <ChurchIcon className="w-[70px] h-[70px] animated-church" />
             )}
             sequence={churchSequence}
-            address="Parque España s/n, Jardines de Oriente, 31385 Chihuahua, Chihuahua"
-            date="Sábado, 7 de septiembre 2024"
-            link="https://maps.app.goo.gl/WernF53fWoLj6Mgc9"
-            place="Parroquia San Juan Pablo II"
-            time="Hora: 6:30 p.m."
+            address1="Juan de Dios Martin Barba Antes #6112,"
+            address2="Nombre de Dios, 31110,"
+            address3="Chihuahua, Chih."
+            link="https://maps.app.goo.gl/6tZo4PFqmskX2nsa8"
+            place="Parroquia San Juan Bautista"
+            time="6:30 pm"
             title="Ceremonia"
           />
           <CardEvent
@@ -113,11 +107,12 @@ export default function CeremonyToast() {
               <CheersIcon className="w-[70px] h-[70px] animated-glasses" />
             )}
             sequence={glassesSequence}
-            address="C. 25a 7105, Aeropuerto, 31384 Chihuahua, Chihuahua"
-            date="Sábado, 7 de septiembre 2024"
-            link="https://maps.app.goo.gl/EmCao4B5J8p1N6dx5"
-            place="Salón Quinta Esparza"
-            time="Hora: 9:00 p.m."
+            address1="Ctra. Chihuahua-Aldama Km 1 #6902,"
+            address2="Privada Ejido Robinson, 31313"
+            address3="Chihuahua, Chih."
+            link="https://maps.app.goo.gl/dgtiBetWv66uCrRi6"
+            place="Hacienda el refugio"
+            time="9:00 pm"
             title="Recepción"
           />
         </div>

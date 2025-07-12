@@ -20,6 +20,8 @@ const config: Config = {
         primary: "#58624F",
         accent: "#f5efe6",
         "cool-gray": "#5D5D5D",
+        button: "#e9e7db",
+        "border-button": "#D1D0C4",
       },
       backgroundImage: {
         main: 'url("/img/principal.jpg")',

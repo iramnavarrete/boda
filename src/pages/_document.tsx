@@ -10,14 +10,6 @@ export default function Document() {
           content="Te invitamos celebrar la unión de Josué & Yaneth"
         />
         <link rel="canonical" href="https://bodajy.info" />
-        {/*
-        <link rel="preload" href="/img/sello.png" as="image" />
-        <link rel="preload" href="/lottie/envolpe.json" as="json" />
-        <link rel="preload" href="/img/principal.jpg" as="image" />
-         <link rel="preload" href="/img/gallery/1.webp" as="image" />
-        <link rel="preload" href="/img/gallery/2.webp" as="image" />
-        <link rel="preload" href="/img/gallery/3.webp" as="image" />
-        <link rel="preload" href="/img/gallery/4.webp" as="image" /> */}
         <meta property="og:locale" content="es_MX" />
         <meta property="og:type" content="article" />
         <meta property="og:title" content="Invitación Boda Josué & Yaneth" />
@@ -30,7 +22,7 @@ export default function Document() {
           property="article:modified_time"
           content="2025-07-10T19:54:01-06:00"
         />
-        <meta property="og:image" content="https://boda-gamma.vercel.app/img/principal.jpg" />
+        <meta property="og:image" content="https://boda-gamma.vercel.app/img/cover.jpg" />
         <meta property="og:image:width" content="630" />
         <meta property="og:image:height" content="420" />
         <meta property="og:image:type" content="image/jpeg" />
