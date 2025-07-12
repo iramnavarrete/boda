@@ -1,8 +1,10 @@
 import CheersIcon from "@/icons/cheers-icon";
-import { useEffect, useRef, useState } from "react";
+import { PropsWithChildren, useEffect, useRef, useState } from "react";
 import AnimatedEntrance from "@/components/AnimatedEntrance";
 import { motion, animate, useInView, AnimationSequence } from "framer-motion";
 import ChurchIcon from "@/icons/church-icon";
+import DressCodeIcon from "@/icons/church-icon copy";
+import FlowersBackground1 from "@/icons/flowers-background-1";
 
 interface CardEventProps {
   time: string;
@@ -50,7 +52,7 @@ const CardEvent: React.FC<CardEventProps> = ({
           <div className="my-3 text-primary text-center text-lg font-nourdMedium">
             <p>{place}</p>
           </div>
-          <div className="text-cool-gray text-center leading-5 text-sm">
+          <div className="text-primary text-center leading-5 text-sm">
             <p>{address1}</p>
             <p>{address2}</p>
             <p>{address3}</p>
@@ -69,8 +71,48 @@ const CardEvent: React.FC<CardEventProps> = ({
   );
 };
 
-export default function CeremonyToast() {
+interface DressCodeProps {
+  IconComponent: () => React.ReactNode;
+  title: string;
+  sequence: AnimationSequence;
+  text: string;
+}
 
+const DressCode: React.FC<PropsWithChildren<DressCodeProps>> = ({
+  IconComponent,
+  title,
+  sequence,
+  text,
+  children,
+}) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref);
+
+  useEffect(() => {
+    animate(sequence);
+  }, [isInView]);
+
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <motion.div ref={ref}>
+        <IconComponent />
+      </motion.div>
+      <AnimatedEntrance>
+        <div className="flex flex-col items-center justify-center">
+          <p className="pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-accent">
+            {title}
+          </p>
+        </div>
+        <div className="text-accent text-center leading-5 my-6 text-xl font-nourdLight">
+          <p>{text}</p>
+        </div>
+        {children}
+      </AnimatedEntrance>
+    </div>
+  );
+};
+
+export default function CeremonyToast() {
   const churchSequence: AnimationSequence = [
     [".animated-church", { opacity: 1 }, { duration: 0.2 }],
     [".animated-church", { scale: 1.2 }, { duration: 0.2 }],
@@ -87,8 +129,9 @@ export default function CeremonyToast() {
 
   return (
     <div className="w-full relative text-medium bg-accent mt-[-100%]">
-      <div className=" border-primary mx-5">
-        <div className="px-8 py-14 flex flex-col gap-16">
+      <div className="px-5 relative">
+      <FlowersBackground1 className="absolute h-[80%] w-full left-0" />
+        <div className="px-8 py-20 flex flex-col gap-16 z-20">
           <CardEvent
             IconComponent={() => (
               <ChurchIcon className="w-[70px] h-[70px] animated-church" />
@@ -115,6 +158,23 @@ export default function CeremonyToast() {
             time="9:00 pm"
             title="Recepción"
           />
+        </div>
+      </div>
+      <div className="px-5 bg-primary w-full py-20">
+        <div className=" flex flex-col gap-16">
+          <DressCode
+            IconComponent={() => (
+              <DressCodeIcon className="w-[70px] h-[70px] animated-church" />
+            )}
+            sequence={churchSequence}
+            title="Código de vestimenta"
+            text="Formal"
+          >
+            <div className="text-accent text-center leading-7 text-md font-nourdBold">
+              <p>¡NO BLANCO!</p>
+              <p>¡NO VERDE OLIVA!</p>
+            </div>
+          </DressCode>
         </div>
       </div>
     </div>
