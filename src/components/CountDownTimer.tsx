@@ -32,9 +32,7 @@ const CountdownTimer = ({ targetDate }: { targetDate: Date }) => {
           whileInView={{
             opacity: 1,
             transition: {
-              type: "spring",
-              stiffness: 300,
-              damping: 24,
+              duration: 1.5
             },
           }}
           viewport={{ once: true, amount: "some" }}
