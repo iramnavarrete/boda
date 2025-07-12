@@ -73,7 +73,9 @@ export default function Home() {
         className="fixed z-20 w-full h-full overflow-hidden"
         style={envolpeDivHidden ? { display: "none" } : {}}
       >
-        <Lottie isClickToPauseDisabled options={defaultOptions} />
+        <div className="lottie-envolpe h-full w-full">
+          <Lottie isClickToPauseDisabled options={defaultOptions} />
+        </div>
         <motion.div
           variants={variants}
           initial={{
