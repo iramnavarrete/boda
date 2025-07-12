@@ -1,14 +1,3 @@
-import { motion } from "framer-motion";
-
-const transition = { duration: 1, yoyo: Infinity, ease: "easeInOut" };
-
-const propsShared = {
-  initial: { opacity: 0 },
-  whileInView: { opacity: 1 },
-  viewport: { once: true },
-  transition,
-};
-
 const FlowersCoverUp = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

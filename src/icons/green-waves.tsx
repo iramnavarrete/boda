@@ -5,6 +5,7 @@ const GreenWaves = (props: React.SVGProps<SVGSVGElement>) => (
     viewBox="0 0 496 70"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    preserveAspectRatio="none"
     {...props}
   >
     <path

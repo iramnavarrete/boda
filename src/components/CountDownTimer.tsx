@@ -5,9 +5,11 @@ import { useWindowSize } from "@/hooks/useWindowSize";
 
 const Square = ({ text, bottomText }: { text: string; bottomText: string }) => {
   return (
-    <div className="w-[65px] h-[65px] text-center rounded-md bg-primary bg-opacity-95 flex flex-col justify-center items-center drop-shadow-[4px_4px_2px_rgba(0,0,0,0.25)]">
-      <p className="leading-6 text-xl">{text}</p>
-      <p className="text-xs">{bottomText}</p>
+    <div className="w-[50px] h-[65px] text-center rounded-md flex flex-col justify-center items-center">
+      <p className="leading-6 text-3xl font-nourdBold text-primary ">{text}</p>
+      <p className="text-xs font-nourdMedium text-primary mt-1">
+        {bottomText}
+      </p>
     </div>
   );
 };
@@ -15,22 +17,20 @@ const Square = ({ text, bottomText }: { text: string; bottomText: string }) => {
 const CountdownTimer = ({ targetDate }: { targetDate: Date }) => {
   const [days, hours, minutes, seconds] = useCountdown(targetDate);
   const [isClient, setIsClient] = useState(false);
-  const { height } = useWindowSize();
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
   return (
-    <div>
+    <div className="relative w-full mt-10">
       {isClient ? (
         <motion.div
           whileTap={{ scale: 1.2 }}
           className="text-white"
-          initial={{ opacity: 0, y: height ? height * 0.7 : 0 }}
+          initial={{ opacity: 0 }}
           whileInView={{
             opacity: 1,
-            y: 0,
             transition: {
               type: "spring",
               stiffness: 300,
@@ -39,14 +39,30 @@ const CountdownTimer = ({ targetDate }: { targetDate: Date }) => {
           }}
           viewport={{ once: true, amount: "some" }}
         >
-          <p className="relative flex flex-row font-sacramento text-5xl items-center justify-center mb-2 drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]">
-            Faltan:
+          <div className="h-20 absolute" />
+          <p className="relative flex flex-row font-newIconScript text-primary text-4xl items-center justify-center mb-2 drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]">
+            Falta poco:
           </p>
-          <div className="flex flex-row gap-2 font-handlee">
-            <Square bottomText="días" text={days} />
-            <Square bottomText="horas" text={hours} />
-            <Square bottomText="minutos" text={minutes} />
-            <Square bottomText="segundos" text={seconds} />
+          <div className="flex flex-row justify-center items-center gap-1 font-handlee">
+            <Square bottomText="DÍAS" text={days} />
+            <div className="h-[50px] flex flex-col items-center">
+              <p className="leading-6 text-xl font-nourdBold text-primary">
+                :
+              </p>
+            </div>
+            <Square bottomText="HORAS" text={hours} />
+            <div className="h-[50px] flex flex-col items-center">
+              <p className="leading-6 text-xl font-nourdBold text-primary">
+                :
+              </p>
+            </div>
+            <Square bottomText="MIN" text={minutes} />
+            <div className="h-[50px] flex flex-col items-center">
+              <p className="leading-6 text-xl font-nourdBold text-primary">
+                :
+              </p>
+            </div>
+            <Square bottomText="SEG" text={seconds} />
           </div>
         </motion.div>
       ) : null}

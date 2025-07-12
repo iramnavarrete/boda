@@ -14,6 +14,7 @@ const config: Config = {
         newIconScript: ["var(--font-new-icon-script)"],
         nourdLight: ["var(--font-nourd-light)"],
         nourdMedium: ["var(--font-nourd-medium)"],
+        nourdBold: ["var(--font-nourd-bold)"],
       },
       colors: {
         primary: "#58624F",
@@ -22,7 +23,7 @@ const config: Config = {
       },
       backgroundImage: {
         main: 'url("/img/principal.jpg")',
-        countdown: 'url("/img/bg-2.webp")',
+        countdown: 'url("/img/conteo.jpg")',
       },
     },
   },

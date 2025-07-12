@@ -1,6 +1,6 @@
 import Cover from "./sections/cover";
 import Quote from "./sections/quote";
-import ParentsGodFathers from "./sections/parents-godfathers";
+import ParentsGodFathers from "./sections/parents";
 import CountDown from "./sections/countdown";
 import CeremonyToast from "./sections/ceremony-toast";
 import { Handlee, Outfit, Sacramento } from "next/font/google";
@@ -11,7 +11,7 @@ import Assistants from "./sections/Assistants";
 import Music from "./sections/music";
 import { motion } from "framer-motion";
 import animationData from "../../public/lottie/envolpe.json";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import localFont from "next/font/local";
 import dynamic from "next/dynamic";
@@ -34,6 +34,11 @@ const nourdLight = localFont({
 const nourdMedium = localFont({
   src: "../fonts/nourd_medium.ttf",
   variable: "--font-nourd-medium",
+});
+
+const nourdBold = localFont({
+  src: "../fonts/nourd_bold.ttf",
+  variable: "--font-nourd-bold",
 });
 
 const variants = {
@@ -62,7 +67,7 @@ export default function Home() {
 
   return (
     <main
-      className={`${newIconScript.variable} ${nourdLight.variable} ${nourdMedium.variable}`}
+      className={`${newIconScript.variable} ${nourdLight.variable} ${nourdMedium.variable} ${nourdBold.variable}`}
     >
       <div
         className="fixed z-20 w-full h-full overflow-hidden"
