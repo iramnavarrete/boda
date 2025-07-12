@@ -3,7 +3,6 @@ import Quote from "./sections/quote";
 import ParentsGodFathers from "./sections/parents";
 import CountDown from "./sections/countdown";
 import CeremonyToast from "./sections/ceremony-toast";
-import { Handlee, Outfit, Sacramento } from "next/font/google";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Gallery from "./sections/gallery";
@@ -61,7 +60,6 @@ const defaultOptions = {
 };
 
 export default function Home() {
-  // const lottieRef = useRef<Lottie>(null);
   const [isVisible, setIsVisible] = useState(true);
   const [envolpeDivHidden, setEnvolpeDivHidden] = useState(false);
 
