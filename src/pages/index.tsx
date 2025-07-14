@@ -14,6 +14,7 @@ import { useState } from "react";
 import Image from "next/image";
 import localFont from "next/font/local";
 import dynamic from "next/dynamic";
+import GiftsTable from "./sections/gifts-table";
 
 const Lottie = dynamic(() => import("react-lottie"), {
   ssr: false,
@@ -130,6 +131,7 @@ export default function Home() {
             <CountDown />
             <CeremonyToast />
             <Gallery />
+            <GiftsTable />
             <Assistants />
           </div>
         </div>

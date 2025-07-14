@@ -4,7 +4,7 @@ import Separator from "@/icons/separator";
 
 export default function Gallery() {
   return (
-    <div className="bg-accent flex flex-col items-center justify-center py-16">
+    <div className="bg-accent flex flex-col items-center justify-center pt-16 pb-20">
       <AnimatedEntrance>
         <div className="flex flex-col items-center justify-center gap-4">
           <Separator className="mx-10" />
