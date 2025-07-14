@@ -20,7 +20,7 @@ export default function Document() {
         <meta property="og:url" content="https://bodajy.info" />
         <meta
           property="article:modified_time"
-          content="2025-07-10T19:54:01-06:00"
+          content="2025-07-14T14:48:01-06:00"
         />
         <meta property="og:image" content="https://bodajy.info/cover.png" />
         <meta property="og:image:width" content="630" />

@@ -1,11 +1,11 @@
 import CheersIcon from "@/icons/cheers-icon";
-import { PropsWithChildren, useEffect, useRef, useState } from "react";
+import { PropsWithChildren, useEffect, useRef } from "react";
 import AnimatedEntrance from "@/components/AnimatedEntrance";
 import { motion, animate, useInView, AnimationSequence } from "framer-motion";
 import ChurchIcon from "@/icons/church-icon";
 import DressCodeIcon from "@/icons/church-icon copy";
-import FlowersBackground1 from "@/icons/flowers-background-1";
-import AddToCalendarButton from "@/components/AddToCalendar";
+import BeigeWaves from "@/icons/beige-waves";
+import FlowersBackground2 from "@/icons/flowers-background-2";
 
 interface CardEventProps {
   time: string;
@@ -95,6 +95,7 @@ const DressCode: React.FC<PropsWithChildren<DressCodeProps>> = ({
 
   return (
     <div className="flex flex-col items-center justify-center">
+      <BeigeWaves className="w-full absolute h-12 left-0 top-[-40px] scale-y-[-1]" />
       <motion.div ref={ref}>
         <IconComponent />
       </motion.div>
@@ -132,8 +133,8 @@ export default function CeremonyToast() {
     <div className="mt-[-100%]">
       <div className="w-full relative text-medium bg-accent">
         <div className="px-5 relative">
-          <FlowersBackground1 className="absolute h-[80%] w-full left-0" />
-          <div className="px-8 py-20 flex flex-col gap-16 z-20">
+          <FlowersBackground2 className="absolute h-[70%] w-full left-0 top-12 z-0" />
+          <div className="px-8 py-20 flex flex-col gap-16 z-50 relative">
             <CardEvent
               IconComponent={() => (
                 <ChurchIcon className="w-[70px] h-[70px] animated-church" />
@@ -174,7 +175,7 @@ export default function CeremonyToast() {
             >
               <div className="text-accent text-center leading-7 text-md font-nourdBold">
                 <p>¡NO BLANCO!</p>
-                <p>¡NO VERDE OLIVA!</p>
+                <p>¡NO VERDE!</p>
               </div>
             </DressCode>
           </div>
