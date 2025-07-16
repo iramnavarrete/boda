@@ -102,15 +102,3 @@ input[type="number"] {
   width: 130px;
   height: 130px;
 }
-
-/* 
-.lottie-envolpe svg g {
-  filter: drop-shadow(0 1px 5px rgba(0, 0, 0, 0.5));
-}
-
-@supports (hanging-punctuation: first) and (font: -apple-system-body) and
-  (-webkit-appearance: none) {
-  .lottie-envolpe svg g {
-    filter: none;
-  }
-} */

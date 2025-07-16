@@ -53,7 +53,6 @@ const defaultOptions = {
   loop: false,
   animationData,
   autoplay: false,
-  play: false,
   rendererSettings: {
     preserveAspectRatio: "xMidYMid slice",
     className: "cursor-default",
@@ -72,9 +71,11 @@ export default function Home() {
         className="fixed z-20 w-full h-full overflow-hidden"
         style={envolpeDivHidden ? { display: "none" } : {}}
       >
-        <div className="lottie-envolpe h-full w-full">
-          <Lottie isClickToPauseDisabled options={defaultOptions} />
-        </div>
+        <Lottie
+          options={defaultOptions}
+          isClickToPauseDisabled
+          isPaused={isVisible}
+        />
         <motion.div
           variants={variants}
           initial={{
@@ -103,10 +104,10 @@ export default function Home() {
             height={0}
             sizes="100vw"
             src={`/img/sello.png`}
-            priority
           />
         </motion.div>
       </div>
+
       <motion.div
         whileInView={{
           opacity: 1,
@@ -125,7 +126,6 @@ export default function Home() {
         <div className="flex flex-col items-center bg-[#fff2e0] overflow-hidden">
           <div className="max-w-[500px] relative min-[500px]:border-x-1 border-primary overflow-hidden">
             <Cover />
-            {/* <Music /> */}
             <Quote />
             <ParentsGodFathers />
             <CountDown />

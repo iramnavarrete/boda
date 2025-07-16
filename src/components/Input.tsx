@@ -12,7 +12,7 @@ function Input({ title, name, inputType }: Props) {
     useFormikContext<FormObject>();
   return (
     <div className="w-full flex flex-col items-start gap-1">
-      <p className="font-handlee px-1">{title}</p>
+      <p className="font-nourdLight px-1">{title}</p>
       {inputType === "textarea" ? (
         <textarea
           name={name}

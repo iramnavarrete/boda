@@ -1,11 +1,23 @@
 import { Checkbox, CheckboxGroup } from "@nextui-org/checkbox";
 import { useFormikContext } from "formik";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FormObject } from "../../types/types";
 
-export default function CheckBoxes() {
+export default function CheckBoxes({ asistencia }: { asistencia?: string }) {
   const [selected, setSelected] = useState<string[]>([]);
   const { setFieldValue, touched, errors } = useFormikContext<FormObject>();
+
+  useEffect(() => {
+    if (asistencia) {
+      if (asistencia === "TRUE") {
+        setSelected(["si"]);
+      }
+      if(asistencia === 'FALSE'){
+        setSelected(['no'])
+      }
+    }
+  }, [asistencia]);
+
   return (
     <div>
       <CheckboxGroup
@@ -28,7 +40,7 @@ export default function CheckBoxes() {
         <div className="w-1" />
         <Checkbox value="no">No</Checkbox>
       </CheckboxGroup>
-      {touched.asistencia && (
+      {touched.asistencia && errors.asistencia && (
         <p className="mt-[-4px] text-sm text-red-500">{errors.asistencia}</p>
       )}
     </div>
