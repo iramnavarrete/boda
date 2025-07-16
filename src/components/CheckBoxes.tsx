@@ -19,7 +19,7 @@ export default function CheckBoxes({ asistencia }: { asistencia?: string }) {
   }, [asistencia]);
 
   return (
-    <div>
+    <div className="">
       <CheckboxGroup
         orientation="horizontal"
         value={selected}
@@ -34,7 +34,7 @@ export default function CheckBoxes({ asistencia }: { asistencia?: string }) {
             setFieldValue("asistencia", "");
           }
         }}
-        className="p-2"
+        className="p-2 items-center"
       >
         <Checkbox value="si">Sí</Checkbox>
         <div className="w-1" />
