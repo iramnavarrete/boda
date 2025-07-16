@@ -139,12 +139,7 @@ function Assistants() {
                             }}
                             initialValues={{
                               id: guestData.id,
-                              asistencia:
-                                guestData.asistencia === "TRUE"
-                                  ? "si"
-                                  : guestData.asistencia === "FALSE"
-                                  ? "no"
-                                  : "",
+                              asistencia: guestData.asistencia,
                               confirmados: guestData.confirmados,
                               mensaje: guestData.mensaje,
                             }}

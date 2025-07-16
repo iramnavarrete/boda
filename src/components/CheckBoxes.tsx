@@ -11,9 +11,11 @@ export default function CheckBoxes({ asistencia }: { asistencia?: string }) {
     if (asistencia) {
       if (asistencia === "TRUE") {
         setSelected(["si"]);
+        setFieldValue("asistencia", true)
       }
       if(asistencia === 'FALSE'){
         setSelected(['no'])
+        setFieldValue("asistencia", false)
       }
     }
   }, [asistencia]);
