@@ -15,10 +15,16 @@ import dynamic from "next/dynamic";
 import animationData from "../../lottie/heart_green.json";
 import { useSearchParams } from "next/navigation";
 
-const Lottie = dynamic(() => import("lottie-react"), {
+const Lottie = dynamic(() => import("react-lottie"), {
   ssr: false,
   loading: () => <div className="w-screen h-screen bg-accent" />,
 });
+
+const defaultOptions = {
+  loop: true,
+  animationData,
+  autoplay: true,
+};
 
 function Assistants() {
   const [isDisabled, setIsDisabled] = useState(false);
@@ -95,6 +101,13 @@ function Assistants() {
                   !isFormSubmitted ? "12" : "6"
                 } border-primary border-1 rounded-md bg-white`}
               >
+                <div className={`pt-12 ${isFormSubmitted ? 'block' : 'hidden'}`}>
+                  <Lottie
+                    options={{ ...defaultOptions }}
+                    height={150}
+                    width={150}
+                  />
+                </div>
                 {!isFormSubmitted ? (
                   <AnimatePresence>
                     <motion.div
@@ -170,16 +183,7 @@ function Assistants() {
                     animate={{ opacity: 1 }}
                     key="thanks"
                   >
-                    <div className="px-7 py-12 font-nourdLight text-center w-full h-full flex flex-col justify-center items-center">
-                      <Lottie
-                        key={isFormSubmitted + "-" + isAssistant} // Fuerza recreación limpia
-                        loop
-                        autoPlay
-                        animationData={animationData}
-                        height={150}
-                        width={150}
-                        className="w-[150px] h-[150px]"
-                      />
+                    <div className="px-7 pb-12 font-nourdLight text-center w-full h-full flex flex-col justify-center items-center">
                       <div className="text-center font-nourdLight py-2 text-primary">
                         {isAssistant ? (
                           <p>
