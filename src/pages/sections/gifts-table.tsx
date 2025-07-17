@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 const GiftsTable: FC = () => {
   const [isCardInfoVisible, setIsCardInfoVisible] = useState(false);
   return (
-    <div className="px-12 bg-primary w-full py-16">
+    <div className="px-10 bg-primary w-full py-16">
       <div className=" flex flex-col gap-5 justify-center items-center">
         <div className="flex flex-col items-center justify-center">
           <p className="pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-accent">
