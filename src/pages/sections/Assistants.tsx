@@ -3,8 +3,8 @@ import ButtonSubmit from "@/components/ButtonSubmit";
 import CheckBoxes from "@/components/CheckBoxes";
 import Input from "@/components/Input";
 import assistanceSchema from "@/validation/yupSchema";
-import { Formik } from "formik";
-import { useCallback, useState } from "react";
+import { Formik, FormikProps } from "formik";
+import { useCallback, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FormObject, SheetData } from "../../../types/types";
 import Separator from "@/icons/separator";
@@ -14,6 +14,15 @@ import { getGuestData, updateGuestData } from "@/services/guest";
 import dynamic from "next/dynamic";
 import animationData from "../../lottie/heart_green.json";
 import { useSearchParams } from "next/navigation";
+
+const defaultGuest: SheetData = {
+  asistencia: "TRUE",
+  confirmados: "1",
+  id: "_",
+  mensaje: "Felicidades",
+  nombre: "Invitado genérico",
+  pases: "1",
+};
 
 const Lottie = dynamic(() => import("react-lottie"), {
   ssr: false,
@@ -26,21 +35,29 @@ const defaultOptions = {
   autoplay: true,
 };
 
+const isDefaultId = (id: string) => id === "_";
+
 function Assistants() {
   const [isDisabled, setIsDisabled] = useState(false);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [isAssistant, setIsAssistant] = useState(false);
-  const [guestData, setGuestData] = useState<SheetData>();
-  const [idInvalid, setIdInvalid] = useState(false);
+  const [guestData, setGuestData] = useState<SheetData>(defaultGuest);
+
+  const formikRef = useRef<FormikProps<FormObject>>(null);
 
   const searchParams = useSearchParams();
   const id = searchParams.get("guest");
 
   const handleGetGuestData = useCallback((id: string) => {
-    getGuestData({ id })
-      .then((el) => {
+    if (!isDefaultId(id)) {
+      getGuestData({ id }).then((el) => {
         setGuestData(el);
-        console.log({ el });
+        formikRef.current?.setValues({
+          id: el.id,
+          asistencia: el.asistencia,
+          confirmados: el.confirmados,
+          mensaje: el.mensaje,
+        });
         if (el.asistencia !== "") {
           setIsFormSubmitted(true);
           if (el.asistencia === "TRUE") {
@@ -49,20 +66,26 @@ function Assistants() {
             setIsAssistant(false);
           }
         }
+      }).catch(() => {
+        setGuestData(defaultGuest)
       })
-      .catch(() => {
-        setIdInvalid(true);
-      });
+    }
   }, []);
 
   useEffect(() => {
     if (id) {
       handleGetGuestData(id);
     }
-  }, [id]);
+  }, [id, handleGetGuestData]);
 
-  if (!id || idInvalid) {
-    return null;
+  if (!guestData) {
+    return (
+      <div className="w-full h-24 bg-accent flex justify-center">
+        <p className="text-primary font-newIconScript">
+          Cargando información...
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -101,7 +124,9 @@ function Assistants() {
                   !isFormSubmitted ? "12" : "6"
                 } border-primary border-1 rounded-md bg-white`}
               >
-                <div className={`pt-12 ${isFormSubmitted ? 'block' : 'hidden'}`}>
+                <div
+                  className={`pt-12 ${isFormSubmitted ? "block" : "hidden"}`}
+                >
                   <Lottie
                     options={{ ...defaultOptions }}
                     height={150}
@@ -117,64 +142,75 @@ function Assistants() {
                       className="px-6 py-12 font-nourdLight flex flex-col items-center text-primary"
                       key="assistance-form"
                     >
-                      {!guestData ? (
-                        <p>Cargando información</p>
-                      ) : (
-                        <>
-                          <p className="py-2 text-2xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-primary text-center">
-                            {guestData.nombre}
-                          </p>
-                          <p className="text-sm">
-                            Pase para {guestData.pases}{" "}
-                            {guestData.pases === "1" ? "persona" : "personas"}
-                          </p>
-                          <p className="py-6 text-lg font-nourdMedium">
-                            ¡NO NIÑOS!
-                          </p>
-                          <p>¿Asistirás?</p>
-                          <Formik
-                            validationSchema={assistanceSchema(
-                              Number(guestData.pases)
-                            )}
-                            onSubmit={(data: FormObject) => {
-                              setIsDisabled(true);
-                              updateGuestData({ id, data })
+                      <>
+                        <p className="py-2 text-2xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-primary text-center">
+                          {guestData.nombre}
+                        </p>
+                        <p className="text-sm">
+                          Pase para {guestData.pases}{" "}
+                          {guestData.pases === "1" ? "persona" : "personas"}
+                        </p>
+                        <p className="py-6 text-lg font-nourdMedium">
+                          ¡NO NIÑOS!
+                        </p>
+                        <p>¿Asistirás?</p>
+                        <Formik
+                          innerRef={formikRef}
+                          validationSchema={assistanceSchema(
+                            Number(guestData.pases)
+                          )}
+                          onSubmit={(data: FormObject) => {
+                            setIsDisabled(true);
+                            // Si tenemos un id válido de un invitado hacemos una petición al api para actualizar
+                            // De lo contrario solo se usará el objeto local
+                            if (!isDefaultId(data.id)) {
+                              updateGuestData({ id: data.id, data })
                                 .then(() => {
                                   setIsFormSubmitted(true);
-                                  handleGetGuestData(id);
+                                  handleGetGuestData(data.id);
                                   setIsAssistant(!!data.asistencia);
                                 })
                                 .catch((error) => {
                                   console.log(error, "ERROR");
                                   setIsDisabled(false);
                                 });
-                            }}
-                            initialValues={{
-                              id: guestData.id,
-                              asistencia: guestData.asistencia,
-                              confirmados: guestData.confirmados,
-                              mensaje: guestData.mensaje,
-                            }}
-                          >
-                            <>
-                              <CheckBoxes asistencia={guestData.asistencia} />
-                              <div className="flex flex-col items-start w-full gap-2">
-                                <Input
-                                  name="confirmados"
-                                  title="Personas confirmadas"
-                                  inputType="number"
-                                />
-                                <Input
-                                  name="mensaje"
-                                  title="¡Envía una felicitación!"
-                                  inputType="textarea"
-                                />
-                                <ButtonSubmit isDisabled={isDisabled} />
-                              </div>
-                            </>
-                          </Formik>
-                        </>
-                      )}
+                            } else {
+                              setIsFormSubmitted(true);
+                              setIsAssistant(!!data.asistencia);
+                              setGuestData({
+                                ...defaultGuest,
+                                asistencia: data.asistencia ? "TRUE" : "FALSE",
+                                confirmados: data.confirmados,
+                                mensaje: data.mensaje,
+                              });
+                              setIsDisabled(false);
+                            }
+                          }}
+                          initialValues={{
+                            id: guestData.id,
+                            asistencia: guestData.asistencia,
+                            confirmados: guestData.confirmados,
+                            mensaje: guestData.mensaje,
+                          }}
+                        >
+                          <>
+                            <CheckBoxes />
+                            <div className="flex flex-col items-start w-full gap-2">
+                              <Input
+                                name="confirmados"
+                                title="Personas confirmadas"
+                                inputType="number"
+                              />
+                              <Input
+                                name="mensaje"
+                                title="¡Envía una felicitación!"
+                                inputType="textarea"
+                              />
+                              <ButtonSubmit isDisabled={isDisabled} />
+                            </div>
+                          </>
+                        </Formik>
+                      </>
                     </motion.div>
                   </AnimatePresence>
                 ) : (

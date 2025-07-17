@@ -3,12 +3,12 @@ import { useFormikContext } from "formik";
 import { useEffect, useState } from "react";
 import { FormObject } from "../../types/types";
 
-export default function CheckBoxes({ asistencia }: { asistencia?: string }) {
+export default function CheckBoxes() {
   const [selected, setSelected] = useState<string[]>([]);
-  const { setFieldValue, touched, errors } = useFormikContext<FormObject>();
+  const { setFieldValue, touched, errors, values: {asistencia} } = useFormikContext<FormObject>();
 
   useEffect(() => {
-    if (asistencia) {
+    if (asistencia !== '') {
       if (asistencia === "TRUE") {
         setSelected(["si"]);
         setFieldValue("asistencia", true)
@@ -17,8 +17,10 @@ export default function CheckBoxes({ asistencia }: { asistencia?: string }) {
         setSelected(['no'])
         setFieldValue("asistencia", false)
       }
+    }else {
+      setSelected([])
     }
-  }, [asistencia]);
+  }, [asistencia, setFieldValue]);
 
   return (
     <div className="">
