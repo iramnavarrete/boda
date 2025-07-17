@@ -1,5 +1,3 @@
-// "use client";
-
 import AnimatedEntrance from "@/components/AnimatedEntrance";
 import ButtonSubmit from "@/components/ButtonSubmit";
 import CheckBoxes from "@/components/CheckBoxes";
@@ -17,7 +15,7 @@ import dynamic from "next/dynamic";
 import animationData from "../../lottie/heart_green.json";
 import { useSearchParams } from "next/navigation";
 
-const Lottie = dynamic(() => import("react-lottie"), {
+const Lottie = dynamic(() => import("lottie-react"), {
   ssr: false,
   loading: () => <div className="w-screen h-screen bg-accent" />,
 });
@@ -104,6 +102,7 @@ function Assistants() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       className="px-6 py-12 font-nourdLight flex flex-col items-center text-primary"
+                      key="assistance-form"
                     >
                       {!guestData ? (
                         <p>Cargando información</p>
@@ -166,16 +165,20 @@ function Assistants() {
                     </motion.div>
                   </AnimatePresence>
                 ) : (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    key="thanks"
+                  >
                     <div className="px-7 py-12 font-nourdLight text-center w-full h-full flex flex-col justify-center items-center">
                       <Lottie
-                        options={{
-                          loop: true,
-                          autoplay: true,
-                          animationData: animationData,
-                        }}
+                        key={isFormSubmitted + "-" + isAssistant} // Fuerza recreación limpia
+                        loop
+                        autoPlay
+                        animationData={animationData}
                         height={150}
                         width={150}
+                        className="w-[150px] h-[150px]"
                       />
                       <div className="text-center font-nourdLight py-2 text-primary">
                         {isAssistant ? (
@@ -196,7 +199,7 @@ function Assistants() {
                           </p>
                         )}
                         <button
-                          className="border-border-button border-1 mt-8 px-8 py-3 rounded-2xl bg-button font-nourdMedium text-primary"
+                          className="border-border-button border-1 mt-8 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary"
                           onClick={() => {
                             setIsFormSubmitted(false);
                             setIsDisabled(false);

@@ -68,7 +68,7 @@ export default function Home() {
       className={`${newIconScript.variable} ${nourdLight.variable} ${nourdMedium.variable} ${nourdBold.variable}`}
     >
       <div
-        className="fixed z-20 w-full h-full overflow-hidden"
+        className="fixed w-full h-full overflow-hidden z-50"
         style={envolpeDivHidden ? { display: "none" } : {}}
       >
         <Lottie
@@ -123,7 +123,7 @@ export default function Home() {
         viewport={{ once: true, amount: "some" }}
         initial={{ opacity: 0 }}
       >
-        <div className="flex flex-col items-center bg-[#fff2e0] overflow-hidden">
+        <div className="flex flex-col items-center bg-accent overflow-hidden">
           <div className="max-w-[500px] relative min-[500px]:border-x-1 border-primary overflow-hidden">
             <Cover />
             <Quote />

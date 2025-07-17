@@ -59,7 +59,7 @@ const CardEvent: React.FC<CardEventProps> = ({
             <p>{address3}</p>
           </div>
           <a
-            className="border-border-button border-1 mt-8 px-8 py-3 rounded-2xl bg-button font-nourdMedium text-primary"
+            className="border-border-button border-1 mt-8 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary"
             href={link}
             target="_blank"
             rel="noopener noreferrer"

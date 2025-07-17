@@ -1,9 +1,12 @@
 import AmazonIcon from "@/icons/amazon-icon";
 import BbvaIcon from "@/icons/bbva-icon";
 import GiftIcon from "@/icons/gift-icon";
-import { FC } from "react";
+import { AnimatePresence } from "framer-motion";
+import { FC, useState } from "react";
+import {motion} from 'framer-motion'
 
 const GiftsTable: FC = () => {
+  const [isCardInfoVisible, setIsCardInfoVisible] = useState(false);
   return (
     <div className="px-5 bg-primary w-full py-16">
       <div className=" flex flex-col gap-5 justify-center items-center">
@@ -18,11 +21,11 @@ const GiftsTable: FC = () => {
             tener un detalle con nosotros, que mejor que muestra luna de miel.
           </p>
         </div>
-        <div className="flex flex-col items-center gap-8">
+        <div className="flex flex-col items-center gap-8 w-full">
           <div className="flex flex-col items-center">
             <AmazonIcon className="h-8 mb-6" />
             <a
-              className="border-border-button border-1 px-8 py-3 rounded-2xl bg-button font-nourdMedium text-primary"
+              className="border-border-button border-1 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary"
               href="https://www.amazon.com.mx"
               target="_blank"
               rel="noopener noreferrer"
@@ -41,17 +44,31 @@ const GiftsTable: FC = () => {
             <div className="text-accent text-center leading-8 text-md font-nourdMedium">
               <p>Transferencia de fondos</p>
             </div>
-            <div className="text-accent text-center leading-7 text-md font-nourdLight">
-              <p>
-                <span className="font-nourdMedium">Banco: </span>BBVA
-              </p>
-              <p>
-                <span className="font-nourdMedium">Numero tarjeta: </span> 5741 4600 5879 5461
-              </p>
-              <p>
-                <span className="font-nourdMedium">Beneficiario: </span>Iram Navarrete
-              </p>
-            </div>
+            <button
+              className="border-border-button border-1 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary"
+              onClick={() => setIsCardInfoVisible(!isCardInfoVisible)}
+            >
+              {!isCardInfoVisible ? 'Ver datos bancarios' : 'Ocultar datos bancarios'}
+            </button>
+            <AnimatePresence>
+              {isCardInfoVisible && (
+                <motion.div initial={{opacity: 0, height: 0}} animate={{opacity: 1, height: 'auto'}} exit={{opacity: 0, height: 0}}>
+                  <div className="text-accent text-center leading-7 text-md font-nourdLight pt-4">
+                    <p>
+                      <span className="font-nourdMedium">Banco: </span>BBVA
+                    </p>
+                    <p>
+                      <span className="font-nourdMedium">Numero tarjeta: </span>{" "}
+                      5741 4600 5879 5461
+                    </p>
+                    <p>
+                      <span className="font-nourdMedium">Beneficiario: </span>
+                      Iram Navarrete
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </div>

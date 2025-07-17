@@ -20,7 +20,8 @@ const config: Config = {
         primary: "#58624F",
         accent: "#f5efe6",
         "cool-gray": "#5D5D5D",
-        button: "#e9e7db",
+        "button-dark": "#e9e7db",
+        "button-light": "#fff2e0",
         "border-button": "#D1D0C4",
       },
       backgroundImage: {
