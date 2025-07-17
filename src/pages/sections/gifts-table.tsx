@@ -18,7 +18,7 @@ const GiftsTable: FC = () => {
         <div className="text-accent text-center leading-5 text-md font-nourdLight px-2 mb-4">
           <p>
             El regalo es opcional, la asistencia obligatoria, pero si quieres
-            tener un detalle con nosotros, que mejor que muestra luna de miel.
+            tener un detalle con nosotros, que mejor que nuestra luna de miel.
           </p>
         </div>
         <div className="flex flex-col items-center gap-8 w-full">
