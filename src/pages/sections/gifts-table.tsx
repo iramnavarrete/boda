@@ -3,7 +3,7 @@ import BbvaIcon from "@/icons/bbva-icon";
 import GiftIcon from "@/icons/gift-icon";
 import { AnimatePresence } from "framer-motion";
 import { FC, useState } from "react";
-import {motion} from 'framer-motion'
+import { motion } from "framer-motion";
 
 const GiftsTable: FC = () => {
   const [isCardInfoVisible, setIsCardInfoVisible] = useState(false);
@@ -48,23 +48,24 @@ const GiftsTable: FC = () => {
               className="border-border-button border-1 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary"
               onClick={() => setIsCardInfoVisible(!isCardInfoVisible)}
             >
-              {!isCardInfoVisible ? 'Ver datos bancarios' : 'Ocultar datos bancarios'}
+              {!isCardInfoVisible
+                ? "Ver datos bancarios"
+                : "Ocultar datos bancarios"}
             </button>
             <AnimatePresence>
               {isCardInfoVisible && (
-                <motion.div initial={{opacity: 0, height: 0}} animate={{opacity: 1, height: 'auto'}} exit={{opacity: 0, height: 0}}>
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                >
                   <div className="text-accent text-center leading-7 text-md font-nourdLight pt-4">
-                    <p>
-                      <span className="font-nourdMedium">Banco: </span>BBVA
-                    </p>
-                    <p>
-                      <span className="font-nourdMedium">Numero tarjeta: </span>{" "}
-                      5741 4600 5879 5461
-                    </p>
-                    <p>
-                      <span className="font-nourdMedium">Beneficiario: </span>
-                      Iram Navarrete
-                    </p>
+                    <p className="font-nourdBold">Banco:</p>
+                    <p>BBVA</p>
+                    <p className="font-nourdBold">Numero tarjeta: </p>
+                    <p>5741 4600 5879 5461</p>
+                    <p className="font-nourdBold">Beneficiario: </p>
+                    <p>Iram Navarrete</p>
                   </div>
                 </motion.div>
               )}
