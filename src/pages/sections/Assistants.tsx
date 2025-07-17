@@ -120,9 +120,7 @@ function Assistants() {
                 )}
               </div>
               <div
-                className={`mt-${
-                  !isFormSubmitted ? "12" : "6"
-                } border-primary border-1 rounded-md bg-white`}
+                className="border-primary border-1 rounded-md bg-white"
               >
                 <div
                   className={`pt-12 ${isFormSubmitted ? "block" : "hidden"}`}

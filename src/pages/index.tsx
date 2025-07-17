@@ -7,7 +7,6 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Gallery from "./sections/gallery";
 import Assistants from "./sections/Assistants";
-import Music from "./sections/music";
 import { motion } from "framer-motion";
 import animationData from "../../public/lottie/envolpe.json";
 import { useState } from "react";
@@ -15,6 +14,7 @@ import Image from "next/image";
 import localFont from "next/font/local";
 import dynamic from "next/dynamic";
 import GiftsTable from "./sections/gifts-table";
+import QrPhotos from "./sections/qr-photos";
 
 const Lottie = dynamic(() => import("react-lottie"), {
   ssr: false,
@@ -108,24 +108,10 @@ export default function Home() {
         </motion.div>
       </div>
 
-      <motion.div
-        whileInView={{
-          opacity: 1,
-          transition: {
-            type: "spring",
-            stiffness: 300,
-            damping: 24,
-            duration: 1,
-            delay: 0.2,
-          },
-        }}
-        style={{ overflow: "hidden" }}
-        viewport={{ once: true, amount: "some" }}
-        initial={{ opacity: 0 }}
-      >
+      <div style={{ overflow: "hidden" }}>
         <div className="flex flex-col items-center bg-accent overflow-hidden">
           <div className="max-w-[500px] relative min-[500px]:border-x-1 border-primary overflow-hidden">
-            <Cover />
+            <Cover isEnvolpeVisible={isVisible} />
             <Quote />
             <ParentsGodFathers />
             <CountDown />
@@ -133,9 +119,10 @@ export default function Home() {
             <Gallery />
             <GiftsTable />
             <Assistants />
+            <QrPhotos />
           </div>
         </div>
-      </motion.div>
+      </div>
     </main>
   );
 }

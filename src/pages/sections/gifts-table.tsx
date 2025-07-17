@@ -8,14 +8,14 @@ import {motion} from 'framer-motion'
 const GiftsTable: FC = () => {
   const [isCardInfoVisible, setIsCardInfoVisible] = useState(false);
   return (
-    <div className="px-5 bg-primary w-full py-16">
+    <div className="px-12 bg-primary w-full py-16">
       <div className=" flex flex-col gap-5 justify-center items-center">
         <div className="flex flex-col items-center justify-center">
           <p className="pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-accent">
             Mesa de regalos
           </p>
         </div>
-        <div className="text-accent text-center leading-5 text-md font-nourdLight px-2">
+        <div className="text-accent text-center leading-5 text-md font-nourdLight px-2 mb-4">
           <p>
             El regalo es opcional, la asistencia obligatoria, pero si quieres
             tener un detalle con nosotros, que mejor que muestra luna de miel.
