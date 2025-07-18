@@ -18,7 +18,9 @@ import QrPhotos from "./sections/qr-photos";
 
 const Lottie = dynamic(() => import("react-lottie"), {
   ssr: false,
-  loading: () => <div className="w-screen h-screen bg-accent" />,
+  loading: () => (
+    <div className="w-screen h-screen bg-accent fixed z-50" />
+  ),
 });
 
 const newIconScript = localFont({
