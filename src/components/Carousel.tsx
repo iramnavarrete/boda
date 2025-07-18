@@ -101,7 +101,7 @@ export default function SimpleSlider() {
   }, [emblaApi]);
 
   return (
-    <div className="relative py-12 w-5/6 mx-auto">
+    <div className="relative py-12 w-11/12 mx-auto">
       <AnimatedEntrance>
         <div id="pswp-gallery-container" ref={galleryRef}>
           <div className="overflow-hidden" ref={emblaRef}>
@@ -148,7 +148,7 @@ export default function SimpleSlider() {
         />
 
         {/* Dots personalizados */}
-        <div className="flex justify-center gap-2 mt-6">
+        <div className="flex justify-center gap-2 mt-8">
           {slides.map((_, idx) => (
             <button
               key={idx}
