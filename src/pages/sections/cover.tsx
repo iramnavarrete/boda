@@ -13,7 +13,7 @@ const animateCoverVariants = {
       stiffness: 300,
       damping: 24,
       duration: 1,
-      delay: 1.5,
+      delay: 1.2,
     },
   },
   showMusic: {
@@ -69,7 +69,7 @@ export default function Cover({ isSealVisible }: Props) {
           initial={{ opacity: 0, y: 40 }}
           className="absolute bottom-6 right-5"
         >
-          <Music />
+          <Music isSealVisible={isSealVisible} />
         </motion.div>
       </div>
     </div>
