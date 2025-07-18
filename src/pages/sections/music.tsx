@@ -17,7 +17,7 @@ function Music() {
   };
 
   return (
-    <div className="flex bg-accent p-6 rounded-full absolute bottom-6 right-5 drop-shadow-[0px_2px_2px_rgba(0,0,0,0.25)]">
+    <div className="flex bg-accent p-6 rounded-full drop-shadow-[0px_2px_2px_rgba(0,0,0,0.25)]">
       <div className="flex flex-row gap-4 w-full">
         <div onClick={toggleAudio}>
           {isPlaying ? (

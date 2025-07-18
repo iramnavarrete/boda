@@ -66,7 +66,8 @@ export default function Cover({ isEnvolpeVisible }: Props) {
           variants={animateCoverVariants}
           animate={isEnvolpeVisible ? "none" : "showMusic"}
           viewport={{ once: true, amount: "some" }}
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 0, y: 40 }}
+          className="absolute bottom-6 right-5"
         >
           <Music />
         </motion.div>
