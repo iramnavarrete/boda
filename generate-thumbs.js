@@ -6,7 +6,7 @@ const path = require('path');
 const inputDir = path.join(__dirname, 'public/img/gallery');       // carpeta con imágenes originales
 const outputDir = path.join(__dirname, 'public/img/gallery/thumbs'); // destino de los thumbnails
 
-const THUMB_WIDTH = 1800; // Puedes ajustarlo a lo que necesites
+const THUMB_WIDTH = 800; // Puedes ajustarlo a lo que necesites
 
 // Asegúrate de que el directorio de salida exista
 if (!fs.existsSync(outputDir)) {

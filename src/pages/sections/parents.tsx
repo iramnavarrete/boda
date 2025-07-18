@@ -1,3 +1,4 @@
+import AnimatedEntrance from "@/components/AnimatedEntrance";
 import CountdownTimer from "@/components/CountDownTimer";
 import ElegantText from "@/components/ElegantText";
 import BeigeWaves from "@/icons/beige-waves";
@@ -56,7 +57,10 @@ export default function ParentsGodFathers() {
           </div>
         </div>
         <Separator className="w-full" />
-        <CountdownTimer targetDate={finalDate} />
+        <AnimatedEntrance>
+          <CountdownTimer targetDate={finalDate} />
+        </AnimatedEntrance>
+
         <BeigeWaves className="w-full absolute h-12 left-0 bottom-[-40px]" />
       </div>
     </article>

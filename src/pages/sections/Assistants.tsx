@@ -50,25 +50,27 @@ function Assistants() {
 
   const handleGetGuestData = useCallback((id: string) => {
     if (!isDefaultId(id)) {
-      getGuestData({ id }).then((el) => {
-        setGuestData(el);
-        formikRef.current?.setValues({
-          id: el.id,
-          asistencia: el.asistencia,
-          confirmados: el.confirmados,
-          mensaje: el.mensaje,
-        });
-        if (el.asistencia !== "") {
-          setIsFormSubmitted(true);
-          if (el.asistencia === "TRUE") {
-            setIsAssistant(true);
-          } else if (el.asistencia === "FALSE") {
-            setIsAssistant(false);
+      getGuestData({ id })
+        .then((el) => {
+          setGuestData(el);
+          formikRef.current?.setValues({
+            id: el.id,
+            asistencia: el.asistencia,
+            confirmados: el.confirmados,
+            mensaje: el.mensaje,
+          });
+          if (el.asistencia !== "") {
+            setIsFormSubmitted(true);
+            if (el.asistencia === "TRUE") {
+              setIsAssistant(true);
+            } else if (el.asistencia === "FALSE") {
+              setIsAssistant(false);
+            }
           }
-        }
-      }).catch(() => {
-        setGuestData(defaultGuest)
-      })
+        })
+        .catch(() => {
+          setGuestData(defaultGuest);
+        });
     }
   }, []);
 
@@ -103,6 +105,8 @@ function Assistants() {
               antes posible
             </p>
           </div>
+        </AnimatedEntrance>
+        <AnimatedEntrance classname="w-full">
           <div className="flex items-center justify-center">
             <div className="mx-5 w-11/12 relative">
               <div className="flex justify-center h-12">
@@ -119,9 +123,7 @@ function Assistants() {
                   </div>
                 )}
               </div>
-              <div
-                className="border-primary border-1 rounded-md bg-white"
-              >
+              <div className="border-primary border-1 rounded-md bg-white">
                 <div
                   className={`pt-12 ${isFormSubmitted ? "block" : "hidden"}`}
                 >

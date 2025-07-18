@@ -1,7 +1,10 @@
 import { motion } from "framer-motion";
-import React, { PropsWithChildren } from "react";
+import React, { HTMLProps, PropsWithChildren } from "react";
 
-const AnimatedEntrance: React.FC<PropsWithChildren> = ({ children }) => {
+const AnimatedEntrance: React.FC<PropsWithChildren<{ classname?: string }>> = ({
+  children,
+  classname = "",
+}) => {
   return (
     <motion.div
       whileInView={{
@@ -17,6 +20,7 @@ const AnimatedEntrance: React.FC<PropsWithChildren> = ({ children }) => {
       }}
       viewport={{ once: true, amount: "some" }}
       initial={{ y: 40, opacity: 0 }}
+      className={classname}
     >
       {children}
     </motion.div>

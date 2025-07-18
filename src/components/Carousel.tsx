@@ -23,6 +23,7 @@ const slides: GalleryImage[] = [
     height: 5103,
     width: 3306,
     thumb: "/img/gallery/thumbs/1.webp",
+    msrc: "/img/gallery/thumbs/1.webp",
   },
   {
     src: "/img/gallery/2.webp",
@@ -30,6 +31,7 @@ const slides: GalleryImage[] = [
     height: 5095,
     width: 3397,
     thumb: "/img/gallery/thumbs/2.webp",
+    msrc: "/img/gallery/thumbs/2.webp",
   },
   {
     src: "/img/gallery/3.webp",
@@ -37,6 +39,7 @@ const slides: GalleryImage[] = [
     height: 5184,
     width: 3456,
     thumb: "/img/gallery/thumbs/3.webp",
+    msrc: "/img/gallery/thumbs/3.webp",
   },
   {
     src: "/img/gallery/4.webp",
@@ -44,6 +47,7 @@ const slides: GalleryImage[] = [
     height: 5184,
     width: 3456,
     thumb: "/img/gallery/thumbs/4.webp",
+    msrc: "/img/gallery/thumbs/4.webp",
   },
 ];
 
@@ -116,6 +120,7 @@ export default function SimpleSlider() {
                     data-pswp-width={slide.width}
                     data-pswp-height={slide.height}
                     data-pswp-src={slide.src}
+                    data-pswp-msrc={slide.thumb}
                     target="_blank"
                     rel="noreferrer"
                     className="block w-full h-full"
