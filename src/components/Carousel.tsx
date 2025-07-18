@@ -1,10 +1,20 @@
-import ArrowLeftIcon from "@/icons/arrow-left-icon";
-import Image from "next/image";
-import React, { useEffect, useRef } from "react";
-import Slider, { Settings } from "react-slick";
-import AnimatedEntrance from "./AnimatedEntrance";
+"use client";
+
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import useEmblaCarousel from "embla-carousel-react";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
+import Image from "next/image";
+import ArrowLeftIcon from "@/icons/arrow-left-icon";
+import AnimatedEntrance from "./AnimatedEntrance";
 import { GalleryImage } from "../../types/types";
+import Autoplay from "embla-carousel-autoplay";
+
+const autoplay = Autoplay({
+  delay: 2000, // milisegundos entre slides
+  stopOnInteraction: true, // no se detiene si el usuario toca el slider
+  stopOnMouseEnter: true, // pausa al hacer hover
+  playOnInit: true, // inicia automáticamente
+});
 
 const slides: GalleryImage[] = [
   {
@@ -36,13 +46,14 @@ const slides: GalleryImage[] = [
     thumb: "/img/gallery/thumbs/4.webp",
   },
 ];
-interface ArrowProps {
-  className?: string;
-  onClick?: React.MouseEventHandler<HTMLDivElement>;
-}
 
-function Arrow(props: ArrowProps) {
-  const { className, onClick } = props;
+function Arrow({
+  onClick,
+  className,
+}: {
+  onClick: () => void;
+  className?: string;
+}) {
   return (
     <div className={className} onClick={onClick}>
       <ArrowLeftIcon className="w-[40px] h-[40px]" />
@@ -51,104 +62,103 @@ function Arrow(props: ArrowProps) {
 }
 
 export default function SimpleSlider() {
-  const sliderRef = useRef<Slider>(null);
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [autoplay]);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const galleryRef = useRef<HTMLDivElement>(null);
 
-  // Define las configuraciones de Slick con el tipo Settings
-  const settings: Settings = {
-    infinite: true,
-    autoplay: true,
-    autoplaySpeed: 2000,
-    speed: 800,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    useTransform: false,
-    arrows: false, 
-    dots: true,
-    adaptiveHeight: false,
-  };
+  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
+  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
 
   useEffect(() => {
-    // PhotoSwipe necesita un selector CSS que apunte al contenedor de los `<a>` tags.
-    // La clase `my-slick-gallery` (o `pswp-gallery` como la usas) se aplicará al div padre del Slider.
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on("select", onSelect);
+  }, [emblaApi, onSelect]);
+
+  useEffect(() => {
     const lightbox = new PhotoSwipeLightbox({
-      gallery: "#pswp-gallery-container", // <-- Este ID se aplica al div que envuelve el Slider
-      children: "div:not(.slick-cloned) >div>div> a", // PhotoSwipe buscará elementos 'a' dentro de este contenedor
+      gallery: "#pswp-gallery-container",
+      children: "a",
       pswpModule: () => import("photoswipe"),
     });
 
     lightbox.init();
 
-    // Opcional: Sincronizar el slider con la imagen de PhotoSwipe
     lightbox.on("change", () => {
-      if (
-        sliderRef.current &&
-        lightbox.pswp &&
-        typeof lightbox.pswp.currIndex === "number"
-      ) {
-        sliderRef.current.slickGoTo(lightbox.pswp.currIndex);
+      if (emblaApi && typeof lightbox.pswp?.currIndex === "number") {
+        emblaApi.scrollTo(lightbox.pswp.currIndex, true);
       }
     });
-
 
     return () => {
       lightbox.destroy();
     };
-  }, []); // Dependencias vacías para que se ejecute solo una vez al montar
+  }, [emblaApi]);
 
   return (
-    // El contenedor principal de la galería. Aquí es donde definirás el 80% de ancho.
     <div className="relative py-12 w-5/6 mx-auto">
       <AnimatedEntrance>
-        <div id="pswp-gallery-container" className="w-full h-full">
-          {/* Asegúrate de que este div tenga un tamaño */}
-          <Slider
-            ref={sliderRef}
-            {...settings}
-            className="slider-root" // React-Slick añade sus propias clases, esta es adicional
-          >
-            {/* CADA ELEMENTO HIJO DIRECTO DE SLIDER ES UN SLIDE */}
-            {slides.map((slide, idx) => (
-              <div key={idx} className="slick-slide-wrapper">
-                <a
-                  key={`pswp-gallery-item-${idx}`} // Mejor key para el 'a'
-                  href={slide.src}
-                  data-pswp-width={slide.width}
-                  data-pswp-height={slide.height}
-                  data-pswp-src={slide.src}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block w-full h-full" // Asegura que el 'a' ocupe todo el espacio de la slide
+        <div id="pswp-gallery-container" ref={galleryRef}>
+          <div className="overflow-hidden" ref={emblaRef}>
+            <div className="flex">
+              {slides.map((slide, idx) => (
+                <div
+                  key={idx}
+                  className="flex-[0_0_100%] px-2" // 1 slide visible, full width
                 >
-                  <Image
-                    alt={slide.alt || `Imagen número ${idx} de la galería`}
-                    width={slide.width}
-                    height={slide.height}
-                    quality={10}
-                    className="slide-img" // Puedes añadir más estilos aquí si necesitas
-                    src={slide.thumb}
-                  />
-                </a>
-              </div>
-            ))}
-          </Slider>
+                  <a
+                    href={slide.src}
+                    data-pswp-width={slide.width}
+                    data-pswp-height={slide.height}
+                    data-pswp-src={slide.src}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block w-full h-full"
+                  >
+                    <Image
+                      alt={slide.alt}
+                      src={slide.thumb}
+                      width={800}
+                      height={600}
+                      className="w-full h-auto"
+                      placeholder="blur"
+                      blurDataURL={slide.thumb}
+                      priority={idx === 0}
+                    />
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-        {/* Flechas de navegación personalizadas fuera del Slider, controlando el SliderRef */}
+
+        {/* Flechas personalizadas */}
         <Arrow
-          className="absolute z-20 top-1/2 -translate-y-1/2 left-0" // Ajusta la posición de la flecha
-          onClick={() => {
-            if (sliderRef.current) {
-              sliderRef.current.slickPrev();
-            }
-          }}
+          onClick={scrollPrev}
+          className="absolute z-20 top-1/2 -translate-y-1/2 left-0 cursor-pointer"
         />
         <Arrow
-          className="absolute z-20 top-1/2 -translate-y-1/2 right-0 rotate-180" // Ajusta la posición
-          onClick={() => {
-            if (sliderRef.current) {
-              sliderRef.current.slickNext();
-            }
-          }}
+          onClick={scrollNext}
+          className="absolute z-20 top-1/2 -translate-y-1/2 right-0 rotate-180 cursor-pointer"
         />
+
+        {/* Dots personalizados */}
+        <div className="flex justify-center gap-2 mt-6">
+          {slides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => emblaApi?.scrollTo(idx)}
+              className={`w-1 h-1 rounded-full ${
+                idx === selectedIndex ? "bg-primary" : "bg-gray-400"
+              }`}
+            />
+          ))}
+        </div>
       </AnimatedEntrance>
     </div>
   );
