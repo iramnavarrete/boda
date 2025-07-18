@@ -110,18 +110,25 @@ function Assistants() {
           <div className="flex items-center justify-center">
             <div className="mx-5 w-11/12 relative">
               <div className="flex justify-center h-12">
-                {!isFormSubmitted && guestData && (
-                  <div className="w-24 h-24 absolute">
-                    <Image
-                      alt="Sello de carta"
-                      className="w-full h-full"
-                      width={0}
-                      height={0}
-                      sizes="100vw"
-                      src={`/img/sello.png`}
-                    />
-                  </div>
-                )}
+                <AnimatePresence>
+                  {!isFormSubmitted && guestData && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1}}
+                      exit={{ opacity: 0 }}
+                      className="w-24 h-24 absolute"
+                    >
+                      <Image
+                        alt="Sello de carta"
+                        className="w-full h-full"
+                        width={0}
+                        height={0}
+                        sizes="100vw"
+                        src={`/img/sello.png`}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
               <div className="border-primary border-1 rounded-md bg-white">
                 <div
