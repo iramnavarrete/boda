@@ -62,8 +62,9 @@ const defaultOptions = {
 };
 
 export default function Home() {
-  const [isVisible, setIsVisible] = useState(true);
+  const [isSealVisible, setIsSealVisible] = useState(true);
   const [envolpeDivHidden, setEnvolpeDivHidden] = useState(false);
+  const [isLottiePaused, setIsLottiePaused] = useState(true)
 
   return (
     <main
@@ -76,7 +77,7 @@ export default function Home() {
         <Lottie
           options={defaultOptions}
           isClickToPauseDisabled
-          isPaused={isVisible}
+          isPaused={isLottiePaused}
         />
         <motion.div
           variants={variants}
@@ -84,17 +85,20 @@ export default function Home() {
             scale: 1,
           }}
           onClick={() => {
-            setIsVisible(false);
+            setIsSealVisible(false); // Ocultamos el sello
+            setTimeout(() => {
+              setIsLottiePaused(false) // Iniciamos la animación de la carta luego de 400ms
+            }, 400);
             document.body.classList.remove("overflow-hidden");
             setTimeout(() => {
-              setEnvolpeDivHidden(true);
-            }, 2000);
+              setEnvolpeDivHidden(true); // Ocultamos el div de la carta cuando pasen los 2400ms
+            }, 2400);
           }}
-          animate={isVisible ? "loop" : "hidden"}
+          animate={isSealVisible ? "loop" : "hidden"}
           className="absolute top-[calc(50%-65px)] left-[calc(30%-65px)] cursor-pointer"
           transition={{
             duration: 1,
-            repeat: isVisible ? Infinity : 0,
+            repeat: isSealVisible ? Infinity : 0,
             ease: "easeInOut",
             repeatType: "reverse",
           }}
@@ -113,7 +117,7 @@ export default function Home() {
       <div style={{ overflow: "hidden" }}>
         <div className="flex flex-col items-center bg-accent overflow-hidden">
           <div className="max-w-[500px] relative min-[500px]:border-x-1 border-primary overflow-hidden">
-            <Cover isEnvolpeVisible={isVisible} />
+            <Cover isSealVisible={isLottiePaused} />
             <Quote />
             <ParentsGodFathers />
             <CountDown />

@@ -29,9 +29,9 @@ const animateCoverVariants = {
   },
 };
 
-type Props = { isEnvolpeVisible: boolean };
+type Props = { isSealVisible: boolean };
 
-export default function Cover({ isEnvolpeVisible }: Props) {
+export default function Cover({ isSealVisible }: Props) {
   return (
     <div className="bg_fixed">
       <div className="overlay bg-main">
@@ -40,7 +40,7 @@ export default function Cover({ isEnvolpeVisible }: Props) {
       <div className="relative">
         <motion.div
           variants={animateCoverVariants}
-          animate={isEnvolpeVisible ? "none" : "show"}
+          animate={isSealVisible ? "none" : "show"}
           viewport={{ once: true, amount: "some" }}
           initial={{ opacity: 0, y: 40 }}
         >
@@ -64,7 +64,7 @@ export default function Cover({ isEnvolpeVisible }: Props) {
         </motion.div>
         <motion.div
           variants={animateCoverVariants}
-          animate={isEnvolpeVisible ? "none" : "showMusic"}
+          animate={isSealVisible ? "none" : "showMusic"}
           viewport={{ once: true, amount: "some" }}
           initial={{ opacity: 0, y: 40 }}
           className="absolute bottom-6 right-5"
