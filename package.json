@@ -19,6 +19,7 @@
     "framer-motion": "^11.3.4",
     "googleapis": "^152.0.0",
     "next": "14.2.5",
+    "photoswipe": "^5.4.4",
     "qs": "^6.13.0",
     "react": "^18",
     "react-dom": "^18",
@@ -33,9 +34,11 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "@types/react-lottie": "^1.2.10",
+    "@types/react-slick": "^0.23.13",
     "eslint": "^8",
     "eslint-config-next": "14.2.5",
     "postcss": "^8",
+    "sharp": "^0.34.3",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   }

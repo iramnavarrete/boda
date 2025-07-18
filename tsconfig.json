@@ -21,7 +21,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "src/components/Carousel.jsx"
+    "src/components/Carousel.tsx"
   ],
   "exclude": ["node_modules"]
 }

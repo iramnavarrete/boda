@@ -5,6 +5,7 @@ import CountDown from "./sections/countdown";
 import CeremonyToast from "./sections/ceremony-toast";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import 'photoswipe/dist/photoswipe.css'; // Estilos base de PhotoSwipe
 import Gallery from "./sections/gallery";
 import Assistants from "./sections/Assistants";
 import { motion } from "framer-motion";
