@@ -6,6 +6,7 @@ import ChurchIcon from "@/icons/church-icon";
 import DressCodeIcon from "@/icons/church-icon copy";
 import BeigeWaves from "@/icons/beige-waves";
 import FlowersBackground2 from "@/icons/flowers-background-2";
+import { churchSequence, glassesSequence } from "@/constants/animationSequences";
 
 interface CardEventProps {
   time: string;
@@ -115,19 +116,6 @@ const DressCode: React.FC<PropsWithChildren<DressCodeProps>> = ({
 };
 
 export default function CeremonyToast() {
-  const churchSequence: AnimationSequence = [
-    [".animated-church", { opacity: 1 }, { duration: 0.2 }],
-    [".animated-church", { scale: 1.2 }, { duration: 0.2 }],
-    [".animated-church", { scale: 1 }, { duration: 0.2 }],
-  ];
-
-  const glassesSequence: AnimationSequence = [
-    [".animated-glasses", { opacity: 1 }, { duration: 0.2 }],
-    [".animated-glasses", { scale: 1.2 }, { duration: 0.2 }],
-    [".animated-glasses", { rotate: "20deg" }, { duration: 0.2 }],
-    [".animated-glasses", { rotate: "-20deg" }, { duration: 0.2 }],
-    [".animated-glasses", { scale: 1, rotate: "0deg" }, { duration: 0.2 }],
-  ];
 
   return (
     <div className="mt-[-100%]">

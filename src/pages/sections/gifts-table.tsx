@@ -1,17 +1,24 @@
 import AmazonIcon from "@/icons/amazon-icon";
 import BbvaIcon from "@/icons/bbva-icon";
 import GiftIcon from "@/icons/gift-icon";
-import { AnimatePresence } from "framer-motion";
-import { FC, useState } from "react";
+import { animate, AnimatePresence, useInView } from "framer-motion";
+import { FC, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import AnimatedEntrance from "@/components/AnimatedEntrance";
+import { giftSequence } from "@/constants/animationSequences";
 
 const GiftsTable: FC = () => {
   const [isCardInfoVisible, setIsCardInfoVisible] = useState(false);
+  const ref = useRef(null);
+  const isInView = useInView(ref);
+
+  useEffect(() => {
+    animate(giftSequence);
+  }, [isInView]);
   return (
     <div className="px-10 bg-primary w-full py-16">
-      <AnimatedEntrance>
-        <div className=" flex flex-col gap-5 justify-center items-center">
+      <div className=" flex flex-col gap-5 justify-center items-center">
+        <AnimatedEntrance>
           <div className="flex flex-col items-center justify-center">
             <p className="pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-accent">
               Mesa de regalos
@@ -23,9 +30,13 @@ const GiftsTable: FC = () => {
               tener un detalle con nosotros, que mejor que nuestra luna de miel.
             </p>
           </div>
+        </AnimatedEntrance>
+        <AnimatedEntrance>
           <div className="flex flex-col items-center gap-8 w-full">
             <div className="flex flex-col items-center">
-              <AmazonIcon className="h-8 mb-6" />
+              <motion.div ref={ref}>
+                <AmazonIcon className="h-8 mb-6 animated-gift" />
+              </motion.div>
               <a
                 className="border-border-button border-1 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary"
                 href="https://www.amazon.com.mx"
@@ -36,13 +47,13 @@ const GiftsTable: FC = () => {
               </a>
             </div>
             <div className="flex flex-col items-center gap-3">
-              <GiftIcon className="h-12" />
+              <GiftIcon className="h-12 animated-gift" />
               <div className="text-accent text-center leading-5 text-md font-nourdLight">
                 <p>En efectivo el día de la boda</p>
               </div>
             </div>
             <div className="flex flex-col items-center gap-1">
-              <BbvaIcon className="h-12" />
+              <BbvaIcon className="h-12 animated-gift" />
               <div className="text-accent text-center leading-8 text-md font-nourdMedium">
                 <p>Transferencia de fondos</p>
               </div>
@@ -74,8 +85,8 @@ const GiftsTable: FC = () => {
               </AnimatePresence>
             </div>
           </div>
-        </div>
-      </AnimatedEntrance>
+        </AnimatedEntrance>
+      </div>
     </div>
   );
 };
