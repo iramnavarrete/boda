@@ -44,7 +44,7 @@ const CardEvent: React.FC<CardEventProps> = ({
       </motion.div>
       <AnimatedEntrance>
         <div className="flex flex-col items-center justify-center">
-          <p className="pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript">
+          <p className="pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-primary">
             {title}
           </p>
           <div className="text-primary text-center leading-6 pt-5 text-lg font-nourdMedium">

@@ -14,6 +14,7 @@ const QrPhotos: FC = () => {
               duration: 1.5,
             },
           }}
+          viewport={{ once: true, amount: "some" }}
           className=" flex flex-col gap-5 justify-center items-center text-accent text-center leading-5 font-nourdLight text-md"
         >
           <p>
@@ -52,6 +53,7 @@ const QrPhotos: FC = () => {
               duration: 1.5,
             },
           }}
+          viewport={{ once: true, amount: "some" }}
           className="flex flex-col justify-center items-center mt-12 gap-2 text-accent"
         >
           <p className="font-nourdLight text-md">25 / OCT / 2025</p>
