@@ -33,7 +33,16 @@ const animateCoverVariants = {
 };
 
 const animateFixedVariants = {
-  none: { opacity: 0, y: -20 },
+  none: {
+    opacity: 0,
+    y: -20,
+    transition: {
+      type: "spring",
+      stiffness: 300,
+      damping: 24,
+      duration: 0.05,
+    },
+  },
   showMusic: {
     opacity: 1,
     y: 0,
