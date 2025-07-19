@@ -29,7 +29,7 @@ function Music({ isSealVisible }: Props) {
   }, [isSealVisible, toggleAudio]);
 
   return (
-    <div className="flex bg-accent p-6 rounded-full drop-shadow-[0px_2px_2px_rgba(0,0,0,0.25)]">
+    <div className="flex bg-accent p-4 rounded-full drop-shadow-[0px_2px_2px_rgba(0,0,0,0.25)]">
       <div className="flex flex-row gap-4 w-full">
         <div onClick={() => toggleAudio(isPlaying)}>
           {isPlaying ? (

@@ -35,7 +35,7 @@ const QrPhotos: FC = () => {
             <p>O sólo haz click en este botón</p>
             <a
               className="border-border-button border-1 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary"
-              href="https://www.google.com.mx"
+              href="https://photos.app.goo.gl/sDAssibZmqngTZmz8"
               target="_blank"
               rel="noopener noreferrer"
             >

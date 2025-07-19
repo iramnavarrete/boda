@@ -1,7 +1,9 @@
 import FlowersCoverDown from "@/icons/flowers-cover-down";
 import FlowersCoverUp from "@/icons/flowers-cover-up";
-import { motion } from "framer-motion";
+import { motion, useAnimate } from "framer-motion";
 import Music from "./music";
+import { useEffect } from "react";
+import ArrowsIcon from "@/icons/arrows-icon";
 
 const animateCoverVariants = {
   none: { opacity: 0, y: 40 },
@@ -32,6 +34,30 @@ const animateCoverVariants = {
 type Props = { isSealVisible: boolean };
 
 export default function Cover({ isSealVisible }: Props) {
+  const [arrowsScope, animateArrows] = useAnimate();
+
+  useEffect(() => {
+    (async () => {
+      if (isSealVisible === false) {
+        await animateArrows(
+          arrowsScope.current,
+          { opacity: 1, y: 0 },
+          { delay: 2 }
+        );
+        animateArrows(
+          arrowsScope.current,
+          { opacity: 1, y: -20 },
+          {
+            repeat: Infinity,
+            ease: "easeInOut",
+            repeatType: "reverse",
+            delay: 0.5,
+            duration: 0.8
+          }
+        );
+      }
+    })();
+  }, [isSealVisible, arrowsScope, animateArrows]);
   return (
     <div className="bg_fixed">
       <div className="overlay bg-main">
@@ -70,6 +96,13 @@ export default function Cover({ isSealVisible }: Props) {
           className="absolute bottom-6 right-5"
         >
           <Music isSealVisible={isSealVisible} />
+        </motion.div>
+        <motion.div
+          ref={arrowsScope}
+          initial={{ opacity: 0, y: 40 }}
+          className="absolute bottom-9 left-[calc(50%-16px)]"
+        >
+          <ArrowsIcon className="w-8 h-8 drop-shadow-[2px_4px_2px_rgba(0,0,0,0.25)]" />
         </motion.div>
       </div>
     </div>

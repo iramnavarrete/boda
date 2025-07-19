@@ -24,10 +24,11 @@ const GiftsTable: FC = () => {
               Mesa de regalos
             </p>
           </div>
-          <div className="text-accent text-center leading-5 text-md font-nourdLight px-2 mb-4">
+          <div className="text-accent text-center leading-5 text-md font-nourdLight px-2 mb-4 py-8">
             <p>
-              El regalo es opcional, la asistencia obligatoria, pero si quieres
-              tener un detalle con nosotros, que mejor que nuestra luna de miel.
+              Tu presencia es el mejor regalo, pero si deseas tener un detalle
+              con nosotros, puedes contribuir a hacer nuestra luna de miel aún
+              más especial.
             </p>
           </div>
         </AnimatedEntrance>
