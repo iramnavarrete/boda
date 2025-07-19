@@ -14,6 +14,7 @@ import localFont from "next/font/local";
 import dynamic from "next/dynamic";
 import GiftsTable from "./sections/gifts-table";
 import QrPhotos from "./sections/qr-photos";
+import { AudioController } from "./sections/music";
 
 const Lottie = dynamic(() => import("react-lottie"), {
   ssr: false,
@@ -125,6 +126,7 @@ export default function Home() {
             <GiftsTable />
             <Assistants />
             <QrPhotos />
+            <AudioController />
           </div>
         </div>
       </div>

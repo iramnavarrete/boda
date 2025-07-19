@@ -1,37 +1,29 @@
 import PauseIcon from "@/icons/pause-icon";
 import PlayIcon from "@/icons/play-icon";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import useMusicStore from "@/stores/musicStore";
+import React, { useEffect, useRef } from "react";
 
-type Props = {
-  isSealVisible: boolean;
-};
-
-function Music({ isSealVisible }: Props) {
-  const [isPlaying, setIsPlaying] = useState(false);
+export function AudioController() {
   const audioRef = useRef<HTMLAudioElement>(null);
-
-  const toggleAudio = useCallback((isPlaying: boolean) => {
-    if (isPlaying) {
-      audioRef.current?.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current?.play();
-      setIsPlaying(true);
-    }
-  }, []);
+  const setAudioRef = useMusicStore((s) => s.setAudioRef);
 
   useEffect(() => {
-    if (!isSealVisible) {
-      setTimeout(() => {
-        toggleAudio(isPlaying);
-      }, 5);
+    if (audioRef.current) {
+      setAudioRef(audioRef.current);
     }
-  }, [isSealVisible, toggleAudio]);
+  }, [setAudioRef]); // Solo se llama una vez
+
+  return <audio ref={audioRef} loop src="/music.mp3" />;
+}
+
+
+function Music() {
+  const { isPlaying, toggleAudio } = useMusicStore();
 
   return (
     <div className="flex bg-accent p-4 rounded-full drop-shadow-[0px_2px_2px_rgba(0,0,0,0.25)]">
       <div className="flex flex-row gap-4 w-full">
-        <div onClick={() => toggleAudio(isPlaying)}>
+        <div onClick={() => toggleAudio()}>
           {isPlaying ? (
             <PauseIcon className="w-7 h-7 text-primary" />
           ) : (
@@ -39,7 +31,6 @@ function Music({ isSealVisible }: Props) {
           )}
         </div>
       </div>
-      <audio ref={audioRef} loop src="/music.mp3" />
     </div>
   );
 }
