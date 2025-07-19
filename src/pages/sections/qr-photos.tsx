@@ -29,7 +29,7 @@ const QrPhotos: FC = () => {
                 width={0}
                 height={0}
                 sizes="100vw"
-                src={`/img/qr.png`}
+                src={`/img/qr-album.png`}
               />
             </div>
             <p>O sólo haz click en este botón</p>
