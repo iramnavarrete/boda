@@ -20,6 +20,7 @@
     "formik": "^2.4.6",
     "framer-motion": "^11.3.4",
     "googleapis": "^152.0.0",
+    "lottie-react": "^2.4.1",
     "next": "14.2.5",
     "photoswipe": "^5.4.4",
     "qs": "^6.13.0",

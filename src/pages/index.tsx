@@ -15,6 +15,7 @@ import dynamic from "next/dynamic";
 import GiftsTable from "./sections/gifts-table";
 import QrPhotos from "./sections/qr-photos";
 import { AudioController } from "./sections/music";
+import Footer from "./sections/footer";
 
 const Lottie = dynamic(() => import("react-lottie"), {
   ssr: false,
@@ -85,6 +86,7 @@ export default function Home() {
             scale: 1,
           }}
           onClick={() => {
+            window.scrollTo({top: 0})
             setIsSealVisible(false); // Ocultamos el sello
             setTimeout(() => {
               setIsLottiePaused(false) // Iniciamos la animación de la carta luego de 400ms
@@ -126,6 +128,7 @@ export default function Home() {
             <GiftsTable />
             <Assistants />
             <QrPhotos />
+            <Footer />
             <AudioController />
           </div>
         </div>
