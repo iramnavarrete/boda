@@ -128,7 +128,7 @@ export default function Cover({ isSealVisible }: Props) {
           </motion.div>
           <div
             ref={triggerRef}
-            className="h-[25px] w-full absolute bottom-9 z-[500]"
+            className="h-[25px] w-full absolute bottom-9"
           />
           <motion.div
             variants={animateCoverVariants}

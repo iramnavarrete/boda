@@ -21,9 +21,12 @@ function Music() {
   const { isPlaying, toggleAudio } = useMusicStore();
 
   return (
-    <div className="flex bg-accent p-4 rounded-full drop-shadow-[0px_2px_2px_rgba(0,0,0,0.25)]">
+    <div
+      className="flex bg-accent p-4 rounded-full drop-shadow-[0px_2px_2px_rgba(0,0,0,0.25)]"
+      onClick={() => toggleAudio()}
+    >
       <div className="flex flex-row gap-4 w-full">
-        <div onClick={() => toggleAudio()}>
+        <div>
           {isPlaying ? (
             <PauseIcon className="w-7 h-7 text-primary" />
           ) : (
