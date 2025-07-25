@@ -112,13 +112,13 @@ export default function Cover({ isSealVisible }: Props) {
               <div className="relative px-3">
                 <div className="flex flex-1 justify-center items-center flex-col gap-3 pt-14 relative">
                   <FlowersCoverUp className="w-[80%]" />
-                  <p className="font-nourdLight text-white text-xl">
+                  <p className="font-nourdLight text-white text-lg">
                     NUESTRA BODA
                   </p>
-                  <p className="font-newIconScript text-white text-4xl drop-shadow-[4px_2px_0_rgba(0,0,0,0.25)]">
-                    Josué & Yaneth
+                  <p className="font-newIconScript text-white text-4xl drop-shadow-[2px_2px_1px_rgba(0,0,0,0.95)]">
+                    Yaneth <span className="text-2xl">&</span> Josué
                   </p>
-                  <p className="font-nourdLight text-white text-xl">
+                  <p className="font-nourdLight text-white text-lg">
                     25 / OCT / 2025
                   </p>
                   <FlowersCoverDown className="w-[80%]" />
@@ -126,10 +126,7 @@ export default function Cover({ isSealVisible }: Props) {
               </div>
             </div>
           </motion.div>
-          <div
-            ref={triggerRef}
-            className="h-[25px] w-full absolute bottom-9"
-          />
+          <div ref={triggerRef} className="h-[25px] w-full absolute bottom-9" />
           <motion.div
             variants={animateCoverVariants}
             animate={isSealVisible ? "none" : "showMusic"}

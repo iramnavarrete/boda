@@ -23,27 +23,27 @@ export default function ParentsGodFathers() {
             />
           </div>
           <div>
-            <div className="font-nourdLight text-lg mt-5">
-              <ElegantText delay={0.63} text="Novio" duration={0.2} />
+            <div className="font-nourdLight text-lg">
+              <ElegantText delay={0.63} text="Novia" duration={0.2} />
             </div>
             <div className="font-nourdMedium text-xl">
-              <ElegantText delay={0.73} text="Juan Navarrete" duration={0.2} />
+              <ElegantText delay={0.73} text="Margarita Hernández" duration={0.2} />
             </div>
-            <div className="font-nourdMedium text-xl">
-              <ElegantText delay={0.73} text="Ana Caraveo" duration={0.2} />
+            <div className="font-nourdMedium text-xl mb-5">
+              <ElegantText delay={0.73} text="Miguel González" duration={0.2} />
             </div>
           </div>
           <div>
-            <div className="font-nourdLight text-lg">
-              <ElegantText delay={1.04} text="Novia" duration={0.2} />
+            <div className="font-nourdLight text-lg mt-5">
+              <ElegantText delay={1.04} text="Novio" duration={0.2} />
             </div>
             <div className="font-nourdMedium text-xl">
-              <ElegantText delay={1.16} text="Miguel González" duration={0.2} />
+              <ElegantText delay={1.16} text="Ana Caraveo" duration={0.2} />
             </div>
-            <div className="font-nourdMedium text-xl mb-5">
+            <div className="font-nourdMedium text-xl">
               <ElegantText
                 delay={1.16}
-                text="Margarita Hernández"
+                text="Juan Navarrete"
                 duration={0.2}
               />
             </div>
