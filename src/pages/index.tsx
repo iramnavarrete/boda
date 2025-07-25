@@ -65,7 +65,13 @@ const defaultOptions = {
 export default function Home() {
   const [isSealVisible, setIsSealVisible] = useState(true);
   const [envolpeDivHidden, setEnvolpeDivHidden] = useState(false);
-  const [isLottiePaused, setIsLottiePaused] = useState(true)
+  const [isLottiePaused, setIsLottiePaused] = useState(true);
+  const [isLottieLoaded, setIsLottieLoaded] = useState(false);
+  const [overlayHidden, setOverlayHidden] = useState(false);
+
+  const handleLottieComplete = () => {
+    setIsLottieLoaded(true);
+  };
 
   return (
     <main
@@ -75,10 +81,30 @@ export default function Home() {
         className="fixed w-full h-full overflow-hidden z-50"
         style={envolpeDivHidden ? { display: "none" } : {}}
       >
+        {/* Overlay que se desvanece cuando el Lottie carga */}
+        <motion.div
+          className="absolute inset-0 bg-accent z-[51]"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: isLottieLoaded ? 0 : 1 }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+          style={{ display: overlayHidden ? 'none' : 'block' }}
+          onAnimationComplete={() => {
+            if (isLottieLoaded) {
+              setOverlayHidden(true);
+            }
+          }}
+        />
+        
         <Lottie
           options={defaultOptions}
           isClickToPauseDisabled
           isPaused={isLottiePaused}
+          eventListeners={[
+            {
+              eventName: 'DOMLoaded',
+              callback: handleLottieComplete,
+            },
+          ]}
         />
         <motion.div
           variants={variants}
@@ -97,7 +123,7 @@ export default function Home() {
             }, 2400);
           }}
           animate={isSealVisible ? "loop" : "hidden"}
-          className="absolute top-[calc(50%-65px)] left-[calc(30%-65px)] cursor-pointer"
+          className="absolute top-[calc(50%-65px)] left-[calc(30%-65px)] cursor-pointer z-20"
           transition={{
             duration: 1,
             repeat: isSealVisible ? Infinity : 0,
