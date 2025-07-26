@@ -10,6 +10,7 @@ const animateCoverVariants = {
   none: { opacity: 0, y: 40 },
   show: {
     opacity: 1,
+    y: 0,
     transition: {
       type: "spring",
       stiffness: 300,
@@ -26,7 +27,7 @@ const animateCoverVariants = {
       stiffness: 300,
       damping: 24,
       duration: 1,
-      delay: 2,
+      delay: 1.8,
     },
   },
 };
@@ -60,7 +61,8 @@ export default function Cover({ isSealVisible }: Props) {
   const [arrowsScope, animateArrows] = useAnimate();
   const { toggleAudio } = useMusicStore();
   const triggerRef = useRef(null);
-  const isInView = useInView(triggerRef); // top visible
+  const isInView =
+    useInView(triggerRef); // top visible
 
   useEffect(() => {
     if (!isSealVisible) {
@@ -76,7 +78,7 @@ export default function Cover({ isSealVisible }: Props) {
         await animateArrows(
           arrowsScope.current,
           { opacity: 1, y: 0 },
-          { delay: 2.2 }
+          { delay: 2 }
         );
         animateArrows(
           arrowsScope.current,
@@ -104,26 +106,12 @@ export default function Cover({ isSealVisible }: Props) {
             variants={animateCoverVariants}
             animate={isSealVisible ? "none" : "show"}
             viewport={{ once: true, amount: "some" }}
-            initial={{ opacity: 0}}
+            initial={{ opacity: 0, y: 40 }}
           >
             <div className="h-[calc(100vh-50px)] w-full flex flex-col drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)] relative">
               <div className="relative px-3">
                 <div className="flex flex-1 justify-center items-center flex-col gap-3 pt-14 relative">
-                  <motion.div
-                    className="w-[80%]"
-                    initial={{ x: -20, opacity: 0 }}
-                    animate={{
-                      x: isSealVisible ? -20 : 0,
-                      opacity: isSealVisible ? 0 : 1,
-                    }}
-                    transition={{
-                      duration: 0.6,
-                      delay: 1.6,
-                      ease: "easeInOut",
-                    }}
-                  >
-                    <FlowersCoverUp className="w-full" />
-                  </motion.div>
+                  <FlowersCoverUp className="w-[80%]" />
                   <p className="font-nourdLight text-white text-lg">
                     NUESTRA BODA
                   </p>
@@ -133,39 +121,25 @@ export default function Cover({ isSealVisible }: Props) {
                   <p className="font-nourdLight text-white text-lg">
                     25 / OCT / 2025
                   </p>
-                  <motion.div
-                    className="w-[80%]"
-                    initial={{ x: 20, opacity: 0 }}
-                    animate={{
-                      x: isSealVisible ? 20 : 0,
-                      opacity: isSealVisible ? 0 : 1,
-                    }}
-                    transition={{
-                      duration: 0.6,
-                      delay: 1.6,
-                      ease: "easeInOut",
-                    }}
-                  >
-                  <FlowersCoverDown className="w-full" />
-                  </motion.div>
+                  <FlowersCoverDown className="w-[80%]" />
                 </div>
               </div>
             </div>
           </motion.div>
-          <div ref={triggerRef} className="h-[25px] w-full absolute bottom-9" />
+          <div ref={triggerRef} className="h-[60px] w-full absolute bottom-11" />
           <motion.div
             variants={animateCoverVariants}
             animate={isSealVisible ? "none" : "showMusic"}
             viewport={{ once: true, amount: "some" }}
             initial={{ opacity: 0, y: 40 }}
-            className="absolute bottom-6 right-5"
+            className="absolute bottom-11 right-5"
           >
             <Music />
           </motion.div>
           <motion.div
             ref={arrowsScope}
             initial={{ opacity: 0, y: 40 }}
-            className="absolute bottom-9 left-[calc(50%-16px)]"
+            className="absolute bottom-11 left-[calc(50%-16px)]"
           >
             <ArrowsIcon className="w-8 h-8 drop-shadow-[2px_4px_2px_rgba(0,0,0,0.25)]" />
           </motion.div>
