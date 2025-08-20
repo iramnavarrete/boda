@@ -3,7 +3,7 @@ import Quote from "./sections/quote";
 import ParentsGodFathers from "./sections/parents";
 import CountDown from "./sections/countdown";
 import CeremonyToast from "./sections/ceremony-toast";
-import 'photoswipe/dist/photoswipe.css'; // Estilos base de PhotoSwipe
+import "photoswipe/dist/photoswipe.css"; // Estilos base de PhotoSwipe
 import Gallery from "./sections/gallery";
 import Assistants from "./sections/Assistants";
 import { motion } from "framer-motion";
@@ -16,12 +16,12 @@ import GiftsTable from "./sections/gifts-table";
 import QrPhotos from "./sections/qr-photos";
 import { AudioController } from "./sections/music";
 import Footer from "./sections/footer";
+import FlowersCoverUp from "@/icons/flowers-cover-up";
+import FlowersCoverDown from "@/icons/flowers-cover-down";
 
 const Lottie = dynamic(() => import("react-lottie"), {
   ssr: false,
-  loading: () => (
-    <div className="w-screen h-screen bg-accent fixed z-50" />
-  ),
+  loading: () => <div className="w-screen h-screen bg-accent fixed z-50" />,
 });
 
 const newIconScript = localFont({
@@ -87,21 +87,21 @@ export default function Home() {
           initial={{ opacity: 1 }}
           animate={{ opacity: isLottieLoaded ? 0 : 1 }}
           transition={{ duration: 0.5, ease: "easeInOut" }}
-          style={{ display: overlayHidden ? 'none' : 'block' }}
+          style={{ display: overlayHidden ? "none" : "block" }}
           onAnimationComplete={() => {
             if (isLottieLoaded) {
               setOverlayHidden(true);
             }
           }}
         />
-        
+
         <Lottie
           options={defaultOptions}
           isClickToPauseDisabled
           isPaused={isLottiePaused}
           eventListeners={[
             {
-              eventName: 'DOMLoaded',
+              eventName: "DOMLoaded",
               callback: handleLottieComplete,
             },
           ]}
@@ -112,10 +112,10 @@ export default function Home() {
             scale: 1,
           }}
           onClick={() => {
-            window.scrollTo({top: 0})
+            window.scrollTo({ top: 0 });
             setIsSealVisible(false); // Ocultamos el sello
             setTimeout(() => {
-              setIsLottiePaused(false) // Iniciamos la animación de la carta luego de 400ms
+              setIsLottiePaused(false); // Iniciamos la animación de la carta luego de 400ms
             }, 400);
             document.body.classList.remove("overflow-hidden");
             setTimeout(() => {
@@ -144,7 +144,14 @@ export default function Home() {
 
       <div style={{ overflow: "hidden" }}>
         <div className="flex flex-col items-center bg-accent overflow-hidden">
-          <div className="max-w-[500px] relative min-[500px]:border-x-1 border-primary overflow-hidden">
+          <div className="hidden sm:block fixed left-0 top-0 bottom-0 w-[calc(50%-250px)] 2xl:w-[calc(50%-300px)] opacity-60 place-content-center text-center">
+            <FlowersCoverUp className="w-full text-primary drop-shadow-none hidden 2xl:block" />
+            <p className="flex items-center justify-center font-newIconScript text-primary text-4xl 2xl:text-4xl -rotate-90 2xl:-rotate-0 2xl:py-12">
+              Yaneth <span className="text-2xl 2xl:text-2xl px-2">&</span> Josué
+            </p>
+            <FlowersCoverDown className="w-full drop-shadow-none text-primary hidden 2xl:block" />
+          </div>
+          <div className="max-w-[500px] 2xl:max-w-[600px] relative min-[500px]:border-x-1 border-primary overflow-hidden">
             <Cover isSealVisible={isLottiePaused} />
             <Quote />
             <ParentsGodFathers />
@@ -156,6 +163,13 @@ export default function Home() {
             <QrPhotos />
             <Footer />
             <AudioController />
+          </div>
+          <div className="hidden sm:block fixed right-0 top-0 bottom-0 w-[calc(50%-250px)] 2xl:w-[calc(50%-300px)] opacity-60 place-content-center text-center">
+            <FlowersCoverUp className="w-full text-primary drop-shadow-none hidden 2xl:block scale-x-[-1]" />
+            <p className="flex gap-2 items-center justify-center font-newIconScript text-primary text-4xl 2xl:text-4xl rotate-90 2xl:rotate-0 2xl:py-12">
+              20 <span>/</span> 10 <span>/</span> 25
+            </p>
+            <FlowersCoverDown className="w-full drop-shadow-none text-primary hidden 2xl:block scale-x-[-1]" />
           </div>
         </div>
       </div>

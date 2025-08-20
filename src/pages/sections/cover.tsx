@@ -122,7 +122,7 @@ export default function Cover({ isSealVisible }: Props) {
                       ease: "easeInOut",
                     }}
                   >
-                    <FlowersCoverUp className="w-full" />
+                    <FlowersCoverUp className="w-full text-white drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]" />
                   </motion.div>
                   <p className="font-nourdLight text-white text-lg">
                     NUESTRA BODA
@@ -146,7 +146,7 @@ export default function Cover({ isSealVisible }: Props) {
                       ease: "easeInOut",
                     }}
                   >
-                    <FlowersCoverDown className="w-full" />
+                    <FlowersCoverDown className="w-full text-white drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]" />
                   </motion.div>
                 </div>
               </div>
@@ -179,7 +179,7 @@ export default function Cover({ isSealVisible }: Props) {
         animate={isInView || isSealVisible ? "none" : "showMusic"}
         viewport={{ once: true, amount: "some" }}
         initial={{ opacity: 0, y: 40 }}
-        className="fixed top-5 right-5 z-[51]"
+        className="fixed top-5 right-5 min-[500px]:right-[calc(50%-230px)] 2xl:right-[calc(50%-280px)] z-[51]"
       >
         <Music />
       </motion.div>

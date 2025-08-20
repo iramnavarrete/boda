@@ -25,6 +25,12 @@ body {
   }
 }
 
+@media (min-width: 96rem) {
+  .bg_fixed .overlay {
+    max-width: 600px;
+  }
+}
+
 @supports (-webkit-clip-path: polygon(0 0, 0 10%, 10% 10%)) or
   (clip-path: polygon(0 0, 0 10%, 10% 10%)) {
   .bg_fixed {

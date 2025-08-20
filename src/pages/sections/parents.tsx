@@ -11,7 +11,7 @@ const finalDate = new Date("2025-10-25T21:00:00");
 export default function ParentsGodFathers() {
   return (
     <article className="bg-accent border-t-1 drop border-primary flex flex-col items-center justify-center relative pt-20">
-      <FlowersBackground1 className="w-full h-[85%] absolute top-0" />
+      <FlowersBackground1 className="w-full h-[85%] 2xl:h-full absolute top-0" />
       <div className="mx-10 text-center text-sm text-cool-gray z-10">
         <Separator className="w-full" />
         <div className="flex flex-col gap-5 my-8">
