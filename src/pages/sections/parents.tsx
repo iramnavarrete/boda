@@ -14,7 +14,7 @@ export default function ParentsGodFathers() {
       <FlowersBackground1 className="w-full h-[85%] 2xl:h-full absolute top-0" />
       <div className="mx-10 text-center text-sm text-cool-gray z-10">
         <Separator className="w-full" />
-        <div className="flex flex-col gap-5 my-8">
+        <div className="flex flex-col gap-2 my-12">
           <div className="font-newIconScript text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]">
             <ElegantText
               delay={0}
@@ -22,19 +22,19 @@ export default function ParentsGodFathers() {
               duration={0.2}
             />
           </div>
-          <div>
+          <div className="mt-12">
             <div className="font-nourdLight text-lg">
               <ElegantText delay={0.63} text="Novia" duration={0.2} />
             </div>
             <div className="font-nourdMedium text-xl">
               <ElegantText delay={0.73} text="Margarita Hernández" duration={0.2} />
             </div>
-            <div className="font-nourdMedium text-xl mb-5">
+            <div className="font-nourdMedium text-xl">
               <ElegantText delay={0.73} text="Miguel González" duration={0.2} />
             </div>
           </div>
-          <div>
-            <div className="font-nourdLight text-lg mt-5">
+          <div className="mb-12 mt-5">
+            <div className="font-nourdLight text-lg">
               <ElegantText delay={1.04} text="Novio" duration={0.2} />
             </div>
             <div className="font-nourdMedium text-xl">
