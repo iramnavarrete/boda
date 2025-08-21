@@ -122,7 +122,7 @@ export default function CeremonyToast() {
       <div className="w-full relative text-medium bg-accent">
         <div className="px-5 relative">
           <FlowersBackground2 className="absolute h-[70%] 2xl:h-[95%] w-full left-0 top-12 z-0" />
-          <div className="px-8 py-20 flex flex-col gap-16 z-50 relative">
+          <div className="px-8 py-20 flex flex-col gap-16 relative">
             <CardEvent
               IconComponent={() => (
                 <ChurchIcon className="w-[70px] h-[70px] animated-church" />

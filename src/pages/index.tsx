@@ -7,8 +7,9 @@ import "photoswipe/dist/photoswipe.css"; // Estilos base de PhotoSwipe
 import Gallery from "./sections/gallery";
 import Assistants from "./sections/Assistants";
 import { motion } from "framer-motion";
-import animationData from "../../public/lottie/envolpe.json";
-import { useState } from "react";
+import mobile from "../../public/lottie/envolpe.json";
+import desktop from "../../public/lottie/envolpeDesktop.json";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import localFont from "next/font/local";
 import dynamic from "next/dynamic";
@@ -52,13 +53,23 @@ const variants = {
   loop: { scale: 1.15 },
 };
 
-const defaultOptions = {
+const mobileAnimation = {
   loop: false,
-  animationData,
+  animationData: mobile,
   autoplay: false,
   rendererSettings: {
     preserveAspectRatio: "xMidYMid slice",
-    className: "cursor-default",
+    className: "cursor-default z-[51]",
+  },
+};
+
+const desktopAnimation = {
+  loop: false,
+  animationData: desktop,
+  autoplay: false,
+  rendererSettings: {
+    preserveAspectRatio: "xMidYMid slice",
+    className: "cursor-default z-[51]",
   },
 };
 
@@ -68,6 +79,19 @@ export default function Home() {
   const [isLottiePaused, setIsLottiePaused] = useState(true);
   const [isLottieLoaded, setIsLottieLoaded] = useState(false);
   const [overlayHidden, setOverlayHidden] = useState(false);
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 1280);
+    };
+
+    handleResize(); // ejecutar al inicio
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const handleLottieComplete = () => {
     setIsLottieLoaded(true);
@@ -94,9 +118,8 @@ export default function Home() {
             }
           }}
         />
-
         <Lottie
-          options={defaultOptions}
+          options={isMobile ? mobileAnimation : desktopAnimation }
           isClickToPauseDisabled
           isPaused={isLottiePaused}
           eventListeners={[
@@ -123,7 +146,7 @@ export default function Home() {
             }, 2400);
           }}
           animate={isSealVisible ? "loop" : "hidden"}
-          className="absolute top-[calc(50%-65px)] left-[calc(30%-65px)] cursor-pointer z-20"
+          className="absolute top-[calc(50%-65px)] left-[calc(30%-65px)] xl:top-[calc(70%-65px)] xl:left-[calc(50%-65px)] cursor-pointer z-20"
           transition={{
             duration: 1,
             repeat: isSealVisible ? Infinity : 0,
