@@ -27,7 +27,10 @@ export const updateGuestData = async ({
     },
     body: JSON.stringify({
       id,
-      data,
+      data: {
+        ...data,
+        confirmados: data.asistencia ? data.confirmados : "",
+      },
     }),
   });
   if (!res.ok) {
