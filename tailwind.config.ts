@@ -26,7 +26,7 @@ const config: Config = {
       },
       backgroundImage: {
         main: 'url("/img/principal.jpg")',
-        countdown: 'url("/img/conteo.jpg")',
+        countdown: 'url("/img/countdown.webp")',
       },
     },
   },
