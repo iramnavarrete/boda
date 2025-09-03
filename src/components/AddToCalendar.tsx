@@ -20,7 +20,7 @@ export default function AddToCalendar() {
   const abrirCalendario = () => {
     const titulo = "Boda de Josué & Yaneth";
     const descripcion =
-      "La boda más esperada del 2025. Mapa: https://maps.app.goo.gl/dgtiBetWv66uCrRi6";
+      "La boda más esperada del 2025\n\nCeremonia: https://maps.app.goo.gl/6tZo4PFqmskX2nsa8\n\nRecepción: https://maps.app.goo.gl/dgtiBetWv66uCrRi6\n\n";
     const ubicacion = "Salón de eventos Hacienda Real, Chihuahua, México";
 
     const fechaInicioUTC = "20251026T030000Z"; // 25 oct 2025, 9:00 PM CDT
