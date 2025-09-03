@@ -40,7 +40,7 @@ const GiftsTable: FC = () => {
               </motion.div>
               <a
                 className="border-border-button border-1 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary"
-                href="https://www.amazon.com.mx"
+                href="https://www.amazon.com.mx/wedding/registry/305VURTI12M1T"
                 target="_blank"
                 rel="noopener noreferrer"
               >
