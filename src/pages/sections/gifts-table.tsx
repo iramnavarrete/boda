@@ -77,7 +77,7 @@ const GiftsTable: FC = () => {
                       <p className="font-nourdBold">Banco:</p>
                       <p>BBVA</p>
                       <p className="font-nourdBold">Numero tarjeta: </p>
-                      <p>5741 4600 5879 5461</p>
+                      <p>4152 3139 4438 3681</p>
                       <p className="font-nourdBold">Beneficiario: </p>
                       <p>Iram Navarrete</p>
                     </div>
