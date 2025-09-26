@@ -159,6 +159,7 @@ export default function Home() {
             alt="Sello de carta"
             className="sello w-full h-auto"
             width={0}
+            priority
             height={0}
             sizes="100vw"
             src={`/img/sello.png`}
