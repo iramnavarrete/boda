@@ -19,6 +19,7 @@ import { AudioController } from "./sections/music";
 import Footer from "./sections/footer";
 import FlowersCoverUp from "@/icons/flowers-cover-up";
 import FlowersCoverDown from "@/icons/flowers-cover-down";
+import { brideName, groomName } from "@/constants/constants";
 
 const Lottie = dynamic(() => import("react-lottie"), {
   ssr: false,
@@ -170,7 +171,7 @@ export default function Home() {
           <div className="hidden sm:block fixed left-0 top-0 bottom-0 w-[calc(50%-250px)] 2xl:w-[calc(50%-300px)] opacity-60 place-content-center text-center">
             <FlowersCoverUp className="w-full text-primary drop-shadow-none hidden 2xl:block" />
             <p className="flex items-center justify-center font-newIconScript text-primary text-4xl 2xl:text-4xl -rotate-90 2xl:-rotate-0 2xl:py-12">
-              Yaneth <span className="text-2xl 2xl:text-2xl px-2">&</span> Josué
+              {brideName} <span className="text-2xl 2xl:text-2xl px-2">&</span> {groomName}
             </p>
             <FlowersCoverDown className="w-full drop-shadow-none text-primary hidden 2xl:block" />
           </div>

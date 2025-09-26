@@ -1,3 +1,4 @@
+import { brideName, groomName } from "@/constants/constants";
 import { useEffect, useState } from "react";
 
 export default function AddToCalendar() {
@@ -18,7 +19,7 @@ export default function AddToCalendar() {
   }, []);
 
   const abrirCalendario = () => {
-    const titulo = "Boda de Josué & Yaneth";
+    const titulo = `Boda de ${groomName} & ${brideName}`;
     const descripcion =
       "La boda más esperada del 2025\n\nCeremonia: https://maps.app.goo.gl/6tZo4PFqmskX2nsa8\n\nRecepción: https://maps.app.goo.gl/dgtiBetWv66uCrRi6\n\n";
     const ubicacion = "Salón de eventos Hacienda Real, Chihuahua, México";
@@ -65,7 +66,7 @@ END:VCALENDAR`.trim();
       });
       const enlace = document.createElement("a");
       enlace.href = URL.createObjectURL(blob);
-      enlace.download = "boda-josue-yaneth.ics";
+      enlace.download = `boda.ics`;
       enlace.click();
     }
   };

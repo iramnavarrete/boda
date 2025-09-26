@@ -1,10 +1,9 @@
-import FlowersCoverDown from "@/icons/flowers-cover-down";
-import FlowersCoverUp from "@/icons/flowers-cover-up";
-import { AnimatePresence, motion, useAnimate, useInView } from "framer-motion";
+import { motion, useAnimate, useInView } from "framer-motion";
 import Music from "./music";
 import { useEffect, useRef, useState } from "react";
 import ArrowsIcon from "@/icons/arrows-icon";
 import useMusicStore from "@/stores/musicStore";
+import { brideName, groomName } from "@/constants/constants";
 
 const animateCoverVariants = {
   none: { opacity: 0, y: 40 },
@@ -143,7 +142,7 @@ export default function Cover({ isSealVisible }: Props) {
               <div className="relative pr-6">
                 <div className="flex flex-1 justify-end items-end flex-col pt-14 relative">
                   <p className="font-newIconScript text-white text-4xl drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]">
-                    Yaneth <span className="text-2xl">&</span> Josué
+                    {brideName} <span className="text-2xl">&</span> {groomName}
                   </p>
                   <p className="font-nourdLight text-white text-lg mt-2">
                     NUESTRA BODA

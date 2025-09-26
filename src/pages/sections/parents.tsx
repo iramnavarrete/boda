@@ -1,12 +1,11 @@
 import AnimatedEntrance from "@/components/AnimatedEntrance";
 import CountdownTimer from "@/components/CountDownTimer";
 import ElegantText from "@/components/ElegantText";
+import { weddingDate } from "@/constants/constants";
 import BeigeWaves from "@/icons/beige-waves";
 import FlowersBackground1 from "@/icons/flowers-background-1";
 import Separator from "@/icons/separator";
 import React from "react";
-
-const finalDate = new Date("2025-10-25T21:00:00");
 
 export default function ParentsGodFathers() {
   return (
@@ -58,7 +57,7 @@ export default function ParentsGodFathers() {
         </div>
         <Separator className="w-full" />
         <AnimatedEntrance>
-          <CountdownTimer targetDate={finalDate} />
+          <CountdownTimer targetDate={weddingDate} />
         </AnimatedEntrance>
 
         <BeigeWaves className="w-full absolute h-12 left-0 bottom-[-40px]" />

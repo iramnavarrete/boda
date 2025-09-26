@@ -1,3 +1,4 @@
+import { brideName, groomName } from "@/constants/constants";
 import type { Metadata } from "next";
 import { Html, Head, Main, NextScript } from "next/document";
 
@@ -7,12 +8,12 @@ export default function Document() {
       <Head>
         <meta
           name="description"
-          content="Te invitamos celebrar la unión de Josué & Yaneth"
+          content={`Te invitamos celebrar la unión de ${groomName} & ${brideName}`}
         />
         <link rel="canonical" href="https://bodajy.info" />
         <meta property="og:locale" content="es_MX" />
         <meta property="og:type" content="article" />
-        <meta property="og:title" content="Invitación Boda Josué & Yaneth" />
+        <meta property="og:title" content={`Invitación Boda ${groomName} & ${brideName}`} />
         <meta
           property="og:description"
           content="Te invitamos a celebrar nuestra unión en este maravilloso día"
