@@ -12,6 +12,7 @@ export type SheetData = {
   confirmados: string;
   asistencia: string;
   mensaje: string;
+  cambiosPermitidos: string;
 };
 
 export type FormObjectKeys = keyof FormObject;

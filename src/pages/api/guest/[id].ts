@@ -4,7 +4,7 @@ import { getSheetsClient } from "../../../utils/google-sheets"; // Asegúrate de
 import { SheetData } from "../../../../types/types";
 
 const SPREADSHEET_ID = "1ENf4a0DShyG7tPu1NPPwRXGxvCylxIBK5qi-RpO0mwE"; // Tu ID de la hoja de cálculo
-const RANGE = "invitacion!A:F"; // Rango donde buscar el UID y la información
+const RANGE = "invitacion!A:G"; // Rango donde buscar el UID y la información
 
 export default async function handler(
   req: NextApiRequest,
