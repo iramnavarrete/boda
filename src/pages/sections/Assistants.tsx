@@ -236,7 +236,7 @@ function Assistants() {
                                 <div className="flex flex-col items-start w-full gap-2">
                                   <Input
                                     name="confirmados"
-                                    title="Personas confirmadas"
+                                    title="Número de personas confirmadas"
                                     inputType="number"
                                   />
                                   <Input
