@@ -306,3 +306,9 @@
 // }
 
 // export default Assistants;
+
+function Assistants() {
+  return <></>;
+}
+
+export default Assistants;

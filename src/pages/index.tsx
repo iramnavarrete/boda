@@ -5,7 +5,7 @@ import CountDown from "./sections/countdown";
 import CeremonyToast from "./sections/ceremony-toast";
 import "photoswipe/dist/photoswipe.css"; // Estilos base de PhotoSwipe
 import Gallery from "./sections/gallery";
-// import Assistants from "./sections/Assistants";
+import Assistants from "./sections/Assistants";
 import { motion } from "framer-motion";
 import mobile from "../../public/lottie/envolpe.json";
 import desktop from "../../public/lottie/envolpeDesktop.json";
@@ -186,7 +186,7 @@ export default function Home() {
             <CeremonyToast />
             <Gallery />
             <GiftsTable />
-            {/* <Assistants /> */}
+            <Assistants />
             <QrPhotos />
             <Footer />
             <AudioController />
