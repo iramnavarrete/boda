@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { brideName, groomName } from "@/constants/constants";
+import { brideName, groomName, weddingDateFormatted } from "@/constants/constants";
 
 const QrPhotos: FC = () => {
   return (
@@ -57,8 +57,12 @@ const QrPhotos: FC = () => {
           viewport={{ once: true, amount: "some" }}
           className="flex flex-col justify-center items-center mt-12 gap-2 text-accent"
         >
-          <p className="font-nourdLight text-md">25 / OCT / 2025</p>
-          <p className="font-newIconScript text-2xl">{brideName} <span className="text-sm">&</span> {groomName}</p>
+          <p className="font-nourdLight text-md">
+            {weddingDateFormatted}
+          </p>
+          <p className="font-newIconScript text-2xl">
+            {brideName} <span className="text-sm">&</span> {groomName}
+          </p>
           <p className="font-nourdLight text-md">¡Te esperamos!</p>
         </motion.div>
       </AnimatePresence>

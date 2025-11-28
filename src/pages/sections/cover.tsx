@@ -3,7 +3,7 @@ import Music from "./music";
 import { useEffect, useRef, useState } from "react";
 import ArrowsIcon from "@/icons/arrows-icon";
 import useMusicStore from "@/stores/musicStore";
-import { brideName, groomName } from "@/constants/constants";
+import { brideName, groomName, weddingDateFormatted } from "@/constants/constants";
 
 const animateCoverVariants = {
   none: { opacity: 0, y: 40 },
@@ -148,7 +148,7 @@ export default function Cover({ isSealVisible }: Props) {
                     NUESTRA BODA
                   </p>
                   <p className="font-nourdLight text-white text-md mt-1">
-                    25 / OCT / 2025
+                    {weddingDateFormatted}
                   </p>
                 </div>
               </div>
