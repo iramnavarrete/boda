@@ -88,6 +88,8 @@ export default function Home() {
       setIsMobile(window.innerWidth <= 1280);
     };
 
+    document.body.classList.add("overflow-hidden");
+
     handleResize(); // ejecutar al inicio
     window.addEventListener("resize", handleResize);
 

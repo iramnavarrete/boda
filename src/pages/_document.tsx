@@ -31,7 +31,7 @@ export default function Document() {
         <meta name="twitter:label1" content="Tiempo de lectura" />
         <meta name="twitter:data1" content="3 minutos" />
       </Head>
-      <body className="overflow-hidden">
+      <body>
         <Main />
         <NextScript />
       </body>
