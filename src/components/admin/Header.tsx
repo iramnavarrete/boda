@@ -1,26 +1,28 @@
 import React from "react";
 import { LogOut, BrainCircuit } from "lucide-react";
 import { DashboardStats } from "../../../types/types";
+import Image from "next/image";
 interface HeaderProps {
   stats: DashboardStats;
   guestCount: number;
   onLogout: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({
-  stats,
-  guestCount,
-  onLogout
-}) => (
+const Header: React.FC<HeaderProps> = ({ stats, guestCount, onLogout }) => (
   <header className="bg-white border-b border-stone-200 sticky top-0 z-10">
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div className="flex justify-between items-center h-16">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-yellow-600 rounded-full flex items-center justify-center text-white font-serif font-bold">
-            J&Y
-          </div>
-          <h1 className="text-xl font-serif font-semibold hidden sm:block">
-            Panel de Boda
+          <Image
+            alt="Sello de carta"
+            width={60}
+            height={60}
+            priority
+            sizes="100vw"
+            src={`/img/sello.png`}
+          />
+          <h1 className="text-xl font-serif font-semibold">
+            Panel de boda
           </h1>
         </div>
 
