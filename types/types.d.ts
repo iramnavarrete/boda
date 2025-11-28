@@ -3,11 +3,12 @@ import { Timestamp, FieldValue } from "firebase/firestore";
 export type GuestFormData = {
   id?: string; // Opcional al registrar
   nombre: string;
+  invitados: number;
   asistencia: boolean | null;
   confirmados: number | null;
   mensaje: string | null;
   telefono: string | null;
-  invitados: number;
+  comentarios: string | null;
   cambiosPermitidos: boolean;
 };
 
@@ -17,8 +18,9 @@ export type Guest = {
   invitados: number;
   asistencia: boolean | null;
   confirmados: number | null;
-  telefono: string | null;
   mensaje: string | null;
+  telefono: string | null;
+  comentarios: string | null;
   cambiosPermitidos: boolean;
   createdAt: Timestamp | FieldValue | null;
   updatedAt: Timestamp | FieldValue | null;

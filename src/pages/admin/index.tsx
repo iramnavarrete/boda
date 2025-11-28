@@ -30,6 +30,7 @@ const defaultGuest = {
   confirmados: null,
   mensaje: null,
   cambiosPermitidos: true,
+  comentarios: null
 };
 
 export default function WeddingAdminPanel() {
@@ -182,13 +183,7 @@ export default function WeddingAdminPanel() {
     if (guest) {
       setCurrentGuestId(guest.id);
       setFormData({
-        id: guest.id,
-        asistencia: guest.asistencia,
-        nombre: guest.nombre,
-        telefono: guest.telefono,
-        invitados: guest.invitados,
-        confirmados: guest.confirmados,
-        mensaje: guest.mensaje,
+        ...guest,
         cambiosPermitidos: !!guest.cambiosPermitidos,
       });
     } else {
