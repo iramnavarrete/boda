@@ -6,7 +6,7 @@ import assistanceSchema from "@/validation/yupSchema";
 import { Formik, FormikProps } from "formik";
 import { useCallback, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { FormObject, SheetData } from "../../../types/types";
+import { GuestFormData, Guest } from "../../../types/types";
 import Separator from "@/icons/separator";
 import Image from "next/image";
 import { useEffect } from "react";
@@ -15,14 +15,19 @@ import dynamic from "next/dynamic";
 import animationData from "../../lottie/heart_green.json";
 import { useSearchParams } from "next/navigation";
 
-const defaultGuest: SheetData = {
-  asistencia: "TRUE",
-  confirmados: "1",
+//TODO Actualizar los datos para que coincidan bien con los modelos
+
+const defaultGuest: Guest = {
+  asistencia: true,
+  confirmados: 1,
   id: "_",
   mensaje: "Felicidades",
+  telefono: null,
   nombre: "Invitado genérico",
-  pases: "1",
-  cambiosPermitidos: "TRUE",
+  invitados: 1,
+  cambiosPermitidos: true,
+  createdAt: null,
+  updatedAt: null
 };
 
 const Lottie = dynamic(() => import("react-lottie"), {
@@ -42,9 +47,9 @@ function Assistants() {
   const [isDisabled, setIsDisabled] = useState(false);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [isAssistant, setIsAssistant] = useState(false);
-  const [guestData, setGuestData] = useState<SheetData>(defaultGuest);
+  const [guestData, setGuestData] = useState<Guest>(defaultGuest);
 
-  const formikRef = useRef<FormikProps<FormObject>>(null);
+  const formikRef = useRef<FormikProps<GuestFormData>>(null);
 
   const searchParams = useSearchParams();
   const id = searchParams.get("guest");
@@ -183,8 +188,8 @@ function Assistants() {
                               {guestData.nombre}
                             </p>
                             <p className="text-sm">
-                              Pase para {guestData.pases}{" "}
-                              {guestData.pases === "1" ? "persona" : "personas"}
+                              Pase para {guestData.invitados}{" "}
+                              {guestData.invitados === "1" ? "persona" : "personas"}
                             </p>
                             <p className="py-6 text-lg font-nourdMedium">
                               ¡NO NIÑOS!
@@ -193,9 +198,9 @@ function Assistants() {
                             <Formik
                               innerRef={formikRef}
                               validationSchema={assistanceSchema(
-                                Number(guestData.pases)
+                                Number(guestData.invitados)
                               )}
-                              onSubmit={(data: FormObject) => {
+                              onSubmit={(data: GuestFormData) => {
                                 setIsDisabled(true);
                                 // Si tenemos un id válido de un invitado hacemos una petición al api para actualizar
                                 // De lo contrario solo se usará el objeto local
