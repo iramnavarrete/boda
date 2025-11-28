@@ -1,14 +1,14 @@
 // pages/api/guest/[uid].js
 import { NextApiRequest, NextApiResponse } from "next";
 import { getSheetsClient } from "../../../utils/google-sheets"; // Asegúrate de la ruta correcta
-import { SheetData } from "../../../../types/types";
+import { Guest } from "../../../../types/types";
 
 const SPREADSHEET_ID = "1ENf4a0DShyG7tPu1NPPwRXGxvCylxIBK5qi-RpO0mwE"; // Tu ID de la hoja de cálculo
 const RANGE = "invitacion!A:G"; // Rango donde buscar el UID y la información
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<SheetData | { message: string }>
+  res: NextApiResponse<Guest | { message: string }>
 ) {
   if (req.method === "GET") {
     const { id } = req.query;
@@ -47,7 +47,7 @@ export default async function handler(
         headers.forEach((header: string, index: number) => {
           guestData[header] = guestRow[index] || "";
         });
-        return res.status(200).json(guestData as SheetData);
+        return res.status(200).json(guestData as Guest);
       } else {
         return res.status(404).json({ message: "Invitado no encontrado." });
       }
