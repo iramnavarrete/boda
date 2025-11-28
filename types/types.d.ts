@@ -1,21 +1,30 @@
-export type FormObject = {
-  id: string;
-  asistencia: boolean | string;
-  confirmados: string;
-  mensaje: string;
+import { Timestamp, FieldValue } from "firebase/firestore";
+
+export type GuestFormData = {
+  id?: string; // Opcional al registrar
+  nombre: string;
+  asistencia: boolean | null;
+  confirmados: number | null;
+  mensaje: string | null;
+  telefono: string | null;
+  invitados: number;
+  cambiosPermitidos: boolean;
 };
 
-export type SheetData = {
+export type Guest = {
   id: string;
   nombre: string;
-  pases: string;
-  confirmados: string;
-  asistencia: string;
-  mensaje: string;
-  cambiosPermitidos: string;
+  invitados: number;
+  asistencia: boolean | null;
+  confirmados: number | null;
+  telefono: string | null;
+  mensaje: string | null;
+  cambiosPermitidos: boolean;
+  createdAt: Timestamp | FieldValue | null;
+  updatedAt: Timestamp | FieldValue | null;
 };
 
-export type FormObjectKeys = keyof FormObject;
+export type GuestFormDataKeys = keyof GuestFormData;
 
 export interface GalleryImage {
   src: string; // Ruta de la imagen de alta resolución para PhotoSwipe
@@ -24,4 +33,10 @@ export interface GalleryImage {
   width: number; // Ancho de la imagen de alta resolución
   height: number; // Alto de la imagen de alta resolución
   thumb: string; // Ruta de la miniatura/imagen para React-Slick
+}
+
+export interface DashboardStats {
+  total: number;
+  confirmed: number;
+  count: number;
 }
