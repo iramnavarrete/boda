@@ -186,7 +186,7 @@ export default function Home() {
             <CeremonyToast />
             <Gallery />
             <GiftsTable />
-            <Assistants />
+            {/* <Assistants /> */}
             <QrPhotos />
             <Footer />
             <AudioController />
