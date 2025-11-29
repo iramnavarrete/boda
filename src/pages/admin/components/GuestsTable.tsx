@@ -5,6 +5,8 @@ import {
   MessageCircle,
   Phone,
   Trash2,
+  Unlock,
+  Lock,
 } from "lucide-react";
 import { Guest } from "../../../../types/types";
 
@@ -54,6 +56,9 @@ export default function GuestsTable({
               Invitado
             </th>
             <th className="px-6 py-3 text-center text-xs font-medium text-stone-500 uppercase">
+              Edición
+            </th>
+            <th className="px-6 py-3 text-center text-xs font-medium text-stone-500 uppercase">
               Cupos
             </th>
             <th className="px-6 py-3 text-center text-xs font-medium text-stone-500 uppercase">
@@ -92,6 +97,15 @@ export default function GuestsTable({
                 <div className="font-medium text-stone-900">{g.nombre}</div>
                 <div className="text-xs text-stone-500 font-mono">
                   ID: {g.id}
+                </div>
+              </td>
+              <td className="px-6 py-4 text-left">
+                <div className="text-xs text-stone-400 flex justify-center">
+                  {g.cambiosPermitidos ? (
+                    <Unlock size={16} className="text-green-600" />
+                  ) : (
+                    <Lock size={16} className="text-red-600" />
+                  )}
                 </div>
               </td>
               <td className="px-6 py-4 text-center font-bold">
