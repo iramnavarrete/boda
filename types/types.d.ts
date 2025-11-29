@@ -22,8 +22,8 @@ export type Guest = {
   telefono: string | null;
   comentarios: string | null;
   cambiosPermitidos: boolean;
-  createdAt: Timestamp | FieldValue | null;
-  updatedAt: Timestamp | FieldValue | null;
+  fechaCreacion: Timestamp | FieldValue | null;
+  ultimaModificacion: Timestamp | FieldValue | null;
 };
 
 export type GuestFormDataKeys = keyof GuestFormData;

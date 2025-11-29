@@ -24,8 +24,9 @@ export const GuestService = {
       // Ordenamiento en cliente para no requerir índices complejos
       callback(
         data.sort(
-          // @ts-ignore (createdAt puede ser FieldValue en escritura, pero Timestamp en lectura)
-          (a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)
+          (a, b) =>
+            // @ts-ignore (createdAt puede ser FieldValue en escritura, pero Timestamp en lectura)
+            (b.fechaCreacion?.seconds || 0) - (a.fechaCreacion?.seconds || 0)
         )
       );
     });
@@ -64,9 +65,9 @@ export const GuestService = {
     const payload: Partial<Guest> = {
       ...data,
       id: guestId,
-      updatedAt: serverTimestamp(),
+      ultimaModificacion: serverTimestamp(),
     };
-    if (isNew) payload.createdAt = serverTimestamp();
+    if (isNew) payload.fechaCreacion = serverTimestamp();
 
     await setDoc(
       doc(db, "invitations", invitationId, "guests", guestId),
