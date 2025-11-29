@@ -5,6 +5,7 @@ import { AuthService } from "@/services/authService";
 import { GuestService } from "@/services/guestService";
 import {
   CheckSquare,
+  FileSpreadsheet,
   Edit2,
   Heart,
   LayoutList,
@@ -15,12 +16,14 @@ import {
   Square,
   Trash2,
   Users,
+  Phone,
 } from "lucide-react";
 import Header from "@/components/admin/Header";
 import BulkActionsBar from "@/components/admin/BulkActionsProps";
 import GuestFormModal from "@/components/admin/GuestFormModal";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import { useToast } from "@/components/Toast";
+import { exportGuestsToExcel } from "@/services/excelService";
 
 const defaultGuest = {
   nombre: "",
@@ -30,7 +33,7 @@ const defaultGuest = {
   confirmados: null,
   mensaje: null,
   cambiosPermitidos: true,
-  comentarios: null
+  comentarios: null,
 };
 
 export default function WeddingAdminPanel() {
@@ -47,7 +50,7 @@ export default function WeddingAdminPanel() {
   const [currentGuestId, setCurrentGuestId] = useState<string | null>(null);
   const [formData, setFormData] = useState<GuestFormData>({ ...defaultGuest });
 
-  const {toast} = useToast();
+  const { toast } = useToast();
 
   // --- NUEVO: Estado para el Modal de Confirmación ---
   const [confirmModal, setConfirmModal] = useState({
@@ -162,8 +165,7 @@ export default function WeddingAdminPanel() {
     e.preventDefault();
     try {
       if (!user) return;
-      const guestId =
-        currentGuestId || (await GuestService.getUniqueGuestId());
+      const guestId = currentGuestId || (await GuestService.getUniqueGuestId());
       await GuestService.saveGuest(guestId, formData, !currentGuestId);
       toast(
         currentGuestId
@@ -188,13 +190,13 @@ export default function WeddingAdminPanel() {
       });
     } else {
       setCurrentGuestId(null);
-      setFormData({...defaultGuest});
+      setFormData({ ...defaultGuest });
     }
     setIsModalOpen(true);
   };
 
   const sendWhatsApp = (guest: Guest) => {
-    if (!guest.telefono) return; // TODO AGREGAR TOAST
+    if (!guest.telefono) return;
     const link = `https://bodajy.info/invitacion/${guest.id}`;
     const msg = `¡Hola ${guest.nombre.split(" ")[0]}! ${
       guest.mensaje || ""
@@ -289,6 +291,21 @@ export default function WeddingAdminPanel() {
               />
             </div>
             <div className="flex gap-2 w-full sm:w-auto">
+              <button
+                onClick={async () => {
+                  try {
+                    toast("Exportando a excel...", "info");
+                    await exportGuestsToExcel(guests);
+                  } catch (e) {
+                    console.error(e);
+                    toast("Ocurrió un error al descargar excel", "error");
+                  }
+                }}
+                className="hidden sm:flex items-center justify-center gap-2 bg-white text-stone-700 border border-stone-200 px-4 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors shadow-sm"
+                title="Exportar a Excel"
+              >
+                <FileSpreadsheet size={18} className="text-green-600" />
+              </button>
               <div className="hidden sm:flex bg-white rounded-lg border border-stone-200 p-1">
                 <button
                   onClick={() => setViewMode("list")}
@@ -332,12 +349,12 @@ export default function WeddingAdminPanel() {
             <div
               className={`hidden ${
                 viewMode === "table" ? "md:block" : ""
-              } bg-white shadow-sm rounded-xl border border-stone-200`}
+              } bg-white shadow-sm rounded-xl border border-stone-200 overflow-hidden`}
             >
               <table className="min-w-full divide-y divide-stone-200">
                 <thead className="bg-stone-50">
                   <tr>
-                    <th className="px-6 py-3 text-left">
+                    <th className="px-6 py-3 text-left flex">
                       <button
                         onClick={() => handleSelectAll(filteredGuests)}
                         className="text-stone-400 hover:text-stone-600"
@@ -416,21 +433,30 @@ export default function WeddingAdminPanel() {
                       </td>
                       <td className="px-6 py-4 text-center">
                         <div className="flex justify-center gap-2">
-                          <button
-                            onClick={() => sendWhatsApp(g)}
-                            className="text-green-600"
-                          >
-                            <MessageCircle size={18} />
-                          </button>
+                          {g.telefono && g.telefono !== "" && (
+                            <button
+                              title="Enviar Whatsapp"
+                              onClick={() => sendWhatsApp(g)}
+                              className="text-green-600 flex justify-center items-center relative"
+                            >
+                              <MessageCircle size={18} />
+                              <Phone
+                                size={9}
+                                className="absolute top-[5px] left-[4px] z-10"
+                              />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleOpenModal(g)}
                             className="text-yellow-600"
+                            title="Editar"
                           >
                             <Edit2 size={18} />
                           </button>
                           <button
                             onClick={() => handleDeleteGuest(g.id)}
                             className="text-red-400"
+                            title="Eliminar"
                           >
                             <Trash2 size={18} />
                           </button>
@@ -505,21 +531,30 @@ export default function WeddingAdminPanel() {
                       {g.cambiosPermitidos ? "Editable" : "Bloqueado"}
                     </div>
                     <div className="flex gap-2">
-                      <button
-                        onClick={() => sendWhatsApp(g)}
-                        className="bg-green-50 text-green-600 p-2 rounded-lg"
-                      >
-                        <MessageCircle size={18} />
-                      </button>
+                      {g.telefono && g.telefono !== "" && (
+                        <button
+                          title="Enviar Whatsapp"
+                          onClick={() => sendWhatsApp(g)}
+                          className="bg-green-50 text-green-600 p-2 rounded-lg flex justify-center items-center relative"
+                        >
+                          <MessageCircle size={18} />
+                          <Phone
+                            size={9}
+                            className="absolute top-[13px] left-[12px] z-10"
+                          />
+                        </button>
+                      )}
                       <button
                         onClick={() => handleOpenModal(g)}
                         className="bg-stone-50 text-stone-600 p-2 rounded-lg"
+                        title="Editar"
                       >
                         <Edit2 size={18} />
                       </button>
                       <button
                         onClick={() => handleDeleteGuest(g.id)}
                         className="bg-red-50 text-red-500 p-2 rounded-lg"
+                        title="Eliminar"
                       >
                         <Trash2 size={18} />
                       </button>
