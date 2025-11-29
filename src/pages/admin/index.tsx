@@ -80,6 +80,23 @@ export default function WeddingAdminPanel() {
     });
   };
 
+  const handleBulkDelete = () => {
+    if (!user || selectedGuests.size === 0) return;
+    openConfirmModal({
+      isOpen: true,
+      title: "Eliminar Múltiples Invitados",
+      message: `¿Estás seguro de que deseas eliminar permanentemente a los ${selectedGuests.size} invitados seleccionados? Esta acción no se puede deshacer.`,
+      isDanger: true, // Esto pondrá el botón del modal en ROJO
+      action: async () => {
+        // Llamamos al servicio nuevo
+        await GuestService.batchDeleteGuests(
+          Array.from(selectedGuests)
+        );
+        clearSelection()
+      },
+    });
+  };
+
   const handleDeleteGuest = (guest: Guest) => {
     if (!user) return;
 
@@ -143,6 +160,7 @@ export default function WeddingAdminPanel() {
           <BulkActionsBar
             count={selectedGuests.size}
             onUpdateLock={handleBulkUpdateLock}
+            onDelete={handleBulkDelete}
             onCancel={clearSelection}
           />
         ) : (

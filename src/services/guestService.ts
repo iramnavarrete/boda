@@ -91,4 +91,13 @@ export const GuestService = {
     });
     await batch.commit();
   },
+  batchDeleteGuests: async (guestIds: string[]) => {
+    const batch = writeBatch(db);
+    guestIds.forEach((id) => {
+      // Asegúrate de usar la misma ruta que en saveGuest/subscribe
+      const docRef = doc(db, "invitations", invitationId, "guests", id);
+      batch.delete(docRef);
+    });
+    await batch.commit();
+  },
 };
