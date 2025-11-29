@@ -10,7 +10,7 @@ const BulkActionsBar: React.FC<BulkActionsProps> = ({
   onUpdateLock,
   onCancel,
 }) => (
-  <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex flex-col sm:flex-row justify-between items-center gap-4 animate-in fade-in slide-in-from-top-4 shadow-sm">
+  <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-xl p-2 flex flex-col sm:flex-row justify-between items-center gap-4 animate-in fade-in slide-in-from-top-4 shadow-sm">
     <div className="flex items-center gap-3">
       <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-bold text-sm">
         {count} seleccionados
