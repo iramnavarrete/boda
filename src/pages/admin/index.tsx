@@ -146,7 +146,8 @@ export default function WeddingAdminPanel() {
   const handleBulkUpdateLock = (shouldLock: boolean) => {
     if (!user || selectedGuests.size === 0) return;
 
-    // Configurar el modal
+    const actionWord = shouldLock ? "Bloquear" : "Permitir";
+
     setConfirmModal({
       isOpen: true,
       title: shouldLock ? "Bloquear Edición" : "Permitir Edición",
