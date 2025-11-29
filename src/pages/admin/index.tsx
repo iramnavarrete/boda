@@ -1,5 +1,5 @@
 import { User } from "firebase/auth";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DashboardStats, Guest, GuestFormData } from "../../../types/types";
 import { AuthService } from "@/services/authService";
 import { GuestService } from "@/services/guestService";
@@ -17,6 +17,12 @@ import {
   Trash2,
   Users,
   Phone,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Download,
+  ChevronDown,
+  Filter,
 } from "lucide-react";
 import Header from "@/components/admin/Header";
 import BulkActionsBar from "@/components/admin/BulkActionsProps";
@@ -36,14 +42,23 @@ const defaultGuest = {
   comentarios: null,
 };
 
+
+// Tipo para el estado del filtro
+type FilterType = 'all' | 'confirmed' | 'pending' | 'rejected';
+
 export default function WeddingAdminPanel() {
   // --- STATE ---
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [guests, setGuests] = useState<Guest[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "table">("list");
   const [selectedGuests, setSelectedGuests] = useState<Set<string>>(new Set());
+
+  // Filtros y Búsqueda
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState<FilterType>("all");
+  const [isFilterOpen, setIsFilterOpen] = useState(false); // Estado para el dropdown
+  const filterRef = useRef<HTMLDivElement>(null); // Ref para click outside
 
   // Estado del Modal de Formulario
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -79,6 +94,20 @@ export default function WeddingAdminPanel() {
     );
     return () => unsubscribe();
   }, [user]);
+
+  // Click Outside para cerrar el filtro
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        filterRef.current &&
+        !filterRef.current.contains(event.target as Node)
+      ) {
+        setIsFilterOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // --- HANDLERS ---
 
@@ -225,15 +254,34 @@ export default function WeddingAdminPanel() {
     [guests]
   );
 
-  const filteredGuests = useMemo(
-    () =>
-      guests.filter(
-        (g) =>
-          g.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          g.id.toLowerCase().includes(searchTerm.toLowerCase())
-      ),
-    [guests, searchTerm]
-  );
+  const filteredGuests = useMemo(() => {
+    return guests.filter((g) => {
+      const matchesSearch =
+        g.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (g.telefono && g.telefono.includes(searchTerm));
+      let matchesFilter = true;
+      if (filterStatus === "confirmed") matchesFilter = g.asistencia === true;
+      else if (filterStatus === "rejected")
+        matchesFilter = g.asistencia === false;
+      else if (filterStatus === "pending")
+        matchesFilter = g.asistencia === null || g.asistencia === undefined;
+      return matchesSearch && matchesFilter;
+    });
+  }, [guests, searchTerm, filterStatus]);
+
+  const filterCounts = useMemo(() => {
+    return guests.reduce(
+      (acc, curr) => ({
+        all: acc.all + 1,
+        confirmed: acc.confirmed + (curr.asistencia === true ? 1 : 0),
+        rejected: acc.rejected + (curr.asistencia === false ? 1 : 0),
+        pending:
+          acc.pending +
+          (curr.asistencia === null || curr.asistencia === undefined ? 1 : 0),
+      }),
+      { all: 0, confirmed: 0, rejected: 0, pending: 0 }
+    );
+  }, [guests]);
 
   // --- RENDER ---
   if (loading)
@@ -262,6 +310,33 @@ export default function WeddingAdminPanel() {
       </div>
     );
 
+  // Label del filtro actual para el botón
+  const getFilterLabel = () => {
+    switch (filterStatus) {
+      case "confirmed":
+        return "Confirmados";
+      case "pending":
+        return "Pendientes";
+      case "rejected":
+        return "Rechazados";
+      default:
+        return "Todos";
+    }
+  };
+
+  const getFilterColor = () => {
+    switch (filterStatus) {
+      case "confirmed":
+        return "text-green-700 bg-green-50 border-green-200";
+      case "pending":
+        return "text-yellow-700 bg-yellow-50 border-yellow-200";
+      case "rejected":
+        return "text-red-700 bg-red-50 border-red-200";
+      default:
+        return "text-stone-700 bg-white border-stone-200";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans pb-20">
       <Header
@@ -279,58 +354,176 @@ export default function WeddingAdminPanel() {
             onCancel={() => setSelectedGuests(new Set())}
           />
         ) : (
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <div className="relative w-full sm:w-96">
-              <Search className="absolute left-3 top-2.5 h-5 w-5 text-stone-400" />
-              <input
-                type="text"
-                placeholder="Buscar..."
-                className="pl-10 pr-3 py-2 w-full border border-stone-200 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 mb-6">
+            {/* GRUPO IZQUIERDO: Búsqueda + Filtro */}
+            <div className="flex flex-1 gap-2">
+              {/* Búsqueda */}
+              <div className="relative flex-1">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
+                  <Search size={18} />
+                </div>
+                <input
+                  className="w-full pl-10 pr-3 py-2.5 bg-white border border-stone-200 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-sm"
+                  placeholder="Buscar invitados..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+
+              {/* FILTRO COMPACTO (Dropdown) */}
+              <div className="relative" ref={filterRef}>
+                <button
+                  onClick={() => setIsFilterOpen(!isFilterOpen)}
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors whitespace-nowrap ${getFilterColor()}`}
+                >
+                  <Filter size={16} />
+                  <span className="hidden sm:inline">{getFilterLabel()}</span>
+                  <span className="inline sm:hidden">Filtro</span>
+                  <span className="bg-black/10 px-1.5 rounded-full text-xs">
+                    {filterStatus === "all"
+                      ? filterCounts.all
+                      : filterStatus === "confirmed"
+                      ? filterCounts.confirmed
+                      : filterStatus === "pending"
+                      ? filterCounts.pending
+                      : filterCounts.rejected}
+                  </span>
+                  <ChevronDown
+                    size={14}
+                    className={`transition-transform duration-200 ${
+                      isFilterOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* Menú Desplegable */}
+                {isFilterOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-stone-100 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+                    <div className="p-1 space-y-0.5">
+                      <button
+                        onClick={() => {
+                          setFilterStatus("all");
+                          setIsFilterOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm ${
+                          filterStatus === "all"
+                            ? "bg-stone-100 font-medium"
+                            : "hover:bg-stone-50"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <LayoutList size={14} /> Todos
+                        </span>
+                        <span className="text-stone-400 text-xs">
+                          {filterCounts.all}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setFilterStatus("confirmed");
+                          setIsFilterOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-green-700 ${
+                          filterStatus === "confirmed"
+                            ? "bg-green-50 font-medium"
+                            : "hover:bg-green-50/50"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <CheckCircle2 size={14} /> Confirmados
+                        </span>
+                        <span className="text-green-600/70 text-xs">
+                          {filterCounts.confirmed}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setFilterStatus("pending");
+                          setIsFilterOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-yellow-700 ${
+                          filterStatus === "pending"
+                            ? "bg-yellow-50 font-medium"
+                            : "hover:bg-yellow-50/50"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <Clock size={14} /> Pendientes
+                        </span>
+                        <span className="text-yellow-600/70 text-xs">
+                          {filterCounts.pending}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setFilterStatus("rejected");
+                          setIsFilterOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-red-700 ${
+                          filterStatus === "rejected"
+                            ? "bg-red-50 font-medium"
+                            : "hover:bg-red-50/50"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <XCircle size={14} /> Rechazados
+                        </span>
+                        <span className="text-red-600/70 text-xs">
+                          {filterCounts.rejected}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
+
+            {/* GRUPO DERECHO: Acciones */}
+            <div className="flex gap-2 shrink-0">
+              {/* Excel (Solo Desktop) */}
               <button
                 onClick={async () => {
                   try {
-                    toast("Exportando a excel...", "info");
                     await exportGuestsToExcel(guests);
+                    toast("Descarga iniciada", "success");
                   } catch (e) {
-                    console.error(e);
-                    toast("Ocurrió un error al descargar excel", "error");
+                    toast("Error", "error");
                   }
                 }}
-                className="hidden sm:flex items-center justify-center gap-2 bg-white text-stone-700 border border-stone-200 px-4 py-2 rounded-lg hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors shadow-sm"
-                title="Exportar a Excel"
+                className="hidden sm:flex items-center justify-center p-2.5 bg-white text-stone-600 border border-stone-200 rounded-lg hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+                title="Exportar Excel"
               >
-                <FileSpreadsheet size={18} className="text-green-600" />
+                <Download size={20} />
               </button>
+
+              {/* Toggle Vista (Solo Desktop) */}
               <div className="hidden sm:flex bg-white rounded-lg border border-stone-200 p-1">
                 <button
                   onClick={() => setViewMode("list")}
-                  className={`p-2 rounded ${
+                  className={`p-1.5 rounded ${
                     viewMode === "list"
-                      ? "bg-stone-100 text-stone-900"
-                      : "text-stone-400"
+                      ? "bg-stone-100 text-stone-900 shadow-sm"
+                      : "text-stone-400 hover:text-stone-600"
                   }`}
                 >
-                  <Smartphone size={20} />
+                  <Smartphone size={18} />
                 </button>
                 <button
                   onClick={() => setViewMode("table")}
-                  className={`p-2 rounded ${
+                  className={`p-1.5 rounded ${
                     viewMode === "table"
-                      ? "bg-stone-100 text-stone-900"
-                      : "text-stone-400"
+                      ? "bg-stone-100 text-stone-900 shadow-sm"
+                      : "text-stone-400 hover:text-stone-600"
                   }`}
                 >
-                  <LayoutList size={20} />
+                  <LayoutList size={18} />
                 </button>
               </div>
+
+              {/* Nuevo Invitado */}
               <button
                 onClick={() => handleOpenModal()}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-4 py-2 rounded-lg transition-colors shadow-lg"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-4 py-2.5 rounded-lg transition-colors shadow-lg shadow-stone-900/20 text-sm font-medium"
               >
                 <Plus size={18} /> <span>Nuevo</span>
               </button>
