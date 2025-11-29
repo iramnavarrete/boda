@@ -54,13 +54,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      {/* MODAL CARD:
-        - max-h-[90vh]: Límite de altura.
-        - flex flex-col: Estructura vertical.
-        - overflow-hidden: CRUCIAL para que las esquinas redondeadas recorten el contenido scrolleable.
-      */}
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-200">
-        {/* HEADER (Fijo, no scrollea) */}
         <div className="px-6 py-4 border-b border-stone-200 flex justify-between items-center bg-stone-50 shrink-0 z-10">
           <h2 className="text-lg font-bold text-stone-800">
             {isEdit ? "Editar Invitado" : "Nuevo Invitado"}
@@ -73,20 +67,10 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
             <XCircle size={24} />
           </button>
         </div>
-
-        {/* FORMULARIO ESTRUCTURAL
-           - flex-1: Toma todo el espacio disponible en la tarjeta.
-           - overflow-hidden: Evita que el form en sí mismo tenga scrollbars, delegándolo al div hijo.
-           - min-h-0: Truco de Flexbox para permitir que los hijos scrolleen dentro de un flex container.
-        */}
         <form
           onSubmit={onSubmit}
           className="flex flex-col flex-1 overflow-hidden min-h-0"
         >
-          {/* ÁREA DE SCROLL (Inputs)
-             - overflow-y-auto: Aquí es donde aparece el scroll.
-             - p-6: Padding interno.
-          */}
           <div className="flex-1 overflow-y-auto p-6 space-y-5">
             {/* Campo: Asistencia (Tri-estado) */}
             <div className="bg-stone-50 p-3 rounded-xl border border-stone-100">
@@ -151,7 +135,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-stone-700 mb-1">
-                  Nombre Completo*
+                  Nombre(s) de invitado(s)*
                 </label>
                 <input
                   required
