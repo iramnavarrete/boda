@@ -150,16 +150,14 @@ export default function WeddingAdminPanel() {
 
     setConfirmModal({
       isOpen: true,
-      title: shouldLock ? "Bloquear Edición" : "Permitir Edición",
-      message: `Estás a punto de ${
-        shouldLock ? "bloquear" : "desbloquear"
-      } la edición para ${
-        selectedGuests.size
-      } invitados seleccionados. ¿Deseas continuar?`,
-      isDanger: false, // No es peligroso, es reversible
+      title: `${actionWord} Edición`,
+      // El mensaje ahora explica explícitamente qué significa "Cerrar" o "Abrir"
+      message: shouldLock
+        ? `¿Deseas bloquear la edición para ${selectedGuests.size} invitados? Ya no podrán modificar sus datos ni confirmación.`
+        : `¿Deseas permitir la edición para ${selectedGuests.size} invitados? Podrán volver a entrar y modificar su confirmación.`,
+      isDanger: false,
       isLoading: false,
       action: async () => {
-        // La lógica real se mueve aquí dentro
         await GuestService.batchUpdateLock(
           Array.from(selectedGuests),
           shouldLock
@@ -170,14 +168,16 @@ export default function WeddingAdminPanel() {
   };
 
   // --- MODIFICADO: Solo prepara el modal ---
-  const handleDeleteGuest = (id: string) => {
+  const handleDeleteGuest = (guest: Guest) => {
     if (!user) return;
+
+    const {id, nombre} = guest;
 
     setConfirmModal({
       isOpen: true,
-      title: "Eliminar Invitado",
+      title: `Eliminar ${nombre}`,
       message:
-        "Esta acción es permanente y no se puede deshacer. ¿Estás seguro de que quieres eliminar a este invitado?",
+        "Esta acción es permanente y no se puede deshacer. ¿Estás seguro de que quieres eliminar este registro?",
       isDanger: true, // Rojo para eliminar
       isLoading: false,
       action: async () => {
@@ -648,7 +648,7 @@ export default function WeddingAdminPanel() {
                             <Edit2 size={18} />
                           </button>
                           <button
-                            onClick={() => handleDeleteGuest(g.id)}
+                            onClick={() => handleDeleteGuest(g)}
                             className="text-red-400"
                             title="Eliminar"
                           >
@@ -746,7 +746,7 @@ export default function WeddingAdminPanel() {
                         <Edit2 size={18} />
                       </button>
                       <button
-                        onClick={() => handleDeleteGuest(g.id)}
+                        onClick={() => handleDeleteGuest(g)}
                         className="bg-red-50 text-red-500 p-2 rounded-lg"
                         title="Eliminar"
                       >
