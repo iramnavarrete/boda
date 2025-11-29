@@ -24,13 +24,13 @@ const BulkActionsBar: React.FC<BulkActionsProps> = ({
         onClick={() => onUpdateLock(true)}
         className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50 hover:text-red-600 hover:border-red-200 transition-all text-sm font-medium"
       >
-        <Lock size={16} /> Bloquear
+        <Lock size={16} /> Bloquear edición
       </button>
       <button
         onClick={() => onUpdateLock(false)}
         className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-stone-200 text-stone-700 rounded-lg hover:bg-stone-50 hover:text-green-600 hover:border-green-200 transition-all text-sm font-medium"
       >
-        <Unlock size={16} /> Permitir
+        <Unlock size={16} /> Permitir edición
       </button>
       <button
         onClick={onCancel}
