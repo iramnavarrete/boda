@@ -5,6 +5,8 @@ import {
   MessageCircle,
   Phone,
   Trash2,
+  Unlock,
+  Lock,
 } from "lucide-react";
 import { Guest } from "../../../../types/types";
 
@@ -80,13 +82,31 @@ export default function GuestsCards({
                 <p className="text-xs text-stone-500 font-mono">ID: {g.id}</p>
               </div>
             </div>
-            <div className="text-xs font-bold bg-stone-100 px-2 py-1 rounded">
+            <p
+              className={`text-xs font-bold p-1 rounded ${
+                g.asistencia === null
+                  ? "text-yellow-600 bg-yellow-100"
+                  : g.asistencia === true
+                  ? "text-green-600 bg-green-100"
+                  : "text-red-600 bg-red-100"
+              }`}
+            >
               {g.asistencia === true ? g.confirmados : 0}/{g.invitados}
-            </div>
+            </p>
           </div>
           <div className="flex justify-between items-center pt-4 border-t border-stone-100">
-            <div className="text-xs text-stone-400">
-              {g.cambiosPermitidos ? "Editable" : "Bloqueado"}
+            <div className="text-xs text-stone-400 flex gap-2 font-medium">
+              {g.cambiosPermitidos ? (
+                <>
+                  <Unlock size={16} className="text-green-600" />
+                  <span>Edición</span>
+                </>
+              ) : (
+                <>
+                  <Lock size={16} className="text-red-600" />
+                  <span>Edición</span>
+                </>
+              )}
             </div>
             <div className="flex gap-2">
               {g.telefono && g.telefono !== "" && (
