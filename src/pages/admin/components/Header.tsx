@@ -1,6 +1,6 @@
 import React from "react";
 import { LogOut, BrainCircuit } from "lucide-react";
-import { DashboardStats } from "../../../types/types";
+import { DashboardStats } from "../../../../types/types";
 import Image from "next/image";
 interface HeaderProps {
   stats: DashboardStats;

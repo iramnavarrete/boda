@@ -3,9 +3,9 @@ import { Heart } from "lucide-react";
 import { Guest } from "../../../types/types";
 import { AuthService } from "@/services/authService";
 import { GuestService } from "@/services/guestService";
-import Header from "@/components/admin/Header";
-import BulkActionsBar from "@/components/admin/BulkActionsProps";
-import GuestFormModal from "@/components/admin/GuestFormModal";
+import Header from "@/pages/admin/components/Header";
+import BulkActionsBar from "@/pages/admin/components/BulkActionsProps";
+import GuestFormModal from "@/pages/admin/components/GuestFormModal";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import SearchAndFilterBar from "./components/SearchAndFilterBar";
 import GuestsListView from "./components/GuestsListView";
@@ -97,6 +97,7 @@ export default function WeddingAdminPanel() {
     });
   };
 
+  // TODO MOVER ESTO A AL HOOK DE ACTIONS
   const handleDeleteGuest = (guest: Guest) => {
     if (!user) return;
 
@@ -113,6 +114,28 @@ export default function WeddingAdminPanel() {
         if (selectedGuests.has(id)) {
           removeFromSelection(id);
         }
+      },
+    });
+  };
+
+  const handleLockToggle = (guest: Guest) => {
+    if (!user) return;
+
+    const { nombre } = guest;
+
+    const title = `Deseas ${guest.cambiosPermitidos ? 'bloquear' : 'permitir'} edición a "${nombre}"`;
+
+    const message = guest.cambiosPermitidos
+        ? `Al hacer esto el invitado NO podrá modificar su mensaje de felicitación ni confirmar cantidad de invitados.`
+        : `Esta acción le permitirá al invitado realizar cambios en su mensaje de felicitación o cambiar la cantidad de confirmados.`
+      
+    openConfirmModal({
+      isOpen: true,
+      title,
+      message,
+      isDanger: false,
+      action: async () => {
+        await GuestService.toggleGuestLock(guest);
       },
     });
   };
@@ -155,7 +178,7 @@ export default function WeddingAdminPanel() {
         onLogout={AuthService.logout}
       />
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {selectedGuests.size > 0 ? (
           <BulkActionsBar
             count={selectedGuests.size}
@@ -186,6 +209,7 @@ export default function WeddingAdminPanel() {
           onEdit={handleOpenModal}
           onDelete={handleDeleteGuest}
           onSendWhatsApp={sendWhatsApp}
+          onLockToggle={handleLockToggle}
         />
       </section>
 

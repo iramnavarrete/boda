@@ -91,6 +91,21 @@ export const GuestService = {
     });
     await batch.commit();
   },
+
+  toggleGuestLock: async (guest: Guest) => {
+    const payload: Partial<Guest> = {
+      ...guest,
+      id: guest.id,
+      ultimaModificacion: serverTimestamp(),
+      cambiosPermitidos: !guest.cambiosPermitidos,
+    };
+    await setDoc(
+      doc(db, "invitations", invitationId, "guests", guest.id),
+      payload,
+      { merge: true }
+    );
+  },
+
   batchDeleteGuests: async (guestIds: string[]) => {
     const batch = writeBatch(db);
     guestIds.forEach((id) => {

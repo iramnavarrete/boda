@@ -12,6 +12,7 @@ interface GuestsListViewProps {
   onEdit: (guest: Guest) => void;
   onDelete: (guest: Guest) => void;
   onSendWhatsApp: (guest: Guest) => void;
+  onLockToggle: (guest: Guest) => void;
 }
 
 export default function GuestsListView({
@@ -23,6 +24,7 @@ export default function GuestsListView({
   onEdit,
   onDelete,
   onSendWhatsApp,
+  onLockToggle
 }: GuestsListViewProps) {
   if (filteredGuests.length === 0) {
     return (
@@ -44,6 +46,7 @@ export default function GuestsListView({
         onEdit={onEdit}
         onDelete={onDelete}
         onSendWhatsApp={onSendWhatsApp}
+        onLockToggle={onLockToggle}
       />
 
       <GuestsCards
@@ -55,6 +58,7 @@ export default function GuestsListView({
         onEdit={onEdit}
         onDelete={onDelete}
         onSendWhatsApp={onSendWhatsApp}
+        onLockToggle={onLockToggle}
       />
     </>
   );

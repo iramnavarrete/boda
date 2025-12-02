@@ -79,7 +79,7 @@ export default function SearchAndFilterBar({
   };
 
   return (
-    <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 mb-6">
+    <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 mb-4">
       {/* GRUPO IZQUIERDO: Búsqueda + Filtro */}
       <div className="flex flex-1 gap-2">
         {/* Búsqueda */}
@@ -88,7 +88,7 @@ export default function SearchAndFilterBar({
             <Search size={18} />
           </div>
           <input
-            className="w-full pl-10 pr-3 py-2.5 bg-white border border-stone-200 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-sm"
+            className="w-full pl-10 pr-3 py-3 bg-white border border-stone-200 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-sm"
             placeholder="Buscar invitados..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -99,7 +99,7 @@ export default function SearchAndFilterBar({
         <div className="relative" ref={filterRef}>
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border text-sm font-medium transition-colors whitespace-nowrap ${getFilterColor()}`}
+            className={`flex items-center gap-2 px-3 py-3 rounded-lg border text-sm font-medium transition-colors whitespace-nowrap ${getFilterColor()}`}
           >
             <Filter size={16} />
             <span className="hidden sm:inline">{getFilterLabel()}</span>
@@ -208,7 +208,7 @@ export default function SearchAndFilterBar({
         {/* Excel (Solo Desktop) */}
         <button
           onClick={onExportExcel}
-          className="hidden sm:flex items-center justify-center p-2.5 bg-white text-stone-600 border border-stone-200 rounded-lg hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+          className="hidden sm:flex items-center justify-center p-3 bg-white text-stone-600 border border-stone-200 rounded-lg hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
           title="Exportar Excel"
         >
           <Download size={20} />
@@ -228,7 +228,7 @@ export default function SearchAndFilterBar({
           </button>
           <button
             onClick={() => setViewMode("table")}
-            className={`p-1.5 rounded ${
+            className={`p-2 rounded ${
               viewMode === "table"
                 ? "bg-stone-100 text-stone-900 shadow-sm"
                 : "text-stone-400 hover:text-stone-600"
@@ -241,7 +241,7 @@ export default function SearchAndFilterBar({
         {/* Nuevo Invitado */}
         <button
           onClick={onNewGuest}
-          className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-4 py-2.5 rounded-lg transition-colors shadow-lg shadow-stone-900/20 text-sm font-medium"
+          className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-4 py-3 rounded-lg transition-colors shadow-lg shadow-stone-900/20 text-sm font-medium"
         >
           <Plus size={18} /> <span>Nuevo</span>
         </button>

@@ -5,6 +5,7 @@ import {
   Trash2,
   Unlock,
   Lock,
+  Eye,
 } from "lucide-react";
 import { Guest } from "../../../../types/types";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
@@ -18,6 +19,7 @@ interface GuestsTableProps {
   onEdit: (guest: Guest) => void;
   onDelete: (guest: Guest) => void;
   onSendWhatsApp: (guest: Guest) => void;
+  onLockToggle: (guest: Guest) => void;
 }
 
 export default function GuestsTable({
@@ -29,6 +31,7 @@ export default function GuestsTable({
   onEdit,
   onDelete,
   onSendWhatsApp,
+  onLockToggle,
 }: GuestsTableProps) {
   return (
     <div
@@ -55,15 +58,12 @@ export default function GuestsTable({
               Invitado
             </th>
             <th className="px-6 py-3 text-center text-xs font-medium text-stone-500 uppercase">
-              Edición
-            </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-stone-500 uppercase">
               Cupos
             </th>
             <th className="px-6 py-3 text-center text-xs font-medium text-stone-500 uppercase">
               Estado
             </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-stone-500 uppercase">
+            <th className="pl-6 pr-12 py-3 text-right text-xs font-medium text-stone-500 uppercase">
               Acciones
             </th>
           </tr>
@@ -92,26 +92,17 @@ export default function GuestsTable({
                   )}
                 </button>
               </td>
-              <td className="px-6 py-4">
+              <td className="px-6 py-4 max-w-48">
                 <div className="font-medium text-stone-900">{g.nombre}</div>
                 <div className="text-xs text-stone-500 font-mono">
                   ID: {g.id}
-                </div>
-              </td>
-              <td className="px-6 py-4 text-left">
-                <div className="text-xs text-stone-400 flex justify-center">
-                  {g.cambiosPermitidos ? (
-                    <Unlock size={16} className="text-green-600" />
-                  ) : (
-                    <Lock size={16} className="text-red-600" />
-                  )}
                 </div>
               </td>
               <td className="px-6 py-4 text-center font-bold">
                 {g.asistencia === true ? g.confirmados : 0} /{" "}
                 <span className="text-stone-400">{g.invitados}</span>
               </td>
-              <td className="px-6 py-4 text-center">
+              <td className="py-4 text-center">
                 {g.asistencia === null ? (
                   <span className="text-yellow-600 text-xs font-bold bg-yellow-100 px-2 py-1 rounded-full">
                     Pendiente
@@ -126,8 +117,8 @@ export default function GuestsTable({
                   </span>
                 )}
               </td>
-              <td className="px-6 py-4 text-center">
-                <div className="flex justify-center gap-2">
+              <td className="pr-12 py-4 text-center">
+                <div className="flex justify-end gap-2">
                   {g.telefono && g.telefono !== "" && (
                     <button
                       title="Enviar Whatsapp"
@@ -138,11 +129,26 @@ export default function GuestsTable({
                     </button>
                   )}
                   <button
+                    className="text-stone-500"
+                    onClick={() => {
+                      onLockToggle(g);
+                    }}
+                  >
+                    {g.cambiosPermitidos ? (
+                      <Unlock size={16} className="text-green-600" />
+                    ) : (
+                      <Lock size={16} className="text-red-600" />
+                    )}
+                  </button>
+                  <button
                     onClick={() => onEdit(g)}
                     className="text-yellow-600"
                     title="Editar"
                   >
                     <Edit2 size={18} />
+                  </button>
+                  <button title="Vista previa">
+                    <Eye size={20} className="text-stone-500" />
                   </button>
                   <button
                     onClick={() => onDelete(g)}

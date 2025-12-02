@@ -1,5 +1,5 @@
 import { CheckSquare, Square, XCircle, XSquare } from "lucide-react";
-import { GuestFormData } from "../../../types/types";
+import { GuestFormData } from "../../../../types/types";
 
 interface GuestFormModalProps {
   isOpen: boolean;

@@ -5,6 +5,7 @@ import {
   Trash2,
   Unlock,
   Lock,
+  Eye,
 } from "lucide-react";
 import { Guest } from "../../../../types/types";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
@@ -18,6 +19,7 @@ interface GuestsCardsProps {
   onEdit: (guest: Guest) => void;
   onDelete: (guest: Guest) => void;
   onSendWhatsApp: (guest: Guest) => void;
+  onLockToggle: (guest: Guest) => void;
 }
 
 export default function GuestsCards({
@@ -29,6 +31,7 @@ export default function GuestsCards({
   onEdit,
   onDelete,
   onSendWhatsApp,
+  onLockToggle
 }: GuestsCardsProps) {
   return (
     <div
@@ -54,13 +57,13 @@ export default function GuestsCards({
       {guests.map((g) => (
         <div
           key={g.id}
-          className={`bg-white rounded-xl shadow-sm border p-5 ${
+          className={`bg-white rounded-xl shadow-sm border p-4 ${
             selectedGuests.has(g.id)
               ? "border-yellow-400 ring-1 ring-yellow-400"
               : "border-stone-200"
           }`}
         >
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex justify-between items-start mb-4 gap-2">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => onSelectGuest(g.id)}
@@ -81,31 +84,35 @@ export default function GuestsCards({
                 <p className="text-xs text-stone-500 font-mono">ID: {g.id}</p>
               </div>
             </div>
-            <p
-              className={`text-xs font-bold p-1 rounded ${
-                g.asistencia === null
-                  ? "text-yellow-600 bg-yellow-100"
-                  : g.asistencia === true
-                  ? "text-green-600 bg-green-100"
-                  : "text-red-600 bg-red-100"
-              }`}
-            >
-              {g.asistencia === true ? g.confirmados : 0}/{g.invitados}
-            </p>
+            <div className="flex gap-2 items-center">
+              <p
+                className={`text-xs font-bold p-1 rounded ${
+                  g.asistencia === null
+                    ? "text-yellow-600 bg-yellow-100"
+                    : g.asistencia === true
+                    ? "text-green-600 bg-green-100"
+                    : "text-red-600 bg-red-100"
+                }`}
+              >
+                {g.asistencia === true ? g.confirmados : 0}/{g.invitados}
+              </p>
+              <button title="Vista previa">
+                <Eye size={20} className="text-stone-600" />
+              </button>
+            </div>
           </div>
           <div className="flex justify-between items-center pt-4 border-t border-stone-100">
-            <div className="text-xs text-stone-400 flex gap-2 font-medium">
-              {g.cambiosPermitidos ? (
-                <>
+            <div className="text-xs text-stone-400 font-medium">
+              <button className="flex gap-1" onClick={() => {
+                onLockToggle(g);
+                }}>
+                {g.cambiosPermitidos ? (
                   <Unlock size={16} className="text-green-600" />
-                  <span>Edición</span>
-                </>
-              ) : (
-                <>
+                ) : (
                   <Lock size={16} className="text-red-600" />
-                  <span>Edición</span>
-                </>
-              )}
+                )}
+                <span>Edición</span>
+              </button>
             </div>
             <div className="flex gap-2">
               {g.telefono && g.telefono !== "" && (
