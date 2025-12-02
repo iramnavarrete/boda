@@ -2,13 +2,12 @@ import {
   CheckSquare,
   Square,
   Edit2,
-  MessageCircle,
-  Phone,
   Trash2,
   Unlock,
   Lock,
 } from "lucide-react";
 import { Guest } from "../../../../types/types";
+import { IconBrandWhatsapp } from "@tabler/icons-react";
 
 interface GuestsCardsProps {
   guests: Guest[];
@@ -113,13 +112,9 @@ export default function GuestsCards({
                 <button
                   title="Enviar Whatsapp"
                   onClick={() => onSendWhatsApp(g)}
-                  className="bg-green-50 text-green-600 p-2 rounded-lg flex justify-center items-center relative"
+                  className="bg-green-50 text-green-600 p-2 rounded-lg flex justify-center items-center"
                 >
-                  <MessageCircle size={18} />
-                  <Phone
-                    size={9}
-                    className="absolute top-[13px] left-[12px] z-10"
-                  />
+                  <IconBrandWhatsapp width={18} height={18} />
                 </button>
               )}
               <button
