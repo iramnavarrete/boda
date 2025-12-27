@@ -1,3 +1,4 @@
+import { AuthInitializer } from "@/components/AuthInitializer";
 import { ToastProvider } from "@/components/Toast";
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
@@ -5,6 +6,7 @@ import type { AppProps } from "next/app";
 export default function App({ Component, pageProps }: AppProps) {
   return (
     <ToastProvider>
+      <AuthInitializer />
       <Component {...pageProps} />
     </ToastProvider>
   );
