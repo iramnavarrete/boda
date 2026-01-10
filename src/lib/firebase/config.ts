@@ -14,4 +14,3 @@ const firebaseConfig = {
 const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const invitationId = "default-app"; // TODO CAMBIAR POR EL ID DE LA INVITACION
