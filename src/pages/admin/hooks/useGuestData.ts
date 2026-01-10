@@ -1,19 +1,28 @@
+"use client";
 import { useEffect, useState } from "react";
 import { User } from "firebase/auth";
-import { AuthService } from "@/services/authService";
 import { GuestService } from "@/services/guestService";
 import { Guest } from "../../../../types/types";
 
-export function useGuestsData(user: User | null) {
+export function useGuestsData(user: User) {
   const [guests, setGuests] = useState<Guest[]>([]);
+  const [isLoadingGuests, setIsLoadingGuests] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!user) return;
-    const unsubscribe = GuestService.subscribeToGuests((data) =>
-      setGuests(data)
+    const unsubscribe = GuestService.subscribeToGuests(
+      (data) => {
+        setGuests(data);
+        setIsLoadingGuests(false);
+      },
+      (error) => {
+        setGuests([]);
+        setIsLoadingGuests(false);
+        setError(error.code);
+      }
     );
-    return () => unsubscribe();
+    return unsubscribe;
   }, [user]);
 
-  return { guests };
+  return { guests, isLoadingGuests, error };
 }
