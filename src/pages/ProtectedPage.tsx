@@ -4,6 +4,7 @@ import { FC, PropsWithChildren, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import Loader from "@/components/Loader";
+import { AuthUserContext } from "@/contexts/AuthUserContext";
 
 const ProtectedPage: FC<PropsWithChildren> = ({ children }) => {
   const router = useRouter();
@@ -18,7 +19,9 @@ const ProtectedPage: FC<PropsWithChildren> = ({ children }) => {
 
   if (loading || !user) return <Loader fullscreen />;
 
-  return children;
+  return (
+    <AuthUserContext.Provider value={user}>{children}</AuthUserContext.Provider>
+  );
 };
 
 export default ProtectedPage;
