@@ -1,11 +1,11 @@
-import ProtectedPage from "../ProtectedPage";
-import WeddingAdminPage from "./page";
+import ProtectedPage from "@/features/admin/components/ProtectedPage";
+import WeddingAdmin from "@/features/front/components/WeddingAdmin";
 
 export default function WeddingAdminPanel() {
 
   return (
     <ProtectedPage>
-      <WeddingAdminPage />
+      <WeddingAdmin />
     </ProtectedPage>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+// TODO Mover esto al AuthService
 import {
   signInWithEmailAndPassword,
   signInWithPopup,
@@ -8,7 +9,7 @@ import {
 import { auth } from "@/lib/firebase/config";
 import { AuthService } from "@/services/authService";
 import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
-import { useToast } from "@/components/Toast";
+import { useToast } from "@/features/shared/components/Toast";
 import dynamic from "next/dynamic";
 import { LottieRefCurrentProps } from "lottie-react";
 import { useInView } from "framer-motion";
@@ -16,7 +17,7 @@ import animationData from "../../lottie/logojn.json";
 import GoogleIcon from "@/icons/google-icon";
 import EnvelopeIcon from "@/icons/envelope-icon";
 import LoginFlowersIcon from "@/icons/login-flowers-icon";
-import Loader from "@/components/Loader";
+import Loader from "@/features/front/components/Loader";
 
 const Lottie = dynamic(() => import("lottie-react"), {
   ssr: false,

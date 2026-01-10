@@ -1,5 +1,5 @@
-import { AuthInitializer } from "@/components/AuthInitializer";
-import { ToastProvider } from "@/components/Toast";
+import { AuthInitializer } from "@/features/admin/components/AuthInitializer";
+import { ToastProvider } from "@/features/shared/components/Toast";
 import "@/styles/globals.css";
 import type { AppProps } from "next/app";
 
