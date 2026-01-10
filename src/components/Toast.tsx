@@ -11,8 +11,10 @@ interface Toast {
   type: ToastType;
 }
 
+export type ToastCallback = (message: string, type?: ToastType) => void
+
 interface ToastContextType {
-  toast: (message: string, type?: ToastType) => void;
+  toast: ToastCallback;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
