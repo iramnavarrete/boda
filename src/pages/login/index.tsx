@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -18,6 +16,7 @@ import animationData from "../../lottie/logojn.json";
 import GoogleIcon from "@/icons/google-icon";
 import EnvelopeIcon from "@/icons/envelope-icon";
 import LoginFlowersIcon from "@/icons/login-flowers-icon";
+import Loader from "@/components/Loader";
 
 const Lottie = dynamic(() => import("lottie-react"), {
   ssr: false,
@@ -36,6 +35,18 @@ export default function LoginPage() {
   const divRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(divRef);
 
+  // Verificar sesión iniciada
+  useEffect(() => {
+    const unsubscribe = AuthService.onUserChange((user) => {
+      if (user) {
+        router.replace("/admin");
+      } else {
+        setCheckingAuth(false);
+      }
+    });
+    return () => unsubscribe();
+  }, [router]);
+
   useEffect(() => {
     const animation = async () => {
       const player = playerRef.current;
@@ -53,18 +64,6 @@ export default function LoginPage() {
     animation();
   }, [isInView]);
 
-  // Verificar sesión
-  useEffect(() => {
-    const unsubscribe = AuthService.onUserChange((user) => {
-      if (user) {
-        router.push("/admin");
-      } else {
-        setCheckingAuth(false);
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
-
   // Handlers
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,10 +75,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      toast("Bienvenido", "success");
-      router.push("/admin");
     } catch (error: any) {
-      console.error(error);
       let msg = "Error al iniciar sesión";
       if (error.code === "auth/invalid-credential")
         msg = "Credenciales incorrectas";
@@ -93,27 +89,18 @@ export default function LoginPage() {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      toast("Acceso correcto", "success");
-      router.push("/admin");
     } catch (error: any) {
-      console.error(error);
       toast("No se pudo conectar con Google", "error");
       setLoading(false);
     }
   };
 
   if (checkingAuth) {
-    return (
-      <div className="min-h-screen bg-[#F9F7F2] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#C5A669]"></div>
-      </div>
-    );
+    return <Loader fullscreen />;
   }
 
   return (
     <div className="min-h-screen w-full bg-[#F9F7F2] flex items-center justify-center p-4 relative overflow-hidden font-sans">
-      {/* --- ELEMENTOS DECORATIVOS DE FONDO (SVG INLINE) --- */}
-
       {/* Textura de papel (Patrón SVG sutil) */}
       <svg
         className="absolute inset-0 w-full h-full opacity-30 pointer-events-none"
