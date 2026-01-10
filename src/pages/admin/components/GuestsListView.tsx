@@ -2,6 +2,7 @@ import { Users } from "lucide-react";
 import GuestsTable from "./GuestsTable";
 import GuestsCards from "./GuestsCards";
 import { Guest } from "../../../../types/types";
+import Loader from "@/components/Loader";
 
 interface GuestsListViewProps {
   filteredGuests: Guest[];
@@ -13,6 +14,7 @@ interface GuestsListViewProps {
   onDelete: (guest: Guest) => void;
   onSendWhatsApp: (guest: Guest) => void;
   onLockToggle: (guest: Guest) => void;
+  isLoading: boolean;
 }
 
 export default function GuestsListView({
@@ -24,13 +26,20 @@ export default function GuestsListView({
   onEdit,
   onDelete,
   onSendWhatsApp,
-  onLockToggle
+  onLockToggle,
+  isLoading,
 }: GuestsListViewProps) {
   if (filteredGuests.length === 0) {
     return (
       <div className="text-center py-20 bg-white rounded-xl border border-dashed border-stone-300">
-        <Users className="mx-auto h-12 w-12 text-stone-300" />
-        <p className="mt-2 text-stone-500">No se encontraron invitados.</p>
+        {isLoading ? (
+          <Loader />
+        ) : (
+          <>
+            <Users className="mx-auto h-12 w-12 text-stone-300" />
+            <p className="mt-2 text-stone-500">No se encontraron invitados.</p>
+          </>
+        )}
       </div>
     );
   }
