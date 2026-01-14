@@ -3,7 +3,7 @@ import HeartIcon from "@/icons/heart-icon";
 import { useInView } from "framer-motion";
 import { type LottieRefCurrentProps } from "lottie-react";
 import dynamic from "next/dynamic";
-import animationData from "../../../lottie/logojn.json";
+import animationData from "../../../../lottie/logojn.json";
 import { useEffect, useRef } from "react";
 import WhatsappIcon from "@/icons/whatsappIcon";
 
