@@ -13,14 +13,11 @@ const BulkActionsBar: React.FC<BulkActionsProps> = ({
   onDelete,
   onCancel,
 }) => (
-  <div className="mb-2 bg-yellow-50 border border-yellow-200 rounded-xl p-2 flex flex-col md:flex-row justify-between items-center gap-4 animate-in fade-in slide-in-from-top-4 shadow-sm">
+  <div className="mb-2 md:h-14 bg-yellow-50 border border-yellow-200 rounded-xl p-2 flex flex-col md:flex-row justify-between items-center gap-4 animate-in fade-in slide-in-from-top-4 shadow-sm">
     {/* Izquierda: Info */}
     <div className="flex items-center gap-3 w-full md:w-auto">
       <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full font-bold text-sm whitespace-nowrap">
         {count} seleccionados
-      </span>
-      <span className="text-sm text-yellow-700 hidden lg:inline">
-        Acciones disponibles:
       </span>
     </div>
 
