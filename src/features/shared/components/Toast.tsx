@@ -11,7 +11,7 @@ interface Toast {
   type: ToastType;
 }
 
-export type ToastCallback = (message: string, type?: ToastType) => void
+export type ToastCallback = (message: string, type?: ToastType, duration?: number) => void
 
 interface ToastContextType {
   toast: ToastCallback;
@@ -24,14 +24,14 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const addToast = useCallback((message: string, type: ToastType = "info") => {
+  const addToast = useCallback<ToastCallback>((message: string, type: ToastType = "info", duration = 2000) => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => [...prev, { id, message, type }]);
 
     // Auto-eliminar después de 4 segundos
     setTimeout(() => {
       removeToast(id);
-    }, 4000);
+    }, duration);
   }, []);
 
   const removeToast = (id: string) => {
