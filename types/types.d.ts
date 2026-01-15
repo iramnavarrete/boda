@@ -6,9 +6,9 @@ export type GuestFormData = {
   invitados: number;
   asistencia: boolean | null;
   confirmados: number | null;
-  mensaje: string | null;
+  notaInvitado: string | null;
   telefono: string | null;
-  comentarios: string | null;
+  notaAnfitrion: string | null;
   cambiosPermitidos: boolean;
 };
 
@@ -18,12 +18,16 @@ export type Guest = {
   invitados: number;
   asistencia: boolean | null;
   confirmados: number | null;
-  mensaje: string | null;
-  telefono: string | null;
-  comentarios: string | null;
+  notaAnfitrion: string | null;
+  tieneTelefono: boolean;
+  notaInvitado: string | null;
   cambiosPermitidos: boolean;
   fechaCreacion: Timestamp | FieldValue | null;
   ultimaModificacion: Timestamp | FieldValue | null;
+};
+
+export type GuestContactInfo = {
+  telefono: string | null;
 };
 
 export type GuestFormDataKeys = keyof GuestFormData;
