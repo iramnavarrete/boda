@@ -132,10 +132,12 @@ export default function GuestsCards({
               </p>
             </div>
           </div>
-          <div className="flex justify-between items-center pt-4 border-t border-stone-100 [&_button:disabled]:opacity-50">
+          <fieldset
+            disabled={isOneOrMoreSelected}
+            className="flex justify-between items-center pt-4 border-t transition-opacity border-stone-100 disabled:opacity-50 disabled:pointer-events-noneF"
+          >
             <div className="text-xs text-stone-400 font-medium">
               <button
-                disabled={isOneOrMoreSelected}
                 className="flex gap-1"
                 onClick={(e) =>
                   handleActionButtonClick(e, () => onLockToggle(g))
@@ -152,7 +154,6 @@ export default function GuestsCards({
             <div className="flex gap-2">
               {g.tieneTelefono && (
                 <button
-                  disabled={isOneOrMoreSelected}
                   title="Enviar Whatsapp"
                   onClick={(e) =>
                     handleActionButtonClick(e, () => onSendWhatsApp(g))
@@ -163,7 +164,6 @@ export default function GuestsCards({
                 </button>
               )}
               <button
-                disabled={isOneOrMoreSelected}
                 className="bg-stone-50 text-stone-600 p-2 rounded-lg"
                 title="Vista previa"
               >
@@ -171,14 +171,13 @@ export default function GuestsCards({
               </button>
               <button
                 onClick={(e) => handleActionButtonClick(e, () => onDelete(g))}
-                disabled={isOneOrMoreSelected}
                 className="bg-red-50 text-red-500 p-2 rounded-lg"
                 title="Eliminar"
               >
                 <Trash2 size={18} />
               </button>
             </div>
-          </div>
+          </fieldset>
         </div>
       ))}
     </div>

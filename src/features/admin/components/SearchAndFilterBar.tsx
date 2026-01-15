@@ -23,6 +23,7 @@ interface SearchAndFilterBarProps {
   setViewMode: (mode: "list" | "table") => void;
   onExportExcel: () => void;
   onNewGuest: () => void;
+  disabled: boolean;
 }
 
 export default function SearchAndFilterBar({
@@ -35,6 +36,7 @@ export default function SearchAndFilterBar({
   setViewMode,
   onExportExcel,
   onNewGuest,
+  disabled,
 }: SearchAndFilterBarProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
@@ -79,7 +81,10 @@ export default function SearchAndFilterBar({
   };
 
   return (
-    <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 my-2.5">
+    <fieldset
+      disabled={disabled}
+      className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 my-2.5 transition-opacity disabled:opacity-50 disabled:pointer-events-none"
+    >
       {/* GRUPO IZQUIERDO: Búsqueda + Filtro */}
       <div className="flex flex-1 gap-2">
         {/* Búsqueda */}
@@ -246,6 +251,6 @@ export default function SearchAndFilterBar({
           <Plus size={18} /> <span>Nuevo</span>
         </button>
       </div>
-    </div>
+    </fieldset>
   );
 }

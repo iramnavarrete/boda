@@ -167,6 +167,7 @@ export default function WeddingAdmin() {
           setViewMode={setViewMode}
           onExportExcel={() => handleExportExcel(guests)}
           onNewGuest={() => handleOpenModal()}
+          disabled={selectedGuests.size > 0}
         />
 
         <GuestsListView
@@ -184,12 +185,12 @@ export default function WeddingAdmin() {
       </section>
 
       {/* BARRA FLOTANTE DE ACCIONES MASIVAS */}
-        <FloatingBulkActionsBar
-          count={selectedGuests.size}
-          onUpdateLock={handleBulkUpdateLock}
-          onDelete={handleBulkDelete}
-          onCancel={clearSelection}
-        />
+      <FloatingBulkActionsBar
+        count={selectedGuests.size}
+        onUpdateLock={handleBulkUpdateLock}
+        onDelete={handleBulkDelete}
+        onCancel={clearSelection}
+      />
 
       <GuestFormModal
         isOpen={isModalOpen}
