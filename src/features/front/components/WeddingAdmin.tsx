@@ -4,7 +4,7 @@ import { Guest } from "@/types";
 import { AuthService } from "@/services/authService";
 import { GuestService } from "@/services/guestService";
 import Header from "@/features/admin/components/Header";
-import BulkActionsBar from "@/features/admin/components/BulkActionsBar";
+// Reemplazamos la barra antigua por la nueva flotante
 import GuestFormModal from "@/features/admin/components/GuestFormModal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
 import SearchAndFilterBar from "@/features/admin/components/SearchAndFilterBar";
@@ -20,6 +20,8 @@ import { useGuestsStats } from "@/features/admin/hooks/useGuestsStats";
 import { useGuestActions } from "@/features/admin/hooks/useGuestActions";
 import { useToast } from "@/features/shared/components/Toast";
 import { useAuthUser } from "@/features/shared/contexts/AuthUserContext";
+import FloatingBulkActionsBar from "@/features/admin/components/FloatingBulkActionsBar";
+import BulkActionsBar from "@/features/admin/components/BulkActionsBar";
 
 export default function WeddingAdmin() {
   const [viewMode, setViewMode] = useState<"list" | "table">("list");
@@ -60,7 +62,6 @@ export default function WeddingAdmin() {
   const stats = useGuestsStats(guests);
   const { toast } = useToast();
 
-  // Si hay un error al obtener los invitados lo mostramos en el toast
   useEffect(() => {
     if (error) {
       toast(error, "error");
@@ -96,16 +97,14 @@ export default function WeddingAdmin() {
       isOpen: true,
       title: "Eliminar Múltiples Invitados",
       message: `¿Estás seguro de que deseas eliminar permanentemente a los ${selectedGuests.size} invitados seleccionados? Esta acción no se puede deshacer.`,
-      isDanger: true, // Esto pondrá el botón del modal en ROJO
+      isDanger: true,
       action: async () => {
-        // Llamamos al servicio nuevo
         await GuestService.batchDeleteGuests(Array.from(selectedGuests));
         clearSelection();
       },
     });
   };
 
-  // TODO MOVER ESTO A AL HOOK DE ACTIONS
   const handleDeleteGuest = (guest: Guest) => {
     const { id, nombre } = guest;
 
@@ -126,7 +125,6 @@ export default function WeddingAdmin() {
 
   const handleLockToggle = (guest: Guest) => {
     const { nombre } = guest;
-
     const title = `Deseas ${
       guest.cambiosPermitidos ? "bloquear" : "permitir"
     } edición a "${nombre}"`;
@@ -151,34 +149,26 @@ export default function WeddingAdmin() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-800 font-sans pb-20">
+    <div className="min-h-screen bg-stone-50 text-stone-800 font-sans pb-20 relative">
       <Header
         stats={stats}
         guestCount={guests.length}
         onLogout={AuthService.logout}
       />
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {selectedGuests.size > 0 ? (
-          <BulkActionsBar
-            count={selectedGuests.size}
-            onUpdateLock={handleBulkUpdateLock}
-            onDelete={handleBulkDelete}
-            onCancel={clearSelection}
-          />
-        ) : (
-          <SearchAndFilterBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            filterStatus={filterStatus}
-            setFilterStatus={setFilterStatus}
-            filterCounts={filterCounts}
-            viewMode={viewMode}
-            setViewMode={setViewMode}
-            onExportExcel={() => handleExportExcel(guests)}
-            onNewGuest={() => handleOpenModal()}
-          />
-        )}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+        {/* BARRA DE BÚSQUEDA Y FILTROS (Siempre visible) */}
+        <SearchAndFilterBar
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          filterStatus={filterStatus}
+          setFilterStatus={setFilterStatus}
+          filterCounts={filterCounts}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          onExportExcel={() => handleExportExcel(guests)}
+          onNewGuest={() => handleOpenModal()}
+        />
 
         <GuestsListView
           filteredGuests={filteredGuests}
@@ -193,6 +183,14 @@ export default function WeddingAdmin() {
           isLoading={isLoadingGuests}
         />
       </section>
+
+      {/* BARRA FLOTANTE DE ACCIONES MASIVAS */}
+        <FloatingBulkActionsBar
+          count={selectedGuests.size}
+          onUpdateLock={handleBulkUpdateLock}
+          onDelete={handleBulkDelete}
+          onCancel={clearSelection}
+        />
 
       <GuestFormModal
         isOpen={isModalOpen}

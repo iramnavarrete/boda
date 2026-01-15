@@ -79,7 +79,7 @@ export default function SearchAndFilterBar({
   };
 
   return (
-    <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 md:h-14 mb-2">
+    <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 my-2.5">
       {/* GRUPO IZQUIERDO: Búsqueda + Filtro */}
       <div className="flex flex-1 gap-2">
         {/* Búsqueda */}
