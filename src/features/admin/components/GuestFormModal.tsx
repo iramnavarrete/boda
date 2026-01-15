@@ -181,7 +181,11 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-stone-700 mb-1">
+                  <label
+                    className={`block text-sm font-medium text-stone-700 mb-1 ${
+                      formData.asistencia === false ? "opacity-40" : ""
+                    }`}
+                  >
                     Confirmados {formData.asistencia === true && "*"}
                   </label>
                   <input
@@ -189,7 +193,8 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                     type="number"
                     min="0"
                     max={formData.invitados}
-                    className="w-full px-4 py-2 rounded-lg border border-stone-300 focus:ring-2 focus:ring-yellow-500 outline-none"
+                    disabled={formData.asistencia === false}
+                    className="w-full px-4 py-2 rounded-lg border border-stone-300 focus:ring-2 focus:ring-yellow-500 outline-none disabled:opacity-40"
                     value={formData.confirmados || ""}
                     onChange={(e) =>
                       handleNumberChange("confirmados", e.target.value)
