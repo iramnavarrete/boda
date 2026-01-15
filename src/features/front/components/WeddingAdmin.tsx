@@ -4,7 +4,7 @@ import { Guest } from "@/types";
 import { AuthService } from "@/services/authService";
 import { GuestService } from "@/services/guestService";
 import Header from "@/features/admin/components/Header";
-import BulkActionsBar from "@/features/admin/components/BulkActionsProps";
+import BulkActionsBar from "@/features/admin/components/BulkActionsBar";
 import GuestFormModal from "@/features/admin/components/GuestFormModal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
 import SearchAndFilterBar from "@/features/admin/components/SearchAndFilterBar";
