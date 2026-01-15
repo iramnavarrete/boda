@@ -52,10 +52,12 @@ export default function GuestsCards({
         viewMode === "table" ? "md:hidden" : ""
       } grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`}
     >
-      <div className="col-span-full flex justify-end">
+      <div className="col-span-full flex justify-end gap-2 text-xs font-medium text-stone-500">
+        <p>{guests.length} elementos</p>
+        <p>-</p>
         <button
           onClick={() => onSelectAll(guests)}
-          className="text-xs font-medium text-stone-500 flex items-center gap-1 mb-2"
+          className="flex items-center gap-1"
         >
           {selectedGuests.size === guests.length
             ? "Deseleccionar todos"
