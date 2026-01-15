@@ -21,7 +21,6 @@ import { useGuestActions } from "@/features/admin/hooks/useGuestActions";
 import { useToast } from "@/features/shared/components/Toast";
 import { useAuthUser } from "@/features/shared/contexts/AuthUserContext";
 import FloatingBulkActionsBar from "@/features/admin/components/FloatingBulkActionsBar";
-import BulkActionsBar from "@/features/admin/components/BulkActionsBar";
 
 export default function WeddingAdmin() {
   const [viewMode, setViewMode] = useState<"list" | "table">("list");

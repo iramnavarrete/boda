@@ -31,20 +31,26 @@ export function useGuestActions(user: User | null) {
     }
   };
 
-  const sendWhatsApp = (guest: Guest) => {
-    if (!guest.telefono) return;
+  const sendWhatsApp = async (guest: Guest) => {
+    toast("Abriendo WhatsApp...", "info");
+
+    const contactInfo = await GuestService.getGuestContactInfo(guest.id);
+    console.log({ contactInfo });
+    const telefono = contactInfo?.telefono;
+    if (!telefono) {
+      toast("Celular no válido", "error");
+      return;
+    }
     const link = `https://bodajy.info/invitacion/${guest.id}`;
     const msg = `¡Hola ${guest.nombre.split(" ")[0]}! ${
-      guest.mensaje || ""
+      guest.notaAnfitrion || ""
     } Confirma aquí: ${link}`;
     window.open(
-      `https://wa.me/${guest.telefono
+      `https://wa.me/+52${telefono
         .replace(/\+/g, "")
         .replace(/\s/g, "")}?text=${encodeURIComponent(msg)}`,
       "_blank"
     );
-
-    toast("Abriendo WhatsApp...", "info");
   };
 
   const handleExportExcel = async (guests: Guest[]) => {

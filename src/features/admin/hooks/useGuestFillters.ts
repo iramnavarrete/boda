@@ -7,9 +7,9 @@ export function useGuestsFilter(guests: Guest[]) {
 
   const filteredGuests = useMemo(() => {
     return guests.filter((g) => {
-      const matchesSearch =
-        g.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (g.telefono && g.telefono.includes(searchTerm));
+      const matchesSearch = g.nombre
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
       let matchesFilter = true;
       if (filterStatus === "confirmed") matchesFilter = g.asistencia === true;
       else if (filterStatus === "rejected")

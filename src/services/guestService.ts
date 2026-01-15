@@ -2,7 +2,6 @@ import {
   collection,
   doc,
   setDoc,
-  deleteDoc,
   onSnapshot,
   serverTimestamp,
   query,
@@ -12,29 +11,39 @@ import {
   where,
   getDocs,
 } from "firebase/firestore";
-import { Guest, GuestFormData } from "../../types/types";
+import { Guest, GuestContactInfo, GuestFormData } from "../../types/types";
 import { db } from "@/lib/firebase/config";
 import { generateGuestID } from "@/utils/generators";
 import { AuthService } from "./authService";
 
+const getInvitationId = (): string => {
+  const user = AuthService.getCurrentUser();
+  return user?.uid === "w6AceU9Qw9XsTkF0GNlCJ0TwriB2"
+    ? "ximena-becerra"
+    : "default-app";
+};
+
 export const GuestService = {
-  // Suscripción en tiempo real
   subscribeToGuests: (
     callback: (guests: Guest[]) => void,
     onError?: (error: FirestoreError) => void
   ) => {
-    const invitationId =
-      AuthService.getCurrentUser()?.uid === "w6AceU9Qw9XsTkF0GNlCJ0TwriB2"
-        ? "ximena-becerra"
-        : "default-app";
+    const invitationId = getInvitationId();
     const q = query(collection(db, "invitations", invitationId, "guests"));
+
     return onSnapshot(
       q,
       (snapshot) => {
-        const data = snapshot.docs.map(
-          (doc) => ({ id: doc.id, ...doc.data() } as Guest)
-        );
-        // Ordenamiento en cliente para no requerir índices complejos
+        const data = snapshot.docs.map((doc) => {
+          const d = doc.data();
+          return {
+            id: doc.id,
+            ...d,
+            tieneTelefono: !!d.tieneTelefono,
+          } as Guest;
+        });
+
+        // Ordenamiento en cliente (Más recientes primero)
         callback(
           data.sort(
             (a, b) =>
@@ -48,132 +57,194 @@ export const GuestService = {
       }
     );
   },
+
+  getGuestContactInfo: async (guestId: string) => {
+    const invitationId = getInvitationId();
+    try {
+      const privateRef = doc(
+        db,
+        "invitations",
+        invitationId,
+        "guests",
+        guestId,
+        "private",
+        "contactInfo"
+      );
+      const snapshot = await getDoc(privateRef);
+
+      if (snapshot.exists()) {
+        return snapshot.data() as GuestContactInfo;
+      }
+      return null;
+    } catch (error) {
+      return null;
+    }
+  },
+
+  // GENERAR ID ÚNICO
   getUniqueGuestId: async () => {
     let isUnique = false;
     let newId = "";
     let attempts = 0;
+    const invitationId = getInvitationId();
 
-    const invitationId =
-      AuthService.getCurrentUser()?.uid === "w6AceU9Qw9XsTkF0GNlCJ0TwriB2"
-        ? "ximena-becerra"
-        : "default-app";
-
-    // Intentamos hasta encontrar uno libre
     while (!isUnique) {
+      // Generador simple de ID de 6 caracteres (puedes usar tu propia función generateGuestID si la tienes)
       newId = generateGuestID();
 
-      // Hacemos la llamada de lectura para ver si existe
+      // Verificamos existencia
       const guest = await getDoc(
         doc(db, "invitations", invitationId, "guests", newId)
       );
 
       if (!guest.exists()) {
-        isUnique = true; // ¡Encontramos uno libre! Salimos del bucle
+        isUnique = true;
       }
 
-      // Safety break: Evita bucles infinitos en el caso de error
       attempts++;
-      if (attempts > 10)
+      if (attempts > 15) {
         throw new Error(
           "No se pudo generar un ID único después de varios intentos"
         );
+      }
     }
 
     return newId;
   },
 
-  // Crear o Actualizar
   saveGuest: async (guestId: string, data: GuestFormData, isNew: boolean) => {
-    const payload: Partial<Guest> = {
-      ...data,
-      id: guestId,
-      ultimaModificacion: serverTimestamp(),
-    };
-    if (isNew) payload.fechaCreacion = serverTimestamp();
+    const invitationId = getInvitationId();
+    const batch = writeBatch(db);
+    const timestamp = serverTimestamp();
 
-    const invitationId =
-      AuthService.getCurrentUser()?.uid === "w6AceU9Qw9XsTkF0GNlCJ0TwriB2"
-        ? "ximena-becerra"
-        : "default-app";
-
-    await setDoc(
-      doc(db, "invitations", invitationId, "guests", guestId),
-      payload,
-      { merge: true }
+    // Referencias
+    const publicRef = doc(db, "invitations", invitationId, "guests", guestId);
+    const privateRef = doc(
+      db,
+      "invitations",
+      invitationId,
+      "guests",
+      guestId,
+      "private",
+      "contactInfo"
     );
+
+    const tieneTelefono = !!(data.telefono && data.telefono.trim().length > 0);
+
+    const publicPayload: Partial<Guest> = {
+      nombre: data.nombre,
+      invitados: Number(data.invitados) || 1,
+      notaAnfitrion: data.notaAnfitrion || null,
+      cambiosPermitidos: data.cambiosPermitidos ?? true,
+      tieneTelefono,
+      ultimaModificacion: timestamp,
+      asistencia: data.asistencia,
+      confirmados: Number(data.confirmados),
+    };
+
+    // Si es nuevo, inicializamos campos faltantes
+    if (isNew) {
+      publicPayload.id = guestId;
+      publicPayload.fechaCreacion = timestamp;
+      publicPayload.notaInvitado = null;
+      publicPayload.asistencia = null;
+      publicPayload.confirmados = null;
+    }
+
+    const privatePayload = {
+      telefono: data.telefono || null,
+    };
+
+    // Agregamos al batch
+    batch.set(publicRef, publicPayload, { merge: true });
+    batch.set(privateRef, privatePayload, { merge: true });
+
+    // Ejecutamos ambas escrituras
+    await batch.commit();
   },
 
-  // Eliminar
   deleteGuest: async (guestId: string) => {
-    const invitationId =
-      AuthService.getCurrentUser()?.uid === "w6AceU9Qw9XsTkF0GNlCJ0TwriB2"
-        ? "ximena-becerra"
-        : "default-app";
-    await deleteDoc(doc(db, "invitations", invitationId, "guests", guestId));
+    const invitationId = getInvitationId();
+    const batch = writeBatch(db);
+
+    const publicRef = doc(db, "invitations", invitationId, "guests", guestId);
+    const privateRef = doc(
+      db,
+      "invitations",
+      invitationId,
+      "guests",
+      guestId,
+      "private",
+      "contactInfo"
+    );
+
+    batch.delete(privateRef);
+    batch.delete(publicRef);
+
+    await batch.commit();
   },
 
-  // Actualización por lotes (Batch)
   batchUpdateLock: async (guestIds: string[], shouldLock: boolean) => {
     const batch = writeBatch(db);
-    const invitationId =
-      AuthService.getCurrentUser()?.uid === "w6AceU9Qw9XsTkF0GNlCJ0TwriB2"
-        ? "ximena-becerra"
-        : "default-app";
+    const invitationId = getInvitationId();
+
     guestIds.forEach((id) => {
       batch.update(doc(db, "invitations", invitationId, "guests", id), {
         cambiosPermitidos: !shouldLock,
+        ultimaModificacion: serverTimestamp(),
       });
     });
     await batch.commit();
   },
 
   toggleGuestLock: async (guest: Guest) => {
-    const payload: Partial<Guest> = {
-      ...guest,
-      id: guest.id,
-      ultimaModificacion: serverTimestamp(),
-      cambiosPermitidos: !guest.cambiosPermitidos,
-    };
+    const invitationId = getInvitationId();
+    const docRef = doc(db, "invitations", invitationId, "guests", guest.id);
 
-    const invitationId =
-      AuthService.getCurrentUser()?.uid === "w6AceU9Qw9XsTkF0GNlCJ0TwriB2"
-        ? "ximena-becerra"
-        : "default-app";
     await setDoc(
-      doc(db, "invitations", invitationId, "guests", guest.id),
-      payload,
+      docRef,
+      {
+        cambiosPermitidos: !guest.cambiosPermitidos,
+        ultimaModificacion: serverTimestamp(),
+      },
       { merge: true }
     );
   },
 
   batchDeleteGuests: async (guestIds: string[]) => {
     const batch = writeBatch(db);
-    const invitationId =
-      AuthService.getCurrentUser()?.uid === "w6AceU9Qw9XsTkF0GNlCJ0TwriB2"
-        ? "ximena-becerra"
-        : "default-app";
+    const invitationId = getInvitationId();
+
     guestIds.forEach((id) => {
-      // Asegúrate de usar la misma ruta que en saveGuest/subscribe
-      const docRef = doc(db, "invitations", invitationId, "guests", id);
-      batch.delete(docRef);
+      const publicRef = doc(db, "invitations", invitationId, "guests", id);
+      const privateRef = doc(
+        db,
+        "invitations",
+        invitationId,
+        "guests",
+        id,
+        "private",
+        "contactInfo"
+      );
+
+      batch.delete(privateRef);
+      batch.delete(publicRef);
     });
+
     await batch.commit();
   },
 
   getUserInvitationIds: async (): Promise<string[]> => {
     try {
+      const user = AuthService.getCurrentUser();
+      if (!user) return [];
+
       const q = query(
         collection(db, "invitations"),
-        where(
-          "allowedUsers",
-          "array-contains",
-          AuthService.getCurrentUser()?.uid
-        )
+        where("allowedUsers", "array-contains", user.uid)
       );
 
       const snapshot = await getDocs(q);
-
-      // Retornamos solo los IDs
       return snapshot.docs.map((doc) => doc.id);
     } catch (error) {
       return [];
