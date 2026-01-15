@@ -155,11 +155,22 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                 </label>
                 <input
                   type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]{10}"
                   className="w-full px-4 py-2 rounded-lg border border-stone-300 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 outline-none"
                   value={formData.telefono || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, telefono: e.target.value })
-                  }
+                  onChange={(e) => {
+                    const input = e.target;
+                    const value = input.value.replace(/\D/g, "");
+                    if (value !== "" && value.length !== 10) {
+                      input.setCustomValidity(
+                        "El número debe ser de 10 dígitos"
+                      );
+                    } else {
+                      input.setCustomValidity(""); // válido
+                    }
+                    setFormData({ ...formData, telefono: value });
+                  }}
                   placeholder="Ej. 6141234567"
                 />
               </div>
@@ -205,16 +216,16 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-stone-700 mb-1">
-                  Comentarios
+                  Nota para invitado
                 </label>
                 <input
                   type="text"
                   className="w-full px-4 py-2 rounded-lg border border-stone-300 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 outline-none"
-                  value={formData.comentarios || ""}
+                  value={formData.notaAnfitrion || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, comentarios: e.target.value })
+                    setFormData({ ...formData, notaAnfitrion: e.target.value })
                   }
-                  placeholder="Ej. 2 niños"
+                  placeholder="Ej. Los queremos mucho padrinos"
                 />
               </div>
 
@@ -241,7 +252,6 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
             </div>
           </div>
 
-          {/* FOOTER (Fijo, no scrollea) */}
           <div className="p-4 border-t border-stone-200 bg-stone-50 flex gap-3 shrink-0 z-10">
             <button
               type="button"
