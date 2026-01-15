@@ -150,7 +150,7 @@ export default function GuestsCards({
               </button>
             </div>
             <div className="flex gap-2">
-              {g.telefono && g.telefono !== "" && (
+              {g.tieneTelefono && (
                 <button
                   disabled={isOneOrMoreSelected}
                   title="Enviar Whatsapp"

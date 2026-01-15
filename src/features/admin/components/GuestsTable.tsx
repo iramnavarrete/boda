@@ -140,7 +140,7 @@ export default function GuestsTable({
               </td>
               <td className="pr-12 py-4 text-center [&_button:disabled]:opacity-50">
                 <div className="flex justify-end gap-2">
-                  {g.telefono && g.telefono !== "" && (
+                  {g.tieneTelefono && (
                     <button
                       title="Enviar Whatsapp"
                       disabled={isOneOrMoreSelected}
