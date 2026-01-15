@@ -3,7 +3,7 @@ import { X, Lock, Unlock, Trash2 } from "lucide-react";
 interface BulkActionsProps {
   count: number;
   onUpdateLock: (lock: boolean) => void;
-  onDelete: () => void; // <--- NUEVO PROP
+  onDelete: () => void;
   onCancel: () => void;
 }
 
