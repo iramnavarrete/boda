@@ -1,14 +1,17 @@
 import {
   CheckSquare,
   Square,
-  Edit2,
   Trash2,
   Unlock,
   Lock,
   Eye,
+  Clock,
+  CheckCircle2,
+  XCircle,
 } from "lucide-react";
 import { Guest } from "@/types";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { MouseEvent } from "react";
 
 interface GuestsCardsProps {
   guests: Guest[];
@@ -31,8 +34,18 @@ export default function GuestsCards({
   onEdit,
   onDelete,
   onSendWhatsApp,
-  onLockToggle
+  onLockToggle,
 }: GuestsCardsProps) {
+  const isOneOrMoreSelected = selectedGuests.size > 0;
+
+  const handleActionButtonClick = (
+    event: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>,
+    callback: () => void
+  ) => {
+    event.stopPropagation();
+    callback();
+  };
+
   return (
     <div
       className={`${
@@ -57,16 +70,26 @@ export default function GuestsCards({
       {guests.map((g) => (
         <div
           key={g.id}
+          onClick={() => {
+            // Si hay algún elemento seleccionado, al hacer click se seleccionará
+            if (isOneOrMoreSelected) {
+              onSelectGuest(g.id);
+              return;
+            }
+            onEdit(g);
+          }}
           className={`bg-white rounded-xl shadow-sm border p-4 ${
             selectedGuests.has(g.id)
               ? "border-yellow-400 ring-1 ring-yellow-400"
-              : "border-stone-200"
+              : "border-stone-200 hover:border-stone-300 hover:ring-1 hover:ring-stone-300"
           }`}
         >
           <div className="flex justify-between items-start mb-4 gap-2">
             <div className="flex items-center gap-3">
               <button
-                onClick={() => onSelectGuest(g.id)}
+                onClick={(e) =>
+                  handleActionButtonClick(e, () => onSelectGuest(g.id))
+                }
                 className={
                   selectedGuests.has(g.id)
                     ? "text-yellow-600"
@@ -86,7 +109,7 @@ export default function GuestsCards({
             </div>
             <div className="flex gap-2 items-center">
               <p
-                className={`text-xs font-bold p-1 rounded ${
+                className={`inline-flex text-xs font-bold p-1 gap-0.5 rounded items-center justify-center ${
                   g.asistencia === null
                     ? "text-yellow-600 bg-yellow-100"
                     : g.asistencia === true
@@ -94,18 +117,28 @@ export default function GuestsCards({
                     : "text-red-600 bg-red-100"
                 }`}
               >
+                <span>
+                  {g.asistencia === null ? (
+                    <Clock size={12} />
+                  ) : g.asistencia === true ? (
+                    <CheckCircle2 size={12} />
+                  ) : (
+                    <XCircle size={12} />
+                  )}
+                </span>
                 {g.asistencia === true ? g.confirmados : 0}/{g.invitados}
               </p>
-              <button title="Vista previa">
-                <Eye size={20} className="text-stone-600" />
-              </button>
             </div>
           </div>
-          <div className="flex justify-between items-center pt-4 border-t border-stone-100">
+          <div className="flex justify-between items-center pt-4 border-t border-stone-100 [&_button:disabled]:opacity-50">
             <div className="text-xs text-stone-400 font-medium">
-              <button className="flex gap-1" onClick={() => {
-                onLockToggle(g);
-                }}>
+              <button
+                disabled={isOneOrMoreSelected}
+                className="flex gap-1"
+                onClick={(e) =>
+                  handleActionButtonClick(e, () => onLockToggle(g))
+                }
+              >
                 {g.cambiosPermitidos ? (
                   <Unlock size={16} className="text-green-600" />
                 ) : (
@@ -117,22 +150,26 @@ export default function GuestsCards({
             <div className="flex gap-2">
               {g.telefono && g.telefono !== "" && (
                 <button
+                  disabled={isOneOrMoreSelected}
                   title="Enviar Whatsapp"
-                  onClick={() => onSendWhatsApp(g)}
+                  onClick={(e) =>
+                    handleActionButtonClick(e, () => onSendWhatsApp(g))
+                  }
                   className="bg-green-50 text-green-600 p-2 rounded-lg flex justify-center items-center"
                 >
                   <IconBrandWhatsapp width={18} height={18} />
                 </button>
               )}
               <button
-                onClick={() => onEdit(g)}
+                disabled={isOneOrMoreSelected}
                 className="bg-stone-50 text-stone-600 p-2 rounded-lg"
-                title="Editar"
+                title="Vista previa"
               >
-                <Edit2 size={18} />
+                <Eye size={20} className="text-stone-600" />
               </button>
               <button
-                onClick={() => onDelete(g)}
+                onClick={(e) => handleActionButtonClick(e, () => onDelete(g))}
+                disabled={isOneOrMoreSelected}
                 className="bg-red-50 text-red-500 p-2 rounded-lg"
                 title="Eliminar"
               >

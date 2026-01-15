@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { Guest } from "@/types";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { MouseEvent } from "react";
 
 interface GuestsTableProps {
   guests: Guest[];
@@ -33,6 +34,16 @@ export default function GuestsTable({
   onSendWhatsApp,
   onLockToggle,
 }: GuestsTableProps) {
+  const isOneOrMoreSelected = selectedGuests.size > 0;
+
+  const handleActionButtonClick = (
+    event: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>,
+    callback: () => void
+  ) => {
+    event.stopPropagation();
+    callback();
+  };
+
   return (
     <div
       className={`hidden ${
@@ -72,13 +83,23 @@ export default function GuestsTable({
           {guests.map((g) => (
             <tr
               key={g.id}
+              onClick={() => {
+                // Si hay algún elemento seleccionado, al hacer click se seleccionará
+                if (isOneOrMoreSelected) {
+                  onSelectGuest(g.id);
+                  return;
+                }
+                onEdit(g);
+              }}
               className={`hover:bg-stone-50 ${
                 selectedGuests.has(g.id) ? "bg-yellow-50/50" : ""
               }`}
             >
               <td className="px-6 py-4">
                 <button
-                  onClick={() => onSelectGuest(g.id)}
+                  onClick={(e) =>
+                    handleActionButtonClick(e, () => onSelectGuest(g.id))
+                  }
                   className={
                     selectedGuests.has(g.id)
                       ? "text-yellow-600"
@@ -117,12 +138,15 @@ export default function GuestsTable({
                   </span>
                 )}
               </td>
-              <td className="pr-12 py-4 text-center">
+              <td className="pr-12 py-4 text-center [&_button:disabled]:opacity-50">
                 <div className="flex justify-end gap-2">
                   {g.telefono && g.telefono !== "" && (
                     <button
                       title="Enviar Whatsapp"
-                      onClick={() => onSendWhatsApp(g)}
+                      disabled={isOneOrMoreSelected}
+                      onClick={(e) =>
+                        handleActionButtonClick(e, () => onSendWhatsApp(g))
+                      }
                       className="text-green-600 flex justify-center items-center relative"
                     >
                       <IconBrandWhatsapp size={18} />
@@ -130,9 +154,10 @@ export default function GuestsTable({
                   )}
                   <button
                     className="text-stone-500"
-                    onClick={() => {
-                      onLockToggle(g);
-                    }}
+                    disabled={isOneOrMoreSelected}
+                    onClick={(e) =>
+                      handleActionButtonClick(e, () => onLockToggle(g))
+                    }
                   >
                     {g.cambiosPermitidos ? (
                       <Unlock size={16} className="text-green-600" />
@@ -140,18 +165,14 @@ export default function GuestsTable({
                       <Lock size={16} className="text-red-600" />
                     )}
                   </button>
-                  <button
-                    onClick={() => onEdit(g)}
-                    className="text-yellow-600"
-                    title="Editar"
-                  >
-                    <Edit2 size={18} />
-                  </button>
-                  <button title="Vista previa">
+                  <button title="Vista previa" disabled={isOneOrMoreSelected}>
                     <Eye size={20} className="text-stone-500" />
                   </button>
                   <button
-                    onClick={() => onDelete(g)}
+                    disabled={isOneOrMoreSelected}
+                    onClick={(e) =>
+                      handleActionButtonClick(e, () => onDelete(g))
+                    }
                     className="text-red-400"
                     title="Eliminar"
                   >
