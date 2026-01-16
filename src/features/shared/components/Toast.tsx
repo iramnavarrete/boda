@@ -48,21 +48,21 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
           <div
             key={t.id}
             className={`
-              pointer-events-auto transform transition-all duration-300 ease-in-out animate-in slide-in-from-bottom-5 fade-in
+              pointer-events-auto transform transition-
               flex items-start gap-3 p-4 rounded-xl shadow-xl border
               ${
                 t.type === "success"
-                  ? "bg-white border-stone-100 text-stone-800"
+                  ? "bg-green-200 border-green-300 text-green-800"
                   : ""
               }
               ${
                 t.type === "error"
-                  ? "bg-white border-red-100 text-stone-800"
+                  ? "bg-red-200 border-red-300 text-red-800"
                   : ""
               }
               ${
                 t.type === "info"
-                  ? "bg-stone-900 border-stone-800 text-white"
+                  ? "bg-blue-200 border-blue-300 text-blue-800"
                   : ""
               }
             `}
@@ -70,13 +70,13 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
             {/* Iconos según tipo */}
             <div className="mt-0.5 shrink-0">
               {t.type === "success" && (
-                <CheckCircle2 size={20} className="text-green-600" />
+                <CheckCircle2 size={20} className="text-current" />
               )}
               {t.type === "error" && (
-                <AlertCircle size={20} className="text-red-500" />
+                <AlertCircle size={20} className="text-current" />
               )}
               {t.type === "info" && (
-                <Info size={20} className="text-stone-400" />
+                <Info size={20} className="text-current" />
               )}
             </div>
 
