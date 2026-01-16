@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
+  X,
 } from "lucide-react";
 import { FilterCounts, FilterType } from "@/types";
 
@@ -98,6 +99,14 @@ export default function SearchAndFilterBar({
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          {searchTerm !== "" && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400"
+            >
+              <X size={18} />
+            </button>
+          )}
         </div>
 
         {/* FILTRO COMPACTO (Dropdown) */}
