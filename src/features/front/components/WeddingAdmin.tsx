@@ -199,6 +199,7 @@ export default function WeddingAdmin() {
         setFormData={setFormData}
         onSubmit={onSaveGuest}
         isEdit={!!currentGuestId}
+        onBackdropPress={handleCloseModal}
       />
 
       <ConfirmationModal
