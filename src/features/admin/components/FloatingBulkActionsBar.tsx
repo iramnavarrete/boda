@@ -7,7 +7,7 @@ import {
   MoreHorizontal,
   ChevronUp,
 } from "lucide-react";
-import { cn } from "@nextui-org/theme";
+import { cn } from "@heroui/theme";
 
 interface BulkActionsProps {
   count: number;

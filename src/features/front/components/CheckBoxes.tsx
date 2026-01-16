@@ -1,4 +1,4 @@
-import { Checkbox, CheckboxGroup } from "@nextui-org/checkbox";
+import { Checkbox, CheckboxGroup } from "@heroui/checkbox";
 import { useFormikContext } from "formik";
 import { useEffect, useState } from "react";
 import { GuestFormData } from "@/types";

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback } from "react";
 import { X, CheckCircle2, AlertCircle, Info } from "lucide-react";
-import { cn } from "@nextui-org/theme";
+import { cn } from "@heroui/theme";
 
 export type ToastType = "success" | "error" | "info";
 

@@ -1,5 +1,5 @@
 import { GuestFormData } from "@/types";
-import { cn } from "@nextui-org/theme";
+import { cn } from "@heroui/theme";
 import { CheckSquare, Square, XCircle, XSquare } from "lucide-react";
 
 interface GuestFormModalProps {
