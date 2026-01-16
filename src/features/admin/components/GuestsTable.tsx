@@ -1,7 +1,6 @@
 import {
   CheckSquare,
   Square,
-  Edit2,
   Trash2,
   Unlock,
   Lock,
@@ -138,12 +137,14 @@ export default function GuestsTable({
                   </span>
                 )}
               </td>
-              <td className="pr-12 py-4 text-center [&_button:disabled]:opacity-50">
-                <div className="flex justify-end gap-2">
+              <td className="pr-12 py-4 text-center">
+                <fieldset
+                  disabled={isOneOrMoreSelected}
+                  className="flex justify-end gap-2 transition-opacity disabled:opacity-50 disabled:pointer-events-none"
+                >
                   {g.tieneTelefono && (
                     <button
                       title="Enviar Whatsapp"
-                      disabled={isOneOrMoreSelected}
                       onClick={(e) =>
                         handleActionButtonClick(e, () => onSendWhatsApp(g))
                       }
@@ -154,7 +155,6 @@ export default function GuestsTable({
                   )}
                   <button
                     className="text-stone-500"
-                    disabled={isOneOrMoreSelected}
                     onClick={(e) =>
                       handleActionButtonClick(e, () => onLockToggle(g))
                     }
@@ -165,11 +165,10 @@ export default function GuestsTable({
                       <Lock size={16} className="text-red-600" />
                     )}
                   </button>
-                  <button title="Vista previa" disabled={isOneOrMoreSelected}>
+                  <button title="Vista previa">
                     <Eye size={20} className="text-stone-500" />
                   </button>
                   <button
-                    disabled={isOneOrMoreSelected}
                     onClick={(e) =>
                       handleActionButtonClick(e, () => onDelete(g))
                     }
@@ -178,7 +177,7 @@ export default function GuestsTable({
                   >
                     <Trash2 size={18} />
                   </button>
-                </div>
+                </fieldset>
               </td>
             </tr>
           ))}
