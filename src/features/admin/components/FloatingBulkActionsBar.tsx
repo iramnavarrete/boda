@@ -71,12 +71,12 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
           <div className="relative">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border
-                        ${
-                          isOpen
-                            ? "bg-yellow-100 text-yellow-800 border-yellow-300"
-                            : "bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-stone-300"
-                        }`}
+              className={cn(
+                "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                isOpen
+                  ? "bg-yellow-100 text-yellow-800 border-yellow-300"
+                  : "bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-stone-300"
+              )}
             >
               <span>Acciones</span>
               <ChevronUp
@@ -88,55 +88,55 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
             </button>
 
             {/* MENÚ DESPLEGABLE */}
-            {isOpen && (
-              <div className="absolute bottom-full right-0 mb-3 w-48 bg-white text-stone-800 rounded-xl shadow-2xl border border-stone-100 overflow-hidden z-50 animate-in slide-in-from-bottom-2 fade-in zoom-in-95 origin-bottom-right ring-1 ring-black/5">
-                <div className="p-1.5 space-y-1">
-                  {/* Grupo Edición */}
-                  <div className="px-2 py-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
-                    Edición
-                  </div>
-                  <button
-                    onClick={() => handleAction(() => onUpdateLock(true))}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors text-left"
-                  >
-                    <Lock size={16} className="text-stone-400" />
-                    <div>
-                      <span className="block font-medium">
-                        Bloquear edición
-                      </span>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => handleAction(() => onUpdateLock(false))}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors text-left"
-                  >
-                    <Unlock size={16} className="text-stone-400" />
-                    <div>
-                      <span className="block font-medium">
-                        Permitir Edición
-                      </span>
-                    </div>
-                  </button>
-
-                  <div className="h-px bg-stone-100 my-1" />
-
-                  {/* Grupo Peligro */}
-                  <div className="px-2 py-1.5 text-[10px] font-bold text-red-300 uppercase tracking-wider">
-                    Zona de Peligro
-                  </div>
-                  <button
-                    onClick={() => handleAction(onDelete)}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors text-left group"
-                  >
-                    <Trash2
-                      size={16}
-                      className="text-red-400 group-hover:text-red-600"
-                    />
-                    <span className="font-medium">Eliminar Registros</span>
-                  </button>
+            <div
+              data-state={isOpen ? "open" : "closed"}
+              className={cn(
+                "absolute bottom-full right-[-60px] mb-4 w-48 bg-white text-stone-800 rounded-xl shadow-sm border border-stone-100 overflow-hidden ring-1 ring-black/5",
+                "transition-all data-[state=open]:opacity-100 data-[state=open]:translate-y-0 duration-300 data-[state=closed]:opacity-0 data-[state=closed]:translate-y-2 data-[state=closed]:pointer-events-none"
+              )}
+            >
+              <div className="p-1.5 space-y-1">
+                {/* Grupo Edición */}
+                <div className="px-2 py-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                  Edición
                 </div>
+                <button
+                  onClick={() => handleAction(() => onUpdateLock(true))}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors text-left"
+                >
+                  <Lock size={16} className="text-stone-400" />
+                  <div>
+                    <span className="block font-medium">Bloquear edición</span>
+                  </div>
+                </button>
+                <button
+                  onClick={() => handleAction(() => onUpdateLock(false))}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors text-left"
+                >
+                  <Unlock size={16} className="text-stone-400" />
+                  <div>
+                    <span className="block font-medium">Permitir Edición</span>
+                  </div>
+                </button>
+
+                <div className="h-px bg-stone-100 my-1" />
+
+                {/* Grupo Peligro */}
+                <div className="px-2 py-1.5 text-[10px] font-bold text-red-300 uppercase tracking-wider">
+                  Zona de Peligro
+                </div>
+                <button
+                  onClick={() => handleAction(onDelete)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors text-left group"
+                >
+                  <Trash2
+                    size={16}
+                    className="text-red-400 group-hover:text-red-600"
+                  />
+                  <span className="font-medium">Eliminar Registros</span>
+                </button>
               </div>
-            )}
+            </div>
           </div>
 
           <button
