@@ -134,7 +134,7 @@ export default function GuestsCards({
           </div>
           <fieldset
             disabled={isOneOrMoreSelected}
-            className="flex justify-between items-center pt-4 border-t transition-opacity border-stone-100 disabled:opacity-50 disabled:pointer-events-noneF"
+            className="flex justify-between items-center pt-4 border-t transition-opacity border-stone-100 disabled:opacity-50 disabled:pointer-events-none"
           >
             <div className="text-xs text-stone-400 font-medium">
               <button
