@@ -44,6 +44,8 @@ export interface GalleryImage {
 export interface DashboardStats {
   total: number;
   confirmed: number;
+  rejected: number;
+  pending: number;
   count: number;
 }
 
