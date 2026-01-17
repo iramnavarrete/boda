@@ -27,7 +27,6 @@ export default function WeddingAdmin({
 }: {
   invitationId: string;
 }) {
-  const [viewMode, setViewMode] = useState<"list" | "table">("list");
   const user = useAuthUser();
 
   const { guests, isLoadingGuests, error } = useGuestsData(invitationId, user);
@@ -64,7 +63,8 @@ export default function WeddingAdmin({
     invitationId,
     user,
   );
-  const stats = useGuestsStats(guests);
+  const stats = useGuestsStats(filteredGuests);
+  const isFiltered = filteredGuests.length !== guests.length;
   const { toast } = useToast();
 
   useEffect(() => {
@@ -165,15 +165,15 @@ export default function WeddingAdmin({
         <div className="flex flex-col lg:flex-row gap-4 items-start mt-2.5">
           <aside className="w-full lg:w-auto">
             <div className="lg:sticky lg:top-24">
-              <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1 ml-1">
-                Personas
+              <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1 ml-1 lg:max-w-[12ch]">
+                Personas {(isFiltered || searchTerm !== "") && "(filtrado)"}
               </h3>
               <StatsSidebar stats={stats} />
             </div>
           </aside>
           <main className="flex-1 w-full lg:order-1 min-w-0">
             <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1 ml-1">
-              Familias
+              Familias {(isFiltered || searchTerm !== "") && "(filtrado)"}
             </h3>
             {/* BARRA DE BÚSQUEDA Y FILTROS (Siempre visible) */}
             <SearchAndFilterBar
