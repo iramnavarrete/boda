@@ -1,15 +1,12 @@
 import { Users } from "lucide-react";
-import GuestsTable from "./GuestsTable";
 import GuestsCards from "./GuestsCards";
 import { Guest } from "@/types";
 import Loader from "@/features/front/components/Loader";
 
-interface GuestsListViewProps {
+interface GuestsGridViewProps {
   filteredGuests: Guest[];
-  viewMode: "list" | "table";
   selectedGuests: Set<string>;
   onSelectGuest: (id: string) => void;
-  onSelectAll: (guests: Guest[]) => void;
   onEdit: (guest: Guest) => void;
   onDelete: (guest: Guest) => void;
   onSendWhatsApp: (guest: Guest) => void;
@@ -17,18 +14,16 @@ interface GuestsListViewProps {
   isLoading: boolean;
 }
 
-export default function GuestsListView({
+export default function GuestsGridView({
   filteredGuests,
-  viewMode,
   selectedGuests,
   onSelectGuest,
-  onSelectAll,
   onEdit,
   onDelete,
   onSendWhatsApp,
   onLockToggle,
   isLoading,
-}: GuestsListViewProps) {
+}: GuestsGridViewProps) {
   if (filteredGuests.length === 0) {
     return (
       <div className="text-center py-20 bg-white rounded-xl border border-dashed border-stone-300">
@@ -45,30 +40,14 @@ export default function GuestsListView({
   }
 
   return (
-    <>
-      <GuestsTable
-        guests={filteredGuests}
-        selectedGuests={selectedGuests}
-        viewMode={viewMode}
-        onSelectGuest={onSelectGuest}
-        onSelectAll={onSelectAll}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onSendWhatsApp={onSendWhatsApp}
-        onLockToggle={onLockToggle}
-      />
-
-      <GuestsCards
-        guests={filteredGuests}
-        selectedGuests={selectedGuests}
-        viewMode={viewMode}
-        onSelectGuest={onSelectGuest}
-        onSelectAll={onSelectAll}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onSendWhatsApp={onSendWhatsApp}
-        onLockToggle={onLockToggle}
-      />
-    </>
+    <GuestsCards
+      guests={filteredGuests}
+      selectedGuests={selectedGuests}
+      onSelectGuest={onSelectGuest}
+      onEdit={onEdit}
+      onDelete={onDelete}
+      onSendWhatsApp={onSendWhatsApp}
+      onLockToggle={onLockToggle}
+    />
   );
 }
