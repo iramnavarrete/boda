@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Guest, GuestFormData } from "@/types";
-import { useToast } from "@/features/shared/components/Toast";
 import { GuestService } from "@/services/guestService";
 
 const DEFAULT_GUEST: GuestFormData = {
@@ -19,12 +18,18 @@ export function useGuestForm() {
   const [currentGuestId, setCurrentGuestId] = useState<string | null>(null);
   const [formData, setFormData] = useState<GuestFormData>({ ...DEFAULT_GUEST });
 
-  const handleOpenModal = async (guest: Guest | null = null) => {
+  const handleOpenModal = async (
+    invitationId: string,
+    guest: Guest | null = null,
+  ) => {
     if (guest) {
       setCurrentGuestId(guest.id);
       let contactInfo;
       if (guest.tieneTelefono) {
-        contactInfo = await GuestService.getGuestContactInfo(guest.id);
+        contactInfo = await GuestService.getGuestContactInfo(
+          invitationId,
+          guest.id,
+        );
       }
       setFormData({
         ...guest,

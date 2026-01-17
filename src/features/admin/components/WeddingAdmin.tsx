@@ -21,7 +21,11 @@ import { useToast } from "@/features/shared/components/Toast";
 import { useAuthUser } from "@/features/shared/contexts/AuthUserContext";
 import FloatingBulkActionsBar from "@/features/admin/components/FloatingBulkActionsBar";
 
-export default function WeddingAdmin({ invitationId }: { invitationId: string }) {
+export default function WeddingAdmin({
+  invitationId,
+}: {
+  invitationId: string;
+}) {
   const [viewMode, setViewMode] = useState<"list" | "table">("list");
   const user = useAuthUser();
 
@@ -55,8 +59,10 @@ export default function WeddingAdmin({ invitationId }: { invitationId: string })
     closeConfirmModal,
     handleExecuteConfirmation,
   } = useConfirmModal();
-  const { handleSaveGuest, sendWhatsApp, handleExportExcel } =
-    useGuestActions(invitationId, user);
+  const { handleSaveGuest, sendWhatsApp, handleExportExcel } = useGuestActions(
+    invitationId,
+    user,
+  );
   const stats = useGuestsStats(guests);
   const { toast } = useToast();
 
@@ -83,7 +89,7 @@ export default function WeddingAdmin({ invitationId }: { invitationId: string })
         await GuestService.batchUpdateLock(
           invitationId,
           Array.from(selectedGuests),
-          shouldLock
+          shouldLock,
         );
         clearSelection();
       },
@@ -100,7 +106,7 @@ export default function WeddingAdmin({ invitationId }: { invitationId: string })
       action: async () => {
         await GuestService.batchDeleteGuests(
           invitationId,
-          Array.from(selectedGuests)
+          Array.from(selectedGuests),
         );
         clearSelection();
       },
@@ -169,7 +175,7 @@ export default function WeddingAdmin({ invitationId }: { invitationId: string })
           viewMode={viewMode}
           setViewMode={setViewMode}
           onExportExcel={() => handleExportExcel(guests)}
-          onNewGuest={() => handleOpenModal()}
+          onNewGuest={() => handleOpenModal(invitationId)}
           disabled={selectedGuests.size > 0}
         />
 
@@ -179,7 +185,7 @@ export default function WeddingAdmin({ invitationId }: { invitationId: string })
           selectedGuests={selectedGuests}
           onSelectGuest={handleSelectGuest}
           onSelectAll={handleSelectAll}
-          onEdit={handleOpenModal}
+          onEdit={(e) => handleOpenModal(invitationId, e)}
           onDelete={handleDeleteGuest}
           onSendWhatsApp={sendWhatsApp}
           onLockToggle={handleLockToggle}
