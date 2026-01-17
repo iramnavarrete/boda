@@ -57,7 +57,7 @@ export default function GuestsCards({
             }
             onEdit(g);
           }}
-          className={`flex flex-col bg-white rounded-xl shadow-sm border p-4 ${
+          className={`flex flex-col bg-white rounded-xl shadow-sm border p-4 cursor-default ${
             selectedGuests.has(g.id)
               ? "border-yellow-400 ring-1 ring-yellow-400"
               : "border-stone-200 hover:border-stone-300 hover:ring-1 hover:ring-stone-300"
