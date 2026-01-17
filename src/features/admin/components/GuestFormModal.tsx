@@ -1,8 +1,9 @@
 import { GuestFormData } from "@/types";
 import { cn } from "@heroui/theme";
 import { CheckSquare, Square, XCircle, XSquare } from "lucide-react";
+import Modal, { ModalProps } from "../../shared/components/Modal";
 
-interface GuestFormModalProps {
+interface GuestFormModalProps extends ModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -54,24 +55,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
   };
 
   return (
-    <div
-      data-state={isOpen ? "backdrop-open" : "backdrop-closed"}
-      onClick={() => {
-        onBackdropPress?.();
-      }}
-      className={cn(
-        "fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4",
-        "transition-all data-[state=backdrop-open]:opacity-100 duration-200 data-[state=backdrop-closed]:opacity-0 data-[state=backdrop-closed]:pointer-events-none"
-      )}
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        data-state={isOpen ? "modal-open" : "modal-closed"}
-        className={cn(
-          "bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90vh] overflow-hidden",
-          "transition-all data-[state=modal-open]:opacity-100 data-[state=modal-open]:translate-y-0 duration-300 data-[state=modal-closed]:opacity-0 data-[state=modal-closed]:translate-y-4 data-[state=modal-closed]:pointer-events-none"
-        )}
-      >
+    <Modal isOpen={isOpen} onBackdropPress={onBackdropPress}>
         <div className="px-6 py-4 border-b border-stone-200 flex justify-between items-center bg-stone-50 shrink-0 z-10">
           <h2 className="text-lg font-bold text-stone-800">
             {isEdit ? "Editar Invitado" : "Nuevo Invitado"}
@@ -285,8 +269,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 };
 
