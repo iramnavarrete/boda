@@ -1,5 +1,6 @@
 import React from "react";
 import { AlertTriangle, X } from "lucide-react";
+import { cn } from "@heroui/theme";
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface ConfirmationModalProps {
   isLoading?: boolean;
   isDanger?: boolean; // Para poner el botón rojo si es eliminar
   confirmText?: string;
+  onBackdropPress?: () => void;
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -21,12 +23,25 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   isLoading = false,
   isDanger = false,
   confirmText = "Confirmar",
+  onBackdropPress,
 }) => {
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-stone-100 transform transition-all scale-100">
+    <div
+      data-state={isOpen ? "backdrop-open" : "backdrop-closed"}
+      className={cn(
+        "fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200",
+        "transition-all data-[state=backdrop-open]:opacity-100 duration-200 data-[state=backdrop-closed]:opacity-0 data-[state=backdrop-closed]:pointer-events-none",
+      )}
+      onClick={() => onBackdropPress?.()}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        data-state={isOpen ? "modal-open" : "modal-closed"}
+        className={cn(
+          "bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden border border-stone-100 transform transition-all scale-100",
+          "transition-all data-[state=modal-open]:opacity-100 data-[state=modal-open]:translate-y-0 duration-300 data-[state=modal-closed]:opacity-0 data-[state=modal-closed]:translate-y-4 data-[state=modal-closed]:pointer-events-none",
+        )}
+      >
         {/* Header */}
         <div className="px-6 py-4 flex gap-4 items-start border-b border-stone-100 bg-stone-50/50">
           <div

@@ -231,6 +231,7 @@ export default function WeddingAdmin({
         isLoading={confirmModal.isLoading}
         isDanger={confirmModal.isDanger}
         confirmText={confirmModal.isDanger ? "Eliminar" : "Confirmar"}
+        onBackdropPress={closeConfirmModal}
       />
     </div>
   );
