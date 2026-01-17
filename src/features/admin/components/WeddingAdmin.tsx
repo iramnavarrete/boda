@@ -1,4 +1,3 @@
-"use client";
 import { useEffect, useState } from "react";
 import { Guest } from "@/types";
 import { AuthService } from "@/services/authService";
@@ -21,12 +20,9 @@ import { useGuestActions } from "@/features/admin/hooks/useGuestActions";
 import { useToast } from "@/features/shared/components/Toast";
 import { useAuthUser } from "@/features/shared/contexts/AuthUserContext";
 import FloatingBulkActionsBar from "@/features/admin/components/FloatingBulkActionsBar";
-import { useParams } from "next/navigation";
 
-export default function WeddingAdmin() {
+export default function WeddingAdmin({ invitationId }: { invitationId: string }) {
   const [viewMode, setViewMode] = useState<"list" | "table">("list");
-  const params = useParams();
-  const invitationId = params.invitationId as string;
   const user = useAuthUser();
 
   const { guests, isLoadingGuests, error } = useGuestsData(invitationId, user);
