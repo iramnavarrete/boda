@@ -3,14 +3,13 @@ import {
   Search,
   Filter,
   ChevronDown,
-  Download,
-  Smartphone,
   LayoutList,
   Plus,
   CheckCircle2,
   Clock,
   XCircle,
   X,
+  FileSpreadsheetIcon,
 } from "lucide-react";
 import { FilterCounts, FilterType } from "@/types";
 
@@ -23,6 +22,7 @@ interface SearchAndFilterBarProps {
   onExportExcel: () => void;
   onNewGuest: () => void;
   disabled: boolean;
+  filteredGuestCount: number;
 }
 
 export default function SearchAndFilterBar({
@@ -34,6 +34,7 @@ export default function SearchAndFilterBar({
   onExportExcel,
   onNewGuest,
   disabled,
+  filteredGuestCount
 }: SearchAndFilterBarProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
@@ -91,7 +92,7 @@ export default function SearchAndFilterBar({
           </div>
           <input
             className="w-full pl-10 pr-3 py-3 bg-white border border-stone-200 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-sm"
-            placeholder="Buscar familias..."
+            placeholder={`Buscar en ${filteredGuestCount} familias...`}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -109,20 +110,10 @@ export default function SearchAndFilterBar({
         <div className="relative" ref={filterRef}>
           <button
             onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className={`flex items-center gap-2 px-3 py-3 rounded-lg border text-sm font-medium transition-colors whitespace-nowrap ${getFilterColor()}`}
+            className={`flex h-full items-center gap-2 px-3 py-3 rounded-lg border text-sm font-medium transition-colors whitespace-nowrap ${getFilterColor()}`}
           >
             <Filter size={16} />
             <span className="hidden sm:inline">{getFilterLabel()}</span>
-            <span className="inline sm:hidden">Filtro</span>
-            <span className="bg-black/10 px-1.5 rounded-full text-xs">
-              {filterStatus === "all"
-                ? filterCounts.all
-                : filterStatus === "confirmed"
-                ? filterCounts.confirmed
-                : filterStatus === "pending"
-                ? filterCounts.pending
-                : filterCounts.rejected}
-            </span>
             <ChevronDown
               size={14}
               className={`transition-transform duration-200 ${
@@ -218,16 +209,16 @@ export default function SearchAndFilterBar({
         {/* Excel (Solo Desktop) */}
         <button
           onClick={onExportExcel}
-          className="hidden sm:flex items-center justify-center p-3 bg-white text-stone-600 border border-stone-200 rounded-lg hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors"
+          className="hidden md:flex items-center justify-center p-3 bg-white text-stone-600 border border-stone-200 rounded-lg hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors text-sm font-medium gap-2"
           title="Exportar Excel"
         >
-          <Download size={20} />
+          <FileSpreadsheetIcon size={18} /> <span>Exportar</span>
         </button>
 
         {/* Nuevo Invitado */}
         <button
           onClick={onNewGuest}
-          className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-4 py-3 rounded-lg transition-colors shadow-lg shadow-stone-900/20 text-sm font-medium"
+          className="flex-1 flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-4 py-3 rounded-lg transition-colors shadow-lg shadow-stone-900/20 text-sm font-medium"
         >
           <Plus size={18} /> <span>Nuevo</span>
         </button>
