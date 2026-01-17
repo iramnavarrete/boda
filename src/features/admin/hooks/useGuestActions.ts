@@ -4,25 +4,31 @@ import { useToast } from "@/features/shared/components/Toast";
 import { exportGuestsToExcel } from "@/services/excelService";
 import { Guest, GuestFormData } from "@/types";
 
-export function useGuestActions(user: User | null) {
+export function useGuestActions(invitationId: string, user: User | null) {
   const { toast } = useToast();
 
   const handleSaveGuest = async (
     e: React.FormEvent,
     currentGuestId: string | null,
     formData: GuestFormData,
-    onSuccess: () => void
+    onSuccess: () => void,
   ) => {
     e.preventDefault();
     try {
       if (!user) return;
-      const guestId = currentGuestId || (await GuestService.getUniqueGuestId());
-      await GuestService.saveGuest(guestId, formData, !currentGuestId);
+      const guestId =
+        currentGuestId || (await GuestService.getUniqueGuestId(invitationId));
+      await GuestService.saveGuest(
+        invitationId,
+        guestId,
+        formData,
+        !currentGuestId,
+      );
       toast(
         currentGuestId
           ? "Invitado actualizado correctamente"
           : "Invitado creado con éxito",
-        "success"
+        "success",
       );
       onSuccess();
     } catch (error) {
@@ -34,7 +40,10 @@ export function useGuestActions(user: User | null) {
   const sendWhatsApp = async (guest: Guest) => {
     toast("Abriendo WhatsApp...", "info");
 
-    const contactInfo = await GuestService.getGuestContactInfo(guest.id);
+    const contactInfo = await GuestService.getGuestContactInfo(
+      invitationId,
+      guest.id,
+    );
     console.log({ contactInfo });
     const telefono = contactInfo?.telefono;
     if (!telefono) {
@@ -49,7 +58,7 @@ export function useGuestActions(user: User | null) {
       `https://wa.me/+52${telefono
         .replace(/\+/g, "")
         .replace(/\s/g, "")}?text=${encodeURIComponent(msg)}`,
-      "_blank"
+      "_blank",
     );
   };
 
