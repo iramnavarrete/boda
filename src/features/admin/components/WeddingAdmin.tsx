@@ -56,7 +56,7 @@ export default function WeddingAdmin({ invitationId }: { invitationId: string })
     handleExecuteConfirmation,
   } = useConfirmModal();
   const { handleSaveGuest, sendWhatsApp, handleExportExcel } =
-    useGuestActions(user);
+    useGuestActions(invitationId, user);
   const stats = useGuestsStats(guests);
   const { toast } = useToast();
 
