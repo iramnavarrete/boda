@@ -185,6 +185,7 @@ export default function WeddingAdmin({
               onExportExcel={() => handleExportExcel(guests)}
               onNewGuest={() => handleOpenModal(invitationId)}
               disabled={selectedGuests.size > 0}
+              filteredGuestCount={filteredGuests.length}
             />
 
             <GuestsGridView
