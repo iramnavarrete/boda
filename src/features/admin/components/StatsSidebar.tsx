@@ -44,9 +44,6 @@ export default function StatsSidebar({ stats }: StatsSidebarProps) {
           </p>
           <div className="flex items-baseline gap-2 relative z-10">
             <p className="text-2xl font-bold leading-none">{stats.total}</p>
-            <span className="text-[10px] text-stone-500 font-medium">
-              {stats.count} Familias
-            </span>
           </div>
         </div>
 
