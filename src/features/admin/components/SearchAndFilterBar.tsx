@@ -20,8 +20,6 @@ interface SearchAndFilterBarProps {
   filterStatus: FilterType;
   setFilterStatus: (status: FilterType) => void;
   filterCounts: FilterCounts;
-  viewMode: "list" | "table";
-  setViewMode: (mode: "list" | "table") => void;
   onExportExcel: () => void;
   onNewGuest: () => void;
   disabled: boolean;
@@ -33,8 +31,6 @@ export default function SearchAndFilterBar({
   filterStatus,
   setFilterStatus,
   filterCounts,
-  viewMode,
-  setViewMode,
   onExportExcel,
   onNewGuest,
   disabled,
@@ -84,7 +80,7 @@ export default function SearchAndFilterBar({
   return (
     <fieldset
       disabled={disabled}
-      className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 my-2.5 transition-opacity disabled:opacity-50 disabled:pointer-events-none"
+      className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-2 mb-2.5 transition-opacity disabled:opacity-50 disabled:pointer-events-none"
     >
       {/* GRUPO IZQUIERDO: Búsqueda + Filtro */}
       <div className="flex flex-1 gap-2">
@@ -95,7 +91,7 @@ export default function SearchAndFilterBar({
           </div>
           <input
             className="w-full pl-10 pr-3 py-3 bg-white border border-stone-200 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-sm"
-            placeholder="Buscar invitados..."
+            placeholder="Buscar familias..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -137,7 +133,7 @@ export default function SearchAndFilterBar({
 
           {/* Menú Desplegable */}
           {isFilterOpen && (
-            <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-stone-100 overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-100 origin-top-right">
+            <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-stone-100 overflow-hidden z-20">
               <div className="p-1 space-y-0.5">
                 <button
                   onClick={() => {
@@ -227,30 +223,6 @@ export default function SearchAndFilterBar({
         >
           <Download size={20} />
         </button>
-
-        {/* Toggle Vista (Solo Desktop) */}
-        <div className="hidden sm:flex bg-white rounded-lg border border-stone-200 p-1">
-          <button
-            onClick={() => setViewMode("list")}
-            className={`p-1.5 rounded ${
-              viewMode === "list"
-                ? "bg-stone-100 text-stone-900 shadow-sm"
-                : "text-stone-400 hover:text-stone-600"
-            }`}
-          >
-            <Smartphone size={18} />
-          </button>
-          <button
-            onClick={() => setViewMode("table")}
-            className={`p-2 rounded ${
-              viewMode === "table"
-                ? "bg-stone-100 text-stone-900 shadow-sm"
-                : "text-stone-400 hover:text-stone-600"
-            }`}
-          >
-            <LayoutList size={18} />
-          </button>
-        </div>
 
         {/* Nuevo Invitado */}
         <button
