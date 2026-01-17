@@ -6,22 +6,28 @@ import {
   Trash2,
   MoreHorizontal,
   ChevronUp,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { cn } from "@heroui/theme";
 
 interface BulkActionsProps {
   count: number;
+  isSelectedAll: boolean;
   onUpdateLock: (lock: boolean) => void;
   onDelete: () => void;
   onCancel: () => void;
+  onSelectAll: () => void;
   className?: string;
 }
 
 const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
   count,
+  isSelectedAll,
   onUpdateLock,
   onDelete,
   onCancel,
+  onSelectAll,
   className,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -49,7 +55,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
       className={cn(
         "fixed bottom-6 inset-x-4 md:inset-x-auto md:right-8 z-50 flex flex-col items-center",
         "transition-all data-[state=open]:opacity-100 data-[state=open]:translate-y-0 duration-300 data-[state=closed]:opacity-0 data-[state=closed]:translate-y-8",
-        className
+        className,
       )}
     >
       <div className="bg-yellow-50 border border-yellow-200 rounded-2xl shadow-2xl p-2 pr-3 flex items-center gap-3 md:gap-6 w-full md:w-auto max-w-2xl relative ring-1 ring-black/5">
@@ -75,7 +81,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
                 "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
                 isOpen
                   ? "bg-yellow-100 text-yellow-800 border-yellow-300"
-                  : "bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-stone-300"
+                  : "bg-white text-stone-700 border-stone-200 hover:bg-stone-50 hover:border-stone-300",
               )}
             >
               <span>Acciones</span>
@@ -92,10 +98,30 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
               data-state={isOpen ? "open" : "closed"}
               className={cn(
                 "absolute bottom-full right-[-60px] mb-4 w-48 bg-white text-stone-800 rounded-xl shadow-sm border border-stone-100 overflow-hidden ring-1 ring-black/5",
-                "transition-all data-[state=open]:opacity-100 data-[state=open]:translate-y-0 duration-300 data-[state=closed]:opacity-0 data-[state=closed]:translate-y-2 data-[state=closed]:pointer-events-none"
+                "transition-all data-[state=open]:opacity-100 data-[state=open]:translate-y-0 duration-300 data-[state=closed]:opacity-0 data-[state=closed]:translate-y-2 data-[state=closed]:pointer-events-none",
               )}
             >
               <div className="p-1.5 space-y-1">
+                {!isSelectedAll && (
+                  <>
+                    <div className="px-2 py-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                      Selección
+                    </div>
+                    <button
+                      onClick={() => handleAction(onSelectAll)}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors text-left"
+                    >
+                      <CheckSquare size={16} className="text-stone-400" />
+                      <div>
+                        <span className="block font-medium">
+                          Seleccionar todos
+                        </span>
+                      </div>
+                    </button>
+                    <div className="h-px bg-stone-100 my-1" />
+                  </>
+                )}
+
                 {/* Grupo Edición */}
                 <div className="px-2 py-1.5 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
                   Edición
