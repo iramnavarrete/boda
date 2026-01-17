@@ -1,11 +1,12 @@
-import ProtectedPage from "@/features/admin/components/ProtectedPage";
-import WeddingAdmin from "@/features/front/components/WeddingAdmin";
+export default function AdminIndex() {
+  return null;
+}
 
-export default function WeddingAdminPanel() {
-
-  return (
-    <ProtectedPage>
-      <WeddingAdmin />
-    </ProtectedPage>
-  );
+export async function getServerSideProps() {
+  return {
+    redirect: {
+      destination: "/admin/invitations",
+      permanent: false,
+    },
+  };
 }
