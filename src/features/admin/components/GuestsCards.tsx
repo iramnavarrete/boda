@@ -16,9 +16,7 @@ import { MouseEvent } from "react";
 interface GuestsCardsProps {
   guests: Guest[];
   selectedGuests: Set<string>;
-  viewMode: "list" | "table";
   onSelectGuest: (id: string) => void;
-  onSelectAll: (guests: Guest[]) => void;
   onEdit: (guest: Guest) => void;
   onDelete: (guest: Guest) => void;
   onSendWhatsApp: (guest: Guest) => void;
@@ -28,9 +26,7 @@ interface GuestsCardsProps {
 export default function GuestsCards({
   guests,
   selectedGuests,
-  viewMode,
   onSelectGuest,
-  onSelectAll,
   onEdit,
   onDelete,
   onSendWhatsApp,
@@ -40,7 +36,7 @@ export default function GuestsCards({
 
   const handleActionButtonClick = (
     event: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>,
-    callback: () => void
+    callback: () => void,
   ) => {
     event.stopPropagation();
     callback();
@@ -48,27 +44,8 @@ export default function GuestsCards({
 
   return (
     <div
-      className={`${
-        viewMode === "table" ? "md:hidden" : ""
-      } grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`}
+      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4"
     >
-      <div className="col-span-full flex justify-end gap-2 text-xs font-medium text-stone-500">
-        <p>{guests.length} elementos</p>
-        <p>-</p>
-        <button
-          onClick={() => onSelectAll(guests)}
-          className="flex items-center gap-1"
-        >
-          {selectedGuests.size === guests.length
-            ? "Deseleccionar todos"
-            : "Seleccionar todos"}{" "}
-          {selectedGuests.size === guests.length ? (
-            <CheckSquare size={14} />
-          ) : (
-            <Square size={14} />
-          )}
-        </button>
-      </div>
       {guests.map((g) => (
         <div
           key={g.id}
@@ -80,13 +57,13 @@ export default function GuestsCards({
             }
             onEdit(g);
           }}
-          className={`bg-white rounded-xl shadow-sm border p-4 ${
+          className={`flex flex-col bg-white rounded-xl shadow-sm border p-4 ${
             selectedGuests.has(g.id)
               ? "border-yellow-400 ring-1 ring-yellow-400"
               : "border-stone-200 hover:border-stone-300 hover:ring-1 hover:ring-stone-300"
           }`}
         >
-          <div className="flex justify-between items-start mb-4 gap-2">
+          <div className="flex flex-1 justify-between items-start mb-4 gap-2">
             <div className="flex items-center gap-3">
               <button
                 onClick={(e) =>
@@ -105,7 +82,7 @@ export default function GuestsCards({
                 )}
               </button>
               <div>
-                <h3 className="font-semibold text-stone-800">{g.nombre}</h3>
+                <h3 className="font-semibold text-stone-800 leading-4 mb-0.5 line-clamp-3">{g.nombre}</h3>
                 <p className="text-xs text-stone-500 font-mono">ID: {g.id}</p>
               </div>
             </div>
@@ -115,8 +92,8 @@ export default function GuestsCards({
                   g.asistencia === null
                     ? "text-yellow-600 bg-yellow-100"
                     : g.asistencia === true
-                    ? "text-green-600 bg-green-100"
-                    : "text-red-600 bg-red-100"
+                      ? "text-green-600 bg-green-100"
+                      : "text-red-600 bg-red-100"
                 }`}
               >
                 <span>
@@ -134,7 +111,7 @@ export default function GuestsCards({
           </div>
           <fieldset
             disabled={isOneOrMoreSelected}
-            className="flex justify-between items-center pt-4 border-t transition-opacity border-stone-100 disabled:opacity-50 disabled:pointer-events-none"
+            className="flex justify-between items-center pt-2 transition-opacity disabled:opacity-50 disabled:pointer-events-none"
           >
             <div className="text-xs text-stone-400 font-medium">
               <button
