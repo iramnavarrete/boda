@@ -21,12 +21,15 @@ import { useGuestActions } from "@/features/admin/hooks/useGuestActions";
 import { useToast } from "@/features/shared/components/Toast";
 import { useAuthUser } from "@/features/shared/contexts/AuthUserContext";
 import FloatingBulkActionsBar from "@/features/admin/components/FloatingBulkActionsBar";
+import { useParams } from "next/navigation";
 
 export default function WeddingAdmin() {
   const [viewMode, setViewMode] = useState<"list" | "table">("list");
+  const params = useParams();
+  const invitationId = params.invitationId as string;
   const user = useAuthUser();
 
-  const { guests, isLoadingGuests, error } = useGuestsData(user);
+  const { guests, isLoadingGuests, error } = useGuestsData(invitationId, user);
   const {
     searchTerm,
     setSearchTerm,
@@ -82,6 +85,7 @@ export default function WeddingAdmin() {
       isDanger: false,
       action: async () => {
         await GuestService.batchUpdateLock(
+          invitationId,
           Array.from(selectedGuests),
           shouldLock
         );
@@ -98,7 +102,10 @@ export default function WeddingAdmin() {
       message: `¿Estás seguro de que deseas eliminar permanentemente a los ${selectedGuests.size} invitados seleccionados? Esta acción no se puede deshacer.`,
       isDanger: true,
       action: async () => {
-        await GuestService.batchDeleteGuests(Array.from(selectedGuests));
+        await GuestService.batchDeleteGuests(
+          invitationId,
+          Array.from(selectedGuests)
+        );
         clearSelection();
       },
     });
@@ -114,7 +121,7 @@ export default function WeddingAdmin() {
         "Esta acción es permanente y no se puede deshacer. ¿Estás seguro de que quieres eliminar este registro?",
       isDanger: true,
       action: async () => {
-        await GuestService.deleteGuest(id);
+        await GuestService.deleteGuest(invitationId, id);
         if (selectedGuests.has(id)) {
           removeFromSelection(id);
         }
@@ -138,7 +145,7 @@ export default function WeddingAdmin() {
       message,
       isDanger: false,
       action: async () => {
-        await GuestService.toggleGuestLock(guest);
+        await GuestService.toggleGuestLock(invitationId, guest);
       },
     });
   };
