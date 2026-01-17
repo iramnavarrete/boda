@@ -8,8 +8,6 @@ import {
   writeBatch,
   getDoc,
   FirestoreError,
-  where,
-  getDocs,
 } from "firebase/firestore";
 import { Guest, GuestContactInfo, GuestFormData } from "../../types/types";
 import { db } from "@/lib/firebase/config";
@@ -25,10 +23,12 @@ const getInvitationId = (): string => {
 
 export const GuestService = {
   subscribeToGuests: (
+    invitationId: string, // <--- AHORA SE RECIBE COMO PARÁMETRO
     callback: (guests: Guest[]) => void,
     onError?: (error: FirestoreError) => void
   ) => {
-    const invitationId = getInvitationId();
+    if (!invitationId) return () => {};
+
     const q = query(collection(db, "invitations", invitationId, "guests"));
 
     return onSnapshot(
@@ -47,7 +47,7 @@ export const GuestService = {
         callback(
           data.sort(
             (a, b) =>
-              // @ts-ignore (createdAt puede ser FieldValue en escritura, pero Timestamp en lectura)
+              // @ts-ignore
               (b.fechaCreacion?.seconds || 0) - (a.fechaCreacion?.seconds || 0)
           )
         );
@@ -58,8 +58,7 @@ export const GuestService = {
     );
   },
 
-  getGuestContactInfo: async (guestId: string) => {
-    const invitationId = getInvitationId();
+  getGuestContactInfo: async (invitationId: string, guestId: string) => {
     try {
       const privateRef = doc(
         db,
@@ -82,17 +81,13 @@ export const GuestService = {
   },
 
   // GENERAR ID ÚNICO
-  getUniqueGuestId: async () => {
+  getUniqueGuestId: async (invitationId: string) => {
     let isUnique = false;
     let newId = "";
     let attempts = 0;
-    const invitationId = getInvitationId();
 
     while (!isUnique) {
-      // Generador simple de ID de 6 caracteres (puedes usar tu propia función generateGuestID si la tienes)
       newId = generateGuestID();
-
-      // Verificamos existencia
       const guest = await getDoc(
         doc(db, "invitations", invitationId, "guests", newId)
       );
@@ -112,8 +107,12 @@ export const GuestService = {
     return newId;
   },
 
-  saveGuest: async (guestId: string, data: GuestFormData, isNew: boolean) => {
-    const invitationId = getInvitationId();
+  saveGuest: async (
+    invitationId: string,
+    guestId: string,
+    data: GuestFormData,
+    isNew: boolean
+  ) => {
     const batch = writeBatch(db);
     const timestamp = serverTimestamp();
 
@@ -163,10 +162,8 @@ export const GuestService = {
     await batch.commit();
   },
 
-  deleteGuest: async (guestId: string) => {
-    const invitationId = getInvitationId();
+  deleteGuest: async (invitationId: string, guestId: string) => {
     const batch = writeBatch(db);
-
     const publicRef = doc(db, "invitations", invitationId, "guests", guestId);
     const privateRef = doc(
       db,
@@ -184,9 +181,12 @@ export const GuestService = {
     await batch.commit();
   },
 
-  batchUpdateLock: async (guestIds: string[], shouldLock: boolean) => {
+  batchUpdateLock: async (
+    invitationId: string,
+    guestIds: string[],
+    shouldLock: boolean
+  ) => {
     const batch = writeBatch(db);
-    const invitationId = getInvitationId();
 
     guestIds.forEach((id) => {
       batch.update(doc(db, "invitations", invitationId, "guests", id), {
@@ -197,8 +197,7 @@ export const GuestService = {
     await batch.commit();
   },
 
-  toggleGuestLock: async (guest: Guest) => {
-    const invitationId = getInvitationId();
+  toggleGuestLock: async (invitationId: string, guest: Guest) => {
     const docRef = doc(db, "invitations", invitationId, "guests", guest.id);
 
     await setDoc(
@@ -211,9 +210,8 @@ export const GuestService = {
     );
   },
 
-  batchDeleteGuests: async (guestIds: string[]) => {
+  batchDeleteGuests: async (invitationId: string, guestIds: string[]) => {
     const batch = writeBatch(db);
-    const invitationId = getInvitationId();
 
     guestIds.forEach((id) => {
       const publicRef = doc(db, "invitations", invitationId, "guests", id);
@@ -226,28 +224,10 @@ export const GuestService = {
         "private",
         "contactInfo"
       );
-
       batch.delete(privateRef);
       batch.delete(publicRef);
     });
 
     await batch.commit();
-  },
-
-  getUserInvitationIds: async (): Promise<string[]> => {
-    try {
-      const user = AuthService.getCurrentUser();
-      if (!user) return [];
-
-      const q = query(
-        collection(db, "invitations"),
-        where("allowedUsers", "array-contains", user.uid)
-      );
-
-      const snapshot = await getDocs(q);
-      return snapshot.docs.map((doc) => doc.id);
-    } catch (error) {
-      return [];
-    }
   },
 };
