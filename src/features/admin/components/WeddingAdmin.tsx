@@ -7,7 +7,7 @@ import Header from "@/features/admin/components/Header";
 import GuestFormModal from "@/features/admin/components/GuestFormModal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
 import SearchAndFilterBar from "@/features/admin/components/SearchAndFilterBar";
-import GuestsListView from "@/features/admin/components/GuestsListView";
+import GuestsGridView from "@/features/admin/components/GuestsGridView";
 
 // Hooks personalizados
 import { useGuestsData } from "@/features/admin/hooks/useGuestData";
@@ -20,6 +20,7 @@ import { useGuestActions } from "@/features/admin/hooks/useGuestActions";
 import { useToast } from "@/features/shared/components/Toast";
 import { useAuthUser } from "@/features/shared/contexts/AuthUserContext";
 import FloatingBulkActionsBar from "@/features/admin/components/FloatingBulkActionsBar";
+import StatsSidebar from "./StatsSidebar";
 
 export default function WeddingAdmin({
   invitationId,
@@ -158,47 +159,56 @@ export default function WeddingAdmin({
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans pb-20 relative">
-      <Header
-        stats={stats}
-        guestCount={guests.length}
-        onLogout={AuthService.logout}
-      />
+      <Header onLogout={AuthService.logout} />
 
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-        {/* BARRA DE BÚSQUEDA Y FILTROS (Siempre visible) */}
-        <SearchAndFilterBar
-          searchTerm={searchTerm}
-          setSearchTerm={setSearchTerm}
-          filterStatus={filterStatus}
-          setFilterStatus={setFilterStatus}
-          filterCounts={filterCounts}
-          viewMode={viewMode}
-          setViewMode={setViewMode}
-          onExportExcel={() => handleExportExcel(guests)}
-          onNewGuest={() => handleOpenModal(invitationId)}
-          disabled={selectedGuests.size > 0}
-        />
+      <section className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+        <div className="flex flex-col lg:flex-row gap-4 items-start mt-2.5">
+          <aside className="w-full lg:w-auto">
+            <div className="lg:sticky lg:top-24">
+              <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1 ml-1">
+                Personas
+              </h3>
+              <StatsSidebar stats={stats} />
+            </div>
+          </aside>
+          <main className="flex-1 w-full lg:order-1 min-w-0">
+            <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1 ml-1">
+              Familias
+            </h3>
+            {/* BARRA DE BÚSQUEDA Y FILTROS (Siempre visible) */}
+            <SearchAndFilterBar
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              filterStatus={filterStatus}
+              setFilterStatus={setFilterStatus}
+              filterCounts={filterCounts}
+              onExportExcel={() => handleExportExcel(guests)}
+              onNewGuest={() => handleOpenModal(invitationId)}
+              disabled={selectedGuests.size > 0}
+            />
 
-        <GuestsListView
-          filteredGuests={filteredGuests}
-          viewMode={viewMode}
-          selectedGuests={selectedGuests}
-          onSelectGuest={handleSelectGuest}
-          onSelectAll={handleSelectAll}
-          onEdit={(e) => handleOpenModal(invitationId, e)}
-          onDelete={handleDeleteGuest}
-          onSendWhatsApp={sendWhatsApp}
-          onLockToggle={handleLockToggle}
-          isLoading={isLoadingGuests}
-        />
+            <GuestsGridView
+              filteredGuests={filteredGuests}
+              selectedGuests={selectedGuests}
+              onSelectGuest={handleSelectGuest}
+              onEdit={(e) => handleOpenModal(invitationId, e)}
+              onDelete={handleDeleteGuest}
+              onSendWhatsApp={sendWhatsApp}
+              onLockToggle={handleLockToggle}
+              isLoading={isLoadingGuests}
+            />
+          </main>
+        </div>
       </section>
 
       {/* BARRA FLOTANTE DE ACCIONES MASIVAS */}
       <FloatingBulkActionsBar
         count={selectedGuests.size}
+        isSelectedAll={selectedGuests.size === filteredGuests.length}
         onUpdateLock={handleBulkUpdateLock}
         onDelete={handleBulkDelete}
         onCancel={clearSelection}
+        onSelectAll={() => handleSelectAll(filteredGuests)}
       />
 
       <GuestFormModal
