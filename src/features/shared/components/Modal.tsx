@@ -33,7 +33,7 @@ const Modal: React.FC<PropsWithChildren<ModalProps>> = ({
               transition={{
                 duration: 0.2,
               }}
-              className="bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[90dvh] overflow-hidden"
+              className="bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[95dvh] overflow-hidden"
             >
               {children}
             </motion.div>
