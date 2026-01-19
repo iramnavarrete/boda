@@ -43,9 +43,7 @@ export default function GuestsCards({
   };
 
   return (
-    <div
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4"
-    >
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 select-none">
       {guests.map((g) => (
         <div
           key={g.id}
@@ -57,7 +55,7 @@ export default function GuestsCards({
             }
             onEdit(g);
           }}
-          className={`flex flex-col bg-white rounded-xl shadow-sm border p-4 cursor-default ${
+          className={`flex flex-col bg-white rounded-xl shadow-sm border p-4 cursor-default transition-all duration-300 ${
             selectedGuests.has(g.id)
               ? "border-yellow-400 ring-1 ring-yellow-400"
               : "border-stone-200 hover:border-stone-300 hover:ring-1 hover:ring-stone-300"
@@ -82,7 +80,9 @@ export default function GuestsCards({
                 )}
               </button>
               <div>
-                <h3 className="font-semibold text-stone-800 leading-4 mb-0.5 line-clamp-3">{g.nombre}</h3>
+                <h3 className="font-semibold text-stone-800 leading-4 mb-0.5 line-clamp-3">
+                  {g.nombre}
+                </h3>
                 <p className="text-xs text-stone-500 font-mono">ID: {g.id}</p>
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function GuestsCards({
           </div>
           <fieldset
             disabled={isOneOrMoreSelected}
-            className="flex justify-between items-center pt-2 transition-opacity disabled:opacity-50 disabled:pointer-events-none"
+            className="flex justify-between items-center pt-2 transition-opacity duration-300 disabled:opacity-50 disabled:pointer-events-none"
           >
             <div className="text-xs text-stone-400 font-medium">
               <button
