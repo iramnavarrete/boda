@@ -32,7 +32,7 @@ export const InvitationDashboard = ({
           </div>
           <Link
             href={`/admin/invitations/${invitationId}`}
-            className="bg-[#C5A669] text-white px-6 py-3 rounded-xl shadow-lg shadow-[#C5A669]/20 hover:bg-[#B39358] transition-all flex items-center gap-2 font-medium"
+            className="bg-[#C5A669] text-white px-6 py-3 rounded-xl shadow-lg shadow-[#C5A669]/20 hover:bg-[#B39358] transition-all duration-300 flex items-center gap-2 font-medium"
           >
             <Users size={18} />
             Gestionar Invitados
@@ -144,7 +144,7 @@ export const InvitationDashboard = ({
 // --- SUB-COMPONENTES DE UI ---
 
 const StatCard = ({ title, value, icon, bg, trend }: any) => (
-  <div className="bg-white p-6 rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-shadow">
+  <div className="bg-white p-6 rounded-2xl border border-stone-100 shadow-sm hover:shadow-md transition-shadow duration-300">
     <div className="flex justify-between items-start mb-4">
       <div>
         <p className="text-stone-500 text-sm font-medium mb-1">{title}</p>
@@ -152,7 +152,7 @@ const StatCard = ({ title, value, icon, bg, trend }: any) => (
       </div>
       <div className={`p-3 rounded-xl ${bg}`}>{icon}</div>
     </div>
-    <div className="flex items-center gap-1 text-xs font-medium text-stone-400 bg-stone-50 inline-block px-2 py-1 rounded-md">
+    <div className="items-center gap-1 text-xs font-medium text-stone-400 bg-stone-50 inline-block px-2 py-1 rounded-md">
       <TrendingUp size={12} /> {trend}
     </div>
   </div>
