@@ -152,7 +152,7 @@ const StatCard = ({ title, value, icon, bg, trend }: any) => (
       </div>
       <div className={`p-3 rounded-xl ${bg}`}>{icon}</div>
     </div>
-    <div className="items-center gap-1 text-xs font-medium text-stone-400 bg-stone-50 inline-block px-2 py-1 rounded-md">
+    <div className="flex items-center gap-1 text-xs font-medium text-stone-400 bg-stone-50 px-2 py-1 rounded-md">
       <TrendingUp size={12} /> {trend}
     </div>
   </div>
