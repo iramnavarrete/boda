@@ -150,19 +150,18 @@ export default function InvitationsListPage() {
     (async () => {
       const invitations = await InvitationsService.getUserInvitations(user.uid);
       setInvitations(
-        // invitations.map((el) => ({
-        //   id: el.id,
-        //   title: "50 Aniversario",
-        //   names: "Roberto & Ana",
-        //   date: "15 Dic 2026",
-        //   targetDate: "2026-12-15T21:00:00",
-        //   location: "Salón Central",
-        //   status: "draft",
-        //   type: "Boda",
-        //   coverUrl:
-        //     "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=800&auto=format&fit=crop",
-        // })),
-        []
+        invitations.map((el) => ({
+          id: el.id,
+          title: "50 Aniversario",
+          names: "Roberto & Ana",
+          date: "15 Dic 2026",
+          targetDate: "2026-12-15T21:00:00",
+          location: "Salón Central",
+          status: "draft",
+          type: "Boda",
+          coverUrl:
+            "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=800&auto=format&fit=crop",
+        })),
       );
       setIsLoading(false);
     })();
