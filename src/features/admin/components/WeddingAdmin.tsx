@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Guest } from "@/types";
-import { AuthService } from "@/services/authService";
 import { GuestService } from "@/services/guestService";
 import Header from "@/features/admin/components/Header";
 // Reemplazamos la barra antigua por la nueva flotante
@@ -159,7 +158,7 @@ export default function WeddingAdmin({
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-800 font-sans pb-20 relative">
-      <Header onLogout={AuthService.logout} />
+      <Header />
 
       <section className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
         <div className="flex flex-col lg:flex-row gap-4 items-start mt-2.5">

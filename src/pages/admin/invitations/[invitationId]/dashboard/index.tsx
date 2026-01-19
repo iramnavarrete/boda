@@ -12,8 +12,6 @@ export default function AdminDashboard() {
   return (
     <InvitationDashboard
       invitationId={invitationId}
-      onBack={() => {}}
-      onGoToList={() => {}}
     />
   );
 }
