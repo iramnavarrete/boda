@@ -1,4 +1,3 @@
-
 import {
   Users,
   ArrowRight,
@@ -8,37 +7,17 @@ import {
   TrendingUp,
   Activity,
 } from "lucide-react";
+import Header from "./Header";
+import Link from "next/link";
 
 export const InvitationDashboard = ({
   invitationId,
-  onGoToList,
-  onBack,
 }: {
   invitationId: string;
-  onGoToList: () => void;
-  onBack: () => void;
 }) => {
   return (
     <div className="min-h-screen bg-stone-50 font-sans">
-      {/* Header Dashboard */}
-      <header className="bg-white border-b border-stone-200 px-6 py-4 sticky top-0 z-20">
-        <div className="max-w-6xl mx-auto flex justify-between items-center">
-          <button
-            onClick={onBack}
-            className="text-stone-500 hover:text-stone-800 flex items-center gap-2 text-sm font-medium transition-colors"
-          >
-            <ArrowRight className="rotate-180" size={16} /> Volver a mis eventos
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 bg-stone-900 rounded-full flex items-center justify-center text-[#C5A669]">
-              <Heart className="fill-current" size={16} />
-            </div>
-            <span className="font-serif font-bold text-stone-800">
-              Boda X&J
-            </span>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="max-w-6xl mx-auto px-6 py-8 space-y-8 animate-in fade-in duration-500">
         {/* Sección de Bienvenida */}
@@ -51,13 +30,13 @@ export const InvitationDashboard = ({
               Última actualización: hace 5 minutos
             </p>
           </div>
-          <button
-            onClick={onGoToList}
+          <Link
+            href={`/admin/invitations/${invitationId}`}
             className="bg-[#C5A669] text-white px-6 py-3 rounded-xl shadow-lg shadow-[#C5A669]/20 hover:bg-[#B39358] transition-all flex items-center gap-2 font-medium"
           >
             <Users size={18} />
             Gestionar Invitados
-          </button>
+          </Link>
         </div>
 
         {/* KPIs / Estadísticas */}
