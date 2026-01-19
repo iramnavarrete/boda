@@ -13,6 +13,7 @@ import { useRouter } from "next/router";
 import Loader from "@/features/front/components/Loader";
 import Image from "next/image";
 import { useCountdown } from "@/features/front/hooks/useCountDown";
+import Link from "next/link";
 
 export interface Invitation {
   id: string;
@@ -21,23 +22,22 @@ export interface Invitation {
   date: string;
   targetDate: string;
   location: string;
+  type: string;
   status: "active" | "draft" | "archived";
   coverUrl?: string;
 }
 
 const InvitationCardVisual = ({
   invitation,
-  onClick,
 }: {
   invitation: Invitation;
-  onClick: (id: string) => void;
 }) => {
   const [days, hours, minutes, seconds] = useCountdown(
     new Date(invitation.targetDate)
   );
   return (
-    <div
-      onClick={() => onClick(invitation.id)}
+    <Link
+    href={`/admin/invitations/${invitation.id}/dashboard`}
       className="group bg-white rounded-2xl overflow-hidden border border-stone-200 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col h-full relative isolate"
     >
       {/* IMAGEN DE PORTADA */}
@@ -126,7 +126,7 @@ const InvitationCardVisual = ({
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 };
 
@@ -169,6 +169,7 @@ export const InvitationsListPage = () => {
           targetDate: "2026-12-15T21:00:00",
           location: "Salón Central",
           status: "draft",
+          type: "Boda",
           coverUrl:
             "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=800&auto=format&fit=crop",
         }))
@@ -202,9 +203,6 @@ export const InvitationsListPage = () => {
               <div key={inv.id} className="w-full max-w-sm flex-shrink-0">
                 <InvitationCardVisual
                   invitation={inv}
-                  onClick={() => {
-                    router.push(`/admin/invitations/${inv.id}`);
-                  }}
                 />
               </div>
             ))}
