@@ -1,19 +1,21 @@
 import { useState, useEffect } from "react";
 import {
   Calendar,
-  Heart,
   MapPin,
   Clock,
   AlertCircle,
   MailOpen,
+  ArrowRight,
+  LogOut,
 } from "lucide-react";
 import { InvitationsService } from "@/services/invitationsService";
 import { useAuthUser } from "@/features/shared/contexts/AuthUserContext";
-import { useRouter } from "next/router";
 import Loader from "@/features/front/components/Loader";
 import Image from "next/image";
 import { useCountdown } from "@/features/front/hooks/useCountDown";
 import Link from "next/link";
+import { AuthService } from "@/services/authService";
+import LoginFlowersIcon from "@/icons/login-flowers-icon";
 
 export interface Invitation {
   id: string;
@@ -27,102 +29,89 @@ export interface Invitation {
   coverUrl?: string;
 }
 
-const InvitationCardVisual = ({
-  invitation,
-}: {
-  invitation: Invitation;
-}) => {
-  const [days, hours, minutes, seconds] = useCountdown(
-    new Date(invitation.targetDate)
-  );
+const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
+  const targetDateObj = new Date(invitation.targetDate);
+  const [days, hours] = useCountdown(targetDateObj);
+
   return (
     <Link
-    href={`/admin/invitations/${invitation.id}/dashboard`}
-      className="group bg-white rounded-2xl overflow-hidden border border-stone-200 shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 cursor-pointer flex flex-col h-full relative isolate"
+      href={`/admin/invitations/${invitation.id}/dashboard`}
+      className="group relative flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-[#EBE5DA] transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(197,166,105,0.2)] hover:-translate-y-1 hover:border-[#D4C4A8]"
     >
-      {/* IMAGEN DE PORTADA */}
-      <div className="h-40 w-full bg-stone-200 relative overflow-hidden">
-        {/* Overlay gradiente */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent z-10 opacity-60 group-hover:opacity-80 transition-opacity" />
+      {/* SECCIÓN IMAGEN */}
+      <div className="relative h-48 w-full overflow-hidden bg-[#F4EFE6]">
+        {/* Overlay degradado */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent z-10 opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
 
-        <div className="relative w-full h-full">
-          <Image
-            src={
-              invitation.coverUrl ||
-              "https://images.unsplash.com/photo-1519225421980-715cb0202128?q=80&w=1000&auto=format&fit=crop"
-            }
-            alt="Cover"
-            fill
-            className="object-cover transform group-hover:scale-105 transition-transform duration-700 ease-out"
-            style={{ willChange: "transform" }}
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          />
-        </div>
+        <Image
+          src={
+            invitation.coverUrl ||
+            "https://images.unsplash.com/photo-1519225421980-715cb0202128?q=80&w=1000&auto=format&fit=crop"
+          }
+          alt={invitation.names}
+          fill
+          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+        />
 
-        {/* Badge de estado flotante */}
+        {/* Badge de Estado */}
         <div className="absolute top-3 right-3 z-20">
           <span
-            className={`backdrop-blur-md text-[10px] font-bold px-2 py-1 rounded-lg shadow-sm uppercase tracking-wider ${
+            className={`
+            px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-md shadow-sm border border-white/10
+            ${
               invitation.status === "active"
-                ? "bg-green-500/90 text-white"
-                : "bg-stone-500/90 text-white"
-            }`}
+                ? "bg-[#C5A669]/90 text-white"
+                : "bg-stone-500/80 text-white"
+            }
+          `}
           >
             {invitation.status === "active" ? "Activa" : "Borrador"}
           </span>
         </div>
       </div>
 
-      {/* CONTENIDO */}
-      <div className="p-5 flex flex-col gap-4 flex-1">
-        <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-serif text-xl text-stone-800 font-bold leading-tight group-hover:text-[#C5A669] transition-colors">
-              {invitation.names}
-            </h3>
-            <p className="text-xs text-stone-400 mt-1 uppercase tracking-wide">
-              {invitation.title}
-            </p>
+      {/* SECCIÓN CONTENIDO */}
+      <div className="flex flex-col flex-1 p-6 gap-4">
+        {/* Encabezado */}
+        <div>
+          <p className="text-[10px] font-bold text-[#A39885] uppercase tracking-widest mb-1.5 flex items-center gap-2">
+            <span className="w-6 h-[1px] bg-[#D4C4A8]"></span>
+            {invitation.type}
+          </p>
+          <h3 className="font-serif text-2xl text-[#5A5A5A] leading-tight group-hover:text-[#C5A669] transition-colors duration-300">
+            {invitation.names}
+          </h3>
+        </div>
+
+        {/* Detalles */}
+        <div className="grid grid-cols-1 gap-2.5 py-4 border-t border-b border-[#F5F2EB]">
+          <div className="flex items-center gap-2.5 text-sm text-[#8A8A8A]">
+            <Calendar size={15} className="text-[#C5A669]" />
+            <span>{invitation.date}</span>
+          </div>
+          <div className="flex items-center gap-2.5 text-sm text-[#8A8A8A]">
+            <MapPin size={15} className="text-[#C5A669]" />
+            <span className="truncate">{invitation.location}</span>
           </div>
         </div>
 
-        {/* Info Grid */}
-        <div className="grid grid-cols-2 gap-3 py-3 border-t border-b border-stone-100">
-          <div className="space-y-1">
-            <p className="text-[10px] text-stone-400 uppercase">Fecha</p>
-            <p className="text-sm font-medium text-stone-600 flex items-center gap-1.5">
-              <Calendar size={14} className="text-[#C5A669]" />
-              {invitation.date}
-            </p>
+        {/* Footer: Contador y Acción */}
+        <div className="mt-auto pt-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock size={14} className="text-[#C5A669]" />
+            <div className="flex items-baseline gap-1 text-xs font-medium text-[#5A5A5A]">
+              <span className="bg-[#FDFBF7] px-1.5 py-0.5 rounded border border-[#EBE5DA] text-[#C5A669] font-bold">
+                {days}d
+              </span>
+              <span className="bg-[#FDFBF7] px-1.5 py-0.5 rounded border border-[#EBE5DA] text-[#C5A669] font-bold">
+                {hours}h
+              </span>
+              <span className="text-[#A39885]">restantes</span>
+            </div>
           </div>
-          <div className="space-y-1">
-            <p className="text-[10px] text-stone-400 uppercase">Lugar</p>
-            <p className="text-sm font-medium text-stone-600 flex items-center gap-1.5 truncate">
-              <MapPin size={14} className="text-[#C5A669]" />
-              {invitation.location}
-            </p>
-          </div>
-        </div>
 
-        {/* Footer con Contador */}
-        <div className="mt-auto pt-1 flex justify-between items-center">
-          <div className="flex gap-2 items-center">
-            <Clock size={14} className="text-stone-400" />
-            <span className="text-xs text-stone-500 font-medium">Faltan:</span>
-          </div>
-          <div className="flex gap-1 text-sm font-bold text-stone-800">
-            {/* Versión compacta del contador */}
-            <span className="bg-stone-100 px-1.5 py-0.5 rounded text-stone-600 group-hover:bg-[#C5A669]/10 group-hover:text-[#C5A669] transition-colors">
-              {days}d
-            </span>{" "}
-            :
-            <span className="bg-stone-100 px-1.5 py-0.5 rounded text-stone-600 group-hover:bg-[#C5A669]/10 group-hover:text-[#C5A669] transition-colors">
-              {hours}h
-            </span>{" "}
-            :
-            <span className="bg-stone-100 px-1.5 py-0.5 rounded text-stone-600 group-hover:bg-[#C5A669]/10 group-hover:text-[#C5A669] transition-colors">
-              {minutes}m
-            </span>
+          <div className="w-9 h-9 rounded-full bg-[#FDFBF7] border border-[#EBE5DA] flex items-center justify-center text-[#C5A669] group-hover:bg-[#C5A669] group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-md">
+            <ArrowRight size={16} />
           </div>
         </div>
       </div>
@@ -130,19 +119,20 @@ const InvitationCardVisual = ({
   );
 };
 
+// 2. Estado Vacío (EmptyInvitationsState)
 const EmptyInvitationsState = () => (
   <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-500">
-    <div className="w-24 h-24 bg-stone-100 rounded-full flex items-center justify-center mb-6">
-      <MailOpen size={48} className="text-stone-300" />
+    <div className="w-24 h-24 bg-[#F4EFE6] rounded-full flex items-center justify-center mb-6">
+      <MailOpen size={48} className="text-[#C5A669]" />
     </div>
-    <h3 className="font-serif text-2xl text-stone-800 mb-2">
+    <h3 className="font-serif text-2xl text-[#5A5A5A] mb-2">
       Sin invitaciones asignadas
     </h3>
-    <p className="text-stone-500 max-w-sm mx-auto mb-8">
+    <p className="text-[#8A8A8A] max-w-sm mx-auto mb-8">
       Actualmente no tienes ninguna invitación activa asociada a tu cuenta.
     </p>
-    <div className="bg-yellow-50 text-yellow-800 px-6 py-4 rounded-xl text-sm border border-yellow-100 max-w-md">
-      <p className="font-bold mb-1 flex items-center gap-2 justify-center">
+    <div className="bg-[#FDFBF7] text-[#A39885] px-6 py-4 rounded-xl text-sm border border-[#EBE5DA] max-w-md">
+      <p className="font-bold mb-1 flex items-center gap-2 justify-center text-[#C5A669]">
         <AlertCircle size={16} /> ¿Crees que es un error?
       </p>
       Contacta al administrador del sistema para que te asigne tus eventos
@@ -151,9 +141,8 @@ const EmptyInvitationsState = () => (
   </div>
 );
 
-export const InvitationsListPage = () => {
+export default function InvitationsListPage() {
   const user = useAuthUser();
-  const router = useRouter();
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -172,7 +161,7 @@ export const InvitationsListPage = () => {
           type: "Boda",
           coverUrl:
             "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=800&auto=format&fit=crop",
-        }))
+        })),
       );
       setIsLoading(false);
     })();
@@ -183,34 +172,80 @@ export const InvitationsListPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 p-6 md:p-12 font-sans">
-      <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        {/* Header */}
-        <div className="text-center space-y-3 mb-10">
-          <div className="inline-flex items-center justify-center p-3 bg-white rounded-full shadow-sm mb-4">
-            <Heart className="text-[#C5A669] fill-current" size={24} />
-          </div>
-          <h1 className="font-serif text-3xl md:text-4xl text-stone-800">
-            Mis Eventos
-          </h1>
-          <p className="text-stone-500 max-w-lg mx-auto">
-            Bienvenido a tu panel. Selecciona el evento que deseas gestionar.
-          </p>
-        </div>
-        {invitations.length > 0 ? (
-          <div className="flex flex-wrap justify-center gap-8">
-            {invitations.map((inv) => (
-              <div key={inv.id} className="w-full max-w-sm flex-shrink-0">
-                <InvitationCardVisual
-                  invitation={inv}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <EmptyInvitationsState />
-        )}
+    <div className="min-h-screen bg-[#F9F7F2] font-sans text-[#5A5A5A] relative overflow-hidden">
+      {/* Textura de papel (Patrón SVG sutil) */}
+      <svg
+        className="fixed inset-0 w-screen h-screen opacity-30 pointer-events-none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <filter id="noiseFilter">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.8"
+            numOctaves="3"
+            stitchTiles="stitch"
+          />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#noiseFilter)" />
+      </svg>
+
+      {/* Decoración Floral: Esquina Superior Izquierda */}
+      <LoginFlowersIcon className="absolute top-0 left-0 w-64 h-64 text-[#C5A669]/20 pointer-events-none -translate-x-10 -translate-y-10" />
+
+      {/* Decoración Floral: Esquina Inferior Derecha (Rotada) */}
+      <LoginFlowersIcon className="absolute bottom-0 right-0 w-64 h-64 text-[#C5A669]/20 pointer-events-none translate-x-10 translate-y-10 rotate-180" />
+
+      {/* Botón de Logout Flotante (Top Right) */}
+      <div className="absolute top-4 right-6 md:top-8 md:right-12">
+        <button
+          onClick={AuthService.logout}
+          className=" relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-[#8A8A8A] hover:text-red-500 hover:bg-red-100 hover:shadow-sm border border-transparent hover:border-red-200 transition-all duration-300 z-20"
+        >
+          <span className="inline">Cerrar Sesión</span>
+          <LogOut size={18} />
+        </button>
       </div>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Header de la Sección */}
+          <div className="text-center space-y-2 mb-12">
+            {/* Logo en lugar del corazón */}
+            {/* <div
+              ref={divRef}
+              className="flex justify-center items-center gap-2 mb-3 bg-[#F9F7F2]"
+            >
+              <Lottie
+                className="h-14 bg-[#F9F7F2]"
+                animationData={animationData}
+                lottieRef={playerRef}
+                autoPlay={false}
+                loop={false}
+              />
+            </div> */}
+
+            <h1 className="font-serif text-3xl md:text-4xl text-[#5A5A5A]">
+              Mis Eventos
+            </h1>
+            <p className="text-[#8A8A8A] max-w-lg mx-auto">
+              Bienvenido a tu panel. Selecciona el evento que deseas gestionar.
+            </p>
+          </div>
+
+          {/* Contenido Dinámico */}
+          {invitations.length > 0 ? (
+            <div className="flex flex-wrap justify-center gap-8">
+              {invitations.map((inv) => (
+                <div key={inv.id} className="w-full max-w-sm flex-shrink-0">
+                  <InvitationCard invitation={inv} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyInvitationsState />
+          )}
+        </div>
+      </main>
     </div>
   );
-};
+}
