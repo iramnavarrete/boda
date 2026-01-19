@@ -121,7 +121,7 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
 
 // 2. Estado Vacío (EmptyInvitationsState)
 const EmptyInvitationsState = () => (
-  <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in duration-500">
+  <div className="flex flex-col items-center justify-center py-20 text-center relative border border-[#EBE5DA] max-w-md bg-[#FDFBF7] justify-self-center rounded-xl">
     <div className="w-24 h-24 bg-[#F4EFE6] rounded-full flex items-center justify-center mb-6">
       <MailOpen size={48} className="text-[#C5A669]" />
     </div>
@@ -131,11 +131,11 @@ const EmptyInvitationsState = () => (
     <p className="text-[#8A8A8A] max-w-sm mx-auto mb-8">
       Actualmente no tienes ninguna invitación activa asociada a tu cuenta.
     </p>
-    <div className="bg-[#FDFBF7] text-[#A39885] px-6 py-4 rounded-xl text-sm border border-[#EBE5DA] max-w-md">
+    <div className=" text-[#A39885] px-8 py-4 text-sm">
       <p className="font-bold mb-1 flex items-center gap-2 justify-center text-[#C5A669]">
         <AlertCircle size={16} /> ¿Crees que es un error?
       </p>
-      Contacta al administrador del sistema para que te asigne tus eventos
+      Contacta a a tu proveedor de invitaciones para que te asigne tus eventos
       correspondientes.
     </div>
   </div>
@@ -150,18 +150,19 @@ export default function InvitationsListPage() {
     (async () => {
       const invitations = await InvitationsService.getUserInvitations(user.uid);
       setInvitations(
-        invitations.map((el) => ({
-          id: el.id,
-          title: "50 Aniversario",
-          names: "Roberto & Ana",
-          date: "15 Dic 2026",
-          targetDate: "2026-12-15T21:00:00",
-          location: "Salón Central",
-          status: "draft",
-          type: "Boda",
-          coverUrl:
-            "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=800&auto=format&fit=crop",
-        })),
+        // invitations.map((el) => ({
+        //   id: el.id,
+        //   title: "50 Aniversario",
+        //   names: "Roberto & Ana",
+        //   date: "15 Dic 2026",
+        //   targetDate: "2026-12-15T21:00:00",
+        //   location: "Salón Central",
+        //   status: "draft",
+        //   type: "Boda",
+        //   coverUrl:
+        //     "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=800&auto=format&fit=crop",
+        // })),
+        []
       );
       setIsLoading(false);
     })();
