@@ -104,7 +104,7 @@ export default function LoginPage() {
     <div className="min-h-screen w-full bg-[#F9F7F2] flex items-center justify-center p-4 relative overflow-hidden font-sans">
       {/* Textura de papel (Patrón SVG sutil) */}
       <svg
-        className="absolute inset-0 w-full h-full opacity-30 pointer-events-none"
+        className="absolute inset-0 w-screen h-screen opacity-30 pointer-events-none"
         xmlns="http://www.w3.org/2000/svg"
       >
         <filter id="noiseFilter">
