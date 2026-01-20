@@ -87,3 +87,26 @@ export interface Invitation {
     hora: string;
   };
 }
+
+export type ThemeColors = {
+  primary: string;
+  accent: string;
+  "cool-gray": string;
+  "button-dark": string;
+  "button-light": string;
+  "border-button": string;
+  gold: {
+    DEFAULT: string;
+    600: string;
+  };
+  status: {
+    confirmed: string;
+    pending: string;
+    rejected: string;
+  };
+  sand: {
+    DEFAULT: string;
+    light: string;
+  };
+  paper: string;
+};

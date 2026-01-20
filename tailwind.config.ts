@@ -24,6 +24,20 @@ const config: Config = {
         "button-dark": "#e9e7db",
         "button-light": "#fff2e0",
         "border-button": "#D1D0C4",
+        gold: {
+          DEFAULT: "#C5A669", // Uso: bg-gold, text-gold
+          600: "#B39358", // Uso: bg-gold-600
+        },
+        status: {
+          confirmed: "#22C55E", // Uso: bg-status-confirmed
+          pending: "#EAB308",
+          rejected: "#EF4444",
+        },
+        sand: {
+          DEFAULT: "#EBE5DA",
+          light: "#FDFBF7",
+        },
+        paper: "#F9F7F2",
       },
       backgroundImage: {
         main: 'url("/img/principal.jpg")',
