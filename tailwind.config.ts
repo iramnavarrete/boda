@@ -66,6 +66,12 @@ const config: Config = {
           950: "#4D3B25",
           DEFAULT: "#EBE5DA",
         },
+        status: {
+          confirmed: "#22C55E",
+          pending: "#EAB308",
+          rejected: "#EF4444",
+        },
+        paper: "#F9F7F2",
       },
       backgroundImage: {
         main: 'url("/img/principal.jpg")',
