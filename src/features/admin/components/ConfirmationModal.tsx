@@ -30,7 +30,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   return (
     <Modal isOpen={isOpen} onBackdropPress={onBackdropPress || onClose}>
       {/* Header */}
-      <div className="px-6 py-5 flex gap-5 items-start bg-white">
+      <div className="px-6 py-5 flex gap-3 items-start bg-white">
         <div
           className={`p-3 rounded-2xl shrink-0 border transition-colors ${
             isDanger
@@ -42,7 +42,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         </div>
 
         <div className="flex-1 pt-1">
-          <h3 className="text-xl font-serif font-bold text-charcoal leading-tight">
+          <h3 className="text-lg font-serif font-bold text-charcoal leading-tight">
             {title}
           </h3>
           <p className="mt-2 text-sm text-stone-custom leading-relaxed">
