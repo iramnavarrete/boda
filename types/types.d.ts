@@ -88,25 +88,37 @@ export interface Invitation {
   };
 }
 
+// Tipo auxiliar para las escalas de color completas (50-950)
+type ColorScale = {
+  DEFAULT: string;
+  50: string;
+  100: string;
+  200: string;
+  300: string;
+  400: string;
+  500: string;
+  600: string;
+  700: string;
+  800: string;
+  900: string;
+  950: string;
+};
+
 export type ThemeColors = {
+  // Colores base del proyecto
   primary: string;
   accent: string;
   "cool-gray": string;
   "button-dark": string;
   "button-light": string;
   "border-button": string;
-  gold: {
-    DEFAULT: string;
-    600: string;
-  };
+  paper: string;
+  gold: ColorScale;
+  sand: ColorScale & { light: string }; // Incluye 'light' por compatibilidad con tu código actual
+  charcoal: ColorScale;
   status: {
     confirmed: string;
     pending: string;
     rejected: string;
   };
-  sand: {
-    DEFAULT: string;
-    light: string;
-  };
-  paper: string;
 };
