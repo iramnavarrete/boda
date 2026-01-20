@@ -1,7 +1,7 @@
 import React from "react";
-import { AlertTriangle, X } from "lucide-react";
-import { cn } from "@heroui/theme";
+import { AlertTriangle, Trash2, X } from "lucide-react";
 import Modal from "@/features/shared/components/Modal";
+import { cn } from "@heroui/theme";
 
 interface ConfirmationModalProps {
   isOpen: boolean;
@@ -10,7 +10,7 @@ interface ConfirmationModalProps {
   title: string;
   message: string;
   isLoading?: boolean;
-  isDanger?: boolean; // Para poner el botón rojo si es eliminar
+  isDanger?: boolean;
   confirmText?: string;
   onBackdropPress?: () => void;
 }
@@ -26,51 +26,56 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   confirmText = "Confirmar",
   onBackdropPress,
 }) => {
+
   return (
-    <Modal isOpen={isOpen} onBackdropPress={onBackdropPress}>
+    <Modal isOpen={isOpen} onBackdropPress={onBackdropPress || onClose}>
       {/* Header */}
-      <div className="px-6 py-4 flex gap-4 items-start border-b border-stone-100 bg-stone-50/50">
+      <div className="px-6 py-5 flex gap-5 items-start bg-white">
         <div
-          className={`p-2 rounded-full ${
+          className={`p-3 rounded-2xl shrink-0 border transition-colors ${
             isDanger
-              ? "bg-red-100 text-red-600"
-              : "bg-yellow-100 text-yellow-700"
+              ? "bg-red-50 text-red-500 border-red-100"
+              : "bg-sand-light text-gold border-sand"
           }`}
         >
-          <AlertTriangle size={24} />
+          {isDanger ? <Trash2 size={24} /> : <AlertTriangle size={24} />}
         </div>
-        <div className="flex-1">
-          <h3 className="text-lg font-bold text-stone-800 leading-6">
+
+        <div className="flex-1 pt-1">
+          <h3 className="text-xl font-serif font-bold text-charcoal leading-tight">
             {title}
           </h3>
-          <div className="mt-2 text-sm text-stone-500">{message}</div>
+          <p className="mt-2 text-sm text-stone-custom leading-relaxed">
+            {message}
+          </p>
         </div>
+
         <button
           onClick={onClose}
-          className="text-stone-400 hover:text-stone-600 transition-colors"
+          className="text-stone-light hover:text-charcoal transition-colors -mr-2 -mt-2 p-2 rounded-full hover:bg-sand-light"
         >
           <X size={20} />
         </button>
       </div>
 
       {/* Footer / Actions */}
-      <div className="px-6 py-4 bg-white flex gap-3 justify-end">
+      <div className="px-6 py-5 bg-sand-light/50 border-t border-sand flex gap-3 justify-end items-center">
         <button
           onClick={onClose}
           disabled={isLoading}
-          className="px-4 py-2 rounded-lg border border-stone-200 text-stone-600 font-medium hover:bg-stone-50 transition-colors disabled:opacity-50"
+          className="px-5 py-2.5 rounded-xl border border-sand text-stone-custom font-medium hover:bg-white hover:text-charcoal hover:border-gold/30 transition-all disabled:opacity-50 text-sm"
         >
           Cancelar
         </button>
         <button
           onClick={onConfirm}
           disabled={isLoading}
-          className={`px-4 py-2 rounded-lg text-white font-medium shadow-lg transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed
-              ${
-                isDanger
-                  ? "bg-red-500 hover:bg-red-600 shadow-red-500/20"
-                  : "bg-stone-900 hover:bg-stone-800 shadow-stone-900/20"
-              }`}
+          className={cn(
+            "px-6 py-2.5 rounded-xl text-white font-medium shadow-lg transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm transform active:scale-95",
+            isDanger
+              ? "bg-red-500 hover:bg-red-600 shadow-red-500/20"
+              : "bg-gold hover:bg-gold-600 shadow-charcoal/20",
+          )}
         >
           {isLoading && (
             <div className="animate-spin rounded-full h-4 w-4 border-2 border-white/30 border-t-white"></div>
