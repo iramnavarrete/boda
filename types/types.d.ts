@@ -66,3 +66,24 @@ export interface ConfirmModalState {
   isLoading: boolean;
   action: (() => Promise<void>) | null;
 }
+
+export interface Invitation {
+  id: string;
+  nombre: string;
+  fecha: Timestamp;
+  ubicacion: string;
+  tipo: string;
+  imagenPortada?: string;
+  recepcion: {
+    nombreSalon: string;
+    direccion: string;
+    enlaceMaps: string;
+    hora: string;
+  };
+  ceremonia: {
+    nombreTemplo: string;
+    direccion: string;
+    enlaceMaps: string;
+    hora: string;
+  };
+}
