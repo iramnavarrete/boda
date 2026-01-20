@@ -16,22 +16,11 @@ import { useCountdown } from "@/features/front/hooks/useCountDown";
 import Link from "next/link";
 import { AuthService } from "@/services/authService";
 import LoginFlowersIcon from "@/icons/login-flowers-icon";
-
-export interface Invitation {
-  id: string;
-  title: string;
-  names: string;
-  date: string;
-  targetDate: string;
-  location: string;
-  type: string;
-  status: "active" | "draft" | "archived";
-  coverUrl?: string;
-}
+import { formatTimeStamp } from "@/utils/formatters";
+import { Invitation } from "@/types";
 
 const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
-  const targetDateObj = new Date(invitation.targetDate);
-  const [days, hours] = useCountdown(targetDateObj);
+  const [days, hours] = useCountdown(invitation.fecha.toDate());
 
   return (
     <Link
@@ -45,27 +34,18 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
 
         <Image
           src={
-            invitation.coverUrl ||
+            invitation.imagenPortada ||
             "https://images.unsplash.com/photo-1519225421980-715cb0202128?q=80&w=1000&auto=format&fit=crop"
           }
-          alt={invitation.names}
+          alt={invitation.nombre}
           fill
           className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
         />
 
         {/* Badge de Estado */}
         <div className="absolute top-3 right-3 z-20">
-          <span
-            className={`
-            px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-md shadow-sm border border-white/10
-            ${
-              invitation.status === "active"
-                ? "bg-[#C5A669]/90 text-white"
-                : "bg-stone-500/80 text-white"
-            }
-          `}
-          >
-            {invitation.status === "active" ? "Activa" : "Borrador"}
+          <span className="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest backdrop-blur-md shadow-sm border border-white/10">
+            Activa
           </span>
         </div>
       </div>
@@ -76,10 +56,10 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
         <div>
           <p className="text-[10px] font-bold text-[#A39885] uppercase tracking-widest mb-1.5 flex items-center gap-2">
             <span className="w-6 h-[1px] bg-[#D4C4A8]"></span>
-            {invitation.type}
+            {invitation.tipo}
           </p>
           <h3 className="font-serif text-2xl text-[#5A5A5A] leading-tight group-hover:text-[#C5A669] transition-colors duration-300">
-            {invitation.names}
+            {invitation.nombre}
           </h3>
         </div>
 
@@ -87,11 +67,15 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
         <div className="grid grid-cols-1 gap-2.5 py-4 border-t border-b border-[#F5F2EB]">
           <div className="flex items-center gap-2.5 text-sm text-[#8A8A8A]">
             <Calendar size={15} className="text-[#C5A669]" />
-            <span>{invitation.date}</span>
+            <span>
+              {formatTimeStamp(invitation.fecha)
+                .replaceAll("/", "")
+                .toLocaleLowerCase()}
+            </span>
           </div>
           <div className="flex items-center gap-2.5 text-sm text-[#8A8A8A]">
             <MapPin size={15} className="text-[#C5A669]" />
-            <span className="truncate">{invitation.location}</span>
+            <span className="truncate">{invitation.recepcion.nombreSalon}</span>
           </div>
         </div>
 
@@ -149,20 +133,7 @@ export default function InvitationsListPage() {
   useEffect(() => {
     (async () => {
       const invitations = await InvitationsService.getUserInvitations(user.uid);
-      setInvitations(
-        invitations.map((el) => ({
-          id: el.id,
-          title: "50 Aniversario",
-          names: "Roberto & Ana",
-          date: "15 Dic 2026",
-          targetDate: "2026-12-15T21:00:00",
-          location: "Salón Central",
-          status: "draft",
-          type: "Boda",
-          coverUrl:
-            "https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=800&auto=format&fit=crop",
-        })),
-      );
+      setInvitations(invitations);
       setIsLoading(false);
     })();
   }, []);
@@ -210,20 +181,6 @@ export default function InvitationsListPage() {
         <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Header de la Sección */}
           <div className="text-center space-y-2 mb-12">
-            {/* Logo en lugar del corazón */}
-            {/* <div
-              ref={divRef}
-              className="flex justify-center items-center gap-2 mb-3 bg-[#F9F7F2]"
-            >
-              <Lottie
-                className="h-14 bg-[#F9F7F2]"
-                animationData={animationData}
-                lottieRef={playerRef}
-                autoPlay={false}
-                loop={false}
-              />
-            </div> */}
-
             <h1 className="font-serif text-3xl md:text-4xl text-[#5A5A5A]">
               Mis Eventos
             </h1>
