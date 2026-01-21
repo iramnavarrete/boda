@@ -121,6 +121,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
                       </div>
                       <span>Seleccionar todos</span>
                     </button>
+                    <div className="my-1.5 border-t border-stone-100 mx-3 border-dashed" />
                   </>
                 )}
 
