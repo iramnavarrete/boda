@@ -54,10 +54,10 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
       )}
     >
       {/* BARRA FLOTANTE - SOMBRA DIFUMINADA */}
-      <div className="bg-white text-stone-800 border border-[#C5A669]/50 rounded-2xl shadow-[0_12px_40px_-8px_rgba(197,166,105,0.4)] p-2 pr-3 flex items-center gap-3 md:gap-5 w-full md:w-auto max-w-2xl relative">
+      <div className="bg-white text-stone-800 border border-gold/50 rounded-2xl shadow-[0_12px_40px_-8px_rgba(197,166,105,0.4)] p-2 pr-3 flex items-center gap-3 md:gap-5 w-full md:w-auto max-w-2xl relative">
         {/* CONTADOR - Fondo Dorado */}
         <div className="flex items-center gap-3 pl-1.5">
-          <span className="bg-[#C5A669] text-white px-3 py-1.5 rounded-xl font-bold text-sm whitespace-nowrap flex items-center gap-2 shadow-sm">
+          <span className="bg-gold text-white px-3 py-1.5 rounded-xl font-bold text-sm whitespace-nowrap flex items-center gap-2 shadow-sm">
             <span className="bg-white/20 px-1.5 rounded text-xs font-mono min-w-[20px] text-center text-white">
               {count}
             </span>
@@ -82,10 +82,10 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
             <button
               onClick={() => setIsOpen(!isOpen)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 border text-[#C5A669]",
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-200 border text-gold",
                 isOpen
-                  ? "bg-sand-light border-[#C5A669] shadow-inner"
-                  : "bg-transparent hover:bg-sand-light/50 border-[#C5A669]/50 hover:border-[#C5A669]",
+                  ? "bg-sand-light border-gold shadow-inner"
+                  : "bg-transparent hover:bg-sand-light/50 border-gold/50 hover:border-gold",
               )}
             >
               <span>Acciones</span>
@@ -100,7 +100,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
             {/* MENÚ DESPLEGABLE - Sombra Difuminada Coherente */}
             <div
               className={cn(
-                "absolute bottom-full right-0 mb-4 w-52 bg-white text-stone-800 rounded-2xl border border-[#C5A669]/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden origin-bottom-right",
+                "absolute bottom-full right-0 mb-4 w-52 bg-white text-stone-800 rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden origin-bottom-right",
                 "transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) translate-x-16 right-0.5",
                 isOpen
                   ? "opacity-100 translate-y-0 scale-100"
@@ -115,9 +115,9 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
                     </div>
                     <button
                       onClick={() => handleAction(onSelectAll)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-sand-light/50 hover:text-[#C5A669] hover:border hover:border-[#C5A669]/30 border border-transparent transition-all text-left group"
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-sand-light/50 hover:text-gold hover:border hover:border-gold/30 border border-transparent transition-all text-left group"
                     >
-                      <div className="text-stone-300 group-hover:text-[#C5A669] transition-colors">
+                      <div className="text-stone-300 group-hover:text-gold transition-colors">
                         <CheckSquare size={18} strokeWidth={2} />
                       </div>
                       <span>Seleccionar todos</span>
@@ -131,9 +131,9 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
                 </div>
                 <button
                   onClick={() => handleAction(() => onUpdateLock(true))}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-sand-light/50 hover:text-[#C5A669] hover:border hover:border-[#C5A669]/30 border border-transparent transition-all text-left group"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-sand-light/50 hover:text-gold hover:border hover:border-gold/30 border border-transparent transition-all text-left group"
                 >
-                  <div className="text-stone-300 group-hover:text-[#C5A669] transition-colors">
+                  <div className="text-stone-300 group-hover:text-gold transition-colors">
                     <Lock size={18} strokeWidth={2} />
                   </div>
                   <span>Bloquear edición</span>
@@ -141,9 +141,9 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
 
                 <button
                   onClick={() => handleAction(() => onUpdateLock(false))}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-sand-light/50 hover:text-[#C5A669] hover:border hover:border-[#C5A669]/30 border border-transparent transition-all text-left group"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-sand-light/50 hover:text-gold hover:border hover:border-gold/30 border border-transparent transition-all text-left group"
                 >
-                  <div className="text-stone-300 group-hover:text-[#C5A669] transition-colors">
+                  <div className="text-stone-300 group-hover:text-gold transition-colors">
                     <Unlock size={18} strokeWidth={2} />
                   </div>
                   <span>Permitir Edición</span>

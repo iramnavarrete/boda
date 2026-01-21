@@ -176,8 +176,8 @@ const DesktopNavLink = ({
       <span
         className={
           active
-            ? "text-[#C5A669]"
-            : "text-[#A39885] group-hover:text-[#C5A669]"
+            ? "text-gold"
+            : "text-[#A39885] group-hover:text-gold"
         }
       >
         {icon}

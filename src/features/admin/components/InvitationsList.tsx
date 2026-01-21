@@ -58,7 +58,7 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
             <span className="w-6 h-[1px] bg-[#D4C4A8]"></span>
             {invitation.tipo}
           </p>
-          <h3 className="font-serif text-2xl text-[#5A5A5A] leading-tight group-hover:text-[#C5A669] transition-colors duration-300">
+          <h3 className="font-serif text-2xl text-[#5A5A5A] leading-tight group-hover:text-gold transition-colors duration-300">
             {invitation.nombre}
           </h3>
         </div>
@@ -66,7 +66,7 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
         {/* Detalles */}
         <div className="grid grid-cols-1 gap-2.5 py-4 border-t border-b border-[#F5F2EB]">
           <div className="flex items-center gap-2.5 text-sm text-[#8A8A8A]">
-            <Calendar size={15} className="text-[#C5A669]" />
+            <Calendar size={15} className="text-gold" />
             <span>
               {formatTimeStamp(invitation.fecha)
                 .replaceAll("/", "")
@@ -74,7 +74,7 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
             </span>
           </div>
           <div className="flex items-center gap-2.5 text-sm text-[#8A8A8A]">
-            <MapPin size={15} className="text-[#C5A669]" />
+            <MapPin size={15} className="text-gold" />
             <span className="truncate">{invitation.recepcion.nombreSalon}</span>
           </div>
         </div>
@@ -82,19 +82,19 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
         {/* Footer: Contador y Acción */}
         <div className="mt-auto pt-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Clock size={14} className="text-[#C5A669]" />
+            <Clock size={14} className="text-gold" />
             <div className="flex items-baseline gap-1 text-xs font-medium text-[#5A5A5A]">
-              <span className="bg-[#FDFBF7] px-1.5 py-0.5 rounded border border-[#EBE5DA] text-[#C5A669] font-bold">
+              <span className="bg-[#FDFBF7] px-1.5 py-0.5 rounded border border-[#EBE5DA] text-gold font-bold">
                 {days}d
               </span>
-              <span className="bg-[#FDFBF7] px-1.5 py-0.5 rounded border border-[#EBE5DA] text-[#C5A669] font-bold">
+              <span className="bg-[#FDFBF7] px-1.5 py-0.5 rounded border border-[#EBE5DA] text-gold font-bold">
                 {hours}h
               </span>
               <span className="text-[#A39885]">restantes</span>
             </div>
           </div>
 
-          <div className="w-9 h-9 rounded-full bg-[#FDFBF7] border border-[#EBE5DA] flex items-center justify-center text-[#C5A669] group-hover:bg-[#C5A669] group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-md">
+          <div className="w-9 h-9 rounded-full bg-[#FDFBF7] border border-[#EBE5DA] flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-md">
             <ArrowRight size={16} />
           </div>
         </div>
@@ -107,7 +107,7 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
 const EmptyInvitationsState = () => (
   <div className="flex flex-col items-center justify-center py-20 text-center relative border border-[#EBE5DA] max-w-md bg-[#FDFBF7] justify-self-center rounded-xl">
     <div className="w-24 h-24 bg-[#F4EFE6] rounded-full flex items-center justify-center mb-6">
-      <MailOpen size={48} className="text-[#C5A669]" />
+      <MailOpen size={48} className="text-gold" />
     </div>
     <h3 className="font-serif text-2xl text-[#5A5A5A] mb-2">
       Sin invitaciones asignadas
@@ -116,7 +116,7 @@ const EmptyInvitationsState = () => (
       Actualmente no tienes ninguna invitación activa asociada a tu cuenta.
     </p>
     <div className=" text-[#A39885] px-8 py-4 text-sm">
-      <p className="font-bold mb-1 flex items-center gap-2 justify-center text-[#C5A669]">
+      <p className="font-bold mb-1 flex items-center gap-2 justify-center text-gold">
         <AlertCircle size={16} /> ¿Crees que es un error?
       </p>
       Contacta a a tu proveedor de invitaciones para que te asigne tus eventos
@@ -161,10 +161,10 @@ export default function InvitationsListPage() {
       </svg>
 
       {/* Decoración Floral: Esquina Superior Izquierda */}
-      <LoginFlowersIcon className="absolute top-0 left-0 w-64 h-64 text-[#C5A669]/20 pointer-events-none -translate-x-10 -translate-y-10" />
+      <LoginFlowersIcon className="absolute top-0 left-0 w-64 h-64 text-gold/20 pointer-events-none -translate-x-10 -translate-y-10" />
 
       {/* Decoración Floral: Esquina Inferior Derecha (Rotada) */}
-      <LoginFlowersIcon className="absolute bottom-0 right-0 w-64 h-64 text-[#C5A669]/20 pointer-events-none translate-x-10 translate-y-10 rotate-180" />
+      <LoginFlowersIcon className="absolute bottom-0 right-0 w-64 h-64 text-gold/20 pointer-events-none translate-x-10 translate-y-10 rotate-180" />
 
       {/* Botón de Logout Flotante (Top Right) */}
       <div className="absolute top-4 right-6 md:top-8 md:right-12">

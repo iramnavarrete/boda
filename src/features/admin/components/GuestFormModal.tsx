@@ -302,7 +302,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
           </button>
           <button
             type="submit"
-            className="flex-1 px-4 py-2.5 bg-gold text-white rounded-xl hover:bg-gold-600 font-medium shadow-lg shadow-[#C5A669]/20 transition-all flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-2.5 bg-gold text-white rounded-xl hover:bg-gold-600 font-medium shadow-lg shadow-gold/20 transition-all flex items-center justify-center gap-2"
           >
             <Save size={18} />
             {isEdit ? "Guardar" : "Crear"}

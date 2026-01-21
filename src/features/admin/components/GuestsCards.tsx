@@ -59,8 +59,8 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
             relative flex flex-col bg-white rounded-2xl p-5 cursor-default transition-all duration-300 border-2
             ${
               selectedGuests.has(g.id)
-                ? "border-[#C5A669] shadow-[0_8px_30px_-5px_rgba(197,166,105,0.3)] ring-0 scale-[1] z-10"
-                : "border-[#EBE5DA] hover:border-[#C5A669]/50 hover:shadow-lg hover:shadow-stone-200/50 md:hover:-translate-y-0.5"
+                ? "border-gold shadow-[0_8px_30px_-5px_rgba(197,166,105,0.3)] ring-0 scale-[1] z-10"
+                : "border-[#EBE5DA] hover:border-gold/50 hover:shadow-lg hover:shadow-stone-200/50 md:hover:-translate-y-0.5"
             }
           `}
         >
@@ -75,8 +75,8 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                   mt-1 p-1 rounded-lg transition-all duration-200 shrink-0
                   ${
                     selectedGuests.has(g.id)
-                      ? "text-[#C5A669] bg-[#FDFBF7]"
-                      : "text-[#A8A29E] hover:text-[#C5A669] hover:bg-[#FDFBF7]"
+                      ? "text-gold bg-[#FDFBF7]"
+                      : "text-[#A8A29E] hover:text-gold hover:bg-[#FDFBF7]"
                   }
                 `}
               >
@@ -105,7 +105,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                   inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border
                   ${
                     g.asistencia === null
-                      ? "bg-[#FDFBF7] text-[#C5A669] border-[#C5A669]/20"
+                      ? "bg-[#FDFBF7] text-gold border-gold/20"
                       : g.asistencia === true
                         ? "bg-green-50 text-green-700 border-green-100"
                         : "bg-red-50 text-red-600 border-red-100"
@@ -177,7 +177,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
               )}
 
               <button
-                className="p-2 rounded-xl text-[#5A5A5A] bg-white hover:bg-sand-100 hover:text-[#2C2C29] hover:border-[#C5A669]/30 transition-all duration-300 border border-[#EBE5DA] shadow-sm"
+                className="p-2 rounded-xl text-[#5A5A5A] bg-white hover:bg-sand-100 hover:text-[#2C2C29] hover:border-gold/30 transition-all duration-300 border border-[#EBE5DA] shadow-sm"
                 title="Vista previa"
               >
                 <Eye size={18} />

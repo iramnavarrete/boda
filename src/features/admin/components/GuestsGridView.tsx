@@ -32,10 +32,10 @@ export default function GuestsGridView({
          ) : (
            <div className="flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-500">
              <div className="relative mb-6">
-               <div className="absolute inset-0 bg-[#C5A669]/10 rounded-full blur-xl scale-150"></div>
+               <div className="absolute inset-0 bg-gold/10 rounded-full blur-xl scale-150"></div>
                <div className="relative bg-[#FDFBF7] p-5 rounded-full border border-[#EBE5DA] shadow-sm">
                  <SearchX
-                   className="h-10 w-10 text-[#C5A669]"
+                   className="h-10 w-10 text-gold"
                    strokeWidth={1.5}
                  />
                </div>

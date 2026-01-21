@@ -119,10 +119,10 @@ export default function LoginPage() {
       </svg>
 
       {/* Decoración Floral: Esquina Superior Izquierda */}
-      <LoginFlowersIcon className="absolute top-0 left-0 w-64 h-64 text-[#C5A669]/20 pointer-events-none -translate-x-10 -translate-y-10" />
+      <LoginFlowersIcon className="absolute top-0 left-0 w-64 h-64 text-gold/20 pointer-events-none -translate-x-10 -translate-y-10" />
 
       {/* Decoración Floral: Esquina Inferior Derecha (Rotada) */}
-      <LoginFlowersIcon className="absolute bottom-0 right-0 w-64 h-64 text-[#C5A669]/20 pointer-events-none translate-x-10 translate-y-10 rotate-180" />
+      <LoginFlowersIcon className="absolute bottom-0 right-0 w-64 h-64 text-gold/20 pointer-events-none translate-x-10 translate-y-10 rotate-180" />
 
       {/* --- TARJETA PRINCIPAL --- */}
       <div className="bg-white/95 backdrop-blur-sm w-full max-w-[900px] rounded-3xl shadow-2xl border border-white/50 overflow-hidden flex flex-col md:flex-row relative z-10 animate-in fade-in zoom-in duration-500">
@@ -131,7 +131,7 @@ export default function LoginPage() {
           <div className="mb-6 relative">
             <div className="w-48 h-48 rounded-full border border-[#D4C4A8] flex items-center justify-center bg-white p-6 shadow-sm">
               {/* Icono de Invitación SVG Personalizado */}
-              <EnvelopeIcon className="w-24 h-24 text-[#C5A669] opacity-80" />
+              <EnvelopeIcon className="w-24 h-24 text-gold opacity-80" />
             </div>
           </div>
           <h3 className="font-serif text-2xl text-[#5A5A5A] mb-2">
@@ -171,18 +171,18 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="peer w-full pl-10 pr-4 py-3.5 bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl text-stone-700 outline-none focus:border-[#C5A669] focus:ring-1 focus:ring-[#C5A669] transition-all placeholder-transparent"
+                className="peer w-full pl-10 pr-4 py-3.5 bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl text-stone-700 outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all placeholder-transparent"
                 placeholder="Correo"
                 id="email"
               />
               <label
                 htmlFor="email"
-                className="absolute left-10 -top-2.5 bg-[#FDFBF7] px-1 text-xs text-[#9CA3AF] transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-[#9CA3AF] peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-[#C5A669]"
+                className="absolute left-10 -top-2.5 bg-[#FDFBF7] px-1 text-xs text-[#9CA3AF] transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-[#9CA3AF] peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-gold"
               >
                 Correo Electrónico
               </label>
               <Mail
-                className="absolute left-4 top-4 text-[#C5C5C5] peer-focus:text-[#C5A669] transition-colors"
+                className="absolute left-4 top-4 text-[#C5C5C5] peer-focus:text-gold transition-colors"
                 size={20}
               />
             </div>
@@ -193,18 +193,18 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="peer w-full pl-10 pr-4 py-3.5 bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl text-stone-700 outline-none focus:border-[#C5A669] focus:ring-1 focus:ring-[#C5A669] transition-all placeholder-transparent"
+                className="peer w-full pl-10 pr-4 py-3.5 bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl text-stone-700 outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all placeholder-transparent"
                 placeholder="Contraseña"
                 id="password"
               />
               <label
                 htmlFor="password"
-                className="absolute left-10 -top-2.5 bg-[#FDFBF7] px-1 text-xs text-[#9CA3AF] transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-[#9CA3AF] peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-[#C5A669]"
+                className="absolute left-10 -top-2.5 bg-[#FDFBF7] px-1 text-xs text-[#9CA3AF] transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-[#9CA3AF] peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-gold"
               >
                 Contraseña
               </label>
               <Lock
-                className="absolute left-4 top-4 text-[#C5C5C5] peer-focus:text-[#C5A669] transition-colors"
+                className="absolute left-4 top-4 text-[#C5C5C5] peer-focus:text-gold transition-colors"
                 size={20}
               />
             </div>
@@ -212,7 +212,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#C5A669] hover:bg-[#B39358] text-white font-medium py-3.5 rounded-xl shadow-lg shadow-[#C5A669]/20 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="w-full bg-gold hover:bg-[#B39358] text-white font-medium py-3.5 rounded-xl shadow-lg shadow-gold/20 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {loading ? (
                 <Loader2 className="animate-spin" />

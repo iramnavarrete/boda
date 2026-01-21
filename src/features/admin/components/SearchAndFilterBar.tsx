@@ -73,11 +73,11 @@ export default function SearchAndFilterBar({
       case "confirmed":
         return "text-green-700 bg-green-50 border-green-200 ring-1 ring-green-100";
       case "pending":
-        return "text-[#C5A669] bg-[#FDFBF7] border-[#EBE5DA] ring-1 ring-[#C5A669]/20"; // Gold theme
+        return "text-gold bg-[#FDFBF7] border-[#EBE5DA] ring-1 ring-gold/20"; // Gold theme
       case "rejected":
         return "text-red-700 bg-red-50 border-red-200 ring-1 ring-red-100";
       default:
-        return "text-[#5A5A5A] bg-white border-[#EBE5DA] hover:border-[#C5A669]/50";
+        return "text-[#5A5A5A] bg-white border-[#EBE5DA] hover:border-gold/50";
     }
   };
 
@@ -95,7 +95,7 @@ export default function SearchAndFilterBar({
               <Search size={18} />
             </div>
             <input
-              className="w-full pl-10 pr-10 py-3 bg-white border border-sand rounded-xl outline-none focus:ring-0 focus:ring-gold focus:border-[#C5A669]/50 transition-all duration-300 text-sm text-charcoal placeholder:text-stone-light shadow-sm"
+              className="w-full pl-10 pr-10 py-3 bg-white border border-sand rounded-xl outline-none focus:ring-0 focus:ring-gold focus:border-gold/50 transition-all duration-300 text-sm text-charcoal placeholder:text-stone-light shadow-sm"
               placeholder={`Buscar entre ${filteredGuestCount} invitados...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -134,7 +134,7 @@ export default function SearchAndFilterBar({
             {/* MENÚ DESPLEGABLE - Sombra Difuminada Coherente */}
             <div
               className={cn(
-                "absolute top-full right-0 md:left-0 w-48 bg-white text-stone-800 rounded-2xl border border-[#C5A669]/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
+                "absolute top-full right-0 md:left-0 w-48 bg-white text-stone-800 rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
                 "transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) z-50",
                 isFilterOpen
                   ? "opacity-100 translate-y-1 scale-100"
@@ -209,8 +209,8 @@ export default function SearchAndFilterBar({
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     filterStatus === "pending"
-                      ? "bg-[#FDFBF7] text-[#C5A669] font-medium border border-[#EBE5DA]"
-                      : "text-stone-custom hover:bg-[#FDFBF7] hover:text-[#C5A669] border border-transparent"
+                      ? "bg-[#FDFBF7] text-gold font-medium border border-[#EBE5DA]"
+                      : "text-stone-custom hover:bg-[#FDFBF7] hover:text-gold border border-transparent"
                   }`}
                 >
                   <span className="flex items-center gap-2.5">
@@ -218,7 +218,7 @@ export default function SearchAndFilterBar({
                       size={16}
                       className={
                         filterStatus === "pending"
-                          ? "text-[#C5A669]"
+                          ? "text-gold"
                           : "text-stone-light"
                       }
                     />
@@ -329,8 +329,8 @@ export default function SearchAndFilterBar({
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
                       filterStatus === "pending"
-                        ? "bg-[#FDFBF7] text-[#C5A669] font-medium border border-[#EBE5DA]"
-                        : "text-stone-custom hover:bg-[#FDFBF7] hover:text-[#C5A669] border border-transparent"
+                        ? "bg-[#FDFBF7] text-gold font-medium border border-[#EBE5DA]"
+                        : "text-stone-custom hover:bg-[#FDFBF7] hover:text-gold border border-transparent"
                     }`}
                   >
                     <span className="flex items-center gap-2.5">
@@ -338,7 +338,7 @@ export default function SearchAndFilterBar({
                         size={16}
                         className={
                           filterStatus === "pending"
-                            ? "text-[#C5A669]"
+                            ? "text-gold"
                             : "text-stone-light"
                         }
                       />
@@ -399,7 +399,7 @@ export default function SearchAndFilterBar({
           {/* Nuevo Invitado */}
           <button
             onClick={onNewGuest}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gold hover:bg-[#B39358] text-white px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#C5A669]/20 hover:shadow-[#C5A669]/30 hover:-translate-y-0.5 text-sm font-bold"
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gold hover:bg-[#B39358] text-white px-6 py-3 rounded-xl transition-all shadow-lg shadow-gold/20 hover:shadow-gold/30 hover:-translate-y-0.5 text-sm font-bold"
           >
             <Plus size={18} />
             <span>Nuevo Invitado</span>
