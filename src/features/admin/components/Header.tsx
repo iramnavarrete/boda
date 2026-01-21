@@ -49,7 +49,7 @@ const Header = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/admin")}
-            className="p-2 -ml-2 text-stone-400 hover:text-stone-600 rounded-full hover:bg-stone-50 transition-colors"
+            className="p-2 -ml-2 text-stone-400 rounded-full hover:bg-sand-100 transition-colors"
           >
             <ArrowLeft size={20} />
           </button>
@@ -86,7 +86,7 @@ const Header = () => {
 
           <button
             onClick={toggleMenu}
-            className={`md:hidden flex items-center gap-2 p-2 rounded-lg transition-all active:scale-95 ${isMenuOpen ? "bg-stone-100 text-stone-900" : "text-stone-600 hover:bg-stone-50"}`}
+            className={`md:hidden flex items-center gap-2 p-2 rounded-lg transition-all active:scale-95 text-stone-600 ${isMenuOpen ? "bg-sand-100" : "hover:bg-sand-100"}`}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
