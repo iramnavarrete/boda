@@ -12,6 +12,7 @@ import {
 import { Guest } from "@/types";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { MouseEvent } from "react";
+import DashedSeparator from "./DashedSeparator";
 
 interface GuestsCardsProps {
   guests: Guest[];
@@ -124,11 +125,11 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
               </span>
             </div>
           </div>
-
+          <DashedSeparator className="m-0" />
           {/* Footer de Acciones */}
           <fieldset
             disabled={isOneOrMoreSelected}
-            className="flex justify-between items-center pt-4 mt-auto border-t border-opacity-40 border-dashed border-[#EBE5DA] transition-opacity duration-300 disabled:opacity-30 disabled:pointer-events-none"
+            className="flex justify-between items-center pt-4 mt-auto transition-opacity duration-300 disabled:opacity-30 disabled:pointer-events-none"
           >
             {/* Estado de Edición */}
             <div className="text-xs font-medium">

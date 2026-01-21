@@ -1,8 +1,16 @@
+import { cn } from "@heroui/theme";
 import { FC } from "react";
 
-const DashedSeparator: FC = () => {
+type Props = { className?: string };
+
+const DashedSeparator: FC<Props> = ({ className }) => {
   return (
-    <div className="my-1.5 border-t border-stone-100 mx-3 border-dashed border-opacity-40" />
+    <div
+      className={cn(
+        "my-1.5 border-t border-[#EBE5DA] mx-3 border-dashed border-opacity-60",
+        className
+      )}
+    />
   );
 };
 
