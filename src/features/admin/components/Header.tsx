@@ -168,8 +168,8 @@ const DesktopNavLink = ({
     href={href}
     className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border ${
       active
-        ? "text-[#5A5A5A] bg-[#F9F7F2] border-[#EBE5DA] shadow-sm"
-        : "text-[#8A8A8A] border-transparent hover:text-[#5A5A5A] hover:bg-white hover:border-[#EBE5DA]"
+        ? "text-stone-custom bg-paper border-sand shadow-sm"
+        : "text-[#8A8A8A] border-transparent hover:text-stone-custom hover:bg-white hover:border-sand"
     }`}
   >
     {icon && (
@@ -200,17 +200,17 @@ const MenuItem = ({
 }) => (
   <Link
     href={href}
-    className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all group active:scale-[0.98] ${
+    className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all group border active:scale-[0.98] ${
       active
-        ? "bg-sand-light border border-sand"
-        : "hover:bg-stone-50 border border-transparent"
+        ? "text-stone-custom bg-paper border-sand shadow-sm"
+        : "text-[#8A8A8A] border-transparent hover:text-stone-custom hover:border-sand"
     }`}
   >
     <div
-      className={`p-2 rounded-lg transition-colors ${
+      className={`p-2 rounded-lg transition-colors shadow-sm ${
         active
-          ? "bg-white text-gold shadow-sm"
-          : "bg-stone-100 text-stone-500 group-hover:bg-white group-hover:text-stone-700"
+          ? "bg-white text-gold"
+          : "bg-sand-50 text-stone-500 group-hover:text-gold"
       }`}
     >
       {icon}

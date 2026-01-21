@@ -101,7 +101,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#F9F7F2] flex items-center justify-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen w-full bg-paper flex items-center justify-center p-4 relative overflow-hidden font-sans">
       {/* Textura de papel (Patrón SVG sutil) */}
       <svg
         className="absolute inset-0 w-screen h-screen opacity-30 pointer-events-none"
@@ -134,7 +134,7 @@ export default function LoginPage() {
               <EnvelopeIcon className="w-24 h-24 text-gold opacity-80" />
             </div>
           </div>
-          <h3 className="font-serif text-2xl text-[#5A5A5A] mb-2">
+          <h3 className="font-serif text-2xl text-stone-custom mb-2">
             Panel de Control
           </h3>
           <p className="text-sm text-[#8A8A8A] leading-relaxed">
@@ -171,7 +171,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="peer w-full pl-10 pr-4 py-3.5 bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl text-stone-700 outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all placeholder-transparent"
+                className="peer w-full pl-10 pr-4 py-3.5 bg-[#FDFBF7] border border-sand rounded-xl text-stone-700 outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all placeholder-transparent"
                 placeholder="Correo"
                 id="email"
               />
@@ -193,7 +193,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="peer w-full pl-10 pr-4 py-3.5 bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl text-stone-700 outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all placeholder-transparent"
+                className="peer w-full pl-10 pr-4 py-3.5 bg-[#FDFBF7] border border-sand rounded-xl text-stone-700 outline-none focus:border-gold focus:ring-1 focus:ring-gold transition-all placeholder-transparent"
                 placeholder="Contraseña"
                 id="password"
               />
@@ -225,7 +225,7 @@ export default function LoginPage() {
 
           <div className="relative my-8">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[#EBE5DA]"></div>
+              <div className="w-full border-t border-sand"></div>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-white px-3 text-[#A39885]">
@@ -237,7 +237,7 @@ export default function LoginPage() {
           <button
             onClick={handleGoogleLogin}
             disabled={loading}
-            className="w-full bg-white text-stone-600 font-medium py-3 rounded-xl border border-[#EBE5DA] hover:bg-[#FDFBF7] hover:border-[#D4C4A8] transition-all flex items-center justify-center gap-3 shadow-sm"
+            className="w-full bg-white text-stone-600 font-medium py-3 rounded-xl border border-sand hover:bg-[#FDFBF7] hover:border-[#D4C4A8] transition-all flex items-center justify-center gap-3 shadow-sm"
           >
             <GoogleIcon className="w-5 h-5" />
             Google

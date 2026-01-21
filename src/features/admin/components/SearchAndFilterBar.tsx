@@ -73,11 +73,11 @@ export default function SearchAndFilterBar({
       case "confirmed":
         return "text-green-700 bg-green-50 border-green-200 ring-1 ring-green-100";
       case "pending":
-        return "text-gold bg-[#FDFBF7] border-[#EBE5DA] ring-1 ring-gold/20"; // Gold theme
+        return "text-gold bg-[#FDFBF7] border-sand ring-1 ring-gold/20"; // Gold theme
       case "rejected":
         return "text-red-700 bg-red-50 border-red-200 ring-1 ring-red-100";
       default:
-        return "text-[#5A5A5A] bg-white border-[#EBE5DA] hover:border-gold/50";
+        return "text-stone-custom bg-white border-sand hover:border-gold/50";
     }
   };
 
@@ -209,7 +209,7 @@ export default function SearchAndFilterBar({
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     filterStatus === "pending"
-                      ? "bg-[#FDFBF7] text-gold font-medium border border-[#EBE5DA]"
+                      ? "bg-[#FDFBF7] text-gold font-medium border border-sand"
                       : "text-stone-custom hover:bg-[#FDFBF7] hover:text-gold border border-transparent"
                   }`}
                 >
@@ -329,7 +329,7 @@ export default function SearchAndFilterBar({
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
                       filterStatus === "pending"
-                        ? "bg-[#FDFBF7] text-gold font-medium border border-[#EBE5DA]"
+                        ? "bg-[#FDFBF7] text-gold font-medium border border-sand"
                         : "text-stone-custom hover:bg-[#FDFBF7] hover:text-gold border border-transparent"
                     }`}
                   >

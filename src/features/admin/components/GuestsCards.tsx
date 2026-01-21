@@ -60,7 +60,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
             ${
               selectedGuests.has(g.id)
                 ? "border-gold shadow-[0_8px_30px_-5px_rgba(197,166,105,0.3)] ring-0 scale-[1] z-10"
-                : "border-[#EBE5DA] hover:border-gold/50 hover:shadow-lg hover:shadow-stone-200/50 md:hover:-translate-y-0.5"
+                : "border-sand hover:border-gold/50 hover:shadow-lg hover:shadow-stone-200/50 md:hover:-translate-y-0.5"
             }
           `}
         >
@@ -92,7 +92,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                 <h3 className="font-serif text-base font-bold text-[#2C2C29] leading-snug line-clamp-2">
                   {g.nombre}
                 </h3>
-                <p className="text-[10px] text-[#A8A29E] font-mono uppercase tracking-widest bg-[#FDFBF7] inline-block px-1.5 py-0.5 rounded border border-[#EBE5DA]">
+                <p className="text-[10px] text-[#A8A29E] font-mono uppercase tracking-widest bg-[#FDFBF7] inline-block px-1.5 py-0.5 rounded border border-sand">
                   ID: {g.id.slice(0, 8)}
                 </p>
               </div>
@@ -177,7 +177,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
               )}
 
               <button
-                className="p-2 rounded-xl text-[#5A5A5A] bg-white hover:bg-sand-100 hover:text-[#2C2C29] hover:border-gold/30 transition-all duration-300 border border-[#EBE5DA] shadow-sm"
+                className="p-2 rounded-xl text-stone-custom bg-white hover:bg-sand-100 hover:text-[#2C2C29] hover:border-gold/30 transition-all duration-300 border border-sand shadow-sm"
                 title="Vista previa"
               >
                 <Eye size={18} />
@@ -185,7 +185,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
 
               <button
                 onClick={(e) => handleActionButtonClick(e, () => onDelete(g))}
-                className="p-2 rounded-xl text-red-400 bg-white border border-[#EBE5DA] hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all duration-300"
+                className="p-2 rounded-xl text-red-400 bg-white border border-sand hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all duration-300"
                 title="Eliminar"
               >
                 <Trash2 size={18} />

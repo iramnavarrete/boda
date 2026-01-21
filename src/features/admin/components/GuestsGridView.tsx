@@ -26,14 +26,14 @@ export default function GuestsGridView({
 }: GuestsGridViewProps) {
    if (filteredGuests.length === 0) {
      return (
-       <div className="flex flex-col items-center justify-center py-24 px-4 bg-white rounded-3xl border border-dashed border-[#EBE5DA] shadow-[0_2px_10px_-5px_rgba(44,44,41,0.05)]">
+       <div className="flex flex-col items-center justify-center py-24 px-4 bg-white rounded-3xl border border-dashed border-sand shadow-[0_2px_10px_-5px_rgba(44,44,41,0.05)]">
          {isLoading ? (
            <Loader />
          ) : (
            <div className="flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-500">
              <div className="relative mb-6">
                <div className="absolute inset-0 bg-gold/10 rounded-full blur-xl scale-150"></div>
-               <div className="relative bg-[#FDFBF7] p-5 rounded-full border border-[#EBE5DA] shadow-sm">
+               <div className="relative bg-[#FDFBF7] p-5 rounded-full border border-sand shadow-sm">
                  <SearchX
                    className="h-10 w-10 text-gold"
                    strokeWidth={1.5}

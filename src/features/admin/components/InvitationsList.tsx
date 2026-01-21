@@ -25,7 +25,7 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
   return (
     <Link
       href={`/admin/invitations/${invitation.id}/dashboard`}
-      className="group relative flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-[#EBE5DA] transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(197,166,105,0.2)] hover:-translate-y-1 hover:border-[#D4C4A8]"
+      className="group relative flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-sand transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(197,166,105,0.2)] hover:-translate-y-1 hover:border-[#D4C4A8]"
     >
       {/* SECCIÓN IMAGEN */}
       <div className="relative h-48 w-full overflow-hidden bg-[#F4EFE6]">
@@ -58,7 +58,7 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
             <span className="w-6 h-[1px] bg-[#D4C4A8]"></span>
             {invitation.tipo}
           </p>
-          <h3 className="font-serif text-2xl text-[#5A5A5A] leading-tight group-hover:text-gold transition-colors duration-300">
+          <h3 className="font-serif text-2xl text-stone-custom leading-tight group-hover:text-gold transition-colors duration-300">
             {invitation.nombre}
           </h3>
         </div>
@@ -83,18 +83,18 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
         <div className="mt-auto pt-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Clock size={14} className="text-gold" />
-            <div className="flex items-baseline gap-1 text-xs font-medium text-[#5A5A5A]">
-              <span className="bg-[#FDFBF7] px-1.5 py-0.5 rounded border border-[#EBE5DA] text-gold font-bold">
+            <div className="flex items-baseline gap-1 text-xs font-medium text-stone-custom">
+              <span className="bg-[#FDFBF7] px-1.5 py-0.5 rounded border border-sand text-gold font-bold">
                 {days}d
               </span>
-              <span className="bg-[#FDFBF7] px-1.5 py-0.5 rounded border border-[#EBE5DA] text-gold font-bold">
+              <span className="bg-[#FDFBF7] px-1.5 py-0.5 rounded border border-sand text-gold font-bold">
                 {hours}h
               </span>
               <span className="text-[#A39885]">restantes</span>
             </div>
           </div>
 
-          <div className="w-9 h-9 rounded-full bg-[#FDFBF7] border border-[#EBE5DA] flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-md">
+          <div className="w-9 h-9 rounded-full bg-[#FDFBF7] border border-sand flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-md">
             <ArrowRight size={16} />
           </div>
         </div>
@@ -105,11 +105,11 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
 
 // 2. Estado Vacío (EmptyInvitationsState)
 const EmptyInvitationsState = () => (
-  <div className="flex flex-col items-center justify-center py-20 text-center relative border border-[#EBE5DA] max-w-md bg-[#FDFBF7] justify-self-center rounded-xl">
+  <div className="flex flex-col items-center justify-center py-20 text-center relative border border-sand max-w-md bg-[#FDFBF7] justify-self-center rounded-xl">
     <div className="w-24 h-24 bg-[#F4EFE6] rounded-full flex items-center justify-center mb-6">
       <MailOpen size={48} className="text-gold" />
     </div>
-    <h3 className="font-serif text-2xl text-[#5A5A5A] mb-2">
+    <h3 className="font-serif text-2xl text-stone-custom mb-2">
       Sin invitaciones asignadas
     </h3>
     <p className="text-[#8A8A8A] max-w-sm mx-auto mb-8">
@@ -143,7 +143,7 @@ export default function InvitationsListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9F7F2] font-sans text-[#5A5A5A] relative overflow-hidden">
+    <div className="min-h-screen bg-paper font-sans text-stone-custom relative overflow-hidden">
       {/* Textura de papel (Patrón SVG sutil) */}
       <svg
         className="fixed inset-0 w-screen h-screen opacity-30 pointer-events-none"
@@ -181,7 +181,7 @@ export default function InvitationsListPage() {
         <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Header de la Sección */}
           <div className="text-center space-y-2 mb-12">
-            <h1 className="font-serif text-3xl md:text-4xl text-[#5A5A5A]">
+            <h1 className="font-serif text-3xl md:text-4xl text-stone-custom">
               Mis Eventos
             </h1>
             <p className="text-[#8A8A8A] max-w-lg mx-auto">

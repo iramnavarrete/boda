@@ -7,7 +7,7 @@ const DashedSeparator: FC<Props> = ({ className }) => {
   return (
     <div
       className={cn(
-        "my-1.5 border-t border-[#EBE5DA] mx-3 border-dashed border-opacity-60",
+        "my-1.5 border-t border-sand mx-3 border-dashed border-opacity-60",
         className
       )}
     />
