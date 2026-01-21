@@ -9,9 +9,11 @@ import {
   Clock,
   XCircle,
   X,
-  FileSpreadsheetIcon,
+  FileSpreadsheet,
 } from "lucide-react";
 import { FilterCounts, FilterType } from "@/types";
+import DashedSeparator from "./DashedSeparator";
+import { cn } from "@heroui/theme";
 
 interface SearchAndFilterBarProps {
   searchTerm: string;
@@ -34,7 +36,7 @@ export default function SearchAndFilterBar({
   onExportExcel,
   onNewGuest,
   disabled,
-  filteredGuestCount
+  filteredGuestCount,
 }: SearchAndFilterBarProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
@@ -65,164 +67,345 @@ export default function SearchAndFilterBar({
     }
   };
 
+  // Colores adaptados a la paleta Stone & Gold (más sutiles)
   const getFilterColor = () => {
     switch (filterStatus) {
       case "confirmed":
-        return "text-green-700 bg-green-50 border-green-200";
+        return "text-green-700 bg-green-50 border-green-200 ring-1 ring-green-100";
       case "pending":
-        return "text-yellow-700 bg-yellow-50 border-yellow-200";
+        return "text-[#C5A669] bg-[#FDFBF7] border-[#EBE5DA] ring-1 ring-[#C5A669]/20"; // Gold theme
       case "rejected":
-        return "text-red-700 bg-red-50 border-red-200";
+        return "text-red-700 bg-red-50 border-red-200 ring-1 ring-red-100";
       default:
-        return "text-stone-700 bg-white border-stone-200";
+        return "text-[#5A5A5A] bg-white border-[#EBE5DA] hover:border-[#C5A669]/50";
     }
   };
 
   return (
-    <fieldset
-      disabled={disabled}
-      className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-2 mb-2.5 transition-opacity disabled:opacity-50 disabled:pointer-events-none"
-    >
-      {/* GRUPO IZQUIERDO: Búsqueda + Filtro */}
-      <div className="flex flex-1 gap-2">
-        {/* Búsqueda */}
-        <div className="relative flex-1">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-stone-400">
-            <Search size={18} />
-          </div>
-          <input
-            className="w-full pl-10 pr-3 py-3 bg-white border border-stone-200 rounded-lg outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-all text-sm"
-            placeholder={`Buscar en ${filteredGuestCount} familias...`}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          {searchTerm !== "" && (
-            <button
-              onClick={() => setSearchTerm("")}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-400"
-            >
-              <X size={18} />
-            </button>
-          )}
-        </div>
-
-        {/* FILTRO COMPACTO (Dropdown) */}
-        <div className="relative" ref={filterRef}>
-          <button
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
-            className={`flex h-full items-center gap-2 px-3 py-3 rounded-lg border text-sm font-medium transition-colors whitespace-nowrap ${getFilterColor()}`}
-          >
-            <Filter size={16} />
-            <span className="hidden sm:inline">{getFilterLabel()}</span>
-            <ChevronDown
-              size={14}
-              className={`transition-transform duration-200 ${
-                isFilterOpen ? "rotate-180" : ""
-              }`}
+    <div className="w-full font-sans">
+      <fieldset
+        disabled={disabled}
+        className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 mb-3 transition-opacity disabled:opacity-60 disabled:pointer-events-none"
+      >
+        {/* GRUPO IZQUIERDO: Búsqueda + Filtro */}
+        <div className="flex flex-1 gap-3">
+          {/* Búsqueda */}
+          <div className="relative flex-1 group">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-300 group-focus-within:text-gold text-stone-custom">
+              <Search size={18} />
+            </div>
+            <input
+              className="w-full pl-10 pr-10 py-3 bg-white border border-sand rounded-xl outline-none focus:ring-0 focus:ring-gold focus:border-[#C5A669]/50 transition-all duration-300 text-sm text-charcoal placeholder:text-stone-light shadow-sm"
+              placeholder={`Buscar entre ${filteredGuestCount} invitados...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
-          </button>
+            {searchTerm !== "" && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-custom hover:text-red-400 transition-colors"
+              >
+                <X size={16} />
+              </button>
+            )}
+          </div>
 
-          {/* Menú Desplegable */}
-          {isFilterOpen && (
-            <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-stone-100 overflow-hidden z-20">
-              <div className="p-1 space-y-0.5">
+          {/* FILTRO COMPACTO (Dropdown) */}
+          <div className="relative" ref={filterRef}>
+            <button
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className={`flex h-full items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium transition-all whitespace-nowrap shadow-sm ${getFilterColor()}`}
+            >
+              <Filter
+                size={16}
+                className={
+                  filterStatus === "all" ? "text-stone-light" : "currentColor"
+                }
+              />
+              <span className="hidden sm:inline">{getFilterLabel()}</span>
+              <ChevronDown
+                size={14}
+                className={`transition-transform duration-200 opacity-60 ${
+                  isFilterOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {/* MENÚ DESPLEGABLE - Sombra Difuminada Coherente */}
+            <div
+              className={cn(
+                "absolute top-full right-0 md:left-0 w-48 bg-white text-stone-800 rounded-2xl border border-[#C5A669]/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
+                "transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) z-50",
+                isFilterOpen
+                  ? "opacity-100 translate-y-1 scale-100"
+                  : "opacity-0 translate-y-0 scale-95 pointer-events-none",
+              )}
+            >
+              <div className="p-1.5 space-y-0.5">
+                <div className="px-3 py-1 text-[10px] font-bold text-gold uppercase tracking-widest bg-sand-light/50 rounded-lg mb-1">
+                  Filtrar por estado
+                </div>
+
                 <button
                   onClick={() => {
                     setFilterStatus("all");
                     setIsFilterOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     filterStatus === "all"
-                      ? "bg-stone-100 font-medium"
-                      : "hover:bg-stone-50"
+                      ? "bg-sand-light text-charcoal font-medium border border-sand"
+                      : "text-stone-custom hover:bg-sand-light hover:text-charcoal border border-transparent"
                   }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <LayoutList size={14} /> Todos
+                  <span className="flex items-center gap-2.5">
+                    <LayoutList
+                      size={16}
+                      className={
+                        filterStatus === "all"
+                          ? "text-gold"
+                          : "text-stone-light"
+                      }
+                    />
+                    Todos
                   </span>
-                  <span className="text-stone-400 text-xs">
+                  <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
                     {filterCounts.all}
                   </span>
                 </button>
+
+                <DashedSeparator className="m-0" />
+
                 <button
                   onClick={() => {
                     setFilterStatus("confirmed");
                     setIsFilterOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-green-700 ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     filterStatus === "confirmed"
-                      ? "bg-green-50 font-medium"
-                      : "hover:bg-green-50/50"
+                      ? "bg-green-50 text-green-800 font-medium border border-green-100"
+                      : "text-stone-custom hover:bg-green-50/50 hover:text-green-700 border border-transparent"
                   }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <CheckCircle2 size={14} /> Confirmados
+                  <span className="flex items-center gap-2.5">
+                    <CheckCircle2
+                      size={16}
+                      className={
+                        filterStatus === "confirmed"
+                          ? "text-green-600"
+                          : "text-stone-light"
+                      }
+                    />
+                    Confirmados
                   </span>
-                  <span className="text-green-600/70 text-xs">
+                  <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
                     {filterCounts.confirmed}
                   </span>
                 </button>
+
                 <button
                   onClick={() => {
                     setFilterStatus("pending");
                     setIsFilterOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-yellow-700 ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     filterStatus === "pending"
-                      ? "bg-yellow-50 font-medium"
-                      : "hover:bg-yellow-50/50"
+                      ? "bg-[#FDFBF7] text-[#C5A669] font-medium border border-[#EBE5DA]"
+                      : "text-stone-custom hover:bg-[#FDFBF7] hover:text-[#C5A669] border border-transparent"
                   }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <Clock size={14} /> Pendientes
+                  <span className="flex items-center gap-2.5">
+                    <Clock
+                      size={16}
+                      className={
+                        filterStatus === "pending"
+                          ? "text-[#C5A669]"
+                          : "text-stone-light"
+                      }
+                    />
+                    Pendientes
                   </span>
-                  <span className="text-yellow-600/70 text-xs">
+                  <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
                     {filterCounts.pending}
                   </span>
                 </button>
+
                 <button
                   onClick={() => {
                     setFilterStatus("rejected");
                     setIsFilterOpen(false);
                   }}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm text-red-700 ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     filterStatus === "rejected"
-                      ? "bg-red-50 font-medium"
-                      : "hover:bg-red-50/50"
+                      ? "bg-red-50 text-red-800 font-medium border border-red-100"
+                      : "text-stone-custom hover:bg-red-50/50 hover:text-red-700 border border-transparent"
                   }`}
                 >
-                  <span className="flex items-center gap-2">
-                    <XCircle size={14} /> Rechazados
+                  <span className="flex items-center gap-2.5">
+                    <XCircle
+                      size={16}
+                      className={
+                        filterStatus === "rejected"
+                          ? "text-red-500"
+                          : "text-stone-light"
+                      }
+                    />
+                    Rechazados
                   </span>
-                  <span className="text-red-600/70 text-xs">
+                  <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
                     {filterCounts.rejected}
                   </span>
                 </button>
               </div>
             </div>
-          )}
+
+            {/* Menú Desplegable */}
+            {/* {isFilterOpen && (
+              <div className="absolute top-full left-0 md:left-auto md:right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-sand overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
+                <div className="p-1.5 space-y-0.5">
+                  <div className="px-3 py-2 text-[10px] font-bold text-gold uppercase tracking-widest bg-sand-light/50 rounded-lg mb-1">
+                    Filtrar por estado
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setFilterStatus("all");
+                      setIsFilterOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      filterStatus === "all"
+                        ? "bg-sand-light text-charcoal font-medium border border-sand"
+                        : "text-stone-custom hover:bg-sand-light hover:text-charcoal border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <LayoutList
+                        size={16}
+                        className={
+                          filterStatus === "all"
+                            ? "text-gold"
+                            : "text-stone-light"
+                        }
+                      />
+                      Todos
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {filterCounts.all}
+                    </span>
+                  </button>
+
+                  <DashedSeparator className="m-0" />
+
+                  <button
+                    onClick={() => {
+                      setFilterStatus("confirmed");
+                      setIsFilterOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      filterStatus === "confirmed"
+                        ? "bg-green-50 text-green-800 font-medium border border-green-100"
+                        : "text-stone-custom hover:bg-green-50/50 hover:text-green-700 border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <CheckCircle2
+                        size={16}
+                        className={
+                          filterStatus === "confirmed"
+                            ? "text-green-600"
+                            : "text-stone-light"
+                        }
+                      />
+                      Confirmados
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {filterCounts.confirmed}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setFilterStatus("pending");
+                      setIsFilterOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      filterStatus === "pending"
+                        ? "bg-[#FDFBF7] text-[#C5A669] font-medium border border-[#EBE5DA]"
+                        : "text-stone-custom hover:bg-[#FDFBF7] hover:text-[#C5A669] border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Clock
+                        size={16}
+                        className={
+                          filterStatus === "pending"
+                            ? "text-[#C5A669]"
+                            : "text-stone-light"
+                        }
+                      />
+                      Pendientes
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {filterCounts.pending}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setFilterStatus("rejected");
+                      setIsFilterOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      filterStatus === "rejected"
+                        ? "bg-red-50 text-red-800 font-medium border border-red-100"
+                        : "text-stone-custom hover:bg-red-50/50 hover:text-red-700 border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <XCircle
+                        size={16}
+                        className={
+                          filterStatus === "rejected"
+                            ? "text-red-500"
+                            : "text-stone-light"
+                        }
+                      />
+                      Rechazados
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {filterCounts.rejected}
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )} */}
+          </div>
         </div>
-      </div>
 
-      {/* GRUPO DERECHO: Acciones */}
-      <div className="flex gap-2 shrink-0">
-        {/* Excel (Solo Desktop) */}
-        <button
-          onClick={onExportExcel}
-          className="hidden md:flex items-center justify-center p-3 bg-white text-stone-600 border border-stone-200 rounded-lg hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-colors text-sm font-medium gap-2"
-          title="Exportar Excel"
-        >
-          <FileSpreadsheetIcon size={18} /> <span>Exportar</span>
-        </button>
+        {/* GRUPO DERECHO: Acciones */}
+        <div className="flex gap-3 shrink-0">
+          {/* Excel (Solo Desktop) */}
+          <button
+            onClick={onExportExcel}
+            className="hidden md:flex items-center justify-center px-4 py-3 bg-white text-stone-custom border border-sand rounded-xl hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-all text-sm font-medium gap-2 shadow-sm group"
+            title="Exportar Excel"
+          >
+            <FileSpreadsheet
+              size={18}
+              className="text-stone-light group-hover:text-green-600 transition-colors"
+            />
+            <span>Exportar</span>
+          </button>
 
-        {/* Nuevo Invitado */}
-        <button
-          onClick={onNewGuest}
-          className="flex-1 flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white px-4 py-3 rounded-lg transition-colors shadow-lg shadow-stone-900/20 text-sm font-medium"
-        >
-          <Plus size={18} /> <span>Nuevo</span>
-        </button>
-      </div>
-    </fieldset>
+          {/* Nuevo Invitado */}
+          <button
+            onClick={onNewGuest}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gold hover:bg-[#B39358] text-white px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#C5A669]/20 hover:shadow-[#C5A669]/30 hover:-translate-y-0.5 text-sm font-bold"
+          >
+            <Plus size={18} />
+            <span>Nuevo Invitado</span>
+          </button>
+        </div>
+      </fieldset>
+    </div>
   );
 }
