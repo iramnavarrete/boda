@@ -72,6 +72,7 @@ const config: Config = {
           rejected: "#EF4444",
         },
         paper: "#F9F7F2",
+        "stone-custom": "#5A5A5A",
       },
       backgroundImage: {
         main: 'url("/img/principal.jpg")',
