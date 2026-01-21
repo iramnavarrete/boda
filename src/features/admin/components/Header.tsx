@@ -109,7 +109,7 @@ const Header = () => {
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: -10, opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute top-16 z-40 bg-white border-b border-sand shadow-2xl overflow-hidden left-0 w-full rounded-b-2xl md:hidden"
+              className="absolute top-16 z-40 bg-white border-b border-sand -mt-16 pt-16 shadow-2xl overflow-hidden left-0 w-full rounded-b-2xl md:hidden"
             >
               <div className="flex flex-col p-4 space-y-2">
                 {invitationId ? (
