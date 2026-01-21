@@ -1,12 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  X,
-  Lock,
-  Unlock,
-  Trash2,
-  ChevronUp,
-  CheckSquare,
-} from "lucide-react";
+import { X, Lock, Unlock, Trash2, ChevronUp, CheckSquare } from "lucide-react";
 import { cn } from "@heroui/theme";
 
 interface BulkActionsProps {
@@ -77,13 +70,12 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
         </div>
 
         {/* SEPARADOR VERTICAL */}
-        <div className="h-8 w-px bg-stone-100" />
+        <div className="flex flex-1 justify-center">
+          <div className="h-8 w-px bg-stone-100" />
+        </div>
 
         {/* ACCIONES */}
-        <div
-          className="flex items-center gap-2 flex-1 justify-end"
-          ref={menuRef}
-        >
+        <div className="flex items-center gap-2 justify-end" ref={menuRef}>
           {/* TOGGLE MENÚ */}
           <div className="relative">
             <button
