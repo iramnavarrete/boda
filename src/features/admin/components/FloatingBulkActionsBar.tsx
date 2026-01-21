@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { X, Lock, Unlock, Trash2, ChevronUp, CheckSquare } from "lucide-react";
 import { cn } from "@heroui/theme";
+import DashedSeparator from "./DashedSeparator";
 
 interface BulkActionsProps {
   count: number;
@@ -121,7 +122,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
                       </div>
                       <span>Seleccionar todos</span>
                     </button>
-                    <div className="my-1.5 border-t border-stone-100 mx-3 border-dashed" />
+                    <DashedSeparator />
                   </>
                 )}
 
@@ -148,7 +149,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
                   <span>Permitir Edición</span>
                 </button>
 
-                <div className="my-1.5 border-t border-stone-100 mx-3 border-dashed" />
+                <DashedSeparator />
 
                 <div className="px-3 py-1.5 text-[10px] font-bold text-red-300 uppercase tracking-wider">
                   Zona de Peligro

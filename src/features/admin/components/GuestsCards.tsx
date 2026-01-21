@@ -128,7 +128,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
           {/* Footer de Acciones */}
           <fieldset
             disabled={isOneOrMoreSelected}
-            className="flex justify-between items-center pt-4 mt-auto border-t border-dashed border-[#EBE5DA] transition-opacity duration-300 disabled:opacity-30 disabled:pointer-events-none"
+            className="flex justify-between items-center pt-4 mt-auto border-t border-opacity-40 border-dashed border-[#EBE5DA] transition-opacity duration-300 disabled:opacity-30 disabled:pointer-events-none"
           >
             {/* Estado de Edición */}
             <div className="text-xs font-medium">
@@ -155,7 +155,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                 ) : (
                   <Lock size={14} />
                 )}
-                <span className="hidden sm:inline">
+                <span>
                   {g.cambiosPermitidos ? "Abierto" : "Cerrado"}
                 </span>
               </button>
