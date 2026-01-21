@@ -14,6 +14,7 @@ import { useRouter, usePathname, useParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthService } from "@/services/authService";
+import { cn } from "@heroui/theme";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -46,14 +47,20 @@ const Header = () => {
   return (
     <header className="bg-white/90 border-b border-sand sticky top-0 z-40">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative z-50">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push("/admin")}
+        <div className="flex items-center">
+          <Link
+            href="/admin"
+            className="hidden md:flex items-center gap-2 text-sm font-bold text-[#A8A29E] hover:text-[#C5A669] transition-colors group mr-6 pr-6 border-r border-[#EBE5DA]"
             title="Volver a mis eventos"
-            className="p-2 -ml-2 text-stone-400 rounded-full hover:bg-sand-100 hover:text-gold duration-300 transition-colors"
           >
-            <CalendarHeart size={20} />
-          </button>
+            <div className="p-1.5 rounded-lg bg-transparent group-hover:bg-[#FDFBF7] transition-colors">
+              <CalendarHeart
+                size={20}
+                className="group-hover:-translate-x-0.5 transition-transform"
+              />
+            </div>
+            <span>Mis Eventos</span>
+          </Link>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-stone-900 rounded-full flex items-center justify-center text-gold shadow-sm">
               <Heart className="fill-current" size={16} />
@@ -126,7 +133,12 @@ const Header = () => {
                 )}
 
                 <div className="h-px bg-sand my-2" />
-
+                <MenuItem
+                  className="hover:bg-sand-50"
+                  icon={<CalendarHeart size={18} />}
+                  label="Volver a mis eventos"
+                  href="/admin"
+                />
                 <button
                   onClick={() => {
                     onLogout();
@@ -176,9 +188,7 @@ const DesktopNavLink = ({
     {icon && (
       <span
         className={
-          active
-            ? "text-gold"
-            : "text-[#A39885] group-hover:text-gold"
+          active ? "text-gold" : "text-[#A39885] group-hover:text-gold"
         }
       >
         {icon}
@@ -193,19 +203,23 @@ const MenuItem = ({
   label,
   active = false,
   href,
+  className,
 }: {
   label: string;
   active?: boolean;
   href: string;
   icon?: React.ReactNode;
+  className?: string;
 }) => (
   <Link
     href={href}
-    className={`flex items-center gap-3 w-full p-3 rounded-xl transition-all group border active:scale-[0.98] ${
+    className={cn(
+      "flex items-center gap-3 w-full p-3 rounded-xl transition-all group border active:scale-[0.98]",
       active
         ? "text-stone-custom bg-paper border-sand shadow-sm"
-        : "text-[#8A8A8A] border-transparent hover:text-stone-custom hover:border-sand"
-    }`}
+        : "text-[#8A8A8A] border-transparent hover:text-stone-custom hover:border-sand",
+      className,
+    )}
   >
     <div
       className={`p-2 rounded-lg transition-colors shadow-sm ${
