@@ -23,7 +23,7 @@ interface GuestsCardsProps {
   onLockToggle: (guest: Guest) => void;
 }
 
-export default function GuestsCards({
+const GuestsCards: React.FC<GuestsCardsProps> = ({
   guests,
   selectedGuests,
   onSelectGuest,
@@ -31,11 +31,11 @@ export default function GuestsCards({
   onDelete,
   onSendWhatsApp,
   onLockToggle,
-}: GuestsCardsProps) {
+}) => {
   const isOneOrMoreSelected = selectedGuests.size > 0;
 
   const handleActionButtonClick = (
-    event: MouseEvent<HTMLButtonElement, globalThis.MouseEvent>,
+    event: MouseEvent<HTMLButtonElement>,
     callback: () => void,
   ) => {
     event.stopPropagation();
@@ -43,91 +43,125 @@ export default function GuestsCards({
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 select-none">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-2 select-none pb-20w">
       {guests.map((g) => (
         <div
           key={g.id}
           onClick={() => {
-            // Si hay algún elemento seleccionado, al hacer click se seleccionará
             if (isOneOrMoreSelected) {
               onSelectGuest(g.id);
               return;
             }
             onEdit(g);
           }}
-          className={`flex flex-col bg-white rounded-xl shadow-sm border p-4 cursor-default transition-all duration-300 ${
-            selectedGuests.has(g.id)
-              ? "border-yellow-400 ring-1 ring-yellow-400"
-              : "border-stone-200 hover:border-stone-300 hover:ring-1 hover:ring-stone-300"
-          }`}
+          className={`
+            relative flex flex-col bg-white rounded-2xl p-5 cursor-default transition-all duration-300 border-2
+            ${
+              selectedGuests.has(g.id)
+                ? "border-[#C5A669] shadow-[0_8px_30px_-5px_rgba(197,166,105,0.3)] ring-0 scale-[1] z-10"
+                : "border-[#EBE5DA] hover:border-[#C5A669]/50 hover:shadow-lg hover:shadow-stone-200/50 md:hover:-translate-y-0.5"
+            }
+          `}
         >
-          <div className="flex flex-1 justify-between items-start mb-4 gap-2">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-1 justify-between items-start mb-4 gap-3">
+            <div className="flex items-start gap-4">
+              {/* Checkbox de Selección */}
               <button
                 onClick={(e) =>
                   handleActionButtonClick(e, () => onSelectGuest(g.id))
                 }
-                className={
-                  selectedGuests.has(g.id)
-                    ? "text-yellow-600"
-                    : "text-stone-300"
-                }
+                className={`
+                  mt-1 p-1 rounded-lg transition-all duration-200 shrink-0
+                  ${
+                    selectedGuests.has(g.id)
+                      ? "text-[#C5A669] bg-[#FDFBF7]"
+                      : "text-[#A8A29E] hover:text-[#C5A669] hover:bg-[#FDFBF7]"
+                  }
+                `}
               >
                 {selectedGuests.has(g.id) ? (
-                  <CheckSquare size={24} />
+                  <CheckSquare size={22} className="drop-shadow-sm" />
                 ) : (
-                  <Square size={24} />
+                  <Square size={22} />
                 )}
               </button>
+
+              {/* Info Principal */}
               <div>
-                <h3 className="font-semibold text-stone-800 leading-4 mb-0.5 line-clamp-3">
+                <h3 className="font-serif text-base font-bold text-[#2C2C29] leading-snug line-clamp-2">
                   {g.nombre}
                 </h3>
-                <p className="text-xs text-stone-500 font-mono">ID: {g.id}</p>
+                <p className="text-[10px] text-[#A8A29E] font-mono uppercase tracking-widest bg-[#FDFBF7] inline-block px-1.5 py-0.5 rounded border border-[#EBE5DA]">
+                  ID: {g.id.slice(0, 8)}
+                </p>
               </div>
             </div>
-            <div className="flex gap-2 items-center">
-              <p
-                className={`inline-flex text-xs font-bold p-1 gap-0.5 rounded items-center justify-center ${
-                  g.asistencia === null
-                    ? "text-yellow-600 bg-yellow-100"
-                    : g.asistencia === true
-                      ? "text-green-600 bg-green-100"
-                      : "text-red-600 bg-red-100"
-                }`}
+
+            {/* Badge de Estado */}
+            <div className="flex-shrink-0">
+              <span
+                className={`
+                  inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border
+                  ${
+                    g.asistencia === null
+                      ? "bg-[#FDFBF7] text-[#C5A669] border-[#C5A669]/20"
+                      : g.asistencia === true
+                        ? "bg-green-50 text-green-700 border-green-100"
+                        : "bg-red-50 text-red-600 border-red-100"
+                  }
+                `}
               >
+                {g.asistencia === null ? (
+                  <Clock size={12} />
+                ) : g.asistencia === true ? (
+                  <CheckCircle2 size={12} />
+                ) : (
+                  <XCircle size={12} />
+                )}
                 <span>
-                  {g.asistencia === null ? (
-                    <Clock size={12} />
-                  ) : g.asistencia === true ? (
-                    <CheckCircle2 size={12} />
-                  ) : (
-                    <XCircle size={12} />
-                  )}
+                  {g.asistencia === true ? g.confirmados : 0}/{g.invitados}
                 </span>
-                {g.asistencia === true ? g.confirmados : 0}/{g.invitados}
-              </p>
+              </span>
             </div>
           </div>
+
+          {/* Footer de Acciones */}
           <fieldset
             disabled={isOneOrMoreSelected}
-            className="flex justify-between items-center pt-2 transition-opacity duration-300 disabled:opacity-50 disabled:pointer-events-none"
+            className="flex justify-between items-center pt-4 mt-auto border-t border-dashed border-[#EBE5DA] transition-opacity duration-300 disabled:opacity-30 disabled:pointer-events-none"
           >
-            <div className="text-xs text-stone-400 font-medium">
+            {/* Estado de Edición */}
+            <div className="text-xs font-medium">
               <button
-                className="flex gap-1"
+                className={`
+                  flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors
+                  ${
+                    g.cambiosPermitidos
+                      ? "text-green-600 bg-green-50 hover:bg-green-100"
+                      : "text-red-500 bg-red-50 hover:bg-red-100"
+                  }
+                `}
                 onClick={(e) =>
                   handleActionButtonClick(e, () => onLockToggle(g))
                 }
+                title={
+                  g.cambiosPermitidos
+                    ? "Edición permitida"
+                    : "Edición bloqueada"
+                }
               >
                 {g.cambiosPermitidos ? (
-                  <Unlock size={16} className="text-green-600" />
+                  <Unlock size={14} />
                 ) : (
-                  <Lock size={16} className="text-red-600" />
+                  <Lock size={14} />
                 )}
-                <span>Edición</span>
+                <span className="hidden sm:inline">
+                  {g.cambiosPermitidos ? "Abierto" : "Cerrado"}
+                </span>
               </button>
             </div>
+
+            {/* Botones de Acción */}
             <div className="flex gap-2">
               {g.tieneTelefono && (
                 <button
@@ -135,20 +169,22 @@ export default function GuestsCards({
                   onClick={(e) =>
                     handleActionButtonClick(e, () => onSendWhatsApp(g))
                   }
-                  className="bg-green-50 text-green-600 p-2 rounded-lg flex justify-center items-center"
+                  className="p-2 rounded-xl text-green-600 bg-green-50 hover:bg-green-100 hover:text-green-700 transition-colors duration-300 border border-green-100"
                 >
-                  <IconBrandWhatsapp width={18} height={18} />
+                  <IconBrandWhatsapp className="w-4 h-4" />
                 </button>
               )}
+
               <button
-                className="bg-stone-50 text-stone-600 p-2 rounded-lg"
+                className="p-2 rounded-xl text-[#5A5A5A] bg-white hover:bg-sand-100 hover:text-[#2C2C29] hover:border-[#C5A669]/30 transition-all duration-300 border border-[#EBE5DA] shadow-sm"
                 title="Vista previa"
               >
-                <Eye size={20} className="text-stone-600" />
+                <Eye size={18} />
               </button>
+
               <button
                 onClick={(e) => handleActionButtonClick(e, () => onDelete(g))}
-                className="bg-red-50 text-red-500 p-2 rounded-lg"
+                className="p-2 rounded-xl text-red-400 bg-white border border-[#EBE5DA] hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all duration-300"
                 title="Eliminar"
               >
                 <Trash2 size={18} />
@@ -159,4 +195,6 @@ export default function GuestsCards({
       ))}
     </div>
   );
-}
+};
+
+export default GuestsCards;
