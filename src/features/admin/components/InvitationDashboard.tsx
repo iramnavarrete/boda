@@ -281,7 +281,7 @@ const GuestStatsPieChart = ({ stats }: { stats: any }) => {
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <span className="text-[10px] text-stone-400 font-medium bg-white px-1.5 py-0.5 rounded border border-sand">
+                  <span className="hidden xl:block text-[10px] text-stone-400 font-medium bg-white px-1.5 py-0.5 rounded border border-sand">
                     {percentage}%
                   </span>
                   <span className="text-sm font-bold text-stone-600 w-6 text-right font-serif">

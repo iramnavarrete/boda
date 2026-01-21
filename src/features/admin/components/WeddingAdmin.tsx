@@ -157,7 +157,7 @@ export default function WeddingAdmin({
   };
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-800 font-sans pb-20 relative">
+    <div className="min-h-screen bg-paper text-stone-800 font-sans pb-20 relative">
       <Header />
 
       <section className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-2">

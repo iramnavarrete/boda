@@ -3,12 +3,12 @@ import React, { useCallback, useState } from "react";
 import {
   LogOut,
   Heart,
-  ArrowLeft,
   Menu,
   X,
   User as UserIcon,
   Home,
   ChevronRight,
+  CalendarHeart,
 } from "lucide-react";
 import { useRouter, usePathname, useParams } from "next/navigation";
 import Link from "next/link";
@@ -49,9 +49,10 @@ const Header = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.push("/admin")}
-            className="p-2 -ml-2 text-stone-400 rounded-full hover:bg-sand-100 transition-colors"
+            title="Volver a mis eventos"
+            className="p-2 -ml-2 text-stone-400 rounded-full hover:bg-sand-100 hover:text-gold duration-300 transition-colors"
           >
-            <ArrowLeft size={20} />
+            <CalendarHeart size={20} />
           </button>
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-stone-900 rounded-full flex items-center justify-center text-gold shadow-sm">
