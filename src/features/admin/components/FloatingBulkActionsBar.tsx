@@ -44,7 +44,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
     <div
       data-state={count > 0 ? "open" : "closed"}
       className={cn(
-        "fixed bottom-6 inset-x-4 md:inset-x-auto md:right-8 z-50 flex flex-col items-center",
+        "fixed bottom-6 inset-x-4 md:inset-x-auto md:right-8 z-20 flex flex-col items-center",
         // Animación elástica rápida
         "transition-all duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275)",
         count > 0

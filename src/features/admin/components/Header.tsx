@@ -9,6 +9,7 @@ import {
   Home,
   ChevronRight,
   CalendarHeart,
+  Gem,
 } from "lucide-react";
 import { useRouter, usePathname, useParams } from "next/navigation";
 import Link from "next/link";
@@ -45,7 +46,7 @@ const Header = () => {
   ];
 
   return (
-    <header className="bg-white/90 border-b border-sand sticky top-0 z-40">
+    <header className="bg-white/95 border-b border-sand sticky top-0 z-40">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative z-50">
         <div className="flex items-center">
           <Link
@@ -62,8 +63,8 @@ const Header = () => {
             <span>Mis Eventos</span>
           </Link>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-stone-900 rounded-full flex items-center justify-center text-gold shadow-sm">
-              <Heart className="fill-current" size={16} />
+            <div className="w-9 h-9 bg-charcoal-700 rounded-full flex items-center justify-center text-gold shadow-sm">
+              <Gem className="text-current" size={16} />
             </div>
             <div>
               <h1 className="text-lg font-serif font-bold text-stone-700 leading-none">
