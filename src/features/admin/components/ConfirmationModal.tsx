@@ -26,7 +26,6 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   confirmText = "Confirmar",
   onBackdropPress,
 }) => {
-
   return (
     <Modal isOpen={isOpen} onBackdropPress={onBackdropPress || onClose}>
       {/* Header */}
@@ -52,9 +51,14 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
         <button
           onClick={onClose}
-          className="text-stone-light hover:text-charcoal transition-colors -mr-2 -mt-2 p-2 rounded-full hover:bg-sand-light"
+          className="group bg-transparent hover:bg-red-50 border border-transparent hover:border-red-100 text-stone-400 hover:text-red-500 rounded-xl p-2 transition-all ml-1"
+          title="Cancelar selección"
         >
-          <X size={20} />
+          <X
+            size={20}
+            className="transform group-hover:rotate-90 transition-transform duration-300"
+            strokeWidth={2.5}
+          />
         </button>
       </div>
 

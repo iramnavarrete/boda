@@ -30,7 +30,6 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
   isEdit,
   onBackdropPress,
 }) => {
-
   const handleNumberChange = (field: keyof GuestFormData, value: string) => {
     const numValue = value === "" ? 0 : parseInt(value, 10);
     const finalValue = isNaN(numValue) ? 0 : numValue;
@@ -52,7 +51,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
     setFormData({
       ...formData,
       asistencia: nuevoEstado,
-      confirmados: nuevoEstado === false ? 0 : formData.confirmados
+      confirmados: nuevoEstado === false ? 0 : formData.confirmados,
     });
   };
 
@@ -71,10 +70,14 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
         </div>
         <button
           onClick={onClose}
-          className="text-stone-light hover:text-charcoal transition-colors p-2 hover:bg-sand-light rounded-full"
-          type="button"
+          className="group bg-transparent hover:bg-red-50 border border-transparent hover:border-red-100 text-stone-400 hover:text-red-500 rounded-xl p-2 transition-all ml-1"
+          title="Cancelar selección"
         >
-          <X size={20} />
+          <X
+            size={20}
+            className="transform group-hover:rotate-90 transition-transform duration-300"
+            strokeWidth={2.5}
+          />
         </button>
       </div>
 
