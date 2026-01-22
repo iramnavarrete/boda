@@ -2,7 +2,6 @@
 import React, { useCallback, useState } from "react";
 import {
   LogOut,
-  Heart,
   Menu,
   X,
   User as UserIcon,
@@ -11,7 +10,7 @@ import {
   CalendarHeart,
   Gem,
 } from "lucide-react";
-import { useRouter, usePathname, useParams } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { AuthService } from "@/services/authService";
@@ -19,7 +18,6 @@ import { cn } from "@heroui/theme";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
   const invitationId = params.invitationId;

@@ -1,8 +1,7 @@
 import { useEffect } from "react";
 import { Guest } from "@/types";
 import { GuestService } from "@/services/guestService";
-import Header from "@/features/admin/components/Header";
-// Reemplazamos la barra antigua por la nueva flotante
+import Header from "@/features/shared/components/Header";
 import GuestFormModal from "@/features/admin/components/GuestFormModal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
 import SearchAndFilterBar from "@/features/admin/components/SearchAndFilterBar";

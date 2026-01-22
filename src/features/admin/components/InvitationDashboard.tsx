@@ -25,7 +25,7 @@ import { useToast } from "@/features/shared/components/Toast";
 import { useGuestsData } from "../hooks/useGuestData";
 import { useGuestsStats } from "../hooks/useGuestsStats";
 import Loader from "@/features/front/components/Loader";
-import Header from "./Header";
+import Header from "@/features/shared/components/Header";
 
 const useMessages = () => [
   {
@@ -330,7 +330,11 @@ const ActivityItem = ({ initials, text, time, type }: any) => {
   );
 };
 
-export default function InvitationDashboard({invitationId}: {invitationId: string}) {
+export default function InvitationDashboard({
+  invitationId,
+}: {
+  invitationId: string;
+}) {
   const user = useAuthUser();
   const { toast } = useToast();
 
@@ -346,7 +350,6 @@ export default function InvitationDashboard({invitationId}: {invitationId: strin
 
       <main className="max-w-6xl mx-auto px-6 py-10 space-y-10 duration-700">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white p-8 rounded-3xl border border-sand shadow-sm relative overflow-hidden">
-
           <div className="relative z-10">
             <h1 className="text-3xl md:text-4xl font-serif text-stone-600 mb-2">
               Resumen del Evento
