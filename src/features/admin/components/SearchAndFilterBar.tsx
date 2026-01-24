@@ -73,7 +73,7 @@ export default function SearchAndFilterBar({
       case "confirmed":
         return "text-green-700 bg-green-50 border-green-200 ring-1 ring-green-100";
       case "pending":
-        return "text-gold bg-[#FDFBF7] border-sand ring-1 ring-gold/20"; // Gold theme
+        return "text-gold bg-paper/30 border-sand ring-1 ring-gold/20"; // Gold theme
       case "rejected":
         return "text-red-700 bg-red-50 border-red-200 ring-1 ring-red-100";
       default:
@@ -209,8 +209,8 @@ export default function SearchAndFilterBar({
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     filterStatus === "pending"
-                      ? "bg-[#FDFBF7] text-gold font-medium border border-sand"
-                      : "text-stone-custom hover:bg-[#FDFBF7] hover:text-gold border border-transparent"
+                      ? "bg-paper/30 text-gold font-medium border border-sand"
+                      : "text-stone-custom hover:bg-paper/30 hover:text-gold border border-transparent"
                   }`}
                 >
                   <span className="flex items-center gap-2.5">
@@ -257,127 +257,6 @@ export default function SearchAndFilterBar({
                 </button>
               </div>
             </div>
-
-            {/* Menú Desplegable */}
-            {/* {isFilterOpen && (
-              <div className="absolute top-full left-0 md:left-auto md:right-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-sand overflow-hidden z-20 animate-in fade-in zoom-in-95 duration-200">
-                <div className="p-1.5 space-y-0.5">
-                  <div className="px-3 py-2 text-[10px] font-bold text-gold uppercase tracking-widest bg-sand-light/50 rounded-lg mb-1">
-                    Filtrar por estado
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setFilterStatus("all");
-                      setIsFilterOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      filterStatus === "all"
-                        ? "bg-sand-light text-charcoal font-medium border border-sand"
-                        : "text-stone-custom hover:bg-sand-light hover:text-charcoal border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <LayoutList
-                        size={16}
-                        className={
-                          filterStatus === "all"
-                            ? "text-gold"
-                            : "text-stone-light"
-                        }
-                      />
-                      Todos
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {filterCounts.all}
-                    </span>
-                  </button>
-
-                  <DashedSeparator className="m-0" />
-
-                  <button
-                    onClick={() => {
-                      setFilterStatus("confirmed");
-                      setIsFilterOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      filterStatus === "confirmed"
-                        ? "bg-green-50 text-green-800 font-medium border border-green-100"
-                        : "text-stone-custom hover:bg-green-50/50 hover:text-green-700 border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <CheckCircle2
-                        size={16}
-                        className={
-                          filterStatus === "confirmed"
-                            ? "text-green-600"
-                            : "text-stone-light"
-                        }
-                      />
-                      Confirmados
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {filterCounts.confirmed}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setFilterStatus("pending");
-                      setIsFilterOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      filterStatus === "pending"
-                        ? "bg-[#FDFBF7] text-gold font-medium border border-sand"
-                        : "text-stone-custom hover:bg-[#FDFBF7] hover:text-gold border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <Clock
-                        size={16}
-                        className={
-                          filterStatus === "pending"
-                            ? "text-gold"
-                            : "text-stone-light"
-                        }
-                      />
-                      Pendientes
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {filterCounts.pending}
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setFilterStatus("rejected");
-                      setIsFilterOpen(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      filterStatus === "rejected"
-                        ? "bg-red-50 text-red-800 font-medium border border-red-100"
-                        : "text-stone-custom hover:bg-red-50/50 hover:text-red-700 border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <XCircle
-                        size={16}
-                        className={
-                          filterStatus === "rejected"
-                            ? "text-red-500"
-                            : "text-stone-light"
-                        }
-                      />
-                      Rechazados
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {filterCounts.rejected}
-                    </span>
-                  </button>
-                </div>
-              </div>
-            )} */}
           </div>
         </div>
 
@@ -399,7 +278,7 @@ export default function SearchAndFilterBar({
           {/* Nuevo Invitado */}
           <button
             onClick={onNewGuest}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gold hover:bg-[#B39358] text-white px-6 py-3 rounded-xl transition-all shadow-lg shadow-gold/20 hover:shadow-gold/30 hover:-translate-y-0.5 text-sm font-bold"
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gold hover:bg-gold-600 hover:bg-g text-white px-6 py-3 rounded-xl transition-all shadow-lg shadow-gold/20 hover:shadow-gold/30 hover:-translate-y-0.5 text-sm font-bold"
           >
             <Plus size={18} />
             <span>Nuevo Invitado</span>

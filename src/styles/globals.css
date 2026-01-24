@@ -142,3 +142,59 @@ input[type="number"] {
 
   background-size: 4px 4px, 3px 3px, 2px 2px, 2.5px 2.5px;
 }
+
+/* Smooth Scroll Global */
+html {
+  scroll-behavior: smooth;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+/* Bucle Infinito de Flotación suave */
+@keyframes gentleFloat {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+.animate-float-1 {
+  animation: gentleFloat 5s ease-in-out 1.5s infinite;
+}
+
+.animate-float-2 {
+  animation: gentleFloat 6s ease-in-out 1.7s infinite;
+}
+
+.animate-float-3 {
+  animation: gentleFloat 5s ease-in-out 2.1s infinite;
+}

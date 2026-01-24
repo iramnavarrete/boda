@@ -75,8 +75,8 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                   mt-1 p-1 rounded-lg transition-all duration-200 shrink-0
                   ${
                     selectedGuests.has(g.id)
-                      ? "text-gold bg-[#FDFBF7]"
-                      : "text-[#A8A29E] hover:text-gold hover:bg-[#FDFBF7]"
+                      ? "text-gold bg-paper/30"
+                      : "text-stone-400 hover:text-gold hover:bg-paper/30"
                   }
                 `}
               >
@@ -89,10 +89,10 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
 
               {/* Info Principal */}
               <div>
-                <h3 className="font-serif text-base font-bold text-[#2C2C29] leading-snug line-clamp-2">
+                <h3 className="font-serif text-base font-bold text-charcoal leading-snug line-clamp-2">
                   {g.nombre}
                 </h3>
-                <p className="text-[10px] text-[#A8A29E] font-mono uppercase tracking-widest bg-[#FDFBF7] inline-block px-1.5 py-0.5 rounded border border-sand">
+                <p className="text-[10px] text-stone-400 font-mono uppercase tracking-widest bg-paper/30 inline-block px-1.5 py-0.5 rounded border border-sand">
                   ID: {g.id.slice(0, 8)}
                 </p>
               </div>
@@ -105,7 +105,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                   inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border
                   ${
                     g.asistencia === null
-                      ? "bg-[#FDFBF7] text-gold border-gold/20"
+                      ? "bg-paper/30 text-gold border-gold/20"
                       : g.asistencia === true
                         ? "bg-green-50 text-green-700 border-green-100"
                         : "bg-red-50 text-red-600 border-red-100"
@@ -177,7 +177,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
               )}
 
               <button
-                className="p-2 rounded-xl text-stone-custom bg-white hover:bg-sand-100 hover:text-[#2C2C29] hover:border-gold/30 transition-all duration-300 border border-sand shadow-sm"
+                className="p-2 rounded-xl text-stone-custom bg-white hover:bg-sand-100 hover:text-charcoal hover:border-gold/30 transition-all duration-300 border border-sand shadow-sm"
                 title="Vista previa"
               >
                 <Eye size={18} />

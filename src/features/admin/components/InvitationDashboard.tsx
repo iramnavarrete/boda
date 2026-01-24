@@ -427,7 +427,7 @@ export default function InvitationDashboard({
             </div>
           </div>
 
-          <div className="bg-[#2C2C29] rounded-3xl p-8 shadow-xl relative overflow-hidden text-sand">
+          <div className="bg-charcoal rounded-3xl p-8 shadow-xl relative overflow-hidden text-sand">
             <div className="absolute top-0 right-0 p-6 opacity-5">
               <Heart size={120} />
             </div>

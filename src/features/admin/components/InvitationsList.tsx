@@ -25,10 +25,10 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
   return (
     <Link
       href={`/admin/invitations/${invitation.id}/dashboard`}
-      className="group relative flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-sand transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(197,166,105,0.2)] hover:-translate-y-1 hover:border-[#D4C4A8]"
+      className="group relative flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-sand transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(197,166,105,0.2)] hover:-translate-y-1 hover:border-sand-400"
     >
       {/* SECCIÓN IMAGEN */}
-      <div className="relative h-48 w-full overflow-hidden bg-[#F4EFE6]">
+      <div className="relative h-48 w-full overflow-hidden bg-paper">
         {/* Overlay degradado */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent z-10 opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
 
@@ -54,8 +54,8 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
       <div className="flex flex-col flex-1 p-6 gap-4">
         {/* Encabezado */}
         <div>
-          <p className="text-[10px] font-bold text-[#A39885] uppercase tracking-widest mb-1.5 flex items-center gap-2">
-            <span className="w-6 h-[1px] bg-[#D4C4A8]"></span>
+          <p className="text-[10px] font-bold text-gold uppercase tracking-widest mb-1.5 flex items-center gap-2">
+            <span className="w-6 h-[1px] bg-sand-400"></span>
             {invitation.tipo}
           </p>
           <h3 className="font-serif text-2xl text-stone-custom leading-tight group-hover:text-gold transition-colors duration-300">
@@ -64,8 +64,8 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
         </div>
 
         {/* Detalles */}
-        <div className="grid grid-cols-1 gap-2.5 py-4 border-t border-b border-[#F5F2EB]">
-          <div className="flex items-center gap-2.5 text-sm text-[#8A8A8A]">
+        <div className="grid grid-cols-1 gap-2.5 py-4 border-t border-b border-stone-100">
+          <div className="flex items-center gap-2.5 text-sm text-charcoal-400">
             <Calendar size={15} className="text-gold" />
             <span>
               {formatTimeStamp(invitation.fecha)
@@ -73,7 +73,7 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
                 .toLocaleLowerCase()}
             </span>
           </div>
-          <div className="flex items-center gap-2.5 text-sm text-[#8A8A8A]">
+          <div className="flex items-center gap-2.5 text-sm text-charcoal-400">
             <MapPin size={15} className="text-gold" />
             <span className="truncate">{invitation.recepcion.nombreSalon}</span>
           </div>
@@ -84,17 +84,17 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
           <div className="flex items-center gap-2">
             <Clock size={14} className="text-gold" />
             <div className="flex items-baseline gap-1 text-xs font-medium text-stone-custom">
-              <span className="bg-[#FDFBF7] px-1.5 py-0.5 rounded border border-sand text-gold font-bold">
+              <span className="bg-paper/30 px-1.5 py-0.5 rounded border border-sand text-gold font-bold">
                 {days}d
               </span>
-              <span className="bg-[#FDFBF7] px-1.5 py-0.5 rounded border border-sand text-gold font-bold">
+              <span className="bg-paper/30 px-1.5 py-0.5 rounded border border-sand text-gold font-bold">
                 {hours}h
               </span>
-              <span className="text-[#A39885]">restantes</span>
+              <span className="text-gold">restantes</span>
             </div>
           </div>
 
-          <div className="w-9 h-9 rounded-full bg-[#FDFBF7] border border-sand flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-md">
+          <div className="w-9 h-9 rounded-full bg-paper/30 border border-sand flex items-center justify-center text-gold group-hover:bg-gold group-hover:text-white transition-all duration-300 shadow-sm group-hover:shadow-md">
             <ArrowRight size={16} />
           </div>
         </div>
@@ -105,17 +105,17 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
 
 // 2. Estado Vacío (EmptyInvitationsState)
 const EmptyInvitationsState = () => (
-  <div className="flex flex-col items-center justify-center py-20 text-center relative border border-sand max-w-md bg-[#FDFBF7] justify-self-center rounded-xl">
-    <div className="w-24 h-24 bg-[#F4EFE6] rounded-full flex items-center justify-center mb-6">
+  <div className="flex flex-col items-center justify-center py-20 text-center relative border border-sand max-w-md bg-paper/30 justify-self-center rounded-xl">
+    <div className="w-24 h-24 bg-paper rounded-full flex items-center justify-center mb-6">
       <MailOpen size={48} className="text-gold" />
     </div>
     <h3 className="font-serif text-2xl text-stone-custom mb-2">
       Sin invitaciones asignadas
     </h3>
-    <p className="text-[#8A8A8A] max-w-sm mx-auto mb-8">
+    <p className="text-charcoal-400 max-w-sm mx-auto mb-8">
       Actualmente no tienes ninguna invitación activa asociada a tu cuenta.
     </p>
-    <div className=" text-[#A39885] px-8 py-4 text-sm">
+    <div className=" text-gold px-8 py-4 text-sm">
       <p className="font-bold mb-1 flex items-center gap-2 justify-center text-gold">
         <AlertCircle size={16} /> ¿Crees que es un error?
       </p>
@@ -170,7 +170,7 @@ export default function InvitationsListPage() {
       <div className="absolute top-4 right-6 md:top-8 md:right-12">
         <button
           onClick={AuthService.logout}
-          className=" relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-[#8A8A8A] hover:text-red-500 hover:bg-red-100 hover:shadow-sm border border-transparent hover:border-red-200 transition-all duration-300 z-20"
+          className=" relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-charcoal-400 hover:text-red-500 hover:bg-red-100 hover:shadow-sm border border-transparent hover:border-red-200 transition-all duration-300 z-20"
         >
           <span className="inline">Cerrar Sesión</span>
           <LogOut size={18} />
@@ -184,7 +184,7 @@ export default function InvitationsListPage() {
             <h1 className="font-serif text-3xl md:text-4xl text-stone-custom">
               Mis Eventos
             </h1>
-            <p className="text-[#8A8A8A] max-w-lg mx-auto">
+            <p className="text-charcoal-400 max-w-lg mx-auto">
               Bienvenido a tu panel. Selecciona el evento que deseas gestionar.
             </p>
           </div>

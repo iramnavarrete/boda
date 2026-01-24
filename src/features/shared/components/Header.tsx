@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   LogOut,
   Menu,
@@ -9,97 +9,292 @@ import {
   ChevronRight,
   CalendarHeart,
   Gem,
+  Play,
+  Star,
+  MessageCircle,
+  Heart,
 } from "lucide-react";
-import { usePathname, useParams } from "next/navigation";
-import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { AuthService } from "@/services/authService";
+import { useParams, usePathname } from "next/navigation";
 import { cn } from "@heroui/theme";
+import Link from "next/link";
+import { AuthService } from "@/services/authService";
+import JnInvitacionesIcon from "@/icons/jn-invitaciones-icon";
 
-const Header = () => {
+export type HeaderVariant = "admin" | "landing";
+
+export interface NavItemType {
+  label: string;
+  href: string;
+  icon?: React.ReactNode;
+  active?: boolean;
+}
+
+interface HeaderProps {
+  // Configuración Principal
+  variant?: HeaderVariant;
+
+  // Estilos (Sobrescriben los defaults del variant)
+  className?: string;
+
+  // Contenido
+  title?: string;
+  subtitle?: string;
+
+  // Navegación Manual (Opcional)
+  navItems?: NavItemType[];
+
+  // Callbacks
+  onLogout?: () => void;
+  onCotizar?: () => void;
+}
+
+// --- CONFIGURACIÓN DE VARIANTES ---
+// Aquí se definen los estilos y textos por defecto para cada modo
+const VARIANT_CONFIG = {
+  admin: {
+    containerClass: "bg-white/95 border-sand-200",
+    titleClass: "text-stone-700",
+    subtitleClass: "text-stone-400",
+    logoBg: "bg-charcoal",
+    logoText: "text-gold",
+    logoIcon: <Gem className="text-current" size={16} />,
+    backButtonIcon: <CalendarHeart size={20} />,
+    backButtonText: "Mis Eventos",
+    backButtonHref: "/admin",
+    backButtonClass: "text-stone-400 hover:text-gold",
+    navLinkBase: "text-stone-custom hover:text-gold hover:border-sand",
+    navLinkActive: "text-gold bg-paper/30 border-sand",
+    mobileBg: "bg-white",
+  },
+  landing: {
+    containerClass: "bg-paper/95 border-border-button",
+    titleClass: "text-primary",
+    subtitleClass: "text-charcoal-400",
+    logoBg: "bg-primary",
+    logoText: "text-gold",
+    logoIcon: <Gem className="text-current" size={16} />,
+    backButtonIcon: <Star size={18} />,
+    backButtonText: "Exclusividad",
+    backButtonHref: "#",
+    backButtonClass: "text-stone-400 hover:text-gold-500",
+    navLinkBase: "text-primary hover:text-gold hover:bg-white",
+    navLinkActive: "text-gold bg-white shadow-sm ring-1 ring-border-button",
+    mobileBg: "bg-paper",
+  },
+};
+
+const Header = ({
+  variant = "admin",
+  className,
+  title,
+  subtitle,
+  navItems: customNavItems,
+  onCotizar,
+}: HeaderProps) => {
+  const config = VARIANT_CONFIG[variant];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("inicio"); // Solo para landing
+
+  // Hooks de Next.js (Solo relevantes para Admin)
   const pathname = usePathname();
   const params = useParams();
-  const invitationId = params.invitationId;
-  const onLogout = useCallback(AuthService.logout, []);
+  const invitationId = params?.invitationId;
+
+  // --- LÓGICA SCROLL SPY (Solo Landing) ---
+  useEffect(() => {
+    if (variant !== "landing") return;
+
+    const handleScroll = () => {
+      const sections = ["inicio", "demo", "paquetes"];
+      const scrollPosition = window.scrollY + 100;
+      for (const section of sections) {
+        const element = document.getElementById(section);
+        if (
+          element &&
+          element.offsetTop <= scrollPosition &&
+          element.offsetTop + element.offsetHeight > scrollPosition
+        ) {
+          setActiveSection(section);
+        }
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [variant]);
+
+  // --- GENERACIÓN DE ITEMS DE NAVEGACIÓN ---
+  const navItems = useMemo(() => {
+    if (customNavItems) return customNavItems;
+
+    if (variant === "landing") {
+      return [
+        {
+          label: "Inicio",
+          href: "#inicio",
+          icon: <Home size={18} />,
+          active: activeSection === "inicio",
+        },
+        {
+          label: "Demo",
+          href: "#demo",
+          icon: <Play size={18} />,
+          active: activeSection === "demo",
+        },
+        {
+          label: "Paquetes",
+          href: "#paquetes",
+          icon: <Gem size={18} />,
+          active: activeSection === "paquetes",
+        },
+      ];
+    }
+
+    // Default Admin logic
+    const basePath = invitationId
+      ? `/admin/invitations/${invitationId}`
+      : "/admin";
+    if (!invitationId) return [];
+
+    return [
+      {
+        label: "Inicio",
+        href: `${basePath}/dashboard`,
+        icon: <Home size={18} />,
+        active: pathname?.includes("/dashboard"),
+      },
+      {
+        label: "Invitados",
+        href: basePath,
+        icon: <UserIcon size={18} />,
+        active: pathname === basePath,
+      },
+    ];
+  }, [variant, customNavItems, activeSection, invitationId, pathname]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-  const basePath = invitationId
-    ? `/admin/invitations/${invitationId}`
-    : "/admin";
+  const handleMobileClose = () => setIsMenuOpen(false);
 
-  const navItems = [
-    {
-      label: "Inicio",
-      href: `${basePath}/dashboard`,
-      icon: <Home size={16} />,
-      active: pathname?.includes("/dashboard"),
-    },
-    {
-      label: "Invitados",
-      href: basePath,
-      icon: <UserIcon size={16} />,
-      active: pathname === basePath,
-    },
-  ];
-
+  // --- RENDER ---
   return (
-    <header className="bg-white/95 border-b border-sand sticky top-0 z-40">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative z-50">
+    <header
+      className={cn(
+        "border-b transition-colors z-50 sticky top-0 font-sans",
+        config.containerClass,
+        className,
+      )}
+    >
+      <div
+        className={cn(
+          "mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between relative z-50",
+          variant === "admin" ? "max-w-screen-2xl" : "max-w-screen-xl",
+        )}
+      >
+        {/* IZQUIERDA */}
         <div className="flex items-center">
-          <Link
-            href="/admin"
-            className="hidden md:flex items-center gap-2 text-sm font-bold text-[#A8A29E] hover:text-[#C5A669] transition-colors group mr-6 pr-6 border-r border-[#EBE5DA]"
-            title="Volver a mis eventos"
-          >
-            <div className="p-1.5 rounded-lg bg-transparent group-hover:bg-[#FDFBF7] transition-colors">
-              <CalendarHeart
-                size={20}
-                className="group-hover:-translate-x-0.5 transition-transform"
+          <div className="flex items-center">
+            {variant === "admin" ? (
+              <>
+                <Link
+                  href="/admin"
+                  className="hidden p-1.5 md:flex items-center gap-2 text-sm font-bold text-stone-400 hover:text-gold-500 transition-colors hover:bg-sand-50 rounded-xl"
+                  title="Volver a mis eventos"
+                >
+                  <div className="rounded-lg bg-transparent transition-colors">
+                    <CalendarHeart size={20} />
+                  </div>
+                  <span className="hidden lg:block">Mis Eventos</span>
+                </Link>
+                <div className="hidden md:block bg-sand-200 w-px h-8 ml-2.5 mr-4" />
+                <div
+                  className={cn(
+                    "w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-colors mr-2",
+                    config.logoBg,
+                    config.logoText,
+                  )}
+                >
+                  {config.logoIcon}
+                </div>
+              </>
+            ) : (
+              <JnInvitacionesIcon
+                primaryColor="#58624F"
+                secondaryColor="rgb(197 166 105 / var(--tw-text-opacity, 1))"
+                className="w-48 h-11"
               />
-            </div>
-            <span>Mis Eventos</span>
-          </Link>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-charcoal-700 rounded-full flex items-center justify-center text-gold shadow-sm">
-              <Gem className="text-current" size={16} />
-            </div>
+            )}
             <div>
-              <h1 className="text-lg font-serif font-bold text-stone-700 leading-none">
-                Boda X&J
+              <h1
+                className={cn(
+                  "text-lg font-serif font-bold leading-none",
+                  config.titleClass,
+                )}
+              >
+                {title || (variant === "admin" ? "Boda X&J" : null)}
               </h1>
-              <p className="text-[10px] text-stone-400 font-bold uppercase tracking-wider mt-0.5">
-                Panel de Administración
-              </p>
+              {subtitle || variant === "admin" ? (
+                <p
+                  className={cn(
+                    "text-[10px] font-bold uppercase tracking-wider mt-0.5",
+                    config.subtitleClass,
+                  )}
+                >
+                  Panel de Administración
+                </p>
+              ) : null}
             </div>
           </div>
         </div>
 
-        {invitationId && (
+        {/* CENTRO (Desktop Nav) */}
+        {navItems.length > 0 && (
           <nav className="hidden md:flex items-center gap-1 md:flex-1 justify-end px-2">
             {navItems.map((item) => (
-              <DesktopNavLink key={item.href} {...item} />
+              <DesktopNavLink
+                key={item.href}
+                {...item}
+                baseClassName={config.navLinkBase}
+                activeClassName={config.navLinkActive}
+              />
             ))}
           </nav>
         )}
 
+        {/* DERECHA (Acciones) */}
         <div className="flex items-center gap-3">
-          <button
-            onClick={onLogout}
-            className="hidden md:flex items-center gap-2 text-stone-400 hover:text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
-          >
-            <LogOut size={18} /> Cerrar sesión
-          </button>
+          <div className="hidden md:flex items-center gap-2">
+            {variant === "landing" ? (
+              <button
+                onClick={onCotizar}
+                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-paper rounded-full text-xs font-bold uppercase tracking-widest hover:bg-charcoal-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+              >
+                <Gem size={14} className="text-gold" />
+                <span>Cotizar</span>
+              </button>
+            ) : (
+              <button
+                onClick={AuthService.logout}
+                className="flex items-center gap-2 text-stone-400 hover:text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+              >
+                <LogOut size={18} />{" "}
+                <span className="hidden lg:block">Cerrar Sesión</span>
+              </button>
+            )}
+          </div>
 
           <button
             onClick={toggleMenu}
-            className={`md:hidden flex items-center gap-2 p-2 rounded-lg transition-all active:scale-95 text-stone-600 ${isMenuOpen ? "bg-sand-100" : "hover:bg-sand-100"}`}
+            className={cn(
+              "md:hidden flex items-center gap-2 p-2 rounded-lg transition-all active:scale-95 text-stone-600",
+              isMenuOpen ? "bg-sand-100" : "hover:bg-sand-100",
+            )}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
       </div>
 
+      {/* MOBILE MENU */}
       <AnimatePresence>
         {isMenuOpen && (
           <>
@@ -108,53 +303,82 @@ const Header = () => {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              onClick={() => setIsMenuOpen(false)}
+              onClick={handleMobileClose}
               className="fixed inset-0 bg-stone-900/10 backdrop-blur-sm z-30 top-16 md:hidden"
             />
             <motion.div
-              initial={{ y: -10, opacity: 0, scale: 0.98 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: -10, opacity: 0, scale: 0.98 }}
+              initial={{ y: -10, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -10, opacity: 0 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="absolute top-16 z-40 bg-white border-b border-sand -mt-16 pt-16 shadow-2xl overflow-hidden left-0 w-full rounded-b-2xl md:hidden"
+              className={cn(
+                "absolute top-0 pt-16 z-40 w-full border-b shadow-2xl overflow-hidden rounded-b-2xl md:hidden",
+                config.mobileBg,
+              )}
             >
               <div className="flex flex-col p-4 space-y-2">
-                {invitationId ? (
-                  <>
-                    {navItems.map((item) => (
-                      <MenuItem key={item.href} {...item} />
-                    ))}
-                  </>
-                ) : (
-                  <div className="p-4 text-center text-stone-400 text-sm italic bg-sand-light rounded-lg m-2">
-                    Selecciona un evento para ver las opciones.
-                  </div>
+                {/* Mobile: Links */}
+                {navItems.map((item) => (
+                  <MenuItem
+                    key={item.href}
+                    {...item}
+                    onClick={handleMobileClose}
+                    activeClass={config.navLinkActive}
+                    variant={variant}
+                  />
+                ))}
+
+                <div className="h-px bg-black/10 my-2" />
+
+                {/* Mobile: Back Button */}
+                {variant === "admin" && (
+                  <MenuItem
+                    icon={config.backButtonIcon}
+                    label={config.backButtonText}
+                    href={config.backButtonHref}
+                    className="hover:bg-sand-50"
+                    variant={variant}
+                  />
                 )}
 
-                <div className="h-px bg-sand my-2" />
-                <MenuItem
-                  className="hover:bg-sand-50"
-                  icon={<CalendarHeart size={18} />}
-                  label="Volver a mis eventos"
-                  href="/admin"
-                />
-                <button
-                  onClick={() => {
-                    onLogout();
-                    setIsMenuOpen(false);
-                  }}
-                  className="flex items-center gap-3 w-full p-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors font-medium text-sm group active:scale-[0.98]"
-                >
-                  <div className="p-2 bg-red-50 text-red-500 rounded-lg group-hover:bg-red-100 transition-colors">
-                    <LogOut size={18} />
-                  </div>
-                  Cerrar Sesión
-                </button>
+                {/* Mobile: Actions */}
+                <div className="pt-2">
+                  {variant === "landing" ? (
+                    <>
+                      <MenuItem
+                        icon={<MessageCircle size={18} />}
+                        label="Contactar Soporte"
+                        href="#"
+                        onClick={handleMobileClose}
+                        variant={variant}
+                      />
+                      <button
+                        onClick={() => {
+                          onCotizar && onCotizar();
+                          handleMobileClose();
+                        }}
+                        className="flex items-center justify-center gap-3 w-full p-3 rounded-xl text-paper bg-primary hover:bg-charcoal-700 transition-colors font-medium text-sm mt-2 shadow-md"
+                      >
+                        <Gem size={18} className="text-gold" /> Solicitar
+                        Cotización
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={AuthService.logout}
+                      className="flex items-center gap-3 w-full p-3 rounded-xl text-red-600 hover:bg-red-50 transition-colors font-medium text-sm"
+                    >
+                      <div className="p-2 bg-red-50 text-red-500 rounded-lg">
+                        <LogOut size={18} />
+                      </div>{" "}
+                      Cerrar Sesión
+                    </button>
+                  )}
+                </div>
               </div>
-
-              <div className="bg-sand-light p-3 text-center border-t border-sand">
+              <div className="bg-black/5 p-3 text-center border-t border-black/5">
                 <p className="text-[10px] text-stone-400 font-medium uppercase tracking-widest">
-                  JN Invitaciones • {new Date().getFullYear()}
+                  {new Date().getFullYear()} • Todos los derechos reservados
                 </p>
               </div>
             </motion.div>
@@ -170,25 +394,23 @@ const DesktopNavLink = ({
   active,
   href,
   icon,
-}: {
-  label: string;
-  active?: boolean;
-  href: string;
-  icon?: React.ReactNode;
-}) => (
+  baseClassName,
+  activeClassName,
+}: any) => (
   <Link
     href={href}
-    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border ${
-      active
-        ? "text-stone-custom bg-paper border-sand shadow-sm"
-        : "text-[#8A8A8A] border-transparent hover:text-stone-custom hover:bg-white hover:border-sand"
-    }`}
+    className={cn(
+      "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border border-transparent",
+      baseClassName,
+      active && activeClassName,
+    )}
   >
     {icon && (
       <span
-        className={
-          active ? "text-gold" : "text-[#A39885] group-hover:text-gold"
-        }
+        className={cn(
+          "transition-colors opacity-70 group-hover:opacity-100",
+          active && "opacity-100 text-current",
+        )}
       >
         {icon}
       </span>
@@ -203,39 +425,37 @@ const MenuItem = ({
   active = false,
   href,
   className,
-}: {
-  label: string;
-  active?: boolean;
-  href: string;
-  icon?: React.ReactNode;
-  className?: string;
-}) => (
+  onClick,
+  activeClass,
+  variant,
+}: any) => (
   <Link
     href={href}
+    onClick={onClick}
     className={cn(
-      "flex items-center gap-3 w-full p-3 rounded-xl transition-all group border active:scale-[0.98]",
-      active
-        ? "text-stone-custom bg-paper border-sand shadow-sm"
-        : "text-[#8A8A8A] border-transparent hover:text-stone-custom hover:border-sand",
+      "flex items-center gap-3 w-full p-3 rounded-xl transition-all group border border-transparent active:scale-[0.98]",
+      variant === "landing"
+        ? "text-primary hover:bg-primary/5"
+        : "text-stone-600 hover:bg-sand-200/20",
+      active && (activeClass || "hover:bg-sand-200/20 font-bold"),
       className,
     )}
   >
-    <div
-      className={`p-2 rounded-lg transition-colors shadow-sm ${
-        active
-          ? "bg-white text-gold"
-          : "bg-sand-50 text-stone-500 group-hover:text-gold"
-      }`}
-    >
-      {icon}
-    </div>
-    <div className="flex-1 text-left">
+    {icon && (
       <div
-        className={`text-sm font-medium flex items-center justify-between ${active ? "text-stone-900" : "text-stone-700"}`}
+        className={cn(
+          "p-2 rounded-lg transition-colors shadow-sm",
+          active
+            ? "bg-white text-current"
+            : "bg-white text-stone-400 group-hover:text-current",
+        )}
       >
-        {label}
-        {active && <ChevronRight size={14} className="text-gold" />}
+        {icon}
       </div>
+    )}
+    <div className="flex-1 text-left flex justify-between">
+      <span className="text-sm font-medium">{label}</span>
+      {active && <ChevronRight size={14} className="opacity-50" />}
     </div>
   </Link>
 );
