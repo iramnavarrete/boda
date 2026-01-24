@@ -13,6 +13,7 @@ import { Guest } from "@/types";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { MouseEvent } from "react";
 import DashedSeparator from "./DashedSeparator";
+import { cn } from "@heroui/theme";
 
 interface GuestsCardsProps {
   guests: Guest[];
@@ -34,6 +35,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
   onLockToggle,
 }) => {
   const isOneOrMoreSelected = selectedGuests.size > 0;
+  const compactMode = false;
 
   const handleActionButtonClick = (
     event: MouseEvent<HTMLButtonElement>,
@@ -125,73 +127,78 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
               </span>
             </div>
           </div>
-          <DashedSeparator className="m-0" />
           {/* Footer de Acciones */}
-          <fieldset
-            disabled={isOneOrMoreSelected}
-            className="flex justify-between items-center pt-4 mt-auto transition-opacity duration-300 disabled:opacity-30 disabled:pointer-events-none"
+          <div
+            className={cn(
+              "transition-all duration-200 max-h-20 overflow-hidden opacity-100",
+              compactMode ? "max-h-0 opacity-0" : "",
+            )}
           >
-            {/* Estado de Edición */}
-            <div className="text-xs font-medium">
-              <button
-                className={`
+            <DashedSeparator className="m-0" />
+            <fieldset
+              disabled={isOneOrMoreSelected}
+              className="flex justify-between items-center pt-4 mt-auto transition-opacity duration-300 disabled:opacity-30 disabled:pointer-events-none"
+            >
+              {/* Estado de Edición */}
+              <div className="text-xs font-medium">
+                <button
+                  className={`
                   flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors
                   ${
                     g.cambiosPermitidos
                       ? "text-green-600 bg-green-50 hover:bg-green-100"
                       : "text-red-500 bg-red-50 hover:bg-red-100"
                   }
-                `}
-                onClick={(e) =>
-                  handleActionButtonClick(e, () => onLockToggle(g))
-                }
-                title={
-                  g.cambiosPermitidos
-                    ? "Edición permitida"
-                    : "Edición bloqueada"
-                }
-              >
-                {g.cambiosPermitidos ? (
-                  <Unlock size={14} />
-                ) : (
-                  <Lock size={14} />
-                )}
-                <span>
-                  {g.cambiosPermitidos ? "Abierto" : "Cerrado"}
-                </span>
-              </button>
-            </div>
-
-            {/* Botones de Acción */}
-            <div className="flex gap-2">
-              {g.tieneTelefono && (
-                <button
-                  title="Enviar Whatsapp"
+                  `}
                   onClick={(e) =>
-                    handleActionButtonClick(e, () => onSendWhatsApp(g))
+                    handleActionButtonClick(e, () => onLockToggle(g))
                   }
-                  className="p-2 rounded-xl text-green-600 bg-green-50 hover:bg-green-100 hover:text-green-700 transition-colors duration-300 border border-green-100"
+                  title={
+                    g.cambiosPermitidos
+                      ? "Edición permitida"
+                      : "Edición bloqueada"
+                  }
                 >
-                  <IconBrandWhatsapp className="w-4 h-4" />
+                  {g.cambiosPermitidos ? (
+                    <Unlock size={14} />
+                  ) : (
+                    <Lock size={14} />
+                  )}
+                  <span>{g.cambiosPermitidos ? "Abierto" : "Cerrado"}</span>
                 </button>
-              )}
+              </div>
 
-              <button
-                className="p-2 rounded-xl text-stone-custom bg-white hover:bg-sand-100 hover:text-charcoal hover:border-gold/30 transition-all duration-300 border border-sand shadow-sm"
-                title="Vista previa"
-              >
-                <Eye size={18} />
-              </button>
+              {/* Botones de Acción */}
+              <div className="flex gap-2">
+                {g.tieneTelefono && (
+                  <button
+                    title="Enviar Whatsapp"
+                    onClick={(e) =>
+                      handleActionButtonClick(e, () => onSendWhatsApp(g))
+                    }
+                    className="p-2 rounded-xl text-green-600 bg-green-50 hover:bg-green-100 hover:text-green-700 transition-colors duration-300 border border-green-100"
+                  >
+                    <IconBrandWhatsapp className="w-4 h-4" />
+                  </button>
+                )}
 
-              <button
-                onClick={(e) => handleActionButtonClick(e, () => onDelete(g))}
-                className="p-2 rounded-xl text-red-400 bg-white border border-sand hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all duration-300"
-                title="Eliminar"
-              >
-                <Trash2 size={18} />
-              </button>
-            </div>
-          </fieldset>
+                <button
+                  className="p-2 rounded-xl text-stone-custom bg-white hover:bg-sand-100 hover:text-charcoal hover:border-gold/30 transition-all duration-300 border border-sand shadow-sm"
+                  title="Vista previa"
+                >
+                  <Eye size={18} />
+                </button>
+
+                <button
+                  onClick={(e) => handleActionButtonClick(e, () => onDelete(g))}
+                  className="p-2 rounded-xl text-red-400 bg-white border border-sand hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all duration-300"
+                  title="Eliminar"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </fieldset>
+          </div>
         </div>
       ))}
     </div>
