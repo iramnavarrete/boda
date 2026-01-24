@@ -348,7 +348,7 @@ export default function InvitationDashboard({
     <div className="min-h-screen bg-paper font-sans text-stone-600">
       <Header />
 
-      <main className="max-w-6xl mx-auto px-6 py-10 space-y-10 duration-700">
+      <main className="max-w-6xl mx-auto p-4 md:px-6 py-4 md:py-10 space-y-6 duration-700">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white p-8 rounded-3xl border border-sand shadow-sm relative overflow-hidden">
           <div className="relative z-10">
             <h1 className="text-3xl md:text-4xl font-serif text-stone-600 mb-2">
@@ -368,7 +368,7 @@ export default function InvitationDashboard({
               size={18}
               className="group-hover:scale-110 transition-transform"
             />
-            Gestionar Lista
+            Gestionar invitados
           </Link>
         </div>
 
@@ -377,7 +377,7 @@ export default function InvitationDashboard({
           <GuestStatsPieChart stats={stats} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-sand p-8 relative overflow-hidden">
             <div className="flex items-center justify-between mb-8 pb-4 border-b border-sand-light">
               <div className="flex items-center gap-3">
@@ -427,7 +427,7 @@ export default function InvitationDashboard({
             </div>
           </div>
 
-          <div className="bg-charcoal rounded-3xl p-8 shadow-xl relative overflow-hidden text-sand">
+          <div className="bg-[#2C2C29] rounded-3xl p-8 shadow-xl relative overflow-hidden text-sand">
             <div className="absolute top-0 right-0 p-6 opacity-5">
               <Heart size={120} />
             </div>
