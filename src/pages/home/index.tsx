@@ -1,15 +1,19 @@
-import React, { ReactNode } from "react";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import {
   Check,
   MapPin,
-  Smartphone,
   Gift,
-  ShieldCheck,
-  Play,
   MessageCircle,
   Star,
   Calendar,
   Music,
+  Palette,
+  Timer,
+  ImageIcon,
+  QrCode,
+  PlayCircle,
+  ExternalLink,
+  RotateCcw,
 } from "lucide-react";
 import Image from "next/image";
 import Header from "@/features/shared/components/Header";
@@ -40,6 +44,8 @@ interface PricingCardProps {
   recommended?: boolean;
   whatsappLink: string;
 }
+
+const svgClassNames = "w-44 h-44 lg:w-48 lg:h-48 ";
 
 // --- COMPONENTES UI ---
 
@@ -83,7 +89,7 @@ const TextureButton: React.FC<TextureButtonProps> = ({
 );
 
 const IconRings: React.FC = () => (
-  <div className="w-48 h-48 md:w-56 md:h-56 animate-float-1">
+  <div className={svgClassNames + "animate-float-1"}>
     <Image
       alt="Boda"
       className="w-full h-full"
@@ -98,7 +104,7 @@ const IconRings: React.FC = () => (
 );
 
 const IconDress: React.FC = () => (
-  <div className="w-48 h-48 md:w-56 md:h-56 animate-float-2">
+  <div className={svgClassNames + "animate-float-2"}>
     <Image
       alt="Quinceañera"
       className="w-full h-full"
@@ -113,7 +119,7 @@ const IconDress: React.FC = () => (
 );
 
 const IconCups: React.FC = () => (
-  <div className="w-44 h-44 md:w-48 md:h-48 animate-float-3">
+  <div className={svgClassNames + "animate-float-3"}>
     <Image
       alt="Cualquier evento"
       className="w-full h-full"
@@ -139,10 +145,10 @@ const Hero: React.FC = () => {
       <div className="absolute inset-0 opacity-[0.4] mix-blend-multiply bg-[url('/img/textures/cream-paper.png')] pointer-events-none"></div>
 
       <div className="max-w-5xl mx-auto text-center z-10 relative mt-6">
-        <h1 className="font-serif text-4xl md:text-7xl text-primary leading-[1.05] mb-8 drop-shadow-sm">
+        <h1 className="font-serif text-3xl sm:text-4xl md:text-7xl text-primary leading-[1.05] mb-8 drop-shadow-sm">
           Tu invitación soñada
           <br />
-          <span className="italic font-light text-gold text-4xl md:text-7xl relative inline-block">
+          <span className="italic font-light text-gold text-3xl sm:text-4xl md:text-7xl relative inline-block">
             llena de vida
             <svg
               className="absolute w-full h-3 -bottom-1 left-0 text-gold opacity-40"
@@ -159,7 +165,7 @@ const Hero: React.FC = () => {
           </span>
         </h1>
 
-        <p className="text-cool-gray text-lg max-w-2xl mx-auto mb-12 font-light leading-relaxed px-20">
+        <p className="text-cool-gray text-lg max-w-2xl mx-auto mb-12 font-light leading-relaxed px-8 sm:px-16 md:px-20">
           Invitaciones digitales diseñadas para hacer tu evento inolvidable
           desde la primera impresión.
         </p>
@@ -171,7 +177,7 @@ const Hero: React.FC = () => {
               if (element) element.scrollIntoView({ behavior: "smooth" });
             }}
           >
-            Nuestros trabajos
+            Ver paquetes
           </TextureButton>
         </div>
       </div>
@@ -183,8 +189,11 @@ const Hero: React.FC = () => {
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent"></div>
 
           {/* Contenedor Flex/Grid Real */}
-          <div className="w-full relative z-10 p-8 md:p-12">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 items-center justify-items-center">
+          <div className="w-full relative z-10 px-8 py-8">
+            <p className="text-center pt-2 italic font-light font-serif text-base text-primary leading-[1.05] mb-8 drop-shadow-sm">
+              Cuenta con nosotros para todo tipo de eventos.
+            </p>
+            <div className="py-10 px-4 grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-8 items-center justify-items-center">
               <IconRings />
               <IconDress />
               <IconCups />
@@ -203,7 +212,7 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ icon, title, text }) => (
   <div className="p-8 rounded-[20px] bg-paper relative overflow-hidden group hover:-translate-y-2 transition-transform duration-300 border border-transparent hover:border-border-button/50 hover:shadow-xl hover:shadow-primary/5">
     <div className="absolute inset-0 opacity-40 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]"></div>
     <div className="relative z-10 flex flex-col items-center text-center">
-      <div className="w-16 h-16 rounded-full bg-charcoal-100 flex items-center justify-center mb-6 text-primary group-hover:bg-primary group-hover:text-paper transition-colors shadow-inner">
+      <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center mb-6 text-paper">
         {icon}
       </div>
       <h3 className="font-serif text-xl text-primary mb-3">{title}</h3>
@@ -220,26 +229,49 @@ const Features: React.FC = () => {
       <section className="py-24 bg-white relative">
         <div className="absolute inset-0 opacity-[0.3] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] pointer-events-none"></div>
         <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <SectionTitle subtitle="Funcionalidades premium">
+            Todo lo que tu evento necesita
+          </SectionTitle>
+          <div className="max-w-[90%] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <FeatureItem
-              icon={<Smartphone strokeWidth={1.5} />}
-              title="Diseño Adaptable"
-              text="Visualización perfecta en cualquier dispositivo móvil, tablet o computadora."
+              icon={<Palette strokeWidth={1.5} />}
+              title="Diseño personalizado"
+              text="Cada historia es única. Adaptamos colores, tipografías y estilos para reflejar la esencia de tu evento."
+            />
+            <FeatureItem
+              icon={<MessageCircle strokeWidth={1.5} />}
+              title="Confirmación (RSVP)"
+              text="Olvídate de las llamadas. Tus invitados confirman asistencia directamente desde la invitación."
             />
             <FeatureItem
               icon={<MapPin strokeWidth={1.5} />}
               title="Ubicación GPS"
-              text="Integración nativa con Google Maps y Waze para que tus invitados lleguen fácil."
+              text="Integración directa con Google Maps para que nadie se pierda en el camino."
+            />
+            <FeatureItem
+              icon={<QrCode strokeWidth={1.5} />}
+              title="Álbum QR"
+              text="Acceso directo al álbum de fotografías de tu evento (Google Fotos preferentemente)."
+            />
+            <FeatureItem
+              icon={<ImageIcon strokeWidth={1.5} />}
+              title="Galería de Fotos"
+              text="Comparte su sesión de fotos en alta calidad para emocionar a los invitados antes del gran día."
+            />
+            <FeatureItem
+              icon={<Music strokeWidth={1.5} />}
+              title="Música de Fondo"
+              text="Canciones instrumentales que llenan de vida tu invitación y reflejan la esencia de tu evento"
+            />
+            <FeatureItem
+              icon={<Timer strokeWidth={1.5} />}
+              title="Cuenta Regresiva"
+              text="Un temporizador elegante que genera expectativa y emoción contando los días, horas y minutos restantes."
             />
             <FeatureItem
               icon={<Gift strokeWidth={1.5} />}
               title="Mesa de Regalos"
-              text="Enlaces directos a tus mesas de regalos en tiendas o sobres virtuales."
-            />
-            <FeatureItem
-              icon={<ShieldCheck strokeWidth={1.5} />}
-              title="Acceso Seguro"
-              text="Control de pases con códigos QR únicos por familia o invitado."
+              text="Sugerencias de regalos, sobres digitales o enlaces directos a tiendas departamentales."
             />
           </div>
         </div>
@@ -248,56 +280,142 @@ const Features: React.FC = () => {
   );
 };
 
-const DemoSection: React.FC = () => {
+function DemoSection() {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  // --- LÓGICA DE INTERSECCIÓN Y CONTROL DE VIDEO ---
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsPlaying(entry.isIntersecting);
+      },
+      { threshold: 0.5 },
+    );
+
+    if (containerRef.current) {
+      observer.observe(containerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Efecto para sincronizar el estado isPlaying con el elemento de video real
+  useEffect(() => {
+    if (videoRef.current) {
+      if (isPlaying) {
+        // Promesa para evitar errores si el video no ha cargado
+        videoRef.current
+          .play()
+          .catch((e) => console.log("Autoplay prevenido por navegador", e));
+      } else {
+        videoRef.current.pause();
+      }
+    }
+  }, [isPlaying]);
+
+  const handleRestart = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Evita que se pause al hacer clic en el botón
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play();
+      setIsPlaying(true);
+    }
+  };
+
   return (
-    <section id="demo" className="py-32 bg-accent relative overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 flex flex-col lg:flex-row items-center justify-between gap-16 relative z-10">
-        <div className="lg:w-1/2">
-          <SectionTitle subtitle="Inmersión">Experiencia Visual</SectionTitle>
-          <p className="text-cool-gray text-lg font-light mb-10 leading-relaxed text-center lg:text-left">
-            Diseñamos cada pantalla pensando en la usabilidad y la estética. Tus
-            invitados disfrutarán de una navegación fluida, acompañada de música
-            y animaciones sutiles.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[
-              { label: "RSVP Digital", icon: <MessageCircle size={16} /> },
-              { label: "Galería de Fotos", icon: <Check size={16} /> },
-              { label: "Música de Fondo", icon: <Music size={16} /> },
-              { label: "Agregar a Calendario", icon: <Calendar size={16} /> },
-            ].map((item, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-4 p-5 rounded-xl bg-paper border border-charcoal-100 shadow-sm hover:border-gold transition-colors group"
-              >
-                <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-gold shadow-sm group-hover:scale-110 transition-transform">
-                  {item.icon}
-                </div>
-                <span className="text-primary text-sm font-medium">
-                  {item.label}
-                </span>
+    <section
+      id="demo"
+      className={`py-24 md:py-32 relative overflow-hidden bg-paper`}
+    >
+      <div className="absolute inset-0 opacity-[0.4] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] pointer-events-none" />
+
+      <div className="max-w-7xl mx-auto px-4 relative z-10 flex flex-col items-center">
+        <SectionTitle subtitle="Experiencia Inmersiva">
+          Magia en cada interacción
+        </SectionTitle>
+        <p className="text-cool-gray text-lg font-light mb-10 leading-relaxed text-center lg:text-left">
+          Transmite la elegancia y el amor de tu celebración antes de que llegue
+          la fecha. Una experiencia sensorial completa donde el diseño, el
+          movimiento y el sonido se unen para emocionar a quienes más quieres.
+        </p>
+
+        {/* --- IPHONE MOCKUP CENTRAL --- */}
+        <div
+          ref={containerRef}
+          className="relative z-20 transform transition-all duration-700 cursor-pointer group"
+          onClick={() => setIsPlaying(!isPlaying)} // Click manual para alternar si el usuario quiere
+        >
+          {/* Estructura del Teléfono */}
+          <div className="relative mx-auto w-[280px] h-[550px] bg-charcoal-900 rounded-[55px] shadow-[0_30px_60px_-15px_rgba(197,166,105,0.4)] border-[8px] border-charcoal-900">
+            {/* Botones Laterales */}
+            <div className="absolute top-24 -left-[10px] w-[3px] h-[32px] bg-charcoal-900 rounded-l-md" />
+            <div className="absolute top-36 -left-[10px] w-[3px] h-[50px] bg-charcoal-900 rounded-l-md" />
+            <div className="absolute top-36 -right-[10px] w-[3px] h-[80px] bg-charcoal-900 rounded-r-md" />
+
+            {/* Pantalla Interna */}
+            <div className="relative w-full h-full rounded-[48px] overflow-hidden bg-black">
+              {/* Notch */}
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[100px] h-[28px] bg-charcoal-900 rounded-b-[16px] z-30 flex justify-center pt-1">
+                <div className="w-12 h-1 rounded-full bg-stone-950" />
               </div>
-            ))}
-          </div>
-        </div>
-        <div className="lg:w-1/2 flex justify-center perspective-1000">
-          <div className="relative group">
-            <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-[80%] h-10 bg-black/20 blur-xl rounded-[100%] group-hover:scale-110 transition-transform duration-500"></div>
-            <div className="relative bg-paper p-3 rounded-[3.5rem] shadow-[inset_0_0_20px_rgba(0,0,0,0.05),0_20px_40px_rgba(88,98,79,0.15)] border border-charcoal-100">
-              <div className="relative w-[350px] h-[650px] bg-white rounded-[3rem] overflow-hidden border-[6px] border-paper shadow-inner">
-                <iframe
-                  src="https://bodajy.info"
-                  className="w-full h-full border-0"
-                  title="Demo"
+
+              <div className="relative w-full h-full">
+                <video
+                  ref={videoRef}
+                  src="/video/example.mp4"
+                  poster="/img/example.jpg" // Imagen mientras carga
+                  className="w-full h-full object-cover"
+                  muted
+                  loop
+                  playsInline
                 />
+
+                {/* Overlay de "Play" si está pausado */}
+                <div
+                  className={`absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm z-20 transition-opacity duration-500 ${isPlaying ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+                >
+                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 text-white shadow-xl animate-pulse">
+                    <PlayCircle
+                      size={32}
+                      fill="currentColor"
+                      className="opacity-90"
+                    />
+                  </div>
+                </div>
+
+                {/* Botón de Reinicio (Discreto) */}
+                <button
+                  onClick={handleRestart}
+                  className="absolute bottom-4 left-3 z-30 p-2.5 rounded-full bg-black/20 hover:bg-black/40 text-white/70 hover:text-white backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 transform hover:scale-110 active:scale-95"
+                  title="Reiniciar video"
+                >
+                  <RotateCcw size={16} />
+                </button>
+
+                {/* Reflejo Glassy */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent opacity-40 pointer-events-none z-40 rounded-[48px]" />
               </div>
             </div>
           </div>
         </div>
+
+        {/* CTA */}
+        <div className="mt-16 text-center">
+          <TextureButton
+            onClick={() => window.open("https://bodajy.info", "_blank")}
+          >
+            <div className="flex gap-2">
+              Ver Demo en Vivo <ExternalLink size={16} />
+            </div>
+          </TextureButton>
+        </div>
       </div>
     </section>
   );
-};
+}
+
 
 const PricingCard: React.FC<PricingCardProps> = ({
   title,
