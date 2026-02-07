@@ -1,5 +1,5 @@
 "use client";
-import React, { ReactNode, useEffect, useRef, useState } from "react";
+import React, { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import {
   Check,
   MapPin,
@@ -18,10 +18,19 @@ import {
   BarChart3,
   Lock,
   Edit3,
+  Send,
+  CheckCircle2,
+  Filter,
+  FileSpreadsheet,
+  MousePointerClick,
+  ChevronRight,
+  ChevronLeft,
 } from "lucide-react";
 import Image from "next/image";
 import Header from "@/features/shared/components/Header";
 import TextureButton from "@/features/shared/components/TextureButton";
+import useEmblaCarousel from "embla-carousel-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 // --- INTERFACES ---
 interface SectionTitleProps {
@@ -392,120 +401,275 @@ function DemoSection() {
   );
 }
 
-// --- NUEVA SECCIÓN: DASHBOARD SHOWCASE (Admin) ---
-// Esta sección muestra las imágenes del dashboard de gestión que subiste.
-// Asegúrate de tener las imágenes en tu carpeta public/img con estos nombres o ajusta las rutas.
+const AdminFeatureItem: React.FC<
+  FeatureItemProps & { style?: React.CSSProperties; className?: string }
+> = ({ icon, title, text, style, className }) => (
+  <div
+    className={`flex items-start gap-4 p-4 rounded-2xl bg-paper/50 border border-transparent hover:border-gold/30 hover:bg-paper hover:shadow-md transition-all duration-300 group/item ${className}`}
+    style={style}
+  >
+    <div className="relative z-10 w-12 h-12 rounded-xl bg-white flex items-center justify-center shrink-0 text-gold shadow-sm border border-border-button/30 group-hover/item:scale-110 transition-transform duration-300">
+      {icon}
+    </div>
+    <div className="relative z-10">
+      <h4 className="font-serif text-base text-primary mb-1 font-bold">
+        {title}
+      </h4>
+      <p className="text-charcoal-400 text-xs font-light leading-relaxed">
+        {text}
+      </p>
+    </div>
+  </div>
+);
 
+
+const ADMIN_SLIDES = [
+  {
+    id: "resumen",
+    image: "/img/landing/dashboard.png",
+    title: "Dashboard Central",
+    description:
+      "Visualiza el estado de tu evento en tiempo real. Gráficas de confirmación, actividad reciente y accesos rápidos.",
+    features: [
+      {
+        icon: <BarChart3 size={20} />,
+        title: "Estadísticas en Vivo",
+        text: "Confirmados, pendientes y declinados.",
+      },
+      {
+        icon: <RotateCcw size={20} />,
+        title: "Actividad Reciente",
+        text: "Historial de cambios y confirmaciones.",
+      },
+      {
+        icon: <Lock size={20} />,
+        title: "Seguridad",
+        text: "Controla quién puede editar su respuesta.",
+      },
+    ],
+  },
+  {
+    id: "lista",
+    image: "/img/landing/lista-invitados.png",
+    title: "Gestión de Invitados",
+    description:
+      "Tu base de datos completa. Filtra, busca, edita y organiza a tus invitados por familias o grupos.",
+    features: [
+      {
+        icon: <Filter size={20} />,
+        title: "Filtros Inteligentes",
+        text: "Encuentra rápidamente por estado o nombre.",
+      },
+      {
+        icon: <Send size={20} />,
+        title: "Envío WhatsApp",
+        text: "Comparte la invitación con un solo clic.",
+      },
+      {
+        icon: <FileSpreadsheet size={20} />,
+        title: "Exportar Datos",
+        text: "Descarga tu lista para proveedores.",
+      },
+    ],
+  },
+  {
+    id: "formulario",
+    image: "/img/landing/formulario-invitado.png",
+    title: "Registro Familiar",
+    description:
+      "Agrega familias completas fácilmente, asigna pases y personaliza mensajes de bienvenida.",
+    features: [
+      {
+        icon: <Users size={20} />,
+        title: "Agrupación Familiar",
+        text: "Gestiona pases por grupo o familia.",
+      },
+      {
+        icon: <QrCode size={20} />,
+        title: "Pases QR",
+        text: "Generación automática de accesos.",
+      },
+      {
+        icon: <MousePointerClick size={20} />,
+        title: "Edición Fácil",
+        text: "Interfaz intuitiva y rápida.",
+      },
+    ],
+  },
+];
+
+// --- NUEVA SECCIÓN: DASHBOARD SHOWCASE (Rediseñada) ---
 const AdminShowcase: React.FC = () => {
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 30 });
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const onSelect = useCallback(() => {
+    if (!emblaApi) return;
+    setSelectedIndex(emblaApi.selectedScrollSnap());
+  }, [emblaApi]);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    onSelect();
+    emblaApi.on("select", onSelect);
+    return () => {
+      emblaApi.off("select", onSelect);
+    };
+  }, [emblaApi, onSelect]);
+
+  const scrollTo = useCallback(
+    (index: number) => emblaApi && emblaApi.scrollTo(index),
+    [emblaApi],
+  );
+
+  const scrollPrev = useCallback(
+    () => emblaApi && emblaApi.scrollPrev(),
+    [emblaApi],
+  );
+  const scrollNext = useCallback(
+    () => emblaApi && emblaApi.scrollNext(),
+    [emblaApi],
+  );
+
+  const activeSlide = ADMIN_SLIDES[selectedIndex];
+
   return (
-    <section className="py-24 bg-white relative overflow-hidden">
-      {/* Elementos decorativos de fondo */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gold/10 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
+    <section className="py-24 bg-white relative overflow-visible">
+      <div className="max-w-7xl mx-auto px-4 relative z-10 flex flex-col gap-12">
+        {/* Encabezado */}
+        <div className="text-center max-w-3xl mx-auto">
+          <SectionTitle subtitle="Panel de Control">
+            Gestión Inteligente
+          </SectionTitle>
+          <p className="text-cool-gray text-lg font-light mb-8 leading-relaxed">
+            Una plataforma poderosa diseñada para darte el control total.
+            Desliza para explorar las herramientas que facilitarán tu
+            organización.
+          </p>
+        </div>
 
-      <div className="max-w-7xl mx-auto px-4 relative z-10">
-        <SectionTitle subtitle="Panel de Control">
-          Gestión profesional, sin estrés
-        </SectionTitle>
+        {/* --- GRID DE CONTENIDO --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center min-h-[500px]">
+          {/* COLUMNA IZQUIERDA: CARRUSEL DE IMÁGENES */}
+          <div className="relative w-full aspect-[16/9] lg:aspect-auto lg:h-[300px]">
+            {/* Marco Decorativo */}
+            <div className="absolute inset-0 bg-gold/5 transform translate-x-4 translate-y-4 -z-10 rounded-3xl"></div>
 
-        <p className="text-cool-gray text-lg font-light mb-16 text-center max-w-3xl mx-auto leading-relaxed">
-          Toma el control total de tu evento. Gestiona tu lista de invitados,
-          recibe confirmaciones en tiempo real y organiza las mesas desde un
-          panel intuitivo diseñado para darte tranquilidad.
-        </p>
-
-        {/* BENTO GRID LAYOUT */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-          {/* CARD 1: DASHBOARD PRINCIPAL (Grande) */}
-          <div className="lg:col-span-7 flex flex-col group">
-            <div className="relative rounded-[2rem] border border-border-button bg-paper shadow-xl overflow-hidden h-full min-h-[300px] md:min-h-[400px] transition-all duration-500 hover:shadow-2xl hover:border-gold/30">
-              <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-30 pointer-events-none"></div>
-
-              {/* Header de la tarjeta */}
-              <div className="p-6 md:p-8 flex justify-between items-end border-b border-border-button/50 bg-white/50 backdrop-blur-sm">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <BarChart3 className="text-gold" size={20} />
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-charcoal-400">
-                      Resumen en tiempo real
-                    </span>
+            {/* Embla Viewport */}
+            <div
+              className="overflow-hidden rounded-2xl shadow-2xl border border-border-button bg-paper h-full"
+              ref={emblaRef}
+            >
+              <div className="flex h-full">
+                {ADMIN_SLIDES.map((slide) => (
+                  <div
+                    className="flex-[0_0_100%] min-w-0 relative h-full group"
+                    key={slide.id}
+                  >
+                    {/* Header de navegador falso */}
+                    <div className="h-8 bg-primary/5 border-b border-primary/10 flex items-center px-4 gap-2 z-20 backdrop-blur-sm">
+                      <div className="w-2.5 h-2.5 rounded-full bg-red-400/50"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-yellow-400/50"></div>
+                      <div className="w-2.5 h-2.5 rounded-full bg-green-400/50"></div>
+                    </div>
+                    {/* Imagen */}
+                    <div className="relative w-full h-full pt-8">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      <Image
+                        src={slide.image}
+                        alt={slide.title}
+                        fill
+                        className="object-cover object-top"
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        priority={slide.id === "resumen"}
+                      />
+                    </div>
                   </div>
-                  <h3 className="font-serif text-2xl text-primary">
-                    Tu evento en un vistazo
-                  </h3>
-                </div>
+                ))}
               </div>
+            </div>
 
-              {/* Imagen Dashboard Main */}
-              <div className="relative w-full h-full p-6 md:p-8 bg-paper">
-                {/* Contenedor de imagen con efecto de elevación */}
-                <div className="relative rounded-xl overflow-hidden shadow-lg border border-border-button group-hover:scale-[1.02] transition-transform duration-500 origin-top">
-                  {/* AQUÍ VA TU IMAGEN PRINCIPAL (image_c78d5c.png) */}
-                  <Image
-                    src="/img/dashboard-resumen.png" // Reemplaza con tu ruta real
-                    alt="Dashboard Resumen"
-                    width={800}
-                    height={500}
-                    className="w-full h-auto object-cover"
-                  />
-                </div>
-              </div>
+            {/* Controles Flotantes del Carrusel */}
+            <div className="absolute top-1/2 -translate-y-1/2 -left-5 lg:-left-6 z-30">
+              <button
+                onClick={scrollPrev}
+                className="p-3 bg-white text-primary rounded-full shadow-lg border border-border-button hover:bg-primary hover:text-white transition-all transform hover:scale-110"
+              >
+                <ChevronLeft size={20} />
+              </button>
+            </div>
+            <div className="absolute top-1/2 -translate-y-1/2 -right-5 lg:-right-6 z-30">
+              <button
+                onClick={scrollNext}
+                className="p-3 bg-white text-primary rounded-full shadow-lg border border-border-button hover:bg-primary hover:text-white transition-all transform hover:scale-110"
+              >
+                <ChevronRight size={20} />
+              </button>
             </div>
           </div>
 
-          {/* COLUMNA DERECHA */}
-          <div className="lg:col-span-5 flex flex-col gap-6 lg:gap-8">
-            {/* CARD 2: LISTA DE INVITADOS (Mediana) */}
-            <div className="relative rounded-[2rem] border border-border-button bg-white shadow-lg overflow-hidden flex-1 min-h-[250px] group transition-all duration-500 hover:shadow-xl hover:border-gold/30">
-              <div className="p-6 md:p-8 border-b border-border-button/50">
-                <div className="flex items-center gap-2 mb-2">
-                  <Users className="text-gold" size={20} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-charcoal-400">
-                    Base de datos
-                  </span>
-                </div>
-                <h3 className="font-serif text-xl text-primary">
-                  Lista de Invitados Inteligente
-                </h3>
-                <p className="text-sm text-cool-gray mt-2 font-light">
-                  Filtrado rápido, estatus de WhatsApp y control de accesos.
-                </p>
-              </div>
-
-              <div className="p-4 bg-paper/50 h-full">
-                {/* AQUÍ VA TU IMAGEN DE LISTA (image_c78ab7.png) */}
-                <div className="relative rounded-xl overflow-hidden shadow-md border border-border-button group-hover:translate-y-[-5px] transition-transform duration-500">
-                  <Image
-                    src="/img/dashboard-lista.png" // Reemplaza con tu ruta real
-                    alt="Lista de Invitados"
-                    width={500}
-                    height={300}
-                    className="w-full h-auto object-cover"
-                  />
-                </div>
-              </div>
+          {/* COLUMNA DERECHA: INFO DINÁMICA CON TRANSICIONES SUAVES */}
+          <div className="flex flex-col justify-center gap-6">
+            {/* Indicadores de Slide (Fijos) */}
+            <div className="flex gap-2 mb-2">
+              {ADMIN_SLIDES.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => scrollTo(idx)}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${idx === selectedIndex ? "w-8 bg-gold" : "w-2 bg-border-button hover:bg-gold/50"}`}
+                />
+              ))}
             </div>
 
-            {/* CARD 3: ACCIONES RÁPIDAS (Pequeña/Feature) */}
-            <div className="relative rounded-[2rem] bg-primary text-paper p-8 shadow-lg overflow-hidden flex flex-col justify-center items-start group">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
-
-              <div className="flex gap-4 mb-4">
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
-                  <Lock className="text-gold" size={18} />
+            {/* Contenedor de contenido cambiante con AnimatePresence */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSlide.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3, ease: "easeInOut" }}
+                className="space-y-6"
+              >
+                {/* Título y Descripción */}
+                <div className="space-y-2">
+                  <h3 className="font-serif text-3xl md:text-4xl text-primary">
+                    {activeSlide.title}
+                  </h3>
+                  <p className="text-charcoal-400 text-base leading-relaxed">
+                    {activeSlide.description}
+                  </p>
                 </div>
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
-                  <Edit3 className="text-gold" size={18} />
-                </div>
-              </div>
 
-              <h3 className="font-serif text-xl mb-2 relative z-10">
-                Control Total
-              </h3>
-              <p className="text-sm text-paper/80 font-light relative z-10 leading-relaxed">
-                Bloquea ediciones, elimina registros o edita detalles al
-                instante. Tú decides quién entra.
-              </p>
+                {/* Lista de Features */}
+                <div className="space-y-3">
+                  {activeSlide.features.map((feature, idx) => (
+                    <motion.div
+                      key={`${activeSlide.id}-${idx}`}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: idx * 0.1, duration: 0.3 }}
+                    >
+                      <AdminFeatureItem
+                        icon={feature.icon}
+                        title={feature.title}
+                        text={feature.text}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* Botón CTA (Fijo) */}
+            <div className="mt-4 pt-6">
+              <TextureButton
+                onClick={() =>
+                  window.open("https://bodajy.info/admin", "_blank")
+                }
+              >
+                Solicita tu Demo
+              </TextureButton>
             </div>
           </div>
         </div>
@@ -586,7 +750,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
 const Pricing: React.FC = () => {
   const phoneNumber = "5215555555555";
   return (
-    <section id="paquetes" className="py-32 bg-white relative">
+    <section id="paquetes" className="py-32 bg-paper relative">
       <div className="max-w-6xl mx-auto px-4 relative z-10">
         <SectionTitle subtitle="Inversión">Nuestros Paquetes</SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
