@@ -1,5 +1,11 @@
 "use client";
-import React, { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   Check,
   MapPin,
@@ -31,6 +37,7 @@ import Header from "@/features/shared/components/Header";
 import TextureButton from "@/features/shared/components/TextureButton";
 import useEmblaCarousel from "embla-carousel-react";
 import { AnimatePresence, motion } from "framer-motion";
+import Autoplay from "embla-carousel-autoplay";
 
 // --- INTERFACES ---
 interface SectionTitleProps {
@@ -422,7 +429,6 @@ const AdminFeatureItem: React.FC<
   </div>
 );
 
-
 const ADMIN_SLIDES = [
   {
     id: "resumen",
@@ -500,7 +506,14 @@ const ADMIN_SLIDES = [
 
 // --- NUEVA SECCIÓN: DASHBOARD SHOWCASE (Rediseñada) ---
 const AdminShowcase: React.FC = () => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 30 });
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 30 }, [
+    Autoplay({
+      delay: 3500, // milisegundos entre slides
+      stopOnInteraction: true, // no se detiene si el usuario toca el slider
+      stopOnMouseEnter: true, // pausa al hacer hover
+      playOnInit: true, // inicia automáticamente
+    }),
+  ]);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const onSelect = useCallback(() => {
@@ -551,13 +564,13 @@ const AdminShowcase: React.FC = () => {
         {/* --- GRID DE CONTENIDO --- */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center min-h-[500px]">
           {/* COLUMNA IZQUIERDA: CARRUSEL DE IMÁGENES */}
-          <div className="relative w-full aspect-[16/9] lg:aspect-auto lg:h-[300px]">
+          <div className="relative w-full aspect-[16/9] lg:aspect-auto lg:h-[330px]">
             {/* Marco Decorativo */}
             <div className="absolute inset-0 bg-gold/5 transform translate-x-4 translate-y-4 -z-10 rounded-3xl"></div>
 
             {/* Embla Viewport */}
             <div
-              className="overflow-hidden rounded-2xl shadow-2xl border border-border-button bg-paper h-full"
+              className="overflow-hidden rounded-2xl shadow-2xl border border-border-button bg-paper h-full relative"
               ref={emblaRef}
             >
               <div className="flex h-full">
@@ -588,37 +601,40 @@ const AdminShowcase: React.FC = () => {
                 ))}
               </div>
             </div>
-
-            {/* Controles Flotantes del Carrusel */}
-            <div className="absolute top-1/2 -translate-y-1/2 -left-5 lg:-left-6 z-30">
-              <button
-                onClick={scrollPrev}
-                className="p-3 bg-white text-primary rounded-full shadow-lg border border-border-button hover:bg-primary hover:text-white transition-all transform hover:scale-110"
-              >
-                <ChevronLeft size={20} />
-              </button>
-            </div>
-            <div className="absolute top-1/2 -translate-y-1/2 -right-5 lg:-right-6 z-30">
-              <button
-                onClick={scrollNext}
-                className="p-3 bg-white text-primary rounded-full shadow-lg border border-border-button hover:bg-primary hover:text-white transition-all transform hover:scale-110"
-              >
-                <ChevronRight size={20} />
-              </button>
-            </div>
           </div>
 
           {/* COLUMNA DERECHA: INFO DINÁMICA CON TRANSICIONES SUAVES */}
           <div className="flex flex-col justify-center gap-6">
-            {/* Indicadores de Slide (Fijos) */}
-            <div className="flex gap-2 mb-2">
-              {ADMIN_SLIDES.map((_, idx) => (
+            {/* BARRA DE CONTROL: Indicadores + Flechas */}
+            <div className="flex items-center justify-between pb-4 border-b border-border-button/30 mb-2">
+              {/* Indicadores */}
+              <div className="flex gap-2">
+                {ADMIN_SLIDES.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => scrollTo(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${idx === selectedIndex ? "w-8 bg-gold" : "w-2 bg-border-button hover:bg-gold/50"}`}
+                  />
+                ))}
+              </div>
+
+              {/* Flechas de Navegación */}
+              <div className="flex gap-2">
                 <button
-                  key={idx}
-                  onClick={() => scrollTo(idx)}
-                  className={`h-1.5 rounded-full transition-all duration-300 ${idx === selectedIndex ? "w-8 bg-gold" : "w-2 bg-border-button hover:bg-gold/50"}`}
-                />
-              ))}
+                  onClick={scrollPrev}
+                  className="w-8 h-8 flex items-center justify-center rounded-full border border-border-button text-charcoal-400 hover:text-primary hover:border-primary hover:bg-paper transition-all"
+                  title="Anterior"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={scrollNext}
+                  className="w-8 h-8 flex items-center justify-center rounded-full border border-border-button text-charcoal-400 hover:text-primary hover:border-primary hover:bg-paper transition-all"
+                  title="Siguiente"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
             </div>
 
             {/* Contenedor de contenido cambiante con AnimatePresence */}
