@@ -106,7 +106,7 @@ type ColorScale = {
 
 export type ThemeColors = {
   // Colores base del proyecto
-  primary: string;
+  primary: ColorScale;
   accent: string;
   "cool-gray": string;
   "button-dark": string;
@@ -114,6 +114,7 @@ export type ThemeColors = {
   "border-button": string;
   paper: string;
   gold: ColorScale;
+  danger: ColorScale;
   sand: ColorScale & { light: string }; // Incluye 'light' por compatibilidad con tu código actual
   charcoal: ColorScale;
   status: {
