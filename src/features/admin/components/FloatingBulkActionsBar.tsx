@@ -54,7 +54,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
       )}
     >
       {/* BARRA FLOTANTE - SOMBRA DIFUMINADA */}
-      <div className="bg-white text-stone-800 border border-gold/50 rounded-2xl shadow-[0_12px_40px_-8px_rgba(197,166,105,0.4)] p-2 pr-3 flex items-center gap-3 md:gap-5 w-full md:w-auto max-w-2xl relative">
+      <div className="bg-white/80 text-stone-800 border border-gold/50 rounded-2xl shadow-[0_12px_40px_-8px_rgba(80,85,73,0.4)] p-2 pr-3 flex items-center gap-3 md:gap-5 w-full md:w-auto max-w-2xl relative">
         {/* CONTADOR - Fondo Dorado */}
         <div className="flex items-center gap-3 pl-1.5">
           <span className="bg-gold text-white px-3 py-1.5 rounded-xl font-bold text-sm whitespace-nowrap flex items-center gap-2 shadow-sm">
@@ -151,14 +151,14 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
 
                 <DashedSeparator />
 
-                <div className="px-3 py-1.5 text-[10px] font-bold text-red-300 uppercase tracking-wider">
+                <div className="px-3 py-1.5 text-[10px] font-bold text-danger-300 uppercase tracking-wider">
                   Zona de Peligro
                 </div>
                 <button
                   onClick={() => handleAction(onDelete)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-red-500 hover:bg-red-50 hover:border hover:border-red-100 border border-transparent transition-all text-left group"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-danger-600 hover:bg-red-50 hover:border hover:border-danger-100 border border-transparent transition-all text-left group"
                 >
-                  <div className="text-red-300 group-hover:text-red-600 transition-colors">
+                  <div className="text-danger-300 group-hover:text-danger-600 transition-colors">
                     <Trash2 size={18} strokeWidth={2} />
                   </div>
                   <div className="flex flex-col">
@@ -172,7 +172,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
           {/* Botón Cerrar */}
           <button
             onClick={onCancel}
-            className="group bg-transparent hover:bg-red-50 border border-transparent hover:border-red-100 text-stone-400 hover:text-red-500 rounded-xl p-2 transition-all ml-1"
+            className="group bg-transparent hover:bg-danger-50 border border-transparent hover:border-danger-100 text-stone-400 hover:text-danger-600 rounded-xl p-2 transition-all ml-1"
             title="Cancelar selección"
           >
             <X

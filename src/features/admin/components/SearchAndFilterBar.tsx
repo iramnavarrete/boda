@@ -14,6 +14,7 @@ import {
 import { FilterCounts, FilterType } from "@/types";
 import DashedSeparator from "./DashedSeparator";
 import { cn } from "@heroui/theme";
+import TextureButton from "@/features/shared/components/TextureButton";
 
 interface SearchAndFilterBarProps {
   searchTerm: string;
@@ -77,7 +78,7 @@ export default function SearchAndFilterBar({
       case "rejected":
         return "text-red-700 bg-red-50 border-red-200 ring-1 ring-red-100";
       default:
-        return "text-stone-custom bg-white border-sand hover:border-gold/50";
+        return "text-stone-custom bg-white/90 border-sand hover:border-gold/50";
     }
   };
 
@@ -95,7 +96,7 @@ export default function SearchAndFilterBar({
               <Search size={18} />
             </div>
             <input
-              className="w-full pl-10 pr-10 py-3 bg-white border border-sand rounded-xl outline-none focus:ring-0 focus:ring-gold focus:border-gold/50 transition-all duration-300 text-sm text-charcoal placeholder:text-stone-light shadow-sm"
+              className="w-full pl-10 pr-10 py-3 bg-white/90 border border-sand rounded-xl outline-none focus:ring-0 focus:ring-gold focus:border-gold/50 transition-all duration-300 text-sm text-charcoal placeholder:text-stone-light shadow-sm"
               placeholder={`Buscar entre ${filteredGuestCount} invitados...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -134,7 +135,7 @@ export default function SearchAndFilterBar({
             {/* MENÚ DESPLEGABLE - Sombra Difuminada Coherente */}
             <div
               className={cn(
-                "absolute top-full right-0 md:left-0 w-48 bg-white text-stone-800 rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
+                "absolute top-full right-0 md:left-0 w-48 bg-white/90 text-stone-800 rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
                 "transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) z-50",
                 isFilterOpen
                   ? "opacity-100 translate-y-1 scale-100"
@@ -251,7 +252,7 @@ export default function SearchAndFilterBar({
                     />
                     Rechazados
                   </span>
-                  <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                  <span className="text-stone-light text-xs bg-white/90 px-1.5 py-0.5 rounded border border-sand">
                     {filterCounts.rejected}
                   </span>
                 </button>
@@ -261,28 +262,29 @@ export default function SearchAndFilterBar({
         </div>
 
         {/* GRUPO DERECHO: Acciones */}
-        <div className="flex gap-3 shrink-0">
+        <div className="flex gap-3 shrink-0 relative">
           {/* Excel (Solo Desktop) */}
           <button
             onClick={onExportExcel}
-            className="hidden md:flex items-center justify-center px-4 py-3 bg-white text-stone-custom border border-sand rounded-xl hover:bg-green-50 hover:text-green-700 hover:border-green-200 transition-all text-sm font-medium gap-2 shadow-sm group"
+            className="hidden md:flex items-center justify-center px-4 py-3 bg-white/90 text-stone-custom border border-sand rounded-xl hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all text-sm font-medium gap-2 shadow-sm group duration-400"
             title="Exportar Excel"
           >
             <FileSpreadsheet
               size={18}
-              className="text-stone-light group-hover:text-green-600 transition-colors"
+              className="text-stone-light group-hover:text-white transition-colors duration-400"
             />
             <span>Exportar</span>
           </button>
 
           {/* Nuevo Invitado */}
-          <button
+          <TextureButton
+            lighting={false}
+            icon={<Plus size={18} />}
             onClick={onNewGuest}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-gold hover:bg-gold-600 hover:bg-g text-white px-6 py-3 rounded-xl transition-all shadow-lg shadow-gold/20 hover:shadow-gold/30 hover:-translate-y-0.5 text-sm font-bold"
+            className="px-6 py-3 rounded-xl transition-all shadow-lg shadow-gold/20 hover:shadow-gold/30 hover:-translate-y-0.5 font-bold"
           >
-            <Plus size={18} />
             <span>Nuevo Invitado</span>
-          </button>
+          </TextureButton>
         </div>
       </fieldset>
     </div>

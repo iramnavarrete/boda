@@ -17,6 +17,7 @@ import {
   MessageCircle,
   ChevronLeft,
   Quote,
+  Gem,
 } from "lucide-react";
 import Link from "next/link";
 import theme from "@/utils/theme";
@@ -26,6 +27,8 @@ import { useGuestsData } from "../hooks/useGuestData";
 import { useGuestsStats } from "../hooks/useGuestsStats";
 import Loader from "@/features/front/components/Loader";
 import Header from "@/features/shared/components/Header";
+import TextureButton from "@/features/shared/components/TextureButton";
+import DashedSeparator from "./DashedSeparator";
 
 const useMessages = () => [
   {
@@ -61,26 +64,26 @@ const MessagesCarousel = () => {
   const currentMessage = messages[currentIndex];
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-sand shadow-sm flex flex-col h-full hover:shadow-[0_8px_30px_rgb(197,166,105,0.1)] transition-all duration-300 relative overflow-hidden group">
+    <div className="bg-white/80 p-6 rounded-2xl border border-sand shadow-sm flex flex-col h-full hover:shadow-[0_8px_30px_rgb(197,166,105,0.1)] transition-all duration-300 relative overflow-hidden group">
       <div className="flex items-center justify-between mb-6 relative z-10">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-sand-light rounded-lg text-gold border border-sand">
+          <div className="p-2 bg-paper rounded-lg text-gold border border-sand">
             <MessageCircle size={18} />
           </div>
           <div>
-            <h3 className="font-serif text-lg font-bold text-stone-600 leading-none">
+            <h3 className="font-serif text-lg font-semibold text-primary leading-none">
               Felicitaciones
             </h3>
-            <p className="text-[10px] text-stone-400 mt-1 uppercase tracking-wider">
+            <p className="text-[10px] text-charcoal-400 mt-1 uppercase tracking-wider">
               Muro de deseos
             </p>
           </div>
         </div>
         <Link
           href="/admin/invitations/inv-123/messages"
-          className="text-xs font-medium text-gold hover:text-stone-600 transition-colors flex items-center gap-1"
+          className="text-xs font-medium text-gold hover:text-primary transition-colors flex items-center gap-1 tracking-wider"
         >
-          Ver todos <ChevronRight size={12} />
+          VER TODOS <ChevronRight size={12} />
         </Link>
       </div>
 
@@ -96,7 +99,7 @@ const MessagesCarousel = () => {
             "{currentMessage.text}"
           </p>
           <div className="flex flex-col items-center gap-1">
-            <span className="text-sm font-bold text-stone-700 bg-sand-light px-3 py-1 rounded-full">
+            <span className="text-xs font-bold text-primary bg-paper border border-[#EBE5DA] px-4 py-1.5 rounded-full uppercase tracking-widest">
               {currentMessage.author}
             </span>
             <span className="text-[10px] text-stone-400 mt-1">
@@ -144,17 +147,17 @@ const GuestStatsPieChart = ({ stats }: { stats: any }) => {
       {
         label: "Confirmados",
         value: stats.confirmed,
-        color: theme.colors.status.confirmed,
+        color: theme.colors.primary[600],
       },
       {
         label: "Pendientes",
         value: stats.pending,
-        color: theme.colors.status.pending,
+        color: theme.colors.gold[500],
       },
       {
         label: "Rechazados",
         value: stats.rejected,
-        color: theme.colors.status.rejected,
+        color: theme.colors.danger[500],
       },
     ],
     [stats],
@@ -242,63 +245,68 @@ const GuestStatsPieChart = ({ stats }: { stats: any }) => {
   }, [data, stats.total]);
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-sand shadow-sm flex flex-col md:flex-row items-center gap-6 w-full hover:shadow-[0_8px_30px_rgb(197,166,105,0.1)] transition-all duration-300 h-full">
-      <div className="relative flex-shrink-0 flex items-center justify-center p-2">
-        <canvas ref={canvasRef} />
-      </div>
-
-      <div className="flex-1 w-full space-y-4">
+    <div className="bg-white/80 relative p-6 rounded-2xl border border-sand shadow-sm flex flex-col md:flex-row items-center gap-6 w-full hover:shadow-[0_8px_30px_rgb(197,166,105,0.1)] transition-all duration-300 h-full">
+      <div className="flex h-full flex-1 flex-col">
         <div className="flex items-center justify-between mb-2">
-          <div>
-            <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mb-1">
-              Resumen
-            </p>
-            <h3 className="font-serif text-lg font-bold text-stone-600">
-              Estatus Asistencia
-            </h3>
-          </div>
-          <div className="p-2 bg-sand-light rounded-xl text-gold border border-sand">
-            <PieChart size={18} />
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-paper rounded-lg text-gold border border-sand">
+              <PieChart size={18} />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg font-semibold text-primary leading-none">
+                Estatus asistencia
+              </h3>
+              <p className="text-[10px] text-charcoal-400 mt-1 uppercase tracking-wider">
+                Resumen
+              </p>
+            </div>
           </div>
         </div>
+        <div className="flex h-full items-center justify-center">
+          <div className="relative flex-shrink-0 flex items-center justify-center p-2">
+            <canvas ref={canvasRef} />
+          </div>
 
-        <div className="space-y-2">
-          {data.map((item, index) => {
-            const percentage =
-              total > 0 ? Math.round((item.value / total) * 100) : 0;
-            return (
-              <div
-                key={index}
-                className="group flex items-center justify-between p-2 hover:bg-sand-light rounded-lg transition-colors cursor-default border border-transparent hover:border-sand"
-              >
-                <div className="flex items-center gap-2">
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shadow-sm ring-2 ring-white"
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <span className="text-sm font-medium text-stone-600">
-                    {item.label}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="hidden xl:block text-[10px] text-stone-400 font-medium bg-white px-1.5 py-0.5 rounded border border-sand">
-                    {percentage}%
-                  </span>
-                  <span className="text-sm font-bold text-stone-600 w-6 text-right font-serif">
-                    {item.value}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+          <div className="flex-1 w-full space-y-4">
+            <div className="space-y-2">
+              {data.map((item, index) => {
+                const percentage =
+                  total > 0 ? Math.round((item.value / total) * 100) : 0;
+                return (
+                  <div
+                    key={index}
+                    className="group flex items-center justify-between p-2 hover:bg-sand-light rounded-lg transition-colors cursor-default border border-transparent hover:border-sand"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shadow-sm ring-2 ring-white"
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-sm font-medium text-stone-600">
+                        {item.label}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="hidden xl:block text-[10px] text-stone-400 font-medium bg-white px-1.5 py-0.5 rounded border border-sand">
+                        {percentage}%
+                      </span>
+                      <span className="text-sm font-bold text-stone-600 w-6 text-right font-serif">
+                        {item.value}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
 
-        <div className="pt-3 mt-2 border-t border-sand flex items-center gap-2 text-stone-400">
-          <TrendingUp size={14} />
-          <p className="text-[10px]">
-            <strong>{Math.round((stats.confirmed / total) * 100)}%</strong>{" "}
-            confirmados.
-          </p>
+            <div className="pt-3 mt-2 border-t border-sand flex items-center gap-2 text-stone-400">
+              <TrendingUp size={14} />
+              <p className="text-[10px]">
+                <strong>{Math.round((stats.confirmed / total) * 100)}%</strong>{" "}
+                confirmados.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -308,15 +316,15 @@ const GuestStatsPieChart = ({ stats }: { stats: any }) => {
 const ActivityItem = ({ initials, text, time, type }: any) => {
   let colorClass = "bg-stone-100 text-stone-600 border-stone-200";
   if (type === "success")
-    colorClass = "bg-green-50 text-green-700 border-green-200";
-  if (type === "danger") colorClass = "bg-red-50 text-red-700 border-red-200";
+    colorClass = "bg-primary/10 text-primary-500/80 border-primary-500/80";
+  if (type === "danger") colorClass = "bg-danger/10 text-danger/80 border-danger/80";
   if (type === "neutral")
-    colorClass = "bg-sand-light text-stone-400 border-sand";
+    colorClass = "bg-gold/10 text-gold/80 border-gold/80";
 
   return (
-    <div className="flex gap-4 relative group">
+    <div className="flex gap-4 relative">
       <div
-        className={`w-9 h-9 shrink-0 rounded-full border shadow-sm z-10 flex items-center justify-center text-xs font-bold transition-transform group-hover:scale-110 ${colorClass}`}
+        className={`w-9 h-9 shrink-0 rounded-full border shadow-sm z-10 flex items-center justify-center text-xs font-bold transition-transform ${colorClass}`}
       >
         {initials}
       </div>
@@ -345,31 +353,31 @@ export default function InvitationDashboard({
   if (error) toast("Ocurrió un error", "error");
 
   return (
-    <div className="min-h-screen bg-paper font-sans text-stone-600">
+    <div className="min-h-screen bg-paper font-sans text-stone-600 relative ">
+      <div className="absolute inset-0 opacity-[0.4] mix-blend-multiply bg-[url('/img/textures/cream-paper.png')] pointer-events-none"></div>
       <Header />
 
       <main className="max-w-6xl mx-auto p-4 md:px-6 py-4 md:py-10 space-y-6 duration-700">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-white p-8 rounded-3xl border border-sand shadow-sm relative overflow-hidden">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 p-8 rounded-3xl border border-sand relative overflow-hidden border-white/40 bg-white/80 backdrop-blur-md shadow-sm">
           <div className="relative z-10">
-            <h1 className="text-3xl md:text-4xl font-serif text-stone-600 mb-2">
+            <h1 className="text-3xl md:text-4xl font-serif font-medium text-primary mb-2">
               Resumen del Evento
             </h1>
-            <div className="flex items-center gap-2 text-stone-400 text-sm">
-              <Clock size={14} />
+            <div className="flex items-center gap-2 text-primary/70 text-sm font-semibold">
+              <Clock className="text-gold" size={14} />
               <span>Última actualización: hace un momento</span>
             </div>
           </div>
-
-          <Link
-            href={`/admin/invitations/${invitationId}`}
-            className="relative z-10 bg-gold text-white px-8 py-3.5 rounded-xl shadow-[0_10px_20px_-10px_rgba(197,166,105,0.5)] hover:bg-gold-600 hover:shadow-[0_15px_30px_-10px_rgba(197,166,105,0.6)] hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-3 font-medium group"
+          <TextureButton
+            className="relative z-10 text-white font-semibold px-8 py-3.5 rounded-xl"
+            icon={<Users size={16} />}
+            onClick={() => {
+              const element = document.getElementById("paquetes");
+              if (element) element.scrollIntoView({ behavior: "smooth" });
+            }}
           >
-            <Users
-              size={18}
-              className="group-hover:scale-110 transition-transform"
-            />
             Gestionar invitados
-          </Link>
+          </TextureButton>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
@@ -378,22 +386,22 @@ export default function InvitationDashboard({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-3xl shadow-sm border border-sand p-8 relative overflow-hidden">
+          <div className="lg:col-span-2 bg-white/80 rounded-2xl shadow-sm border border-sand p-8 relative overflow-hidden">
             <div className="flex items-center justify-between mb-8 pb-4 border-b border-sand-light">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-sand-light rounded-lg border border-sand text-gold">
+                <div className="p-2 bg-paper rounded-lg border border-sand text-gold">
                   <Activity size={20} />
                 </div>
-                <h2 className="text-lg font-bold text-stone-600">
+                <h2 className="text-lg font-bold text-primary">
                   Actividad Reciente
                 </h2>
               </div>
-              <span className="text-xs text-stone-400 font-medium px-3 py-1 bg-sand-light rounded-full border border-sand">
+              <span className="text-xs font-medium text-primary bg-paper border border-sand-200 px-4 py-1.5 rounded-full uppercase tracking-wider">
                 Hoy
               </span>
             </div>
 
-            <div className="space-y-8 relative before:absolute before:left-[35px] before:top-24 before:bottom-10 before:w-px before:bg-sand before:border-l before:border-dashed before:border-gold/30">
+            <div className="relative">
               <ActivityItem
                 initials={<CheckCircle2 size={16} />}
                 text={
@@ -404,6 +412,7 @@ export default function InvitationDashboard({
                 time="Hace 10 min"
                 type="success"
               />
+              <DashedSeparator className="my-3 mx-8" />
               <ActivityItem
                 initials={<Clock size={16} />}
                 text={
@@ -414,6 +423,7 @@ export default function InvitationDashboard({
                 time="Hace 1 hora"
                 type="neutral"
               />
+                <DashedSeparator className="my-3 mx-8" />
               <ActivityItem
                 initials={<XCircle size={16} />}
                 text={
@@ -427,45 +437,56 @@ export default function InvitationDashboard({
             </div>
           </div>
 
-          <div className="bg-[#2C2C29] rounded-3xl p-8 shadow-xl relative overflow-hidden text-sand">
-            <div className="absolute top-0 right-0 p-6 opacity-5">
-              <Heart size={120} />
+          <div className="bg-primary-800/85 rounded-2xl p-8 shadow-xl relative overflow-hidden text-[#F9F7F2] group">
+            {/* Decoración Fondo */}
+            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
+              <Gem size={140} />
             </div>
-            <h3 className="text-white font-serif text-xl mb-6 relative z-10 border-b border-white/10 pb-4">
+
+            <h3 className="text-white font-serif text-2xl mb-8 relative z-10 border-b border-white/20 pb-4">
               Detalles del Evento
             </h3>
-            <div className="space-y-6 relative z-10">
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-white/5 rounded-lg border border-white/10">
-                  <Calendar size={18} className="text-gold" />
+
+            <div className="space-y-8 relative z-10">
+              <div className="flex items-start gap-5">
+                <div className="p-3 bg-charcoal/10 rounded-xl border border-white/20 backdrop-blur-sm">
+                  <Calendar size={20} className="text-gold" />
                 </div>
                 <div>
-                  <p className="text-xs text-stone-400 font-bold uppercase tracking-wider mb-1">
+                  <p className="text-[10px] text-gold font-bold uppercase tracking-[0.15em] mb-1">
                     Fecha
                   </p>
-                  <p className="text-white font-medium">Sábado, 22 Oct 2025</p>
-                  <p className="text-xs text-white/50">18:00 hrs</p>
+                  <p className="text-white font-medium text-lg leading-tight">
+                    Sábado, 22 Oct 2025
+                  </p>
+                  <p className="text-xs text-white/60 mt-1">18:00 hrs</p>
                 </div>
               </div>
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-white/5 rounded-lg border border-white/10">
-                  <MapPin size={18} className="text-gold" />
+
+              <div className="flex items-start gap-5">
+                <div className="p-3 bg-charcoal/10 rounded-xl border border-white/20 backdrop-blur-sm">
+                  <MapPin size={20} className="text-gold" />
                 </div>
                 <div>
-                  <p className="text-xs text-stone-400 font-bold uppercase tracking-wider mb-1">
+                  <p className="text-[10px] text-gold font-bold uppercase tracking-[0.15em] mb-1">
                     Lugar
                   </p>
-                  <p className="text-white font-medium">
+                  <p className="text-white font-medium text-lg leading-tight">
                     Hacienda Los Arcángeles
                   </p>
-                  <p className="text-xs text-white/50">
+                  <p className="text-xs text-white/60 mt-1">
                     San Miguel de Allende, Gto.
                   </p>
                 </div>
               </div>
-              <div className="pt-4 mt-2">
-                <button className="w-full py-3 rounded-xl border border-gold/30 text-gold hover:bg-gold hover:text-white transition-all text-sm font-medium flex items-center justify-center gap-2">
-                  Editar Detalles <ArrowRight size={14} />
+
+              <div className="pt-6 mt-4">
+                <button className="w-full py-4 rounded-full border border-gold/50 text-gold hover:bg-gold hover:text-primary transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 group/btn">
+                  Editar Detalles{" "}
+                  <ArrowRight
+                    size={14}
+                    className="group-hover/btn:translate-x-1 transition-transform"
+                  />
                 </button>
               </div>
             </div>

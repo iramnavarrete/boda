@@ -17,7 +17,7 @@ const StatCard = ({
     <div
       className={`
       min-w-[120px] lg:w-full 
-      bg-white p-4 rounded-2xl 
+      bg-white/90 p-4 rounded-2xl 
       border border-sand 
       shadow-sm relative overflow-hidden group 
       transition-all duration-300 shrink-0
@@ -51,9 +51,7 @@ export default function StatsSidebar({ stats }: StatsSidebarProps) {
       {/* CONTENEDOR FLEXIBLE: Scroll horizontal en móvil, Columna en Desktop */}
       {/* UPDATE: Agregado 'lg:overflow-visible' para evitar que se corten las sombras en desktop */}
       <div className="flex flex-row lg:flex-col gap-3 overflow-x-auto lg:overflow-visible pb-4 lg:pb-0 scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0 pt-2 md:pt-0">
-        {/* CARD PRINCIPAL (TOTAL) - Estilo Dark Stone/Charcoal */}
-        {/* UPDATE: Agregado 'hover:z-10' para manejo correcto de apilamiento */}
-        <div className="min-w-[120px] lg:w-full bg-charcoal text-white p-4 rounded-2xl shadow-md md:shadow-lg shadow-charcoal/20 relative overflow-hidden shrink-0 flex flex-col justify-center min-h-[85px] group border border-charcoal hover:z-10 transition-all">
+        <div className="min-w-[120px] lg:w-full bg-primary-800/90 text-white p-4 rounded-2xl shadow-md md:shadow-lg shadow-charcoal/20 relative overflow-hidden shrink-0 flex flex-col justify-center min-h-[85px] group border border-primary hover:z-10 transition-all">
           {/* Decoración de fondo */}
           <div className="absolute top-0 right-0 w-16 h-16 bg-gold rounded-full blur-[40px] opacity-20 -mr-4 -mt-4 group-hover:opacity-30 transition-opacity"></div>
 
@@ -80,8 +78,8 @@ export default function StatsSidebar({ stats }: StatsSidebarProps) {
           title="Confirmados"
           value={stats.confirmed}
           icon={<CheckCircle2 />}
-          colorClass="text-green-700"
-          borderHoverClass="hover:border-green-300"
+          colorClass="text-primary"
+          borderHoverClass="hover:border-primary-300"
         />
 
         {/* Pendientes */}
@@ -89,7 +87,7 @@ export default function StatsSidebar({ stats }: StatsSidebarProps) {
           title="Pendientes"
           value={stats.pending}
           icon={<Clock />}
-          colorClass="text-gold-700" // Gold
+          colorClass="text-gold" // Gold
           borderHoverClass="hover:border-gold/50"
         />
 
@@ -98,8 +96,8 @@ export default function StatsSidebar({ stats }: StatsSidebarProps) {
           title="Rechazados"
           value={stats.rejected}
           icon={<XCircle />}
-          colorClass="text-red-700"
-          borderHoverClass="hover:border-red-200"
+          colorClass="text-danger-700"
+          borderHoverClass="hover:border-danger-300"
         />
       </div>
     </div>

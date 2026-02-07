@@ -1,3 +1,4 @@
+"use client";
 import React, { ReactNode, useEffect, useRef, useState } from "react";
 import {
   Check,
@@ -5,7 +6,6 @@ import {
   Gift,
   MessageCircle,
   Star,
-  Calendar,
   Music,
   Palette,
   Timer,
@@ -14,20 +14,19 @@ import {
   PlayCircle,
   ExternalLink,
   RotateCcw,
+  Users,
+  BarChart3,
+  Lock,
+  Edit3,
 } from "lucide-react";
 import Image from "next/image";
 import Header from "@/features/shared/components/Header";
+import TextureButton from "@/features/shared/components/TextureButton";
 
+// --- INTERFACES ---
 interface SectionTitleProps {
   children: ReactNode;
   subtitle: string;
-}
-
-interface TextureButtonProps {
-  children: ReactNode;
-  primary?: boolean;
-  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
-  icon?: ReactNode;
 }
 
 interface FeatureItemProps {
@@ -63,29 +62,6 @@ const SectionTitle: React.FC<SectionTitleProps> = ({ children, subtitle }) => (
       <div className="w-8 h-[1px] bg-gold"></div>
     </div>
   </div>
-);
-
-const TextureButton: React.FC<TextureButtonProps> = ({
-  children,
-  primary = true,
-  onClick,
-  icon,
-}) => (
-  <button
-    onClick={onClick}
-    className={`
-      px-8 py-4 rounded-full font-medium tracking-widest uppercase text-xs transition-all duration-300 transform hover:-translate-y-1 flex items-center justify-center gap-2 relative overflow-hidden group
-      ${
-        primary
-          ? "bg-primary text-paper shadow-[0_4px_20px_rgba(88,98,79,0.4)]"
-          : "bg-paper border border-border-button text-primary hover:border-primary shadow-sm"
-      }
-    `}
-  >
-    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer  pointer-events-none"></div>
-    {icon && <span className="w-4 h-4">{icon}</span>}
-    <span className="relative z-10">{children}</span>
-  </button>
 );
 
 const IconRings: React.FC = () => (
@@ -416,6 +392,127 @@ function DemoSection() {
   );
 }
 
+// --- NUEVA SECCIÓN: DASHBOARD SHOWCASE (Admin) ---
+// Esta sección muestra las imágenes del dashboard de gestión que subiste.
+// Asegúrate de tener las imágenes en tu carpeta public/img con estos nombres o ajusta las rutas.
+
+const AdminShowcase: React.FC = () => {
+  return (
+    <section className="py-24 bg-white relative overflow-hidden">
+      {/* Elementos decorativos de fondo */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gold/10 rounded-full blur-3xl -translate-x-1/2 translate-y-1/2 pointer-events-none"></div>
+
+      <div className="max-w-7xl mx-auto px-4 relative z-10">
+        <SectionTitle subtitle="Panel de Control">
+          Gestión profesional, sin estrés
+        </SectionTitle>
+
+        <p className="text-cool-gray text-lg font-light mb-16 text-center max-w-3xl mx-auto leading-relaxed">
+          Toma el control total de tu evento. Gestiona tu lista de invitados,
+          recibe confirmaciones en tiempo real y organiza las mesas desde un
+          panel intuitivo diseñado para darte tranquilidad.
+        </p>
+
+        {/* BENTO GRID LAYOUT */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+          {/* CARD 1: DASHBOARD PRINCIPAL (Grande) */}
+          <div className="lg:col-span-7 flex flex-col group">
+            <div className="relative rounded-[2rem] border border-border-button bg-paper shadow-xl overflow-hidden h-full min-h-[300px] md:min-h-[400px] transition-all duration-500 hover:shadow-2xl hover:border-gold/30">
+              <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] opacity-30 pointer-events-none"></div>
+
+              {/* Header de la tarjeta */}
+              <div className="p-6 md:p-8 flex justify-between items-end border-b border-border-button/50 bg-white/50 backdrop-blur-sm">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <BarChart3 className="text-gold" size={20} />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-charcoal-400">
+                      Resumen en tiempo real
+                    </span>
+                  </div>
+                  <h3 className="font-serif text-2xl text-primary">
+                    Tu evento en un vistazo
+                  </h3>
+                </div>
+              </div>
+
+              {/* Imagen Dashboard Main */}
+              <div className="relative w-full h-full p-6 md:p-8 bg-paper">
+                {/* Contenedor de imagen con efecto de elevación */}
+                <div className="relative rounded-xl overflow-hidden shadow-lg border border-border-button group-hover:scale-[1.02] transition-transform duration-500 origin-top">
+                  {/* AQUÍ VA TU IMAGEN PRINCIPAL (image_c78d5c.png) */}
+                  <Image
+                    src="/img/dashboard-resumen.png" // Reemplaza con tu ruta real
+                    alt="Dashboard Resumen"
+                    width={800}
+                    height={500}
+                    className="w-full h-auto object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* COLUMNA DERECHA */}
+          <div className="lg:col-span-5 flex flex-col gap-6 lg:gap-8">
+            {/* CARD 2: LISTA DE INVITADOS (Mediana) */}
+            <div className="relative rounded-[2rem] border border-border-button bg-white shadow-lg overflow-hidden flex-1 min-h-[250px] group transition-all duration-500 hover:shadow-xl hover:border-gold/30">
+              <div className="p-6 md:p-8 border-b border-border-button/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <Users className="text-gold" size={20} />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-charcoal-400">
+                    Base de datos
+                  </span>
+                </div>
+                <h3 className="font-serif text-xl text-primary">
+                  Lista de Invitados Inteligente
+                </h3>
+                <p className="text-sm text-cool-gray mt-2 font-light">
+                  Filtrado rápido, estatus de WhatsApp y control de accesos.
+                </p>
+              </div>
+
+              <div className="p-4 bg-paper/50 h-full">
+                {/* AQUÍ VA TU IMAGEN DE LISTA (image_c78ab7.png) */}
+                <div className="relative rounded-xl overflow-hidden shadow-md border border-border-button group-hover:translate-y-[-5px] transition-transform duration-500">
+                  <Image
+                    src="/img/dashboard-lista.png" // Reemplaza con tu ruta real
+                    alt="Lista de Invitados"
+                    width={500}
+                    height={300}
+                    className="w-full h-auto object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* CARD 3: ACCIONES RÁPIDAS (Pequeña/Feature) */}
+            <div className="relative rounded-[2rem] bg-primary text-paper p-8 shadow-lg overflow-hidden flex flex-col justify-center items-start group">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
+
+              <div className="flex gap-4 mb-4">
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                  <Lock className="text-gold" size={18} />
+                </div>
+                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center backdrop-blur-sm">
+                  <Edit3 className="text-gold" size={18} />
+                </div>
+              </div>
+
+              <h3 className="font-serif text-xl mb-2 relative z-10">
+                Control Total
+              </h3>
+              <p className="text-sm text-paper/80 font-light relative z-10 leading-relaxed">
+                Bloquea ediciones, elimina registros o edita detalles al
+                instante. Tú decides quién entra.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
 
 const PricingCard: React.FC<PricingCardProps> = ({
   title,
@@ -490,7 +587,6 @@ const Pricing: React.FC = () => {
   const phoneNumber = "5215555555555";
   return (
     <section id="paquetes" className="py-32 bg-white relative">
-      {/* <div className="absolute top-0 left-0 w-full h-24 bg-accent rounded-b-[50%] scale-x-150 -translate-y-12"></div> */}
       <div className="max-w-6xl mx-auto px-4 relative z-10">
         <SectionTitle subtitle="Inversión">Nuestros Paquetes</SectionTitle>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
@@ -569,6 +665,8 @@ export default function AppCurvedTextured() {
       <Hero />
       <Features />
       <DemoSection />
+      {/* NUEVA SECCIÓN DE DASHBOARD */}
+      <AdminShowcase />
       <Pricing />
       <Footer />
     </div>

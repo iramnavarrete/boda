@@ -33,7 +33,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         <div
           className={`p-3 rounded-2xl shrink-0 border transition-colors ${
             isDanger
-              ? "bg-red-50 text-red-500 border-red-100"
+              ? "bg-danger-50 text-danger-700 border-danger-100"
               : "bg-sand-light text-gold border-sand"
           }`}
         >
@@ -51,7 +51,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
         <button
           onClick={onClose}
-          className="group bg-transparent hover:bg-red-50 border border-transparent hover:border-red-100 text-stone-400 hover:text-red-500 rounded-xl p-2 transition-all ml-1"
+          className="group bg-transparent hover:bg-danger-50 border border-transparent hover:border-danger-100 text-stone-400 hover:text-danger-700 rounded-xl p-2 transition-all ml-1"
           title="Cancelar selección"
         >
           <X
@@ -77,7 +77,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           className={cn(
             "px-6 py-2.5 rounded-xl text-white font-medium shadow-lg transition-all flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed text-sm transform active:scale-95",
             isDanger
-              ? "bg-red-500 hover:bg-red-600 shadow-red-500/20"
+              ? "bg-danger-600 hover:bg-danger-700 shadow-danger-200/20"
               : "bg-gold hover:bg-gold-600 shadow-charcoal/20",
           )}
         >

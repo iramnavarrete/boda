@@ -157,6 +157,7 @@ export default function WeddingAdmin({
 
   return (
     <div className="min-h-screen bg-paper text-stone-800 font-sans pb-20 relative">
+      <div className="fixed inset-0 opacity-[0.4] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] pointer-events-none" />
       <Header />
 
       <section className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-2">

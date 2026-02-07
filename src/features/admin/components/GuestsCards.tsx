@@ -58,7 +58,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
             onEdit(g);
           }}
           className={`
-            relative flex flex-col bg-white rounded-2xl p-5 cursor-default transition-all duration-300 border-2
+            relative flex flex-col bg-white/90 rounded-2xl p-5 cursor-default transition-all duration-300 border-2
             ${
               selectedGuests.has(g.id)
                 ? "border-gold shadow-[0_8px_30px_-5px_rgba(197,166,105,0.3)] ring-0 scale-[1] z-10"
@@ -109,8 +109,8 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                     g.asistencia === null
                       ? "bg-paper/30 text-gold border-gold/20"
                       : g.asistencia === true
-                        ? "bg-green-50 text-green-700 border-green-100"
-                        : "bg-red-50 text-red-600 border-red-100"
+                        ? "bg-primary-50 text-primary border-primary-100"
+                        : "bg-danger-50 text-danger-700 border-danger-100"
                   }
                 `}
               >
@@ -146,8 +146,8 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                   flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors
                   ${
                     g.cambiosPermitidos
-                      ? "text-green-600 bg-green-50 hover:bg-green-100"
-                      : "text-red-500 bg-red-50 hover:bg-red-100"
+                      ? "text-primary bg-primary-50  hover:bg-primary-100"
+                      : "text-danger-700 bg-danger-50 hover:bg-danger-100"
                   }
                   `}
                   onClick={(e) =>
@@ -176,14 +176,14 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                     onClick={(e) =>
                       handleActionButtonClick(e, () => onSendWhatsApp(g))
                     }
-                    className="p-2 rounded-xl text-green-600 bg-green-50 hover:bg-green-100 hover:text-green-700 transition-colors duration-300 border border-green-100"
+                    className="p-2 rounded-xl text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors duration-300 border border-sand hover:border-green-600"
                   >
                     <IconBrandWhatsapp className="w-4 h-4" />
                   </button>
                 )}
 
                 <button
-                  className="p-2 rounded-xl text-stone-custom bg-white hover:bg-sand-100 hover:text-charcoal hover:border-gold/30 transition-all duration-300 border border-sand shadow-sm"
+                  className="p-2 rounded-xl text-stone-custom hover:bg-sand-100 hover:text-charcoal hover:border-gold/30 transition-all duration-300 border border-sand shadow-sm"
                   title="Vista previa"
                 >
                   <Eye size={18} />
@@ -191,7 +191,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
 
                 <button
                   onClick={(e) => handleActionButtonClick(e, () => onDelete(g))}
-                  className="p-2 rounded-xl text-red-400 bg-white border border-sand hover:bg-red-50 hover:text-red-600 hover:border-red-100 transition-all duration-300"
+                  className="p-2 rounded-xl text-danger-600 border border-sand hover:bg-red-50 hover:text-danger-700 hover:border-red-100 transition-all duration-300"
                   title="Eliminar"
                 >
                   <Trash2 size={18} />

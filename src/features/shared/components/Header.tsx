@@ -53,19 +53,19 @@ interface HeaderProps {
 // Aquí se definen los estilos y textos por defecto para cada modo
 const VARIANT_CONFIG = {
   admin: {
-    containerClass: "bg-white/95 border-sand-200",
-    titleClass: "text-stone-700",
-    subtitleClass: "text-stone-400",
-    logoBg: "bg-charcoal",
+    containerClass: "bg-paper/95",
+    titleClass: "text-primary",
+    subtitleClass: "text-charcoal-400",
+    logoBg: "bg-primary",
     logoText: "text-gold",
     logoIcon: <Gem className="text-current" size={16} />,
     backButtonIcon: <CalendarHeart size={20} />,
     backButtonText: "Mis Eventos",
     backButtonHref: "/admin",
-    backButtonClass: "text-stone-400 hover:text-gold",
-    navLinkBase: "text-stone-custom hover:text-gold hover:border-sand",
-    navLinkActive: "text-gold bg-paper/30 border-sand",
-    mobileBg: "bg-white",
+    backButtonClass: "text-stone-400 hover:text-primary",
+    navLinkBase: "text-primary hover:text-gold hover:bg-white",
+    navLinkActive: "text-gold bg-white shadow-sm ring-1 ring-border-button",
+    mobileBg: "bg-paper",
   },
   landing: {
     containerClass: "bg-paper/95 border-border-button",
@@ -197,7 +197,7 @@ const Header = ({
               <>
                 <Link
                   href="/admin"
-                  className="hidden p-1.5 md:flex items-center gap-2 text-sm font-bold text-stone-400 hover:text-gold-500 transition-colors hover:bg-sand-50 rounded-xl"
+                  className="hidden p-1.5 md:flex items-center gap-2 text-sm font-bold text-primary hover:text-gold transition-colors hover:bg-sand-50 rounded-xl"
                   title="Volver a mis eventos"
                 >
                   <div className="rounded-lg bg-transparent transition-colors">
