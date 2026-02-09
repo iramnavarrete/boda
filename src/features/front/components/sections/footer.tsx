@@ -40,7 +40,7 @@ export default function Footer() {
         <div className="flex flex-col items-center justify-center gap-4 text-sm font-nourdLight text-primary">
           <div className="flex flex-row gap-1">
             <p>Hecho con</p>
-            <HeartIcon className="h-6 w-6" />
+            <HeartIcon className="h-6 w-6 text-primary" />
             <p>por</p>
           </div>
           <div ref={divRef} className="flex justify-center">
