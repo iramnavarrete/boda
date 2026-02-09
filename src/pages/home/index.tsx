@@ -69,7 +69,7 @@ const SectionTitle: React.FC<SectionTitleProps> = ({ children, subtitle }) => (
     <span className="inline-block py-1 px-5 rounded-full border border-primary/30 text-primary text-[10px] font-bold tracking-[0.25em] uppercase mb-4 bg-accent/80 backdrop-blur-sm">
       {subtitle}
     </span>
-    <h2 className="text-4xl md:text-6xl font-serif text-primary mb-6 drop-shadow-sm">
+    <h2 className="text-3xl md:text-6xl font-serif text-primary mb-6 drop-shadow-sm">
       {children}
     </h2>
     <div className="flex items-center justify-center gap-2 opacity-60">
@@ -327,7 +327,7 @@ function DemoSection() {
         <SectionTitle subtitle="Experiencia Inmersiva">
           Magia en cada interacción
         </SectionTitle>
-        <p className="text-cool-gray text-lg font-light mb-10 leading-relaxed text-center lg:text-left">
+        <p className="text-cool-gray text-lg font-light mb-10 leading-relaxed text-center">
           Transmite la elegancia y el amor de tu celebración antes de que llegue
           la fecha. Una experiencia sensorial completa donde el diseño, el
           movimiento y el sonido se unen para emocionar a quienes más quieres.
@@ -562,9 +562,9 @@ const AdminShowcase: React.FC = () => {
         </div>
 
         {/* --- GRID DE CONTENIDO --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center min-h-[500px]">
+        <div className="flex flex-col md:flex-row gap-12 lg:gap-20 items-center min-h-[500px]">
           {/* COLUMNA IZQUIERDA: CARRUSEL DE IMÁGENES */}
-          <div className="relative w-full aspect-[16/9] lg:aspect-auto lg:h-[330px]">
+          <div className="relative flex-[3] w-full aspect-[16/9] lg:h-[400px]">
             {/* Marco Decorativo */}
             <div className="absolute inset-0 bg-gold/5 transform translate-x-4 translate-y-4 -z-10 rounded-3xl"></div>
 
@@ -604,9 +604,9 @@ const AdminShowcase: React.FC = () => {
           </div>
 
           {/* COLUMNA DERECHA: INFO DINÁMICA CON TRANSICIONES SUAVES */}
-          <div className="flex flex-col justify-center gap-6">
+          <div className="flex-[2] flex-col justify-center gap-6">
             {/* BARRA DE CONTROL: Indicadores + Flechas */}
-            <div className="flex items-center justify-between pb-4 border-b border-border-button/30 mb-2">
+            <div className="flex items-center justify-between pb-4 mb-2">
               {/* Indicadores */}
               <div className="flex gap-2">
                 {ADMIN_SLIDES.map((_, idx) => (
@@ -658,7 +658,7 @@ const AdminShowcase: React.FC = () => {
                 </div>
 
                 {/* Lista de Features */}
-                <div className="space-y-3">
+                <div className="space-y-3 overflow-hidden">
                   {activeSlide.features.map((feature, idx) => (
                     <motion.div
                       key={`${activeSlide.id}-${idx}`}
