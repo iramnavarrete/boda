@@ -13,6 +13,7 @@ import {
   Star,
   MessageCircle,
   Heart,
+  AppWindow,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, usePathname } from "next/navigation";
@@ -106,7 +107,7 @@ const Header = ({
     if (variant !== "landing") return;
 
     const handleScroll = () => {
-      const sections = ["inicio", "demo", "paquetes"];
+      const sections = ["inicio", "demo", "paquetes", "dashboard"];
       const scrollPosition = window.scrollY + 100;
       for (const section of sections) {
         const element = document.getElementById(section);
@@ -140,6 +141,12 @@ const Header = ({
           href: "#demo",
           icon: <Play size={18} />,
           active: activeSection === "demo",
+        },
+        {
+          label: "Dashboard",
+          href: "#dashboard",
+          icon: <AppWindow size={18} />,
+          active: activeSection === "dashboard",
         },
         {
           label: "Paquetes",
