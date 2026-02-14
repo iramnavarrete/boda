@@ -119,6 +119,14 @@ const AdminShowcase: React.FC = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
 
+  const handleMouseEnter = () => {
+    if (emblaApi) emblaApi.plugins().autoplay?.stop();
+  };
+
+  const handleMouseLeave = () => {
+    if (emblaApi) emblaApi.plugins().autoplay?.play();
+  };
+
   // --- INTERSECTION OBSERVER PARA CONTROLAR AUTOPLAY ---
   useEffect(() => {
     if (!emblaApi) return;
@@ -194,8 +202,9 @@ const AdminShowcase: React.FC = () => {
             Gestión Inteligente
           </SectionTitle>
           <p className="text-cool-gray text-lg font-light mb-8 leading-relaxed">
-            Una plataforma poderosa diseñada para darte el control total de tu evento.
-            Administra tus invitados desde un solo sitio hermoso e intuitivo.
+            Una plataforma poderosa diseñada para darte el control total de tu
+            evento. Administra tus invitados desde un solo sitio hermoso e
+            intuitivo.
           </p>
         </div>
 
@@ -278,6 +287,8 @@ const AdminShowcase: React.FC = () => {
             {/* Contenedor de contenido cambiante con AnimatePresence */}
             <AnimatePresence mode="wait">
               <motion.div
+                onHoverEnd={handleMouseLeave}
+                onHoverStart={handleMouseEnter}
                 key={activeSlide.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -296,7 +307,7 @@ const AdminShowcase: React.FC = () => {
                 </div>
 
                 {/* Lista de Features */}
-                <div className="space-y-3 overflow-hidden">
+                <div className="space-y-3 overflow-hidden pb-3">
                   {activeSlide.features.map((feature, idx) => (
                     <motion.div
                       key={`${activeSlide.id}-${idx}`}
@@ -330,6 +341,6 @@ const AdminShowcase: React.FC = () => {
       </div>
     </section>
   );
-};
+};;
 
 export default AdminShowcase;

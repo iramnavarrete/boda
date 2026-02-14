@@ -1,5 +1,13 @@
 import TextureButton from "@/features/shared/components/TextureButton";
-import { ExternalLink, Heart, Infinity, PlayCircle, Puzzle, RotateCcw, Smartphone } from "lucide-react";
+import {
+  ExternalLink,
+  Heart,
+  Infinity,
+  PlayCircle,
+  Puzzle,
+  RotateCcw,
+  Smartphone,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import SectionTitle from "./SectionTitle";
 
@@ -48,10 +56,14 @@ function DemoSection() {
       className="py-24 md:py-32 bg-white relative overflow-hidden"
     >
       <div className="max-w-7xl mx-auto px-4 relative z-10">
-        <SectionTitle subtitle="Experiencia Completa">
-          Más que una simple invitación
+        <SectionTitle subtitle="Más que una invitación">
+          <span className="text-3xl md:text-5xl lg:text-4xl font-serif text-primary leading-tight">
+            Lo mismo que el papel...
+            <br />
+            <span className="text-gold italic">pero con alma propia</span>
+          </span>
         </SectionTitle>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center mt-20">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-24">
           {/* COLUMNA IZQUIERDA: VIDEO DEMO */}
           <div className="order-2 lg:order-1 flex justify-center lg:justify-end relative">
             <div
@@ -101,18 +113,23 @@ function DemoSection() {
                   </div>
                 </div>
               </div>
+              <div className="flex flex-1 items-center justify-center mt-16">
+              <TextureButton
+                className="lg:hidden"
+                onClick={() => window.open("https://bodajy.info", "_blank")}
+              >
+                <div className="flex gap-2">
+                  Ver Demo en Vivo <ExternalLink size={16} />
+                </div>
+              </TextureButton>
+
+              </div>
             </div>
           </div>
 
           {/* COLUMNA DERECHA: TEXTO Y VENTAJAS */}
           <div className="order-1 lg:order-2 flex flex-col items-center lg:items-start text-center lg:text-left">
-            <h2 className="text-3xl md:text-5xl lg:text-4xl font-serif text-primary mb-6 leading-tight">
-              Lo mismo que el papel...
-              <br />
-              <span className="text-gold italic">pero con alma propia</span>
-            </h2>
-
-            <p className="text-stone-500 text-lg font-light leading-relaxed mb-10 max-w-lg">
+            <p className="text-stone-500 text-lg font-light leading-relaxed mb-16 max-w-lg">
               Sorprende a tus invitados con una experiencia interactiva
               inolvidable. Diseño fluido, lleno de vida y con todo lo que
               necesitan saber de tu evento en la palma de su mano.
@@ -170,13 +187,15 @@ function DemoSection() {
                     Sin límite de envíos
                   </h4>
                   <p className="text-xs text-stone-500 leading-relaxed">
-                    Comparte la invitación de tu evento las veces que quieras, 100% ilimitado.
+                    Comparte la invitación de tu evento las veces que quieras,
+                    100% ilimitado.
                   </p>
                 </div>
               </div>
             </div>
 
             <TextureButton
+              className="hidden lg:block"
               onClick={() => window.open("https://bodajy.info", "_blank")}
             >
               <div className="flex gap-2">
