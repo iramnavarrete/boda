@@ -27,7 +27,6 @@ import { useGuestsStats } from "../hooks/useGuestsStats";
 import Loader from "@/features/front/components/Loader";
 import Header from "@/features/shared/components/Header";
 import TextureButton from "@/features/shared/components/TextureButton";
-import DashedSeparator from "./DashedSeparator";
 import { useRouter } from "next/router";
 
 const useMessages = () => [
