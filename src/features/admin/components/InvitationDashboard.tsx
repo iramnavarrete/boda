@@ -7,7 +7,6 @@ import {
   CheckCircle2,
   XCircle,
   Activity,
-  Heart,
   TrendingUp,
   MapPin,
   Calendar,
@@ -29,6 +28,7 @@ import Loader from "@/features/front/components/Loader";
 import Header from "@/features/shared/components/Header";
 import TextureButton from "@/features/shared/components/TextureButton";
 import DashedSeparator from "./DashedSeparator";
+import { useRouter } from "next/router";
 
 const useMessages = () => [
   {
@@ -345,6 +345,7 @@ export default function InvitationDashboard({
 }) {
   const user = useAuthUser();
   const { toast } = useToast();
+  const router = useRouter();
 
   const { guests, isLoadingGuests, error } = useGuestsData(invitationId, user);
   const stats = useGuestsStats(guests);
@@ -387,7 +388,7 @@ export default function InvitationDashboard({
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 bg-white/80 rounded-2xl shadow-sm border border-sand p-8 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-8 pb-4 border-b border-sand-light">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-sand-light">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-paper rounded-lg border border-sand text-gold">
                   <Activity size={20} />
@@ -401,7 +402,7 @@ export default function InvitationDashboard({
               </span>
             </div>
 
-            <div className="relative">
+            <div className="relative grid grid-cols-1 md:grid-cols-2 flex-col gap-5 mx-2">
               <ActivityItem
                 initials={<CheckCircle2 size={16} />}
                 text={
@@ -412,7 +413,6 @@ export default function InvitationDashboard({
                 time="Hace 10 min"
                 type="success"
               />
-              <DashedSeparator className="my-3 mx-8" />
               <ActivityItem
                 initials={<Clock size={16} />}
                 text={
@@ -423,7 +423,36 @@ export default function InvitationDashboard({
                 time="Hace 1 hora"
                 type="neutral"
               />
-                <DashedSeparator className="my-3 mx-8" />
+              <ActivityItem
+                initials={<XCircle size={16} />}
+                text={
+                  <>
+                    <strong>Carlos Ruiz</strong> declinó la invitación
+                  </>
+                }
+                time="Hace 3 horas"
+                type="danger"
+              />
+              <ActivityItem
+                initials={<CheckCircle2 size={16} />}
+                text={
+                  <>
+                    <strong>Familia González</strong> confirmó asistencia
+                  </>
+                }
+                time="Hace 10 min"
+                type="success"
+              />
+              <ActivityItem
+                initials={<Clock size={16} />}
+                text={
+                  <>
+                    <strong>María López</strong> vio la invitación
+                  </>
+                }
+                time="Hace 1 hora"
+                type="neutral"
+              />
               <ActivityItem
                 initials={<XCircle size={16} />}
                 text={
@@ -481,13 +510,15 @@ export default function InvitationDashboard({
               </div>
 
               <div className="pt-6 mt-4">
-                <button className="w-full py-4 rounded-full border border-gold/50 text-gold hover:bg-gold hover:text-primary transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 group/btn">
-                  Editar Detalles{" "}
+                <Link
+                 href={`${router.basePath}/${invitationId}`}
+                 className="w-full py-4 rounded-full border border-gold/50 text-gold hover:bg-gold hover:text-primary transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 group/btn">
+                  Ver invitación{" "}
                   <ArrowRight
                     size={14}
                     className="group-hover/btn:translate-x-1 transition-transform"
                   />
-                </button>
+                </Link>
               </div>
             </div>
           </div>
