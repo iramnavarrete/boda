@@ -63,9 +63,9 @@ function DemoSection() {
             <span className="text-gold italic">pero con alma propia</span>
           </span>
         </SectionTitle>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-24">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-20">
           {/* COLUMNA IZQUIERDA: VIDEO DEMO */}
-          <div className="order-2 lg:order-1 flex justify-center lg:justify-end relative">
+          <div className="order-2 lg:order-1 flex justify-center lg:justify-end relative lg:col-span-2">
             <div
               ref={containerRef}
               className="relative z-20 transform transition-all duration-700 cursor-pointer group"
@@ -114,21 +114,20 @@ function DemoSection() {
                 </div>
               </div>
               <div className="flex flex-1 items-center justify-center mt-16">
-              <TextureButton
-                className="lg:hidden"
-                onClick={() => window.open("https://bodajy.info", "_blank")}
-              >
-                <div className="flex gap-2">
-                  Ver Demo en Vivo <ExternalLink size={16} />
-                </div>
-              </TextureButton>
-
+                <TextureButton
+                  className="lg:hidden"
+                  onClick={() => window.open("https://bodajy.info", "_blank")}
+                >
+                  <div className="flex gap-2">
+                    Ver Demo en Vivo <ExternalLink size={16} />
+                  </div>
+                </TextureButton>
               </div>
             </div>
           </div>
 
           {/* COLUMNA DERECHA: TEXTO Y VENTAJAS */}
-          <div className="order-1 lg:order-2 flex flex-col items-center lg:items-start text-center lg:text-left">
+          <div className="order-1 lg:order-2 lg:col-span-3 flex flex-col items-center lg:items-start text-center lg:text-left">
             <p className="text-stone-500 text-lg font-light leading-relaxed mb-16 max-w-lg">
               Sorprende a tus invitados con una experiencia interactiva
               inolvidable. Diseño fluido, lleno de vida y con todo lo que

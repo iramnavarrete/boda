@@ -1,9 +1,21 @@
-"use client"
+"use client";
 import TextureButton from "@/features/shared/components/TextureButton";
 import Autoplay from "embla-carousel-autoplay";
 import useEmblaCarousel from "embla-carousel-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { BarChart3, ChevronLeft, ChevronRight, FileSpreadsheet, Filter, Lock, MousePointerClick, QrCode, RotateCcw, Send, Users } from "lucide-react";
+import {
+  BarChart3,
+  ChevronLeft,
+  ChevronRight,
+  FileSpreadsheet,
+  Filter,
+  Lock,
+  MousePointerClick,
+  QrCode,
+  RotateCcw,
+  Send,
+  Users,
+} from "lucide-react";
 import Image from "next/image";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import SectionTitle from "./SectionTitle";
@@ -13,7 +25,6 @@ interface FeatureItemProps {
   title: string;
   text: string;
 }
-
 
 const AdminFeatureItem: React.FC<
   FeatureItemProps & { style?: React.CSSProperties; className?: string }
@@ -201,7 +212,7 @@ const AdminShowcase: React.FC = () => {
           <SectionTitle subtitle="Panel de Control">
             Gestión Inteligente
           </SectionTitle>
-          <p className="text-cool-gray text-lg font-light mb-8 leading-relaxed">
+          <p className="text-cool-gray text-lg font-light -mt-8 leading-relaxed">
             Una plataforma poderosa diseñada para darte el control total de tu
             evento. Administra tus invitados desde un solo sitio hermoso e
             intuitivo.
@@ -209,9 +220,9 @@ const AdminShowcase: React.FC = () => {
         </div>
 
         {/* --- GRID DE CONTENIDO --- */}
-        <div className="flex flex-col md:flex-row gap-12 lg:gap-20 items-center min-h-[500px]">
+        <div className="flex flex-col px-2 sm:px-6 md:px-8 xl:flex-row gap-12 lg:gap-20 items-center min-h-[500px]">
           {/* COLUMNA IZQUIERDA: CARRUSEL DE IMÁGENES */}
-          <div className="relative flex-[3] w-full aspect-[16/9] lg:h-[400px]">
+          <div className="relative flex-[3] w-full aspect-[16/9] xl:h-[400px]">
             {/* Marco Decorativo */}
             <div className="absolute inset-0 bg-gold/5 transform translate-x-4 translate-y-4 -z-10 rounded-3xl"></div>
 
@@ -251,7 +262,7 @@ const AdminShowcase: React.FC = () => {
           </div>
 
           {/* COLUMNA DERECHA: INFO DINÁMICA CON TRANSICIONES SUAVES */}
-          <div className="flex-[2] flex-col justify-center gap-6">
+          <div className="flex-[2] flex-col justify-center gap-6 w-full">
             {/* BARRA DE CONTROL: Indicadores + Flechas */}
             <div className="flex items-center justify-between pb-4 mb-2">
               {/* Indicadores */}
@@ -325,22 +336,18 @@ const AdminShowcase: React.FC = () => {
                 </div>
               </motion.div>
             </AnimatePresence>
-
-            {/* Botón CTA (Fijo) */}
-            <div className="mt-4 pt-6">
-              <TextureButton
-                onClick={() =>
-                  window.open("https://bodajy.info/admin", "_blank")
-                }
-              >
-                Solicita tu Demo
-              </TextureButton>
-            </div>
           </div>
+        </div>
+        <div className="mx-auto">
+          <TextureButton
+            onClick={() => window.open("https://bodajy.info/admin", "_blank")}
+          >
+            Solicita tu Demo
+          </TextureButton>
         </div>
       </div>
     </section>
   );
-};;
+};
 
 export default AdminShowcase;
