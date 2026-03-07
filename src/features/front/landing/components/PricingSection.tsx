@@ -89,7 +89,7 @@ const Pricing: React.FC = () => {
           <PricingCard
             title="Plus"
             subtitle="Esencial & Elegante"
-            price="1,200"
+            price="1,250"
             whatsappLink={`https://wa.me/${phoneNumber}?text=Hola,%20me%20interesa%20el%20Paquete%20Plus%20de%20$1200%20MXN`}
             features={[
               "Animación de apertura de invitación",
@@ -107,7 +107,7 @@ const Pricing: React.FC = () => {
           <PricingCard
             title="Diamante"
             subtitle="Gestión Total"
-            price="1,600"
+            price="1,900"
             recommended={true}
             whatsappLink={`https://wa.me/${phoneNumber}?text=Hola,%20me%20interesa%20el%20Paquete%20Diamante%20de%20$1600%20MXN`}
             features={[
