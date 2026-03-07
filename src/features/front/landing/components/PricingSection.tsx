@@ -28,7 +28,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
     }
   `}
   >
-    <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] rounded-[2rem] pointer-events-none"></div>
+    <div className="absolute inset-0 opacity-30 bg-[url('/img/textures/cream-paper.png')] rounded-[2rem] pointer-events-none"></div>
     {recommended && (
       <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-primary text-paper text-[10px] font-bold px-4 py-2 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1 z-20">
         <Star size={10} fill="currentColor" /> Recomendado
@@ -92,13 +92,16 @@ const Pricing: React.FC = () => {
             price="1,200"
             whatsappLink={`https://wa.me/${phoneNumber}?text=Hola,%20me%20interesa%20el%20Paquete%20Plus%20de%20$1200%20MXN`}
             features={[
-              "Diseño Digital Personalizado (Carta)",
-              "Ubicación GPS Interactiva",
+              "Animación de apertura de invitación",
+              "Portada con una o varias imágenes",
+              "Ubicación GPS de ceremonia y recepción",
               "Mesa de Regalos (Sobres/Tiendas)",
-              "RSVP Básico (WhatsApp)",
-              "Música de Fondo",
+              "RSVP Básico (confirmación via WhatsApp)",
+              "Música instrumental de Fondo",
               "Timeline del Evento",
-              "Botón de Calendario",
+              "Botón de Agregar al Calendario",
+              "Cuenta regresiva",
+              "Envíos ilimitados",
             ]}
           />
           <PricingCard
@@ -110,10 +113,11 @@ const Pricing: React.FC = () => {
             features={[
               "Todo lo incluido en Plus",
               "Gestión Avanzada de Invitados (RSVP)",
-              "Pases Digitales con QR",
+              "Confirmaciones de invitados en tiempo real",
               "Control de Accesos por Familia",
-              "Restricciones Alimenticias",
-              "Recordatorios Automáticos",
+              "Visualización de mensajes de los invitados",
+              "Sección de actividad de invitados",
+              "Atención prioritaria",
             ]}
           />
         </div>
