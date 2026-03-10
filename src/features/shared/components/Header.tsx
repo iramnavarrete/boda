@@ -21,6 +21,7 @@ import { cn } from "@heroui/theme";
 import Link from "next/link";
 import { AuthService } from "@/services/authService";
 import JnInvitacionesIcon from "@/icons/jn-invitaciones-icon";
+import { useRouter } from "next/router";
 
 export type HeaderVariant = "admin" | "landing";
 
@@ -95,7 +96,8 @@ const Header = ({
 }: HeaderProps) => {
   const config = VARIANT_CONFIG[variant];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState("inicio"); // Solo para landing
+  const [activeSection, setActiveSection] = useState<string | null>(null); // Solo para landing
+  const router = useRouter();
 
   // Hooks de Next.js (Solo relevantes para Admin)
   const pathname = usePathname();
@@ -105,6 +107,9 @@ const Header = ({
   // --- LÓGICA SCROLL SPY (Solo Landing) ---
   useEffect(() => {
     if (variant !== "landing") return;
+    if (pathname === "/") {
+      setActiveSection("inicio");
+    }
 
     const handleScroll = () => {
       const sections = ["inicio", "demo", "paquetes", "dashboard"];
@@ -227,7 +232,8 @@ const Header = ({
               <JnInvitacionesIcon
                 primaryColor="#58624F"
                 secondaryColor="rgb(197 166 105 / var(--tw-text-opacity, 1))"
-                className="w-48 h-11"
+                className="w-48 h-11 cursor-pointer"
+                onClick={() => router.replace("/")}
               />
             )}
             <div>
