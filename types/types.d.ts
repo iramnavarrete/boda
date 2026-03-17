@@ -123,3 +123,13 @@ export type ThemeColors = {
     rejected: string;
   };
 };
+
+interface GuestQuote {
+  id: string;
+  autor: string;
+  parentesco: string;
+  mensaje: string;
+  fecha: string;
+  timestamp: number;
+  leido: boolean;
+}

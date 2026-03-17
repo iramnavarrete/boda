@@ -12,20 +12,12 @@ import {
 import { Guest, GuestContactInfo, GuestFormData } from "../../types/types";
 import { db } from "@/lib/firebase/config";
 import { generateGuestID } from "@/utils/generators";
-import { AuthService } from "./authService";
-
-const getInvitationId = (): string => {
-  const user = AuthService.getCurrentUser();
-  return user?.uid === "w6AceU9Qw9XsTkF0GNlCJ0TwriB2"
-    ? "ximena-becerra"
-    : "default-app";
-};
 
 export const GuestService = {
   subscribeToGuests: (
-    invitationId: string, // <--- AHORA SE RECIBE COMO PARÁMETRO
+    invitationId: string,
     callback: (guests: Guest[]) => void,
-    onError?: (error: FirestoreError) => void
+    onError?: (error: FirestoreError) => void,
   ) => {
     if (!invitationId) return () => {};
 
@@ -43,18 +35,17 @@ export const GuestService = {
           } as Guest;
         });
 
-        // Ordenamiento en cliente (Más recientes primero)
         callback(
           data.sort(
             (a, b) =>
               // @ts-ignore
-              (b.fechaCreacion?.seconds || 0) - (a.fechaCreacion?.seconds || 0)
-          )
+              (b.fechaCreacion?.seconds || 0) - (a.fechaCreacion?.seconds || 0),
+          ),
         );
       },
       (error) => {
         onError?.(error);
-      }
+      },
     );
   },
 
@@ -67,7 +58,7 @@ export const GuestService = {
         "guests",
         guestId,
         "private",
-        "contactInfo"
+        "contactInfo",
       );
       const snapshot = await getDoc(privateRef);
 
@@ -80,7 +71,6 @@ export const GuestService = {
     }
   },
 
-  // GENERAR ID ÚNICO
   getUniqueGuestId: async (invitationId: string) => {
     let isUnique = false;
     let newId = "";
@@ -89,7 +79,7 @@ export const GuestService = {
     while (!isUnique) {
       newId = generateGuestID();
       const guest = await getDoc(
-        doc(db, "invitations", invitationId, "guests", newId)
+        doc(db, "invitations", invitationId, "guests", newId),
       );
 
       if (!guest.exists()) {
@@ -99,7 +89,7 @@ export const GuestService = {
       attempts++;
       if (attempts > 15) {
         throw new Error(
-          "No se pudo generar un ID único después de varios intentos"
+          "No se pudo generar un ID único después de varios intentos",
         );
       }
     }
@@ -111,12 +101,11 @@ export const GuestService = {
     invitationId: string,
     guestId: string,
     data: GuestFormData,
-    isNew: boolean
+    isNew: boolean,
   ) => {
     const batch = writeBatch(db);
     const timestamp = serverTimestamp();
 
-    // Referencias
     const publicRef = doc(db, "invitations", invitationId, "guests", guestId);
     const privateRef = doc(
       db,
@@ -125,7 +114,7 @@ export const GuestService = {
       "guests",
       guestId,
       "private",
-      "contactInfo"
+      "contactInfo",
     );
 
     const tieneTelefono = !!(data.telefono && data.telefono.trim().length > 0);
@@ -141,7 +130,6 @@ export const GuestService = {
       confirmados: Number(data.confirmados),
     };
 
-    // Si es nuevo, inicializamos campos faltantes
     if (isNew) {
       publicPayload.id = guestId;
       publicPayload.fechaCreacion = timestamp;
@@ -154,11 +142,9 @@ export const GuestService = {
       telefono: data.telefono || null,
     };
 
-    // Agregamos al batch
     batch.set(publicRef, publicPayload, { merge: true });
     batch.set(privateRef, privatePayload, { merge: true });
 
-    // Ejecutamos ambas escrituras
     await batch.commit();
   },
 
@@ -172,7 +158,7 @@ export const GuestService = {
       "guests",
       guestId,
       "private",
-      "contactInfo"
+      "contactInfo",
     );
 
     batch.delete(privateRef);
@@ -184,7 +170,7 @@ export const GuestService = {
   batchUpdateLock: async (
     invitationId: string,
     guestIds: string[],
-    shouldLock: boolean
+    shouldLock: boolean,
   ) => {
     const batch = writeBatch(db);
 
@@ -206,7 +192,7 @@ export const GuestService = {
         cambiosPermitidos: !guest.cambiosPermitidos,
         ultimaModificacion: serverTimestamp(),
       },
-      { merge: true }
+      { merge: true },
     );
   },
 
@@ -222,7 +208,7 @@ export const GuestService = {
         "guests",
         id,
         "private",
-        "contactInfo"
+        "contactInfo",
       );
       batch.delete(privateRef);
       batch.delete(publicRef);
