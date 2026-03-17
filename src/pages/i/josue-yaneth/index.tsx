@@ -27,7 +27,7 @@ const Lottie = dynamic(() => import("react-lottie"), {
 });
 
 const newIconScript = localFont({
-  src: "../../fonts/New-Icon-Script.otf",
+  src: "../../../fonts/New-Icon-Script.otf",
   variable: "--font-new-icon-script",
 });
 
