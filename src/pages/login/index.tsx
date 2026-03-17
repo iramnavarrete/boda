@@ -177,7 +177,7 @@ export default function LoginPage() {
               />
               <label
                 htmlFor="email"
-                className="absolute left-10 -top-2.5 bg-paper/30 px-1 text-xs text-[#9CA3AF] transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-[#9CA3AF] peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-gold"
+                className="absolute left-10 -top-2.5 rounded-full bg-[#fcfcfa] px-2 text-xs text-[#9CA3AF] transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-[#9CA3AF] peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-gold z-10"
               >
                 Correo Electrónico
               </label>
@@ -199,7 +199,7 @@ export default function LoginPage() {
               />
               <label
                 htmlFor="password"
-                className="absolute left-10 -top-2.5 bg-paper/30 px-1 text-xs text-[#9CA3AF] transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-[#9CA3AF] peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-gold"
+                className="absolute left-10 -top-2.5 rounded-full bg-[#fcfcfa] px-2 text-xs text-[#9CA3AF] transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:text-[#9CA3AF] peer-placeholder-shown:top-4 peer-placeholder-shown:left-10 peer-focus:-top-2.5 peer-focus:text-xs peer-focus:text-gold z-10"
               >
                 Contraseña
               </label>
@@ -228,9 +228,7 @@ export default function LoginPage() {
               <div className="w-full border-t border-sand"></div>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-3 text-gold">
-                O ingresa con
-              </span>
+              <span className="bg-white px-3 text-gold">O ingresa con</span>
             </div>
           </div>
 
