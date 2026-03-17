@@ -1,5 +1,6 @@
 import InvitationDashboard from "@/features/admin/components/InvitationDashboard";
 import Loader from "@/features/front/components/Loader";
+import AdminLayout from "@/features/shared/layouts/admin";
 import { useRouter } from "next/router";
 
 export default function AdminDashboard() {
@@ -10,8 +11,8 @@ export default function AdminDashboard() {
     return <Loader fullscreen />;
   }
   return (
-    <InvitationDashboard
-      invitationId={invitationId}
-    />
+    <AdminLayout>
+      <InvitationDashboard invitationId={invitationId} />
+    </AdminLayout>
   );
 }

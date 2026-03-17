@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { Guest } from "@/types";
 import { GuestService } from "@/services/guestService";
-import Header from "@/features/shared/components/Header";
 import GuestFormModal from "@/features/admin/components/GuestFormModal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
 import SearchAndFilterBar from "@/features/admin/components/SearchAndFilterBar";
@@ -156,10 +155,7 @@ export default function WeddingAdmin({
   };
 
   return (
-    <div className="min-h-screen bg-paper text-stone-800 font-sans pb-20 relative">
-      <div className="fixed inset-0 opacity-[0.4] bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')] pointer-events-none" />
-      <Header />
-
+    <div>
       <section className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
         <div className="flex flex-col lg:flex-row gap-4 items-start mt-2.5">
           <aside className="w-full lg:w-auto">

@@ -12,8 +12,8 @@ import {
   Play,
   Star,
   MessageCircle,
-  Heart,
   AppWindow,
+  Mail,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, usePathname } from "next/navigation";
@@ -180,6 +180,12 @@ const Header = ({
         href: basePath,
         icon: <UserIcon size={18} />,
         active: pathname === basePath,
+      },
+      {
+        label: "Mensajes",
+        href: `${basePath}/quotes`,
+        icon: <Mail size={18} />,
+        active: pathname?.includes("/quotes"),
       },
     ];
   }, [variant, customNavItems, activeSection, invitationId, pathname]);

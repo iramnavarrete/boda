@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef, FC } from "react";
 import {
   Users,
   Clock,
@@ -25,7 +25,6 @@ import { useToast } from "@/features/shared/components/Toast";
 import { useGuestsData } from "../hooks/useGuestData";
 import { useGuestsStats } from "../hooks/useGuestsStats";
 import Loader from "@/features/front/components/Loader";
-import Header from "@/features/shared/components/Header";
 import TextureButton from "@/features/shared/components/TextureButton";
 import { useRouter } from "next/router";
 
@@ -52,7 +51,7 @@ const useMessages = () => [
 
 // --- COMPONENTE CARRUSEL ---
 
-const MessagesCarousel = () => {
+const MessagesCarousel: FC<{invitationId: string}> = ({invitationId}) => {
   const messages = useMessages();
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -79,7 +78,7 @@ const MessagesCarousel = () => {
           </div>
         </div>
         <Link
-          href="/admin/invitations/inv-123/messages"
+          href={`/admin/invitations/${invitationId}/quotes`}
           className="text-xs font-medium text-gold hover:text-primary transition-colors flex items-center gap-1 tracking-wider"
         >
           VER TODOS <ChevronRight size={12} />
@@ -353,11 +352,7 @@ export default function InvitationDashboard({
   if (error) toast("Ocurrió un error", "error");
 
   return (
-    <div className="min-h-screen bg-paper font-sans text-stone-600 relative ">
-      <div className="absolute inset-0 opacity-[0.4] mix-blend-multiply bg-[url('/img/textures/cream-paper.png')] pointer-events-none"></div>
-      <Header />
-
-      <main className="max-w-6xl mx-auto p-4 md:px-6 py-4 md:py-10 space-y-6 duration-700">
+      <div className="max-w-6xl mx-auto p-4 md:px-6 py-4 md:py-10 space-y-6 duration-700">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 p-8 rounded-3xl border border-sand relative overflow-hidden border-white/40 bg-white/80 backdrop-blur-md shadow-sm">
           <div className="relative z-10">
             <h1 className="text-3xl md:text-4xl font-serif font-medium text-primary mb-2">
@@ -372,8 +367,7 @@ export default function InvitationDashboard({
             className="relative z-10 text-white font-semibold px-8 py-3.5 rounded-xl"
             icon={<Users size={16} />}
             onClick={() => {
-              const element = document.getElementById("paquetes");
-              if (element) element.scrollIntoView({ behavior: "smooth" });
+              router.push(`/admin/invitations/${invitationId}`);
             }}
           >
             Gestionar invitados
@@ -381,7 +375,7 @@ export default function InvitationDashboard({
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-          <MessagesCarousel />
+          <MessagesCarousel invitationId={invitationId} />
           <GuestStatsPieChart stats={stats} />
         </div>
 
@@ -510,7 +504,7 @@ export default function InvitationDashboard({
 
               <div className="pt-6 mt-4">
                 <Link
-                 href={`${router.basePath}/${invitationId}`}
+                 href={`${router.basePath}/i/${invitationId}`}
                  className="w-full py-4 rounded-full border border-gold/50 text-gold hover:bg-gold hover:text-primary transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 group/btn">
                   Ver invitación{" "}
                   <ArrowRight
@@ -522,7 +516,6 @@ export default function InvitationDashboard({
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </div>
   );
 }
