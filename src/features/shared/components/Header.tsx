@@ -148,7 +148,7 @@ const Header = ({
           active: activeSection === "demo",
         },
         {
-          label: "Dashboard",
+          label: "Panel de control",
           href: "/#dashboard",
           icon: <AppWindow size={18} />,
           active: activeSection === "dashboard",
