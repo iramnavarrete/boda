@@ -137,25 +137,25 @@ const Header = ({
       return [
         {
           label: "Inicio",
-          href: "#inicio",
+          href: "/#inicio",
           icon: <Home size={18} />,
           active: activeSection === "inicio",
         },
         {
           label: "Demo",
-          href: "#demo",
+          href: "/#demo",
           icon: <Play size={18} />,
           active: activeSection === "demo",
         },
         {
           label: "Dashboard",
-          href: "#dashboard",
+          href: "/#dashboard",
           icon: <AppWindow size={18} />,
           active: activeSection === "dashboard",
         },
         {
           label: "Paquetes",
-          href: "#paquetes",
+          href: "/#paquetes",
           icon: <Gem size={18} />,
           active: activeSection === "paquetes",
         },

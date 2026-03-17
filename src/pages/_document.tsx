@@ -4,7 +4,7 @@ import { Html, Head, Main, NextScript } from "next/document";
 
 export default function Document() {
   return (
-    <Html lang="es">
+    <Html lang="es" data-scroll-behavior="smooth">
       <Head>
         <meta
           name="description"
@@ -13,7 +13,10 @@ export default function Document() {
         <link rel="canonical" href="https://bodajy.info" />
         <meta property="og:locale" content="es_MX" />
         <meta property="og:type" content="article" />
-        <meta property="og:title" content={`Invitación Boda ${groomName} & ${brideName}`} />
+        <meta
+          property="og:title"
+          content={`Invitación Boda ${groomName} & ${brideName}`}
+        />
         <meta
           property="og:description"
           content="Te invitamos a celebrar nuestra unión en este maravilloso día"
@@ -23,7 +26,10 @@ export default function Document() {
           property="article:modified_time"
           content="2025-09-02T20:53:01-06:00"
         />
-        <meta property="og:image" content="https://bodajy.info/img/og-cover.jpg" />
+        <meta
+          property="og:image"
+          content="https://bodajy.info/img/og-cover.jpg"
+        />
         <meta property="og:image:width" content="630" />
         <meta property="og:image:height" content="420" />
         <meta property="og:image:type" content="image/jpeg" />
