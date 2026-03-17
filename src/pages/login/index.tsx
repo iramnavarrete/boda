@@ -24,6 +24,12 @@ const Lottie = dynamic(() => import("lottie-react"), {
   loading: () => <div className="h-14 w-14 bg-[#fefefe]" />,
 });
 
+// Interfaz local para tipar de forma segura los errores de Firebase Auth
+interface FirebaseAuthError {
+  code?: string;
+  message?: string;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -66,7 +72,7 @@ export default function LoginPage() {
   }, [isInView]);
 
   // Handlers
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleEmailLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!email || !password) {
       toast("Por favor ingresa tus credenciales", "error");
@@ -76,10 +82,14 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const firebaseError = error as FirebaseAuthError;
       let msg = "Error al iniciar sesión";
-      if (error.code === "auth/invalid-credential")
+
+      if (firebaseError?.code === "auth/invalid-credential") {
         msg = "Credenciales incorrectas";
+      }
+
       toast(msg, "error");
       setLoading(false);
     }
@@ -89,9 +99,40 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
+      // Forzar a que siempre pida seleccionar cuenta
+      provider.setCustomParameters({ prompt: "select_account" });
+
       await signInWithPopup(auth, provider);
-    } catch (error: any) {
-      toast("No se pudo conectar con Google", "error");
+    } catch (error: unknown) {
+      const firebaseError = error as FirebaseAuthError;
+      let msg = "No se pudo conectar con Google";
+
+      // Manejador de errores específicos de Firebase Auth para Google
+      switch (firebaseError?.code) {
+        case "auth/popup-closed-by-user":
+          msg = "Cancelaste el inicio de sesión";
+          break;
+        case "auth/popup-blocked":
+          msg = "Tu navegador bloqueó la ventana emergente";
+          break;
+        case "auth/cancelled-popup-request":
+          msg = "Se canceló la petición porque abriste otra";
+          break;
+        case "auth/account-exists-with-different-credential":
+          msg = "Este correo ya está registrado con otro método";
+          break;
+        case "auth/network-request-failed":
+          msg = "Error de red. Revisa tu conexión a internet";
+          break;
+        case "auth/unauthorized-domain":
+          msg = "Dominio no autorizado";
+          break;
+        default:
+          console.error("Error completo de Google Login:", error);
+          break;
+      }
+
+      toast(msg, "error");
       setLoading(false);
     }
   };
