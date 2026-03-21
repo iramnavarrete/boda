@@ -1,15 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-// TODO Mover esto al AuthService
-import {
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
-} from "firebase/auth";
-import { auth } from "@/lib/firebase/config";
-import { AuthService } from "@/services/authService";
+import { useEffect, useRef } from "react";
 import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
-import { useToast } from "@/features/shared/components/Toast";
 import dynamic from "next/dynamic";
 import { LottieRefCurrentProps } from "lottie-react";
 import { useInView } from "framer-motion";
@@ -18,42 +8,31 @@ import GoogleIcon from "@/icons/google-icon";
 import EnvelopeIcon from "@/icons/envelope-icon";
 import LoginFlowersIcon from "@/icons/login-flowers-icon";
 import Loader from "@/features/front/components/Loader";
+import { useAuthLogin } from "@/features/shared/hooks/useAuthLogin";
 
 const Lottie = dynamic(() => import("lottie-react"), {
   ssr: false,
   loading: () => <div className="h-14 w-14 bg-[#fefefe]" />,
 });
 
-// Interfaz local para tipar de forma segura los errores de Firebase Auth
-interface FirebaseAuthError {
-  code?: string;
-  message?: string;
-}
-
 export default function LoginPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  // Extraemos toda la lógica y estado desde nuestro custom hook
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    loading,
+    checkingAuth,
+    handleEmailLogin,
+    handleGoogleLogin,
+  } = useAuthLogin();
 
   const playerRef = useRef<LottieRefCurrentProps>(null);
   const divRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(divRef);
 
-  // Verificar sesión iniciada
-  useEffect(() => {
-    const unsubscribe = AuthService.onUserChange((user) => {
-      if (user) {
-        router.replace("/admin");
-      } else {
-        setCheckingAuth(false);
-      }
-    });
-    return () => unsubscribe();
-  }, [router]);
-
+  // Mantenemos aquí únicamente el efecto visual de Lottie
   useEffect(() => {
     const animation = async () => {
       const player = playerRef.current;
@@ -70,72 +49,6 @@ export default function LoginPage() {
     };
     animation();
   }, [isInView]);
-
-  // Handlers
-  const handleEmailLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!email || !password) {
-      toast("Por favor ingresa tus credenciales", "error");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (error: unknown) {
-      const firebaseError = error as FirebaseAuthError;
-      let msg = "Error al iniciar sesión";
-
-      if (firebaseError?.code === "auth/invalid-credential") {
-        msg = "Credenciales incorrectas";
-      }
-
-      toast(msg, "error");
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleLogin = async () => {
-    setLoading(true);
-    try {
-      const provider = new GoogleAuthProvider();
-      // Forzar a que siempre pida seleccionar cuenta
-      provider.setCustomParameters({ prompt: "select_account" });
-
-      await signInWithPopup(auth, provider);
-    } catch (error: unknown) {
-      const firebaseError = error as FirebaseAuthError;
-      let msg = "No se pudo conectar con Google";
-
-      // Manejador de errores específicos de Firebase Auth para Google
-      switch (firebaseError?.code) {
-        case "auth/popup-closed-by-user":
-          msg = "Cancelaste el inicio de sesión";
-          break;
-        case "auth/popup-blocked":
-          msg = "Tu navegador bloqueó la ventana emergente";
-          break;
-        case "auth/cancelled-popup-request":
-          msg = "Se canceló la petición porque abriste otra";
-          break;
-        case "auth/account-exists-with-different-credential":
-          msg = "Este correo ya está registrado con otro método";
-          break;
-        case "auth/network-request-failed":
-          msg = "Error de red. Revisa tu conexión a internet";
-          break;
-        case "auth/unauthorized-domain":
-          msg = "Dominio no autorizado";
-          break;
-        default:
-          console.error("Error completo de Google Login:", error);
-          break;
-      }
-
-      toast(msg, "error");
-      setLoading(false);
-    }
-  };
 
   if (checkingAuth) {
     return <Loader fullscreen />;
