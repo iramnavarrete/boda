@@ -17,6 +17,9 @@
     "jsx": "react-jsx",
     "incremental": true,
     "paths": {
+      "@/public/*" : [
+        "./public/*"
+      ],
       "@/*": [
         "./src/*"
       ],

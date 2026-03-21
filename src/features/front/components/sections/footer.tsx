@@ -2,15 +2,10 @@ import AnimatedEntrance from "@/features/front/components/AnimatedEntrance";
 import HeartIcon from "@/icons/heart-icon";
 import { useInView } from "framer-motion";
 import { type LottieRefCurrentProps } from "lottie-react";
-import dynamic from "next/dynamic";
 import animationData from "../../../../lottie/logojn.json";
 import { useEffect, useRef } from "react";
 import WhatsappIcon from "@/icons/whatsappIcon";
-
-const Lottie = dynamic(() => import("lottie-react"), {
-  ssr: false,
-  loading: () => <div className="w-screen h-screen bg-accent" />,
-});
+import CustomLottie from "@/features/shared/components/CustomLottie";
 
 export default function Footer() {
   const playerRef = useRef<LottieRefCurrentProps>(null);
@@ -44,7 +39,7 @@ export default function Footer() {
             <p>por</p>
           </div>
           <div ref={divRef} className="flex justify-center">
-            <Lottie
+            <CustomLottie
               className="w-[70%]"
               animationData={animationData}
               lottieRef={playerRef}

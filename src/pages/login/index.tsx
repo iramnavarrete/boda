@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
-import dynamic from "next/dynamic";
 import { LottieRefCurrentProps } from "lottie-react";
 import { useInView } from "framer-motion";
 import animationData from "../../lottie/logojn.json";
@@ -9,11 +8,7 @@ import EnvelopeIcon from "@/icons/envelope-icon";
 import LoginFlowersIcon from "@/icons/login-flowers-icon";
 import Loader from "@/features/front/components/Loader";
 import { useAuthLogin } from "@/features/shared/hooks/useAuthLogin";
-
-const Lottie = dynamic(() => import("lottie-react"), {
-  ssr: false,
-  loading: () => <div className="h-14 w-14 bg-[#fefefe]" />,
-});
+import CustomLottie from "@/features/shared/components/CustomLottie";
 
 export default function LoginPage() {
   // Extraemos toda la lógica y estado desde nuestro custom hook
@@ -105,7 +100,7 @@ export default function LoginPage() {
               ref={divRef}
               className="flex justify-center items-center gap-2 mb-3"
             >
-              <Lottie
+              <CustomLottie
                 className=" h-14"
                 animationData={animationData}
                 lottieRef={playerRef}

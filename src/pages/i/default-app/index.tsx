@@ -20,6 +20,7 @@ import Footer from "../../../features/front/components/sections/footer";
 import FlowersCoverUp from "@/icons/flowers-cover-up";
 import FlowersCoverDown from "@/icons/flowers-cover-down";
 import { brideName, groomName, weddingDate } from "@/constants/constants";
+import CustomLottie from "@/features/shared/components/CustomLottie";
 
 const Lottie = dynamic(() => import("react-lottie"), {
   ssr: false,
@@ -121,7 +122,7 @@ export default function Home() {
             }
           }}
         />
-        <Lottie
+        <CustomLottie
           options={isMobile ? mobileAnimation : desktopAnimation}
           isClickToPauseDisabled
           isPaused={isLottiePaused}
