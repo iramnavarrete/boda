@@ -173,7 +173,7 @@ const GuestQuotesList: FC<{ invitationId: string }> = ({ invitationId }) => {
               />
               <input
                 type="text"
-                placeholder="Buscar remitente..."
+                placeholder="Buscar..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 bg-white/70 hover:bg-white focus:bg-white border border-sand-200] focus:border-gold-500/50 rounded-lg text-sm outline-none transition-all placeholder:text-charcoal-500 text-charcoal-800 shadow-sm focus:shadow-md"
