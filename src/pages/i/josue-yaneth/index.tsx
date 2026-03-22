@@ -13,7 +13,7 @@ import QrPhotos from "@/features/front/components/sections/qr-photos";
 import { AudioController } from "@/features/front/components/sections/music";
 import Footer from "@/features/front/components/sections/footer";
 
-import EnvelopeSplash from "@/features/shared/components/openingAnimations/EnvelopeSplash";
+import EnvelopeSplash from "@/features/front/components/openingAnimations/EnvelopeSplash";
 import DesktopSidebars from "@/features/shared/components/DesktopSidebars";
 import {
   newIconScript,

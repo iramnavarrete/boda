@@ -8,23 +8,45 @@ import {
   getDoc,
   getDocs,
   FirestoreError,
+  Unsubscribe,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
+import { GuestQuote } from "@/types";
+
+// Definimos la interfaz para los mensajes tipados correctamente
+type GuestQuoteMap = GuestQuote & {
+  sortLeido?: boolean;
+};
 
 export const GuestQuotesService = {
   // SUSCRIPCIÓN EN TIEMPO REAL A LOS MENSAJES (QUOTES)
   subscribeToGuestMessages: (
     invitationId: string,
-    callback: (messages: any[]) => void,
+    callback: (messages: GuestQuoteMap[]) => void,
     onError?: (error: FirestoreError) => void,
   ) => {
     if (!invitationId) return () => {};
 
-    const messagesMap = new Map();
-    const quoteUnsubscribes = new Map();
+    const messagesMap = new Map<string, GuestQuoteMap>();
+    const quoteUnsubscribes = new Map<string, Unsubscribe>();
 
     const guestsRef = collection(db, "invitations", invitationId, "guests");
     const q = query(guestsRef);
+
+    const notifyChanges = () => {
+      const sorted = Array.from(messagesMap.values()).sort((a, b) => {
+        // 1. PRIMER NIVEL: Ordenar por estado inicial de lectura
+        if (a.sortLeido !== b.sortLeido) {
+          return a.sortLeido ? 1 : -1;
+        }
+
+        // 2. SEGUNDO NIVEL: Fecha descendente
+        const timeA = a.timestamp || 0;
+        const timeB = b.timestamp || 0;
+        return timeB - timeA;
+      });
+      callback(sorted);
+    };
 
     const mainUnsub = onSnapshot(
       q,
@@ -36,7 +58,6 @@ export const GuestQuotesService = {
           // Si se agrega o modifica un invitado, aseguramos de escuchar su mensaje
           if (change.type === "added" || change.type === "modified") {
             if (!quoteUnsubscribes.has(guestId)) {
-              // Escuchar cambios específicos de la cita de este invitado
               const quoteRef = doc(guestsRef, guestId, "quotes", "quote");
 
               const qUnsub = onSnapshot(
@@ -61,6 +82,13 @@ export const GuestQuotesService = {
                         },
                       );
 
+                      const existingMsg = messagesMap.get(guestId);
+                      const currentLeido = qData.leido || false;
+
+                      const initialSortLeido = existingMsg
+                        ? existingMsg.sortLeido
+                        : currentLeido;
+
                       messagesMap.set(guestId, {
                         id: guestId,
                         autor: guestData.nombre || "Invitado",
@@ -70,7 +98,8 @@ export const GuestQuotesService = {
                         timestamp: qData.fechaCreacion?.toMillis
                           ? qData.fechaCreacion.toMillis()
                           : Date.now(),
-                        leido: qData.leido || false,
+                        leido: currentLeido,
+                        sortLeido: initialSortLeido,
                       });
                     } else {
                       messagesMap.delete(guestId);
@@ -79,11 +108,7 @@ export const GuestQuotesService = {
                     messagesMap.delete(guestId);
                   }
 
-                  // Emitir el array actualizado y ORDENADO (más recientes primero)
-                  const sortedMessages = Array.from(messagesMap.values()).sort(
-                    (a, b) => b.timestamp - a.timestamp,
-                  );
-                  callback(sortedMessages);
+                  notifyChanges();
                 },
                 (error) => {
                   console.warn(
@@ -93,37 +118,28 @@ export const GuestQuotesService = {
               );
               quoteUnsubscribes.set(guestId, qUnsub);
             } else {
-              // Si el invitado se actualiza pero el listener ya existe, solo actualizamos su nombre/grupo
-              if (messagesMap.has(guestId)) {
-                const existingMsg = messagesMap.get(guestId);
+              // Si el invitado se actualiza (ej: cambia su nombre) pero el listener ya existe
+              const existingMsg = messagesMap.get(guestId);
+              if (existingMsg) {
                 messagesMap.set(guestId, {
                   ...existingMsg,
                   autor: guestData.nombre || "Invitado",
                   parentesco: guestData.grupo || "Invitado",
                 });
-
-                // Emitir nuevamente ordenado
-                const sortedMessages = Array.from(messagesMap.values()).sort(
-                  (a, b) => b.timestamp - a.timestamp,
-                );
-                callback(sortedMessages);
+                notifyChanges();
               }
             }
           }
 
-          // Si se elimina al invitado, limpiamos sus listeners de mensajes
+          // Si se elimina al invitado, limpiamos sus listeners
           if (change.type === "removed") {
-            if (quoteUnsubscribes.has(guestId)) {
-              quoteUnsubscribes.get(guestId)();
+            const unsub = quoteUnsubscribes.get(guestId);
+            if (unsub) {
+              unsub();
               quoteUnsubscribes.delete(guestId);
             }
             messagesMap.delete(guestId);
-
-            // Emitir nuevamente ordenado
-            const sortedMessages = Array.from(messagesMap.values()).sort(
-              (a, b) => b.timestamp - a.timestamp,
-            );
-            callback(sortedMessages);
+            notifyChanges();
           }
         });
       },
@@ -176,7 +192,7 @@ export const GuestQuotesService = {
     await batch.commit();
   },
 
-  getGuestMessages: async (invitationId: string) => {
+  getGuestMessages: async (invitationId: string): Promise<GuestQuoteMap[]> => {
     try {
       if (!invitationId) return [];
 
@@ -214,12 +230,11 @@ export const GuestQuotesService = {
                     quoteData.fechaCreacion.seconds * 1000,
                   ).toLocaleDateString()
                 : "Reciente",
-              // Aseguramos que retorne el timestamp para poder ordenar
               timestamp: quoteData.fechaCreacion?.toMillis
                 ? quoteData.fechaCreacion.toMillis()
                 : Date.now(),
               leido: quoteData.leido || false,
-            };
+            } as GuestQuoteMap;
           }
         }
 
@@ -228,9 +243,7 @@ export const GuestQuotesService = {
 
       const results = await Promise.all(messagesPromises);
 
-      // Filtramos los nulos y ORDENAMOS por timestamp antes de regresar los datos
-      const validMessages = results.filter((msg) => msg !== null);
-      return validMessages.sort((a, b) => b.timestamp - a.timestamp);
+      return results.filter((msg): msg is GuestQuoteMap => msg !== null);
     } catch (error) {
       console.error("Error fetching guest messages:", error);
       throw error;
