@@ -1,21 +1,36 @@
-export type FormObject = {
-  id: string;
-  asistencia: boolean | string;
-  confirmados: string;
-  mensaje: string;
+import { Timestamp, FieldValue } from "firebase/firestore";
+
+export type GuestFormData = {
+  id?: string; // Opcional al registrar
+  nombre: string;
+  invitados: number;
+  asistencia: boolean | null;
+  confirmados: number | null;
+  notaInvitado: string | null;
+  telefono: string | null;
+  notaAnfitrion: string | null;
+  cambiosPermitidos: boolean;
 };
 
-export type SheetData = {
+export type Guest = {
   id: string;
   nombre: string;
-  pases: string;
-  confirmados: string;
-  asistencia: string;
-  mensaje: string;
-  cambiosPermitidos: string;
+  invitados: number;
+  asistencia: boolean | null;
+  confirmados: number | null;
+  notaAnfitrion: string | null;
+  tieneTelefono: boolean;
+  notaInvitado: string | null;
+  cambiosPermitidos: boolean;
+  fechaCreacion: Timestamp | FieldValue | null;
+  ultimaModificacion: Timestamp | FieldValue | null;
 };
 
-export type FormObjectKeys = keyof FormObject;
+export type GuestContactInfo = {
+  telefono: string | null;
+};
+
+export type GuestFormDataKeys = keyof GuestFormData;
 
 export interface GalleryImage {
   src: string; // Ruta de la imagen de alta resolución para PhotoSwipe
@@ -24,4 +39,97 @@ export interface GalleryImage {
   width: number; // Ancho de la imagen de alta resolución
   height: number; // Alto de la imagen de alta resolución
   thumb: string; // Ruta de la miniatura/imagen para React-Slick
+}
+
+export interface DashboardStats {
+  total: number;
+  confirmed: number;
+  rejected: number;
+  pending: number;
+  count: number;
+}
+
+export type FilterType = "all" | "confirmed" | "pending" | "rejected";
+
+export interface FilterCounts {
+  all: number;
+  confirmed: number;
+  rejected: number;
+  pending: number;
+}
+
+export interface ConfirmModalState {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  isDanger: boolean;
+  isLoading: boolean;
+  action: (() => Promise<void>) | null;
+}
+
+export interface Invitation {
+  id: string;
+  nombre: string;
+  fecha: Timestamp;
+  ubicacion: string;
+  tipo: string;
+  imagenPortada?: string;
+  recepcion: {
+    nombreSalon: string;
+    direccion: string;
+    enlaceMaps: string;
+    hora: string;
+  };
+  ceremonia: {
+    nombreTemplo: string;
+    direccion: string;
+    enlaceMaps: string;
+    hora: string;
+  };
+}
+
+// Tipo auxiliar para las escalas de color completas (50-950)
+type ColorScale = {
+  DEFAULT: string;
+  50: string;
+  100: string;
+  200: string;
+  300: string;
+  400: string;
+  500: string;
+  600: string;
+  700: string;
+  800: string;
+  900: string;
+  950: string;
+};
+
+export type ThemeColors = {
+  // Colores base del proyecto
+  primary: ColorScale;
+  accent: string;
+  "cool-gray": string;
+  "button-dark": string;
+  "button-light": string;
+  "border-button": string;
+  paper: string;
+  gold: ColorScale;
+  danger: ColorScale;
+  sand: ColorScale & { light: string }; // Incluye 'light' por compatibilidad con tu código actual
+  charcoal: ColorScale;
+  status: {
+    confirmed: string;
+    pending: string;
+    rejected: string;
+  };
+};
+
+interface GuestQuote {
+  id: string;
+  autor: string;
+  parentesco: string;
+  mensaje: string;
+  fecha: string;
+  timestamp: number;
+  leido: boolean;
 }

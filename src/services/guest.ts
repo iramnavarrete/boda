@@ -1,10 +1,6 @@
-import { FormObject, SheetData } from "../../types/types";
+import { GuestFormData, Guest } from "../../types/types";
 
-export const getGuestData = async ({
-  id,
-}: {
-  id: string;
-}): Promise<SheetData> => {
+export const getGuestData = async ({ id }: { id: string }): Promise<Guest> => {
   const res = await fetch(`/api/guest/${id}`);
   if (!res.ok) {
     const errData = await res.json();
@@ -18,7 +14,7 @@ export const updateGuestData = async ({
   data,
 }: {
   id: string;
-  data: FormObject;
+  data: GuestFormData;
 }) => {
   const res = await fetch("/api/guest/confirm", {
     method: "PUT",
