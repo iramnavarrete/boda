@@ -152,13 +152,7 @@ const Header = ({
           href: "/#dashboard",
           icon: <AppWindow size={18} />,
           active: activeSection === "dashboard",
-        },
-        {
-          label: "Paquetes",
-          href: "/#paquetes",
-          icon: <Gem size={18} />,
-          active: activeSection === "paquetes",
-        },
+        }
       ];
     }
 
@@ -283,13 +277,13 @@ const Header = ({
         <div className="flex items-center gap-3">
           <div className="hidden md:flex items-center gap-2">
             {variant === "landing" ? (
-              <button
-                onClick={onCotizar}
+              <a
+                href="/#paquetes"
                 className="flex items-center gap-2 px-5 py-2.5 bg-primary text-paper rounded-full text-xs font-bold uppercase tracking-widest hover:bg-charcoal-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
               >
                 <Gem size={14} className="text-gold" />
-                <span>Cotizar</span>
-              </button>
+                <span>Paquetes</span>
+              </a>
             ) : (
               <button
                 onClick={AuthService.logout}

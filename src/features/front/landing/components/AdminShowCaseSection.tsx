@@ -340,7 +340,12 @@ const AdminShowcase: React.FC = () => {
         </div>
         <div className="mx-auto">
           <TextureButton
-            onClick={() => window.open("https://bodajy.info/admin", "_blank")}
+            onClick={() =>
+              window.open(
+                `https://wa.me/+526142537718?text=${encodeURIComponent("Hola me comunico para saber más información sobre el demo de la gestión de invitados para una invitación digital.")}`,
+                "_blank",
+              )
+            }
           >
             Solicita tu Demo
           </TextureButton>

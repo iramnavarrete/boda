@@ -195,7 +195,7 @@ function DemoSection() {
 
             <TextureButton
               className="hidden lg:block"
-              onClick={() => window.open("https://bodajy.info", "_blank")}
+              onClick={() => window.open("https://bodajy.info/i/josue-yaneth", "_blank")}
             >
               <div className="flex gap-2">
                 Ver Demo en Vivo <ExternalLink size={16} />

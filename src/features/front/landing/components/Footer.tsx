@@ -85,7 +85,11 @@ const Footer: React.FC = () => {
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-gold transition-colors">
+                <a
+                  href={`https://wa.me/+526142537718?text=${encodeURIComponent("Hola me comunico para saber màs información sobre las invitaciones digitales.")}`}
+                  target="_blank"
+                  className="hover:text-gold transition-colors"
+                >
                   Contacto
                 </a>
               </li>

@@ -1,10 +1,32 @@
-import { Check, MessageCircle, Star } from "lucide-react";
-import SectionTitle from "./SectionTitle";
+import { Check, MessageCircle, Star, Sparkles, Clock } from "lucide-react";
+import React, { ReactNode } from "react";
+
+interface SectionTitleProps {
+  children: ReactNode;
+  subtitle: string;
+}
+
+const SectionTitle: React.FC<SectionTitleProps> = ({ children, subtitle }) => (
+  <div className="text-center mb-12 px-4 relative z-10">
+    <span className="inline-block py-1 px-5 rounded-full border border-[#C5A669]/30 text-[#58624F] text-[10px] font-bold tracking-[0.25em] uppercase mb-4 bg-[#F9F7F2]/80 backdrop-blur-sm">
+      {subtitle}
+    </span>
+    <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-[#58624F] mb-6 drop-shadow-sm leading-tight">
+      {children}
+    </h2>
+    <div className="flex items-center justify-center gap-2 opacity-60">
+      <div className="w-8 h-[1px] bg-[#C5A669]"></div>
+      <div className="w-1.5 h-1.5 rotate-45 border border-[#C5A669]"></div>
+      <div className="w-8 h-[1px] bg-[#C5A669]"></div>
+    </div>
+  </div>
+);
 
 interface PricingCardProps {
   title: string;
   subtitle: string;
   price: string;
+  originalPrice?: string;
   features: string[];
   recommended?: boolean;
   whatsappLink: string;
@@ -14,6 +36,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
   title,
   subtitle,
   price,
+  originalPrice,
   features,
   recommended,
   whatsappLink,
@@ -39,13 +62,26 @@ const PricingCard: React.FC<PricingCardProps> = ({
       <p className="text-[10px] uppercase tracking-[0.2em] text-charcoal-400 font-semibold">
         {subtitle}
       </p>
-      <div className="my-6 flex justify-center items-baseline text-primary">
-        <span className="text-xl font-light mr-1">$</span>
-        <span className="text-5xl font-serif">{price}</span>
-        <span className="text-sm font-medium text-charcoal-400 ml-2">MXN</span>
+
+      {/* Sección de Precio Actualizada para mostrar Descuento */}
+      <div className="my-6 flex flex-col items-center justify-center text-primary">
+        {originalPrice && (
+          <div className="text-sm text-charcoal-400/60 font-medium line-through decoration-red-400/60 mb-1">
+            ${originalPrice} MXN
+          </div>
+        )}
+        <div className="flex items-baseline">
+          <span className="text-xl font-light mr-1">$</span>
+          <span className="text-5xl font-serif">{price}</span>
+          <span className="text-sm font-medium text-charcoal-400 ml-2">
+            MXN
+          </span>
+        </div>
       </div>
+
       <div className="w-12 h-[1px] bg-border-button mx-auto"></div>
     </div>
+
     <div className="space-y-4 mb-10 flex-grow relative z-10">
       {features.map((feat, i) => (
         <div key={i} className="flex items-start gap-3">
@@ -60,6 +96,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
         </div>
       ))}
     </div>
+
     <a
       href={whatsappLink}
       target="_blank"
@@ -80,17 +117,62 @@ const PricingCard: React.FC<PricingCardProps> = ({
 );
 
 const Pricing: React.FC = () => {
-  const phoneNumber = "5215555555555";
+  const phoneNumber = "+526142537718";
+
+  // --- LÓGICA DINÁMICA DE PROMOCIÓN ---
+  // Cambia esto a false cuando expire la promoción el 15 de abril
+  const isPromoActive = true;
+
+  // Generador de enlaces dinámico
+  const generateWhatsAppLink = (
+    pkgName: string,
+    price: string,
+    hasDiscount: boolean,
+  ) => {
+    const message = hasDiscount
+      ? `Hola, me interesa el Paquete ${pkgName} con descuento de apertura de $${price} MXN.`
+      : `Hola, me interesa el Paquete ${pkgName} por $${price} MXN.`;
+    return `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+  };
+
   return (
     <section id="paquetes" className="py-32 bg-white relative">
       <div className="max-w-6xl mx-auto px-4 relative z-10">
         <SectionTitle subtitle="Inversión">Nuestros Paquetes</SectionTitle>
+
+        {/* Banner de Promoción condicional */}
+        {isPromoActive && (
+          <div className="max-w-2xl mx-auto mb-16 relative group animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="absolute inset-0 bg-gold/5 transform translate-x-2 translate-y-2 rounded-2xl -z-10 transition-transform group-hover:translate-x-3 group-hover:translate-y-3"></div>
+            <div className="bg-paper border border-gold/30 rounded-2xl p-6 md:p-8 text-center shadow-sm relative z-10 flex flex-col items-center justify-center overflow-hidden">
+              <div className="absolute inset-0 opacity-30 bg-[url('/img/textures/cream-paper.png')] pointer-events-none"></div>
+
+              <div className="bg-gold text-white text-[10px] font-bold px-4 py-1.5 rounded-full uppercase tracking-widest mb-3 flex items-center gap-1.5 shadow-sm relative z-10">
+                <Sparkles size={12} /> Promoción por Apertura
+              </div>
+
+              <p className="text-primary font-medium text-base md:text-lg relative z-10">
+                Aprovecha nuestros precios especiales de lanzamiento.
+              </p>
+              <p className="text-sm text-charcoal-400 mt-2 flex items-center justify-center gap-1.5 font-bold relative z-10">
+                <Clock size={14} className="text-gold" /> Válido solo hasta el{" "}
+                <span className="text-gold">15 de abril</span>
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 items-center">
           <PricingCard
             title="Plus"
             subtitle="Esencial & Elegante"
-            price="1,250"
-            whatsappLink={`https://wa.me/${phoneNumber}?text=Hola,%20me%20interesa%20el%20Paquete%20Plus%20de%20$1200%20MXN`}
+            price={isPromoActive ? "1,000" : "1,250"}
+            originalPrice={isPromoActive ? "1,250" : undefined}
+            whatsappLink={generateWhatsAppLink(
+              "Plus",
+              isPromoActive ? "1,000" : "1,250",
+              isPromoActive,
+            )}
             features={[
               "Animación de apertura de invitación",
               "Portada con una o varias imágenes",
@@ -107,9 +189,14 @@ const Pricing: React.FC = () => {
           <PricingCard
             title="Diamante"
             subtitle="Gestión Total"
-            price="1,900"
+            price={isPromoActive ? "1,500" : "1,900"}
+            originalPrice={isPromoActive ? "1,900" : undefined}
             recommended={true}
-            whatsappLink={`https://wa.me/${phoneNumber}?text=Hola,%20me%20interesa%20el%20Paquete%20Diamante%20de%20$1600%20MXN`}
+            whatsappLink={generateWhatsAppLink(
+              "Diamante",
+              isPromoActive ? "1,500" : "1,900",
+              isPromoActive,
+            )}
             features={[
               "Todo lo incluido en Plus",
               "Gestión Avanzada de Invitados (RSVP)",

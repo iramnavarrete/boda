@@ -12,7 +12,6 @@ import desktop from "../../../../public/lottie/envolpeDesktop.json";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import localFont from "next/font/local";
-import dynamic from "next/dynamic";
 import GiftsTable from "../../../features/front/components/sections/gifts-table";
 import QrPhotos from "../../../features/front/components/sections/qr-photos";
 import { AudioController } from "../../../features/front/components/sections/music";
@@ -21,11 +20,6 @@ import FlowersCoverUp from "@/icons/flowers-cover-up";
 import FlowersCoverDown from "@/icons/flowers-cover-down";
 import { brideName, groomName, weddingDate } from "@/constants/constants";
 import CustomLottie from "@/features/shared/components/CustomLottie";
-
-const Lottie = dynamic(() => import("react-lottie"), {
-  ssr: false,
-  loading: () => <div className="w-screen h-screen bg-accent fixed z-50" />,
-});
 
 const newIconScript = localFont({
   src: "../../../fonts/New-Icon-Script.otf",
