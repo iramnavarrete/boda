@@ -1,6 +1,6 @@
 import { GuestService } from "@/services/guestService";
 import { GuestQuote } from "@/types";
-import { CheckCircle2, MessageCircle, Search } from "lucide-react";
+import { CheckCircle2, MessageCircle, Search, X } from "lucide-react";
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import GuestQuoteCard from "./GuestQuoteCard";
@@ -113,9 +113,9 @@ const GuestQuotesList: FC<{ invitationId: string }> = ({ invitationId }) => {
             {counts.unread > 0 && (
               <button
                 onClick={markAllAsRead}
-                className="hidden md:flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-full text-xs uppercase tracking-widest font-bold hover:bg-black transition-all shadow-xl hover:-translate-y-0.5"
+                className="hidden md:flex items-center gap-2 bg-primary text-white px-5 py-3 rounded-full text-xs uppercase tracking-widest font-bold hover:bg-black transition-all shadow-xl hover:-translate-y-0.5"
               >
-                <CheckCircle2 size={16} /> Marcar Leídos
+                <CheckCircle2 size={16} /> Marcar todos como leídos
               </button>
             )}
           </div>
@@ -165,32 +165,26 @@ const GuestQuotesList: FC<{ invitationId: string }> = ({ invitationId }) => {
                 );
               })}
             </div>
-
-            <div className="relative w-full md:w-64 pb-4 md:pb-3">
-              <Search
-                size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 md:-translate-y-[calc(50%+6px)] text-charcoal-500"
-              />
+            <div className="relative w-full md:w-64 mb-4 md:mb-3">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-300 group-focus-within:text-gold text-stone-custom">
+                <Search size={18} />
+              </div>
               <input
-                type="text"
-                placeholder="Buscar..."
+                className="w-full pl-10 pr-10 py-3 bg-white/90 border border-sand rounded-xl outline-none focus:ring-0 focus:ring-gold focus:border-gold/50 transition-all duration-300 text-sm text-charcoal placeholder:text-stone-light shadow-sm"
+                placeholder={`Buscar entre ${filteredMessages.length} mensaje${filteredMessages.length > 1 ? "s" : ""}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-white/70 hover:bg-white focus:bg-white border border-sand-200] focus:border-gold-500/50 rounded-lg text-sm outline-none transition-all placeholder:text-charcoal-500 text-charcoal-800 shadow-sm focus:shadow-md"
               />
+              {searchQuery !== "" && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-custom hover:text-red-400 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
           </div>
-
-          {counts.unread > 0 && (
-            <div className="mt-6 md:hidden flex justify-end">
-              <button
-                onClick={markAllAsRead}
-                className="flex items-center gap-1.5 text-xs uppercase tracking-widest font-bold text-gold-500 hover:text-[#8F7546]"
-              >
-                <CheckCircle2 size={14} /> Marcar Leídos
-              </button>
-            </div>
-          )}
         </div>
 
         {filteredMessages.length === 0 && !isLoading && (

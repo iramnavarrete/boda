@@ -74,7 +74,7 @@ export default function SearchAndFilterBar({
       case "confirmed":
         return "text-green-700 bg-green-50 border-green-200 ring-1 ring-green-100";
       case "pending":
-        return "text-gold bg-paper/30 border-sand ring-1 ring-gold/20"; // Gold theme
+        return "text-gold bg-sand/30 border-sand ring-1 ring-gold/20";
       case "rejected":
         return "text-red-700 bg-red-50 border-red-200 ring-1 ring-red-100";
       default:

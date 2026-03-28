@@ -260,7 +260,7 @@ const GuestStatsPieChart = ({ stats }: { stats: any }) => {
             </div>
           </div>
         </div>
-        <div className="flex h-full items-center justify-center">
+        <div className="flex h-full items-center justify-center w-full">
           <div className="relative flex-shrink-0 flex items-center justify-center p-2">
             <canvas ref={canvasRef} />
           </div>
