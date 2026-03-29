@@ -358,23 +358,12 @@ const Header = ({
                 <div className="pt-2">
                   {variant === "landing" ? (
                     <>
-                      <MenuItem
-                        icon={<MessageCircle size={18} />}
-                        label="Contactar Soporte"
-                        href="#"
-                        onClick={handleMobileClose}
-                        variant={variant}
-                      />
-                      <button
-                        onClick={() => {
-                          onCotizar && onCotizar();
-                          handleMobileClose();
-                        }}
+                      <a
+                        href="/#paquetes"
                         className="flex items-center justify-center gap-3 w-full p-3 rounded-xl text-paper bg-primary hover:bg-charcoal-700 transition-colors font-medium text-sm mt-2 shadow-md"
                       >
-                        <Gem size={18} className="text-gold" /> Solicitar
-                        Cotización
-                      </button>
+                        <Gem size={18} className="text-gold" /> Paquetes
+                      </a>
                     </>
                   ) : (
                     <button
