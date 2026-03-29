@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     siteName: "JN Invitaciones",
     images: [
       {
-        url: "/img/cover_jn.png",
+        url: "https://bodajy.info/img/cover_jn.png",
         width: 1108,
         height: 410,
         alt: "Invitaciones Digitales Elegantes para Eventos",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
     title: "Invitaciones Digitales Premium | Promoción de Apertura",
     description:
       "La forma más elegante de invitar y gestionar la asistencia de tus invitados. ¡Aprovecha precios de lanzamiento hasta el 15 de abril!",
-    images: ["/img/cover_jn.png"],
+    images: ["https://bodajy.info/img/cover_jn.png"],
   },
 };
 
