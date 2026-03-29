@@ -116,7 +116,7 @@ function DemoSection() {
               <div className="flex flex-1 items-center justify-center mt-16">
                 <TextureButton
                   className="lg:hidden"
-                  onClick={() => window.open("https://bodajy.info", "_blank")}
+                  onClick={() => window.open("https://bodajy.info/i/josue-yaneth", "_blank")}
                 >
                   <div className="flex gap-2">
                     Ver Demo en Vivo <ExternalLink size={16} />
