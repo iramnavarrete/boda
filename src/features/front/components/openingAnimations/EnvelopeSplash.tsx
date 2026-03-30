@@ -59,17 +59,21 @@ export default function EnvelopeSplash({
       onOpen(); // Le avisamos al padre (Home) que cambie su estado a abierto
     }, 400);
 
-    document.body.classList.remove("overflow-hidden");
-
     setTimeout(() => {
       setEnvolpeDivHidden(true); // Ocultamos el div de la carta completamente
+      document.body.classList.remove("overflow-hidden"); // Mostramos el restante de la invitación
     }, 2400);
   };
 
   if (envolpeDivHidden) return null;
 
   return (
-    <div className={cn("fixed w-full h-full overflow-hidden z-50", className)}>
+    <div
+      className={cn(
+        "fixed w-full h-full max-h-[100dvh] overflow-hidden z-50",
+        className,
+      )}
+    >
       {/* Overlay que se desvanece cuando el Lottie carga */}
       <motion.div
         className="absolute inset-0 bg-accent z-[51]"
@@ -92,7 +96,7 @@ export default function EnvelopeSplash({
           autoplay: false,
           rendererSettings: {
             preserveAspectRatio: "xMidYMid slice",
-            className: "cursor-default z-[51] !w-full !h-screen",
+            className: "cursor-default z-[51] !w-full !h-screen !max-h-[100dvh]",
           },
         }}
         isClickToPauseDisabled
