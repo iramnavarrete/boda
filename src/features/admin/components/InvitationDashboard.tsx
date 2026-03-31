@@ -77,7 +77,6 @@ export const MessagesCarousel: FC<{ invitationId: string }> = ({
 
   return (
     <div className="bg-white/80 p-6 rounded-[24px] border border-sand shadow-sm flex flex-col h-full hover:shadow-[0_8px_30px_rgba(197,166,105,0.1)] transition-all duration-300 relative overflow-hidden group font-sans min-h-[320px]">
-
       {/* HEADER DEL CARRUSEL */}
       <div className="flex items-center justify-between mb-6 relative z-10">
         <div className="flex items-center gap-3">
@@ -141,7 +140,7 @@ export const MessagesCarousel: FC<{ invitationId: string }> = ({
               )}
 
               <p className="text-stone-600 font-serif text-lg md:text-xl italic leading-relaxed mb-6 line-clamp-3">
-                {currentMessage.mensaje}
+                {`"${currentMessage.mensaje}"`}
               </p>
               <div className="flex flex-col items-center gap-1.5">
                 <span className="text-xs font-bold text-primary bg-paper border border-sand px-4 py-1.5 rounded-full uppercase tracking-widest shadow-sm">
