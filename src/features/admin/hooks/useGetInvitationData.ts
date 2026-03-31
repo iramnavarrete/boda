@@ -6,15 +6,18 @@ import { Invitation } from "@/types";
 export function useGetInvitationData(invitationId: string) {
   const [invitationData, setInvitationData] = useState<Invitation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>();
 
   useEffect(() => {
     const fetchInvitations = async () => {
-      const invitation = await InvitationsService.getInvitation(invitationId);
+      const { invitation, error } =
+        await InvitationsService.getInvitation(invitationId);
       setInvitationData(invitation);
       setIsLoading(false);
+      setError(error);
     };
     fetchInvitations();
   }, []);
 
-  return { invitationData, isLoading };
+  return { invitationData, isLoading, error };
 }

@@ -7,6 +7,8 @@ import {
   doc,
   setDoc,
   updateDoc,
+  FirestoreError,
+  FirestoreErrorCode,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Invitation } from "@/types";
@@ -89,18 +91,26 @@ export const InvitationsService = {
     }
   },
 
-  getInvitation: async (invitationId: string) => {
+  getInvitation: async (
+    invitationId: string,
+  ): Promise<{
+    invitation: Invitation | null;
+    error: FirestoreErrorCode | null;
+  }> => {
     try {
       const privateRef = doc(db, "invitations", invitationId);
       const snapshot = await getDoc(privateRef);
 
       if (snapshot.exists()) {
-        return snapshot.data() as Invitation;
+        return { invitation: snapshot.data() as Invitation, error: null };
       }
-      return null;
+      return { invitation: null, error: null };
     } catch (error) {
-      console.error("Error obteniendo invitación:", error);
-      return null;
+      const firestoreError = error as FirestoreError;
+      return {
+        invitation: null,
+        error: firestoreError.code || "Error desconocido",
+      };
     }
   },
 };

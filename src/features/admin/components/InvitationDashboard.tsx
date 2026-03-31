@@ -409,21 +409,33 @@ const ActivityItem = ({
 
 export default function InvitationDashboard({
   invitationId,
-  invitationData
+  invitationData,
 }: {
   invitationId: string;
-  invitationData: Invitation | null
+  invitationData: Invitation | null;
 }) {
   const user = useAuthUser();
   const { toast } = useToast();
+
   const router = useRouter();
 
   const { guests, isLoadingGuests, error } = useGuestsData(invitationId, user);
-  
+
   const stats = useGuestsStats(guests);
 
+  useEffect(() => {
+    if (error) {
+      if (error === "permission-denied" || error === "unauthenticated") {
+        router.replace("/admin/invitations");
+      } else {
+        toast("Ocurrió un error", "error");
+      }
+    }
+  }, [error, router]);
+
   if (isLoadingGuests) return <Loader fullscreen />;
-  if (error) toast("Ocurrió un error", "error");
+
+  if (error === "permission-denied") return null;
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:px-6 py-4 md:py-10 space-y-6 duration-700">
@@ -558,7 +570,9 @@ export default function InvitationDashboard({
                       .replaceAll("/", "")
                       .toLocaleLowerCase()}
                 </p>
-                <p className="text-xs text-white/60 mt-1">{invitationData?.recepcion.hora}</p>
+                <p className="text-xs text-white/60 mt-1">
+                  {invitationData?.recepcion.hora}
+                </p>
               </div>
             </div>
 
