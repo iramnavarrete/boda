@@ -51,7 +51,11 @@ export const GuestQuotesService = {
     const mainUnsub = onSnapshot(
       q,
       (snapshot) => {
-        snapshot.docChanges().forEach((change) => {
+        const docs = snapshot.docChanges();
+        if (snapshot.empty) {
+          callback([]);
+        }
+        docs.forEach((change) => {
           const guestId = change.doc.id;
           const guestData = change.doc.data();
 
