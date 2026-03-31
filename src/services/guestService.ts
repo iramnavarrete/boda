@@ -38,7 +38,7 @@ export const GuestService = {
         callback(
           data.sort(
             (a, b) =>
-              // @ts-ignore
+              // @ts-expect-error Se ignora este error por compatibilidad de campos
               (b.fechaCreacion?.seconds || 0) - (a.fechaCreacion?.seconds || 0),
           ),
         );

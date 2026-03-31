@@ -53,7 +53,7 @@ const GuestQuotesList: FC<{ invitationId: string }> = ({ invitationId }) => {
         currentStatus,
       );
     },
-    [],
+    [invitationId],
   );
 
   const markAllAsRead = async () => {

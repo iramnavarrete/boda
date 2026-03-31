@@ -7,6 +7,8 @@ import {
   MailOpen,
   ArrowRight,
   LogOut,
+  Plus,
+  Edit2,
 } from "lucide-react";
 import { InvitationsService } from "@/services/invitationsService";
 import { useAuthUser } from "@/features/shared/contexts/AuthUserContext";
@@ -18,8 +20,17 @@ import { AuthService } from "@/services/authService";
 import LoginFlowersIcon from "@/icons/login-flowers-icon";
 import { formatTimeStamp } from "@/utils/formatters";
 import { Invitation } from "@/types";
+import CreateInvitationModal from "./CreateInvitationModal";
 
-const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
+const InvitationCard = ({
+  invitation,
+  isAdmin,
+  onEdit
+}: {
+  invitation: Invitation;
+  isAdmin: boolean;
+  onEdit: (inv: Invitation) => void;
+}) => {
   const [days, hours] = useCountdown(invitation.fecha.toDate());
 
   return (
@@ -27,6 +38,17 @@ const InvitationCard = ({ invitation }: { invitation: Invitation }) => {
       href={`/admin/invitations/${invitation.id}/dashboard`}
       className="group relative flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-sand transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(197,166,105,0.2)] hover:-translate-y-1 hover:border-sand-400"
     >
+      {isAdmin && (
+        <button
+          onClick={(e) => {
+            e.preventDefault(); // Evita que se abra el enlace al Dashboard
+            onEdit(invitation);
+          }}
+          className="absolute top-3 left-3 z-30 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-[#2C2C29] hover:text-[#C5A669] hover:bg-white transition-all shadow-sm border border-white/40"
+        >
+          <Edit2 size={14} />
+        </button>
+      )}
       {/* SECCIÓN IMAGEN */}
       <div className="relative h-48 w-full overflow-hidden bg-paper">
         {/* Overlay degradado */}
@@ -130,6 +152,33 @@ export default function InvitationsListPage() {
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Estados para el administrador Root
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isRootUser, setIsRootUser] = useState(false);
+
+  const [editingInvitation, setEditingInvitation] = useState<Invitation | null>(null);
+
+  const fetchInvitations = async () => {
+    setIsLoading(true);
+    const invites = await InvitationsService.getUserInvitations(user.uid);
+    setInvitations(invites);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    const checkRootStatus = async () => {
+      try {
+        const isAdmin = await InvitationsService.isAdmin(user.uid);
+        setIsRootUser(isAdmin);
+      } catch (error) {
+        console.error("Error verificando permisos de admin:", error);
+      }
+    };
+
+    checkRootStatus();
+    fetchInvitations();
+  }, [user.uid]);
+
   useEffect(() => {
     (async () => {
       const invitations = await InvitationsService.getUserInvitations(user.uid);
@@ -178,7 +227,7 @@ export default function InvitationsListPage() {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-        <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Header de la Sección */}
           <div className="text-center space-y-2 mb-12">
             <h1 className="font-serif text-3xl md:text-4xl text-stone-custom">
@@ -187,6 +236,20 @@ export default function InvitationsListPage() {
             <p className="text-charcoal-400 max-w-lg mx-auto">
               Bienvenido a tu panel. Selecciona el evento que deseas gestionar.
             </p>
+            {/* RENDERIZADO CONDICIONAL SEGURO */}
+            {isRootUser && (
+              <div className="mt-8 pt-4 flex justify-center">
+                <button
+                  onClick={() => {
+                    setEditingInvitation(null);
+                    setIsModalOpen(true);
+                  }}
+                  className="bg-[#2C2C29] hover:bg-black text-white px-6 py-3 rounded-full flex items-center gap-2 font-bold uppercase tracking-widest text-xs transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5 border border-[#2C2C29]"
+                >
+                  <Plus size={16} /> Crear Nueva Invitación
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Contenido Dinámico */}
@@ -194,7 +257,14 @@ export default function InvitationsListPage() {
             <div className="flex flex-wrap justify-center gap-8">
               {invitations.map((inv) => (
                 <div key={inv.id} className="w-full max-w-sm flex-shrink-0">
-                  <InvitationCard invitation={inv} />
+                  <InvitationCard
+                    invitation={inv}
+                    isAdmin={isRootUser}
+                    onEdit={(inv) => {
+                      setEditingInvitation(inv);
+                      setIsModalOpen(true);
+                    }}
+                  />
                 </div>
               ))}
             </div>
@@ -203,6 +273,12 @@ export default function InvitationsListPage() {
           )}
         </div>
       </main>
+      <CreateInvitationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        invitationToEdit={editingInvitation}
+        onSuccess={fetchInvitations}
+      />
     </div>
   );
 }
