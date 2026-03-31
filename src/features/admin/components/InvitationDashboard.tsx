@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   Quote,
   Gem,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import theme from "@/utils/theme";
@@ -27,116 +28,176 @@ import { useGuestsStats } from "../hooks/useGuestsStats";
 import Loader from "@/features/front/components/Loader";
 import TextureButton from "@/features/shared/components/TextureButton";
 import { useRouter } from "next/router";
+import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
+import { GuestQuotesService } from "@/services/guestQuotesService";
+import { DashboardStats, GuestQuote } from "@/types";
 
-const useMessages = () => [
-  {
-    id: 1,
-    author: "Tía Carmen",
-    text: "¡Muchísimas felicidades! Estamos ansiosos por compartir este día tan especial con ustedes. ¡Que viva el amor!",
-    time: "Hace 2 hrs",
-  },
-  {
-    id: 2,
-    author: "Los Ramírez",
-    text: "Gracias por la invitación. Ahí estaremos sin falta para celebrar su unión.",
-    time: "Ayer",
-  },
-  {
-    id: 3,
-    author: "Jorge y Ana",
-    text: "¡Qué emoción! Ya tenemos listos los boletos de avión. Nos vemos pronto.",
-    time: "Hace 2 días",
-  },
-];
-
-// --- COMPONENTE CARRUSEL ---
-
-const MessagesCarousel: FC<{invitationId: string}> = ({invitationId}) => {
-  const messages = useMessages();
+export const MessagesCarousel: FC<{ invitationId: string }> = ({
+  invitationId,
+}) => {
+  const [messages, setMessages] = useState<GuestQuote[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Suscripción a Firestore en tiempo real
+  useEffect(() => {
+    setIsLoading(true);
+    const unsubscribe = GuestQuotesService.subscribeToGuestMessages(
+      invitationId,
+      (allMessages) => {
+        // Extraemos solo los primeros 5 mensajes del arreglo ordenado
+        const top5Messages = allMessages.slice(0, 5);
+        setMessages(top5Messages);
+        setIsLoading(false);
+
+        // Si el índice actual quedó fuera de rango tras una actualización, lo reiniciamos
+        setCurrentIndex((prev) => {
+          if (top5Messages.length === 0) return 0;
+          return prev >= top5Messages.length ? 0 : prev;
+        });
+      },
+      (error) => {
+        console.error("Error cargando mensajes:", error);
+        setIsLoading(false);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [invitationId]);
+
+  const currentMessage = messages[currentIndex];
+
+  // Uso del hook de tiempo (se actualiza cuando cambia el mensaje actual)
+  const timeAgoString = useTimeAgo(currentMessage?.timestamp);
 
   const nextSlide = () =>
     setCurrentIndex((prev) => (prev + 1) % messages.length);
   const prevSlide = () =>
     setCurrentIndex((prev) => (prev - 1 + messages.length) % messages.length);
-  const currentMessage = messages[currentIndex];
 
   return (
-    <div className="bg-white/80 p-6 rounded-2xl border border-sand shadow-sm flex flex-col h-full hover:shadow-[0_8px_30px_rgb(197,166,105,0.1)] transition-all duration-300 relative overflow-hidden group">
+    <div className="bg-white/80 p-6 rounded-[24px] border border-sand shadow-sm flex flex-col h-full hover:shadow-[0_8px_30px_rgba(197,166,105,0.1)] transition-all duration-300 relative overflow-hidden group font-sans min-h-[320px]">
+
+      {/* HEADER DEL CARRUSEL */}
       <div className="flex items-center justify-between mb-6 relative z-10">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-paper rounded-lg text-gold border border-sand">
+          <div className="p-2 bg-paper rounded-lg text-gold border border-sand shadow-sm">
             <MessageCircle size={18} />
           </div>
           <div>
             <h3 className="font-serif text-lg font-semibold text-primary leading-none">
               Felicitaciones
             </h3>
-            <p className="text-[10px] text-charcoal-400 mt-1 uppercase tracking-wider">
+            <p className="text-[10px] text-charcoal-400 mt-1 uppercase tracking-widest font-bold">
               Muro de deseos
             </p>
           </div>
         </div>
         <Link
           href={`/admin/invitations/${invitationId}/quotes`}
-          className="text-xs font-medium text-gold hover:text-primary transition-colors flex items-center gap-1 tracking-wider"
+          className="text-xs font-bold text-gold hover:text-primary transition-colors flex items-center gap-1 tracking-wider uppercase"
         >
-          VER TODOS <ChevronRight size={12} />
+          Ver Todos <ChevronRight size={14} />
         </Link>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10 min-h-[160px]">
-        <div className="absolute top-0 left-0 text-gold/10">
-          <Quote size={40} className="transform rotate-180" />
+      {/* ESTADO DE CARGA */}
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center relative z-10 min-h-[160px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gold/30 border-t-gold"></div>
         </div>
-        <div
-          className="px-4 animate-in fade-in slide-in-from-right-4 duration-300 w-full"
-          key={currentIndex}
-        >
-          <p className="text-stone-600 font-serif text-lg italic leading-relaxed mb-4 line-clamp-3">
-            "{currentMessage.text}"
-          </p>
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs font-bold text-primary bg-paper border border-[#EBE5DA] px-4 py-1.5 rounded-full uppercase tracking-widest">
-              {currentMessage.author}
-            </span>
-            <span className="text-[10px] text-stone-400 mt-1">
-              {currentMessage.time}
-            </span>
+      ) : messages.length === 0 ? (
+        /* ESTADO VACÍO */
+        <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10 min-h-[160px] opacity-70">
+          <div className="w-12 h-12 bg-sand-light border border-sand rounded-full flex items-center justify-center mb-3 text-stone-300">
+            <MessageCircle size={20} />
           </div>
+          <p className="text-sm font-medium text-stone-500">
+            Aún no hay mensajes
+          </p>
+          <p className="text-xs text-stone-400 mt-1 max-w-[200px]">
+            Los buenos deseos de tus invitados aparecerán aquí.
+          </p>
         </div>
-      </div>
+      ) : (
+        /* CONTENIDO DEL CARRUSEL */
+        <>
+          <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10 min-h-[160px]">
+            <div className="absolute top-0 left-0 text-gold/10 pointer-events-none">
+              <Quote size={40} className="transform rotate-180" />
+            </div>
 
-      <div className="flex items-center justify-between mt-6 pt-4 border-t border-sand-light relative z-10">
-        <div className="flex gap-1">
-          {messages.map((_, idx) => (
             <div
-              key={idx}
-              className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentIndex ? "w-6 bg-gold" : "w-1.5 bg-sand"}`}
-            />
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={prevSlide}
-            className="p-2 rounded-full border border-sand text-stone-400 hover:text-gold hover:border-gold hover:bg-sand-light transition-all active:scale-95"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="p-2 rounded-full border border-sand text-stone-400 hover:text-gold hover:border-gold hover:bg-sand-light transition-all active:scale-95"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
-      <div className="absolute bottom-0 right-0 w-32 h-32 bg-gold-10 rounded-tl-full opacity-30 pointer-events-none" />
+              className="px-4 animate-in fade-in slide-in-from-right-4 duration-300 w-full relative pt-8"
+              key={currentMessage.id} // Forza re-render de animación al cambiar
+            >
+              {/* Etiqueta Nuevo (Centrada en la parte superior) */}
+              {!currentMessage.leido && (
+                <div className="absolute top-0 right-0 flex justify-center">
+                  <span className="bg-gold text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm flex items-center gap-1 animate-pulse">
+                    <Sparkles size={10} /> Nuevo
+                  </span>
+                </div>
+              )}
+
+              <p className="text-stone-600 font-serif text-lg md:text-xl italic leading-relaxed mb-6 line-clamp-3">
+                {currentMessage.mensaje}
+              </p>
+              <div className="flex flex-col items-center gap-1.5">
+                <span className="text-xs font-bold text-primary bg-paper border border-sand px-4 py-1.5 rounded-full uppercase tracking-widest shadow-sm">
+                  {currentMessage.autor}
+                </span>
+
+                <span className="text-[10px] text-stone-400 font-medium capitalize-first mt-1">
+                  {timeAgoString || currentMessage.fecha}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* CONTROLES DEL CARRUSEL (Solo si hay más de 1 mensaje) */}
+          {messages.length > 1 && (
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-sand relative z-10">
+              <div className="flex gap-1.5">
+                {messages.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      idx === currentIndex
+                        ? "w-6 bg-gold"
+                        : "w-1.5 bg-stone-200 hover:bg-gold/50"
+                    }`}
+                    aria-label={`Ir al mensaje ${idx + 1}`}
+                  />
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={prevSlide}
+                  className="p-2 rounded-full border border-sand text-stone-400 hover:text-gold hover:border-gold hover:bg-sand-light transition-all active:scale-95 shadow-sm"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="p-2 rounded-full border border-sand text-stone-400 hover:text-gold hover:border-gold hover:bg-sand-light transition-all active:scale-95 shadow-sm"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Decoración de Fondo (Esquina inferior derecha) */}
+      <div className="absolute bottom-0 right-0 w-32 h-32 bg-gold/5 rounded-tl-full pointer-events-none" />
     </div>
   );
 };
 
-const GuestStatsPieChart = ({ stats }: { stats: any }) => {
+const GuestStatsPieChart = ({ stats }: { stats: DashboardStats }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // AQUÍ usamos los colores importados directamente, sin usar resolveConfig
@@ -311,7 +372,7 @@ const GuestStatsPieChart = ({ stats }: { stats: any }) => {
   );
 };
 
-const ActivityItem = ({ initials, text, time, type }: any) => {
+const ActivityItem = ({ initials, text, time, type }: {initials: React.ReactElement, text: React.ReactElement; time: string; type: string;} ) => {
   let colorClass = "bg-stone-100 text-stone-600 border-stone-200";
   if (type === "success")
     colorClass = "bg-primary/10 text-primary-500/80 border-primary-500/80";
