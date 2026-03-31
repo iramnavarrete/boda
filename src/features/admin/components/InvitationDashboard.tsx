@@ -30,7 +30,8 @@ import TextureButton from "@/features/shared/components/TextureButton";
 import { useRouter } from "next/router";
 import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
 import { GuestQuotesService } from "@/services/guestQuotesService";
-import { DashboardStats, GuestQuote } from "@/types";
+import { DashboardStats, GuestQuote, Invitation } from "@/types";
+import { formatTimeStamp } from "@/utils/formatters";
 
 export const MessagesCarousel: FC<{ invitationId: string }> = ({
   invitationId,
@@ -371,13 +372,23 @@ const GuestStatsPieChart = ({ stats }: { stats: DashboardStats }) => {
   );
 };
 
-const ActivityItem = ({ initials, text, time, type }: {initials: React.ReactElement, text: React.ReactElement; time: string; type: string;} ) => {
+const ActivityItem = ({
+  initials,
+  text,
+  time,
+  type,
+}: {
+  initials: React.ReactElement;
+  text: React.ReactElement;
+  time: string;
+  type: string;
+}) => {
   let colorClass = "bg-stone-100 text-stone-600 border-stone-200";
   if (type === "success")
     colorClass = "bg-primary/10 text-primary-500/80 border-primary-500/80";
-  if (type === "danger") colorClass = "bg-danger/10 text-danger/80 border-danger/80";
-  if (type === "neutral")
-    colorClass = "bg-gold/10 text-gold/80 border-gold/80";
+  if (type === "danger")
+    colorClass = "bg-danger/10 text-danger/80 border-danger/80";
+  if (type === "neutral") colorClass = "bg-gold/10 text-gold/80 border-gold/80";
 
   return (
     <div className="flex gap-4 relative">
@@ -398,184 +409,191 @@ const ActivityItem = ({ initials, text, time, type }: {initials: React.ReactElem
 
 export default function InvitationDashboard({
   invitationId,
+  invitationData
 }: {
   invitationId: string;
+  invitationData: Invitation | null
 }) {
   const user = useAuthUser();
   const { toast } = useToast();
   const router = useRouter();
 
   const { guests, isLoadingGuests, error } = useGuestsData(invitationId, user);
+  
   const stats = useGuestsStats(guests);
 
   if (isLoadingGuests) return <Loader fullscreen />;
   if (error) toast("Ocurrió un error", "error");
 
   return (
-      <div className="max-w-6xl mx-auto p-4 md:px-6 py-4 md:py-10 space-y-6 duration-700">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 p-8 rounded-3xl border border-sand relative overflow-hidden border-white/40 bg-white/80 backdrop-blur-md shadow-sm">
-          <div className="relative z-10">
-            <h1 className="text-3xl md:text-4xl font-serif font-medium text-primary mb-2">
-              Resumen del Evento
-            </h1>
-            <div className="flex items-center gap-2 text-primary/70 text-sm font-semibold">
-              <Clock className="text-gold" size={14} />
-              <span>Última actualización: hace un momento</span>
-            </div>
+    <div className="max-w-6xl mx-auto p-4 md:px-6 py-4 md:py-10 space-y-6 duration-700">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 p-8 rounded-3xl border border-sand relative overflow-hidden border-white/40 bg-white/80 backdrop-blur-md shadow-sm">
+        <div className="relative z-10">
+          <h1 className="text-3xl md:text-4xl font-serif font-medium text-primary mb-2">
+            Resumen del Evento
+          </h1>
+          <div className="flex items-center gap-2 text-primary/70 text-sm font-semibold">
+            <Clock className="text-gold" size={14} />
+            <span>Última actualización: hace un momento</span>
           </div>
-          <TextureButton
-            className="relative z-10 text-white font-semibold px-8 py-3.5 rounded-xl"
-            icon={<Users size={16} />}
-            onClick={() => {
-              router.push(`/admin/invitations/${invitationId}`);
-            }}
-          >
-            Gestionar invitados
-          </TextureButton>
         </div>
+        <TextureButton
+          className="relative z-10 text-white font-semibold px-8 py-3.5 rounded-xl"
+          icon={<Users size={16} />}
+          onClick={() => {
+            router.push(`/admin/invitations/${invitationId}`);
+          }}
+        >
+          Gestionar invitados
+        </TextureButton>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-          <MessagesCarousel invitationId={invitationId} />
-          <GuestStatsPieChart stats={stats} />
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+        <MessagesCarousel invitationId={invitationId} />
+        <GuestStatsPieChart stats={stats} />
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white/80 rounded-2xl shadow-sm border border-sand p-8 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-sand-light">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-paper rounded-lg border border-sand text-gold">
-                  <Activity size={20} />
-                </div>
-                <h2 className="text-lg font-bold text-primary">
-                  Actividad Reciente
-                </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white/80 rounded-2xl shadow-sm border border-sand p-8 relative overflow-hidden">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-sand-light">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-paper rounded-lg border border-sand text-gold">
+                <Activity size={20} />
               </div>
-              <span className="text-xs font-medium text-primary bg-paper border border-sand-200 px-4 py-1.5 rounded-full uppercase tracking-wider">
-                Hoy
-              </span>
+              <h2 className="text-lg font-bold text-primary">
+                Actividad Reciente
+              </h2>
             </div>
-
-            <div className="relative grid grid-cols-1 md:grid-cols-2 flex-col gap-5 mx-2">
-              <ActivityItem
-                initials={<CheckCircle2 size={16} />}
-                text={
-                  <>
-                    <strong>Familia González</strong> confirmó asistencia
-                  </>
-                }
-                time="Hace 10 min"
-                type="success"
-              />
-              <ActivityItem
-                initials={<Clock size={16} />}
-                text={
-                  <>
-                    <strong>María López</strong> vio la invitación
-                  </>
-                }
-                time="Hace 1 hora"
-                type="neutral"
-              />
-              <ActivityItem
-                initials={<XCircle size={16} />}
-                text={
-                  <>
-                    <strong>Carlos Ruiz</strong> declinó la invitación
-                  </>
-                }
-                time="Hace 3 horas"
-                type="danger"
-              />
-              <ActivityItem
-                initials={<CheckCircle2 size={16} />}
-                text={
-                  <>
-                    <strong>Familia González</strong> confirmó asistencia
-                  </>
-                }
-                time="Hace 10 min"
-                type="success"
-              />
-              <ActivityItem
-                initials={<Clock size={16} />}
-                text={
-                  <>
-                    <strong>María López</strong> vio la invitación
-                  </>
-                }
-                time="Hace 1 hora"
-                type="neutral"
-              />
-              <ActivityItem
-                initials={<XCircle size={16} />}
-                text={
-                  <>
-                    <strong>Carlos Ruiz</strong> declinó la invitación
-                  </>
-                }
-                time="Hace 3 horas"
-                type="danger"
-              />
-            </div>
+            <span className="text-xs font-medium text-primary bg-paper border border-sand-200 px-4 py-1.5 rounded-full uppercase tracking-wider">
+              Hoy
+            </span>
           </div>
 
-          <div className="bg-primary-800/85 rounded-2xl p-8 shadow-xl relative overflow-hidden text-[#F9F7F2] group">
-            {/* Decoración Fondo */}
-            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
-              <Gem size={140} />
+          <div className="relative grid grid-cols-1 md:grid-cols-2 flex-col gap-5 mx-2">
+            <ActivityItem
+              initials={<CheckCircle2 size={16} />}
+              text={
+                <>
+                  <strong>Familia González</strong> confirmó asistencia
+                </>
+              }
+              time="Hace 10 min"
+              type="success"
+            />
+            <ActivityItem
+              initials={<Clock size={16} />}
+              text={
+                <>
+                  <strong>María López</strong> vio la invitación
+                </>
+              }
+              time="Hace 1 hora"
+              type="neutral"
+            />
+            <ActivityItem
+              initials={<XCircle size={16} />}
+              text={
+                <>
+                  <strong>Carlos Ruiz</strong> declinó la invitación
+                </>
+              }
+              time="Hace 3 horas"
+              type="danger"
+            />
+            <ActivityItem
+              initials={<CheckCircle2 size={16} />}
+              text={
+                <>
+                  <strong>Familia González</strong> confirmó asistencia
+                </>
+              }
+              time="Hace 10 min"
+              type="success"
+            />
+            <ActivityItem
+              initials={<Clock size={16} />}
+              text={
+                <>
+                  <strong>María López</strong> vio la invitación
+                </>
+              }
+              time="Hace 1 hora"
+              type="neutral"
+            />
+            <ActivityItem
+              initials={<XCircle size={16} />}
+              text={
+                <>
+                  <strong>Carlos Ruiz</strong> declinó la invitación
+                </>
+              }
+              time="Hace 3 horas"
+              type="danger"
+            />
+          </div>
+        </div>
+
+        <div className="bg-primary-800/85 rounded-2xl p-8 shadow-xl relative overflow-hidden text-[#F9F7F2] group">
+          {/* Decoración Fondo */}
+          <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
+            <Gem size={140} />
+          </div>
+
+          <h3 className="text-white font-serif text-2xl mb-8 relative z-10 border-b border-white/20 pb-4">
+            Detalles del Evento
+          </h3>
+
+          <div className="space-y-8 relative z-10">
+            <div className="flex items-start gap-5">
+              <div className="p-3 bg-charcoal/10 rounded-xl border border-white/20 backdrop-blur-sm">
+                <Calendar size={20} className="text-gold" />
+              </div>
+              <div>
+                <p className="text-[10px] text-gold font-bold uppercase tracking-[0.15em] mb-1">
+                  Fecha
+                </p>
+                <p className="text-white font-medium text-lg leading-tight">
+                  {invitationData &&
+                    formatTimeStamp(invitationData.fecha)
+                      .replaceAll("/", "")
+                      .toLocaleLowerCase()}
+                </p>
+                <p className="text-xs text-white/60 mt-1">{invitationData?.recepcion.hora}</p>
+              </div>
             </div>
 
-            <h3 className="text-white font-serif text-2xl mb-8 relative z-10 border-b border-white/20 pb-4">
-              Detalles del Evento
-            </h3>
-
-            <div className="space-y-8 relative z-10">
-              <div className="flex items-start gap-5">
-                <div className="p-3 bg-charcoal/10 rounded-xl border border-white/20 backdrop-blur-sm">
-                  <Calendar size={20} className="text-gold" />
-                </div>
-                <div>
-                  <p className="text-[10px] text-gold font-bold uppercase tracking-[0.15em] mb-1">
-                    Fecha
-                  </p>
-                  <p className="text-white font-medium text-lg leading-tight">
-                    Sábado, 22 Oct 2025
-                  </p>
-                  <p className="text-xs text-white/60 mt-1">18:00 hrs</p>
-                </div>
+            <div className="flex items-start gap-5">
+              <div className="p-3 bg-charcoal/10 rounded-xl border border-white/20 backdrop-blur-sm">
+                <MapPin size={20} className="text-gold" />
               </div>
-
-              <div className="flex items-start gap-5">
-                <div className="p-3 bg-charcoal/10 rounded-xl border border-white/20 backdrop-blur-sm">
-                  <MapPin size={20} className="text-gold" />
-                </div>
-                <div>
-                  <p className="text-[10px] text-gold font-bold uppercase tracking-[0.15em] mb-1">
-                    Lugar
-                  </p>
-                  <p className="text-white font-medium text-lg leading-tight">
-                    Hacienda Los Arcángeles
-                  </p>
-                  <p className="text-xs text-white/60 mt-1">
-                    San Miguel de Allende, Gto.
-                  </p>
-                </div>
+              <div>
+                <p className="text-[10px] text-gold font-bold uppercase tracking-[0.15em] mb-1">
+                  Lugar
+                </p>
+                <p className="text-white font-medium text-lg leading-tight">
+                  {invitationData?.recepcion.nombreSalon || "Salón de eventos"}
+                </p>
+                <p className="text-xs text-white/60 mt-1">
+                  {invitationData?.recepcion.direccion || "Salón de eventos"}
+                </p>
               </div>
+            </div>
 
-              <div className="pt-6 mt-4">
-                <Link
-                 href={`${router.basePath}/i/${invitationId}`}
-                 className="w-full py-4 rounded-full border border-gold/50 text-gold hover:bg-gold hover:text-primary transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 group/btn">
-                  Ver invitación{" "}
-                  <ArrowRight
-                    size={14}
-                    className="group-hover/btn:translate-x-1 transition-transform"
-                  />
-                </Link>
-              </div>
+            <div className="pt-6 mt-4">
+              <Link
+                href={`${router.basePath}/i/${invitationId}`}
+                className="w-full py-4 rounded-full border border-gold/50 text-gold hover:bg-gold hover:text-primary transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 group/btn"
+              >
+                Ver invitación{" "}
+                <ArrowRight
+                  size={14}
+                  className="group-hover/btn:translate-x-1 transition-transform"
+                />
+              </Link>
             </div>
           </div>
         </div>
       </div>
+    </div>
   );
 }

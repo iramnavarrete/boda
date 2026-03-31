@@ -88,4 +88,19 @@ export const InvitationsService = {
       throw error;
     }
   },
+
+  getInvitation: async (invitationId: string) => {
+    try {
+      const privateRef = doc(db, "invitations", invitationId);
+      const snapshot = await getDoc(privateRef);
+
+      if (snapshot.exists()) {
+        return snapshot.data() as Invitation;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error obteniendo invitación:", error);
+      return null;
+    }
+  },
 };
