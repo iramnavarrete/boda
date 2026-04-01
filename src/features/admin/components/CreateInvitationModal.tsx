@@ -8,21 +8,16 @@ import {
   Users,
   Save,
   Clock,
+  Heart,
 } from "lucide-react";
 import Modal from "@/features/shared/components/Modal";
-import { EventLocation, EventType, Invitation } from "@/types";
+import { EventLocation, EventType, Invitation, Modify, Padres } from "@/types";
 import { InvitationsService } from "@/services/invitationsService";
 
-interface FormDataState {
-  id: string;
-  nombre: string;
-  tipo: EventType;
+type FormDataState  = Modify<Invitation , {
   fecha: string;
-  imagenPortada: string;
-  ceremonia: EventLocation;
-  recepcion: EventLocation;
   usuariosPermitidos: string;
-}
+}>
 
 interface CreateInvitationModalProps {
   isOpen: boolean;
@@ -46,6 +41,8 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
     tipo: "boda",
     fecha: "",
     imagenPortada: "",
+    padresNovia: { mama: "", papa: "" },
+    padresNovio: { mama: "", papa: "" },
     ceremonia: { nombreTemplo: "", hora: "", direccion: "", enlaceMaps: "" },
     recepcion: { nombreSalon: "", hora: "", direccion: "", enlaceMaps: "" },
     usuariosPermitidos: "",
@@ -56,7 +53,6 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
     if (invitationToEdit && isOpen) {
       let formattedDate = "";
       if (invitationToEdit.fecha) {
-        // Manejar tanto Timestamp de Firebase como Date nativo
         const dateObj = invitationToEdit.fecha.toDate()
         formattedDate = dateObj.toISOString().split("T")[0];
       }
@@ -67,6 +63,8 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
         tipo: invitationToEdit.tipo || "boda",
         fecha: formattedDate,
         imagenPortada: invitationToEdit.imagenPortada || "",
+        padresNovia: invitationToEdit.padresNovia || { mama: "", papa: "" },
+        padresNovio: invitationToEdit.padresNovio || { mama: "", papa: "" },
         ceremonia: invitationToEdit.ceremonia || {
           nombreTemplo: "",
           hora: "",
@@ -91,6 +89,8 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
         tipo: "boda",
         fecha: "",
         imagenPortada: "",
+        padresNovia: { mama: "", papa: "" },
+        padresNovio: { mama: "", papa: "" },
         ceremonia: {
           nombreTemplo: "",
           hora: "",
@@ -115,6 +115,8 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
         ubicacion: formData.recepcion.nombreSalon,
         fecha: new Date(`${formData.fecha}T12:00:00`),
         imagenPortada: formData.imagenPortada,
+        padresNovia: formData.padresNovia,
+        padresNovio: formData.padresNovio,
         ceremonia: formData.ceremonia,
         recepcion: formData.recepcion,
         usuariosPermitidos: formData.usuariosPermitidos
@@ -153,6 +155,20 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
     }));
   };
 
+  const handlePadresNoviaChange = (field: keyof Padres, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      padresNovia: { ...prev.padresNovia, [field]: value },
+    }));
+  };
+
+  const handlePadresNovioChange = (field: keyof Padres, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      padresNovio: { ...prev.padresNovio, [field]: value },
+    }));
+  };
+
   return (
     <Modal isOpen={isOpen} onBackdropPress={onClose}>
       <div className="px-6 md:px-8 py-5 border-b border-[#EBE5DA] flex justify-between items-center bg-white shrink-0 z-10">
@@ -165,6 +181,7 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
           </p>
         </div>
         <button
+          type="button"
           onClick={onClose}
           className="p-2 text-[#A8A29E] hover:text-[#E17676] bg-[#FDFBF7] hover:bg-red-50 rounded-full transition-all border border-[#EBE5DA] hover:border-red-100"
         >
@@ -289,6 +306,86 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
                         ...formData,
                         imagenPortada: e.target.value,
                       })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* SECCIÓN 1.5: PADRES DE LOS NOVIOS */}
+          <section
+            className={`space-y-5 bg-white p-6 rounded-[20px] border border-[#EBE5DA] shadow-sm ${formData.tipo !== "boda" ? "hidden" : ""}`}
+          >
+            <h4 className="font-serif text-[#C5A669] text-lg border-b border-[#EBE5DA] pb-2 flex items-center gap-2">
+              <Heart size={18} /> Papás de los Novios
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-5">
+              {/* Papás de la Novia */}
+              <div className="space-y-4">
+                <h5 className="font-bold text-[#2C2C29] text-[11px] uppercase tracking-widest border-b border-[#EBE5DA] pb-1.5">
+                  Familia de la Novia
+                </h5>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#5A5A5A] uppercase tracking-wider mb-1.5 ml-1">
+                    Nombre de la Mamá
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. María Pérez"
+                    className="w-full px-4 py-2.5 rounded-xl border border-[#EBE5DA] bg-[#FDFBF7] focus:bg-white text-[#5A5A5A] outline-none focus:border-[#C5A669] transition-all shadow-sm"
+                    value={formData.padresNovia.mama}
+                    onChange={(e) =>
+                      handlePadresNoviaChange("mama", e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#5A5A5A] uppercase tracking-wider mb-1.5 ml-1">
+                    Nombre del Papá
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Juan Gómez"
+                    className="w-full px-4 py-2.5 rounded-xl border border-[#EBE5DA] bg-[#FDFBF7] focus:bg-white text-[#5A5A5A] outline-none focus:border-[#C5A669] transition-all shadow-sm"
+                    value={formData.padresNovia.papa}
+                    onChange={(e) =>
+                      handlePadresNoviaChange("papa", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Papás del Novio */}
+              <div className="space-y-4">
+                <h5 className="font-bold text-[#2C2C29] text-[11px] uppercase tracking-widest border-b border-[#EBE5DA] pb-1.5">
+                  Familia del Novio
+                </h5>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#5A5A5A] uppercase tracking-wider mb-1.5 ml-1">
+                    Nombre de la Mamá
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Carmen López"
+                    className="w-full px-4 py-2.5 rounded-xl border border-[#EBE5DA] bg-[#FDFBF7] focus:bg-white text-[#5A5A5A] outline-none focus:border-[#C5A669] transition-all shadow-sm"
+                    value={formData.padresNovio.mama}
+                    onChange={(e) =>
+                      handlePadresNovioChange("mama", e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#5A5A5A] uppercase tracking-wider mb-1.5 ml-1">
+                    Nombre del Papá
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ej. Roberto Ruiz"
+                    className="w-full px-4 py-2.5 rounded-xl border border-[#EBE5DA] bg-[#FDFBF7] focus:bg-white text-[#5A5A5A] outline-none focus:border-[#C5A669] transition-all shadow-sm"
+                    value={formData.padresNovio.papa}
+                    onChange={(e) =>
+                      handlePadresNovioChange("papa", e.target.value)
                     }
                   />
                 </div>

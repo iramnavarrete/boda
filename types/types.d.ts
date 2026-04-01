@@ -67,11 +67,18 @@ export interface ConfirmModalState {
   action: (() => Promise<void>) | null;
 }
 
+interface Padres {
+  mama: string;
+  papa: string;
+}
+
 export interface Invitation {
   id: string;
   nombre: string;
   fecha: Timestamp;
-  ubicacion: string;
+  ubicacion?: string;
+  padresNovia: Padres;
+  padresNovio: Padres;
   tipo: string;
   imagenPortada?: string;
   recepcion: EventLocation;
@@ -134,3 +141,5 @@ export interface EventLocation {
   direccion: string;
   enlaceMaps: string;
 }
+
+export type Modify<T, R> = Omit<T, keyof R> & R;
