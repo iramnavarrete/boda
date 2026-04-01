@@ -24,10 +24,9 @@ import {
 import Head from "next/head";
 import { InvitationsService } from "@/services/invitationsService";
 import { GetServerSidePropsContext } from "next";
-import { Invitation } from "@/types";
 
 interface InvitationPageProps {
-  invitationData: Invitation & { eventUrl: string };
+  invitationData: { eventUrl: string ; nombre: string; imagenPortada: string};
 }
 
 export default function Home({ invitationData }: InvitationPageProps) {
@@ -46,7 +45,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
 
         <meta property="og:locale" content="es_MX" />
         <meta property="og:type" content="article" />
-        <meta property="og:title" content={`Invitación: ${eventName}`} />
+        <meta property="og:title" content={`Invitación Boda ${eventName}`} />
         <meta property="og:description" content={description} />
         <meta property="og:url" content={eventUrl} />
         <meta property="og:image" content={coverImage} />
@@ -110,7 +109,6 @@ export const getServerSideProps = async (
 
     // 2. Consulta a la base de datos
     const rawData = await InvitationsService.getInvitation(INVITATION_ID);
-
     if (!rawData) {
       return { notFound: true };
     }
@@ -142,6 +140,8 @@ export const getServerSideProps = async (
 
     // b) Agregamos la URL del evento lista para usar en `og:url`
     serializedData.eventUrl = `${baseUrl}/i/${INVITATION_ID}`;
+
+    serializedData.nombre = rawData.invitation?.nombre || "";
 
     return {
       props: {
