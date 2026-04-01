@@ -23,6 +23,7 @@ import JnInvitacionesIcon from "@/icons/jn-invitaciones-icon";
 import { useRouter } from "next/router";
 import { Invitation } from "@/types";
 import { getEventTypeName } from "@/utils/formatters";
+import { useInvitationStore } from "@/features/front/stores/invitationStore";
 
 export type HeaderVariant = "admin" | "landing";
 
@@ -95,8 +96,7 @@ const Header = ({
   title,
   subtitle,
   navItems: customNavItems,
-  onCotizar,
-  invitationData
+  onCotizar
 }: HeaderProps) => {
   const config = VARIANT_CONFIG[variant];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -107,6 +107,8 @@ const Header = ({
   const pathname = usePathname();
   const params = useParams();
   const invitationId = params?.invitationId;
+
+  const invitationData = useInvitationStore((state) => state.invitationData);
   
   const formatEventName = () => {
     if(!invitationData){

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import "photoswipe/dist/photoswipe.css";
 
 import Cover from "@/features/front/components/sections/cover";
@@ -24,12 +24,21 @@ import {
 import Head from "next/head";
 import { InvitationsService } from "@/services/invitationsService";
 import { GetServerSidePropsContext } from "next";
+import { Invitation } from "@/types";
+import { getEventTypeName } from "@/utils/formatters";
+import { useInvitationStore } from "@/features/front/stores/invitationStore";
 
 interface InvitationPageProps {
-  invitationData: { eventUrl: string ; nombre: string; imagenPortada: string};
+  invitationData: Invitation & { eventUrl: string };
 }
 
 export default function Home({ invitationData }: InvitationPageProps) {
+  const isInitialized = useRef(false);
+  if (!isInitialized.current) {
+    useInvitationStore.setState({ invitationData });
+    isInitialized.current = true;
+  }
+
   const [isEnvelopeOpened, setIsEnvelopeOpened] = useState(false);
   const eventName = invitationData.nombre;
   const coverImage = invitationData.imagenPortada;
@@ -39,13 +48,18 @@ export default function Home({ invitationData }: InvitationPageProps) {
   return (
     <>
       <Head>
-        <title>{eventName} | Estás Invitado</title>
+        <title>
+          {getEventTypeName(invitationData.tipo)} {eventName} | JN Invitaciones
+        </title>
         <meta name="description" content={description} />
         <link rel="canonical" href={eventUrl} />
 
         <meta property="og:locale" content="es_MX" />
         <meta property="og:type" content="article" />
-        <meta property="og:title" content={`Invitación Boda ${eventName}`} />
+        <meta
+          property="og:title"
+          content={`Invitación ${getEventTypeName(invitationData.tipo)} ${eventName}`}
+        />
         <meta property="og:description" content={description} />
         <meta property="og:url" content={eventUrl} />
         <meta property="og:image" content={coverImage} />
@@ -108,13 +122,33 @@ export const getServerSideProps = async (
     const INVITATION_ID = pathSegments[pathSegments.length - 1];
 
     // 2. Consulta a la base de datos
-    const rawData = await InvitationsService.getInvitation(INVITATION_ID);
-    if (!rawData) {
+    const { invitation } =
+      await InvitationsService.getInvitation(INVITATION_ID);
+    if (!invitation) {
       return { notFound: true };
     }
 
+    if (invitation.fecha && typeof invitation.fecha.toDate === "function") {
+      invitation.fechaISO = invitation.fecha.toDate().toISOString();
+    } else if (invitation.fecha instanceof Date) {
+      invitation.fechaISO = invitation.fecha.toISOString();
+    }
+
+    // 2. Tomamos la hora de la recepción (si no existe, usamos "12:00" por defecto)
+    const horaRecepcion = invitation.recepcion?.hora || "12:00";
+    const [hours, minutes] = horaRecepcion.split(":").map(Number);
+
+    // 3. Combinamos el día base con la hora de la recepción
+    const targetDate = new Date(invitation.fecha.toDate());
+    if (!isNaN(hours) && !isNaN(minutes)) {
+      targetDate.setHours(hours, minutes, 0, 0);
+    }
+
+    // 4. Guardamos el resultado en la nueva variable
+    invitation.fechaISO = targetDate.toISOString();
+
     // 3. Serialización de datos (evita errores de timestamp)
-    const serializedData = JSON.parse(JSON.stringify(rawData));
+    const serializedData = JSON.parse(JSON.stringify(invitation));
 
     // 4. PREPARACIÓN DE URLS PARA SEO DIRECTO EN EL SERVIDOR
 
@@ -140,8 +174,6 @@ export const getServerSideProps = async (
 
     // b) Agregamos la URL del evento lista para usar en `og:url`
     serializedData.eventUrl = `${baseUrl}/i/${INVITATION_ID}`;
-
-    serializedData.nombre = rawData.invitation?.nombre || "";
 
     return {
       props: {

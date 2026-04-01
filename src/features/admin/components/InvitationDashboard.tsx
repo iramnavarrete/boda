@@ -30,8 +30,9 @@ import TextureButton from "@/features/shared/components/TextureButton";
 import { useRouter } from "next/router";
 import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
 import { GuestQuotesService } from "@/services/guestQuotesService";
-import { DashboardStats, GuestQuote, Invitation } from "@/types";
+import { DashboardStats, GuestQuote } from "@/types";
 import { formatTimeStamp } from "@/utils/formatters";
+import { useInvitationStore } from "@/features/front/stores/invitationStore";
 
 export const MessagesCarousel: FC<{ invitationId: string }> = ({
   invitationId,
@@ -42,10 +43,9 @@ export const MessagesCarousel: FC<{ invitationId: string }> = ({
 
   // Suscripción a Firestore en tiempo real
   useEffect(() => {
-    setIsLoading(true);
     const unsubscribe = GuestQuotesService.subscribeToGuestMessages(
       invitationId,
-      (allMessages) => {
+      (allMessages: GuestQuote[]) => {
         // Extraemos solo los primeros 5 mensajes del arreglo ordenado
         const top5Messages = allMessages.slice(0, 5);
         setMessages(top5Messages);
@@ -75,6 +75,7 @@ export const MessagesCarousel: FC<{ invitationId: string }> = ({
     setCurrentIndex((prev) => (prev + 1) % messages.length);
   const prevSlide = () =>
     setCurrentIndex((prev) => (prev - 1 + messages.length) % messages.length);
+
 
   return (
     <div className="bg-white/80 p-6 rounded-[24px] border border-sand shadow-sm flex flex-col h-full hover:shadow-[0_8px_30px_rgba(197,166,105,0.1)] transition-all duration-300 relative overflow-hidden group font-sans min-h-[320px]">
@@ -409,10 +410,8 @@ const ActivityItem = ({
 
 export default function InvitationDashboard({
   invitationId,
-  invitationData,
 }: {
   invitationId: string;
-  invitationData: Invitation | null;
 }) {
   const user = useAuthUser();
   const { toast } = useToast();
@@ -420,6 +419,8 @@ export default function InvitationDashboard({
   const router = useRouter();
 
   const { guests, isLoadingGuests, error } = useGuestsData(invitationId, user);
+
+  const invitationData = useInvitationStore((state) => state.invitationData);
 
   const stats = useGuestsStats(guests);
 

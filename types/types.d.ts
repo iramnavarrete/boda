@@ -84,6 +84,7 @@ export interface Invitation {
   recepcion: EventLocation;
   ceremonia: EventLocation;
   usuariosPermitidos: string[];
+  fechaISO?: string;
 }
 
 // Tipo auxiliar para las escalas de color completas (50-950)
