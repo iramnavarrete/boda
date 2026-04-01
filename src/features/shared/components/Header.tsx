@@ -11,7 +11,6 @@ import {
   Gem,
   Play,
   Star,
-  MessageCircle,
   AppWindow,
   Mail,
 } from "lucide-react";
@@ -22,6 +21,8 @@ import Link from "next/link";
 import { AuthService } from "@/services/authService";
 import JnInvitacionesIcon from "@/icons/jn-invitaciones-icon";
 import { useRouter } from "next/router";
+import { Invitation } from "@/types";
+import { getEventTypeName } from "@/utils/formatters";
 
 export type HeaderVariant = "admin" | "landing";
 
@@ -49,6 +50,8 @@ interface HeaderProps {
   // Callbacks
   onLogout?: () => void;
   onCotizar?: () => void;
+
+  invitationData?: Invitation | null
 }
 
 // --- CONFIGURACIÓN DE VARIANTES ---
@@ -93,6 +96,7 @@ const Header = ({
   subtitle,
   navItems: customNavItems,
   onCotizar,
+  invitationData
 }: HeaderProps) => {
   const config = VARIANT_CONFIG[variant];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -103,6 +107,16 @@ const Header = ({
   const pathname = usePathname();
   const params = useParams();
   const invitationId = params?.invitationId;
+  
+  const formatEventName = () => {
+    if(!invitationData){
+      return ""
+    }
+    if(invitationData?.nombre && invitationData?.tipo){
+      return getEventTypeName(invitationData.tipo) + " " + invitationData.nombre
+    }
+    return ""
+  }
 
   // --- LÓGICA SCROLL SPY (Solo Landing) ---
   useEffect(() => {
@@ -243,7 +257,7 @@ const Header = ({
                   config.titleClass,
                 )}
               >
-                {title || (variant === "admin" ? "Boda X&J" : null)}
+                {title || (variant === "admin" ? formatEventName() : null)}
               </h1>
               {subtitle || variant === "admin" ? (
                 <p
@@ -277,13 +291,13 @@ const Header = ({
         <div className="flex items-center gap-3">
           <div className="hidden md:flex items-center gap-2">
             {variant === "landing" ? (
-              <a
+              <Link
                 href="/#paquetes"
                 className="flex items-center gap-2 px-5 py-2.5 bg-primary text-paper rounded-full text-xs font-bold uppercase tracking-widest hover:bg-charcoal-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
               >
                 <Gem size={14} className="text-gold" />
                 <span>Paquetes</span>
-              </a>
+              </Link>
             ) : (
               <button
                 onClick={AuthService.logout}
@@ -358,12 +372,12 @@ const Header = ({
                 <div className="pt-2">
                   {variant === "landing" ? (
                     <>
-                      <a
+                      <Link
                         href="/#paquetes"
                         className="flex items-center justify-center gap-3 w-full p-3 rounded-xl text-paper bg-primary hover:bg-charcoal-700 transition-colors font-medium text-sm mt-2 shadow-md"
                       >
                         <Gem size={18} className="text-gold" /> Paquetes
-                      </a>
+                      </Link>
                     </>
                   ) : (
                     <button

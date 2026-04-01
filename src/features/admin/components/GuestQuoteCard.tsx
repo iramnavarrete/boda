@@ -42,7 +42,7 @@ export default function GuestQuoteCard({
         </div>
 
         <p className="font-serif text-lg md:text-xl italic leading-relaxed mb-8 flex-1 text-stone-custom">
-          "{msg.mensaje}"
+          {`${msg.mensaje}`}
         </p>
 
         <div className="flex items-start justify-between pt-5 mt-auto border-t border-sand-200/60">

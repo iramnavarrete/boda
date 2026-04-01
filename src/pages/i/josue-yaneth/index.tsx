@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import "photoswipe/dist/photoswipe.css";
 
 import Cover from "@/features/front/components/sections/cover";
@@ -22,44 +22,42 @@ import {
   nourdMedium,
 } from "@/features/shared/fonts";
 import Head from "next/head";
-import { brideName, groomName } from "@/constants/constants";
+import { InvitationsService } from "@/services/invitationsService";
+import { GetServerSidePropsContext } from "next";
+import { Invitation } from "@/types";
 
-export default function Home() {
+interface InvitationPageProps {
+  invitationData: Invitation & { eventUrl: string };
+}
+
+export default function Home({ invitationData }: InvitationPageProps) {
   const [isEnvelopeOpened, setIsEnvelopeOpened] = useState(false);
+  const eventName = invitationData.nombre;
+  const coverImage = invitationData.imagenPortada;
+  const eventUrl = invitationData.eventUrl;
+  const description = `Te invitamos a celebrar con nosotros este día tan especial, nos encantaría contar con tu presencia.`;
 
   return (
     <>
       <Head>
-        <meta
-          name="description"
-          content={`Te invitamos celebrar la unión de ${groomName} & ${brideName}`}
-        />
-        <link rel="canonical" href="https://bodajy.info" />
+        <title>{eventName} | Estás Invitado</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={eventUrl} />
+
         <meta property="og:locale" content="es_MX" />
         <meta property="og:type" content="article" />
-        <meta
-          property="og:title"
-          content={`Invitación Boda ${groomName} & ${brideName}`}
-        />
-        <meta
-          property="og:description"
-          content="Te invitamos a celebrar nuestra unión en este maravilloso día"
-        />
-        <meta property="og:url" content="https://bodajy.info" />
-        <meta
-          property="article:modified_time"
-          content="2025-09-02T20:53:01-06:00"
-        />
-        <meta
-          property="og:image"
-          content="https://bodajy.info/img/og-cover.jpg"
-        />
-        <meta property="og:image:width" content="630" />
-        <meta property="og:image:height" content="420" />
+        <meta property="og:title" content={`Invitación: ${eventName}`} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={eventUrl} />
+        <meta property="og:image" content={coverImage} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
         <meta property="og:image:type" content="image/jpeg" />
+
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:label1" content="Tiempo de lectura" />
-        <meta name="twitter:data1" content="3 minutos" />
+        <meta name="twitter:title" content={`Invitación: ${eventName}`} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={coverImage} />
       </Head>
       <main
         className={`${newIconScript.variable} ${nourdLight.variable} ${nourdMedium.variable} ${nourdBold.variable}`}
@@ -91,3 +89,67 @@ export default function Home() {
     </>
   );
 }
+
+export const getServerSideProps = async (
+  context: GetServerSidePropsContext,
+) => {
+  try {
+    const host = context.req?.headers?.host || "bodajy.info";
+    // Verificamos si estamos en un entorno seguro (https) o local (http)
+    const protocol =
+      context.req?.headers?.["x-forwarded-proto"] ||
+      (host.includes("localhost") ? "http" : "https");
+    // Construimos la URL Base dinámica
+    const baseUrl = `${protocol}://${host}`;
+
+    // 1. Extracción dinámica del ID de la URL
+    const resolvedUrl = context.resolvedUrl || "/i/josue-yaneth";
+    const pathWithoutQuery = resolvedUrl.split("?")[0];
+    const pathSegments = pathWithoutQuery.split("/").filter(Boolean);
+    const INVITATION_ID = pathSegments[pathSegments.length - 1];
+
+    // 2. Consulta a la base de datos
+    const rawData = await InvitationsService.getInvitation(INVITATION_ID);
+
+    if (!rawData) {
+      return { notFound: true };
+    }
+
+    // 3. Serialización de datos (evita errores de timestamp)
+    const serializedData = JSON.parse(JSON.stringify(rawData));
+
+    // 4. PREPARACIÓN DE URLS PARA SEO DIRECTO EN EL SERVIDOR
+
+    // a) Formateo de Imagen Portada a URL Absoluta (usando nuestro baseUrl dinámico)
+    let absoluteImageUrl = `${baseUrl}/img/og-cover.jpg`; // Imagen por defecto
+
+    if (serializedData.imagenPortada) {
+      if (serializedData.imagenPortada.startsWith("http")) {
+        // Ya es absoluta (ej. subida a un bucket externo de Firebase)
+        absoluteImageUrl = serializedData.imagenPortada;
+      } else {
+        // Es relativa, garantizamos que no se duplique el "/"
+        const relativePath = serializedData.imagenPortada.startsWith("/")
+          ? serializedData.imagenPortada
+          : `/${serializedData.imagenPortada}`;
+
+        absoluteImageUrl = `${baseUrl}${relativePath}`;
+      }
+    }
+
+    // Asignamos la ruta absoluta convertida al objeto serializado
+    serializedData.imagenPortada = absoluteImageUrl;
+
+    // b) Agregamos la URL del evento lista para usar en `og:url`
+    serializedData.eventUrl = `${baseUrl}/i/${INVITATION_ID}`;
+
+    return {
+      props: {
+        invitationData: serializedData,
+      },
+    };
+  } catch (error) {
+    console.error(`Error cargando invitación dinámica:`, error);
+    return { notFound: true };
+  }
+};

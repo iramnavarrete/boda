@@ -74,18 +74,9 @@ export interface Invitation {
   ubicacion: string;
   tipo: string;
   imagenPortada?: string;
-  recepcion: {
-    nombreSalon: string;
-    direccion: string;
-    enlaceMaps: string;
-    hora: string;
-  };
-  ceremonia: {
-    nombreTemplo: string;
-    direccion: string;
-    enlaceMaps: string;
-    hora: string;
-  };
+  recepcion: EventLocation;
+  ceremonia: EventLocation;
+  usuariosPermitidos: string[];
 }
 
 // Tipo auxiliar para las escalas de color completas (50-950)
@@ -132,4 +123,14 @@ interface GuestQuote {
   fecha: string;
   timestamp: number;
   leido: boolean;
+}
+
+export type EventType = "boda" | "xv_anos" | "bautizo" | "cumpleanos" | string;
+
+export interface EventLocation {
+  nombreTemplo?: string;
+  nombreSalon?: string;
+  hora: string;
+  direccion: string;
+  enlaceMaps: string;
 }

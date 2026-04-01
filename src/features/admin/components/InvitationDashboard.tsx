@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   Quote,
   Gem,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import theme from "@/utils/theme";
@@ -27,116 +28,176 @@ import { useGuestsStats } from "../hooks/useGuestsStats";
 import Loader from "@/features/front/components/Loader";
 import TextureButton from "@/features/shared/components/TextureButton";
 import { useRouter } from "next/router";
+import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
+import { GuestQuotesService } from "@/services/guestQuotesService";
+import { DashboardStats, GuestQuote, Invitation } from "@/types";
+import { formatTimeStamp } from "@/utils/formatters";
 
-const useMessages = () => [
-  {
-    id: 1,
-    author: "Tía Carmen",
-    text: "¡Muchísimas felicidades! Estamos ansiosos por compartir este día tan especial con ustedes. ¡Que viva el amor!",
-    time: "Hace 2 hrs",
-  },
-  {
-    id: 2,
-    author: "Los Ramírez",
-    text: "Gracias por la invitación. Ahí estaremos sin falta para celebrar su unión.",
-    time: "Ayer",
-  },
-  {
-    id: 3,
-    author: "Jorge y Ana",
-    text: "¡Qué emoción! Ya tenemos listos los boletos de avión. Nos vemos pronto.",
-    time: "Hace 2 días",
-  },
-];
-
-// --- COMPONENTE CARRUSEL ---
-
-const MessagesCarousel: FC<{invitationId: string}> = ({invitationId}) => {
-  const messages = useMessages();
+export const MessagesCarousel: FC<{ invitationId: string }> = ({
+  invitationId,
+}) => {
+  const [messages, setMessages] = useState<GuestQuote[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // Suscripción a Firestore en tiempo real
+  useEffect(() => {
+    setIsLoading(true);
+    const unsubscribe = GuestQuotesService.subscribeToGuestMessages(
+      invitationId,
+      (allMessages) => {
+        // Extraemos solo los primeros 5 mensajes del arreglo ordenado
+        const top5Messages = allMessages.slice(0, 5);
+        setMessages(top5Messages);
+        setIsLoading(false);
+
+        // Si el índice actual quedó fuera de rango tras una actualización, lo reiniciamos
+        setCurrentIndex((prev) => {
+          if (top5Messages.length === 0) return 0;
+          return prev >= top5Messages.length ? 0 : prev;
+        });
+      },
+      (error) => {
+        console.error("Error cargando mensajes:", error);
+        setIsLoading(false);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [invitationId]);
+
+  const currentMessage = messages[currentIndex];
+
+  // Uso del hook de tiempo (se actualiza cuando cambia el mensaje actual)
+  const timeAgoString = useTimeAgo(currentMessage?.timestamp);
 
   const nextSlide = () =>
     setCurrentIndex((prev) => (prev + 1) % messages.length);
   const prevSlide = () =>
     setCurrentIndex((prev) => (prev - 1 + messages.length) % messages.length);
-  const currentMessage = messages[currentIndex];
 
   return (
-    <div className="bg-white/80 p-6 rounded-2xl border border-sand shadow-sm flex flex-col h-full hover:shadow-[0_8px_30px_rgb(197,166,105,0.1)] transition-all duration-300 relative overflow-hidden group">
+    <div className="bg-white/80 p-6 rounded-[24px] border border-sand shadow-sm flex flex-col h-full hover:shadow-[0_8px_30px_rgba(197,166,105,0.1)] transition-all duration-300 relative overflow-hidden group font-sans min-h-[320px]">
+      {/* HEADER DEL CARRUSEL */}
       <div className="flex items-center justify-between mb-6 relative z-10">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-paper rounded-lg text-gold border border-sand">
+          <div className="p-2 bg-paper rounded-lg text-gold border border-sand shadow-sm">
             <MessageCircle size={18} />
           </div>
           <div>
             <h3 className="font-serif text-lg font-semibold text-primary leading-none">
               Felicitaciones
             </h3>
-            <p className="text-[10px] text-charcoal-400 mt-1 uppercase tracking-wider">
+            <p className="text-[10px] text-charcoal-400 mt-1 uppercase tracking-widest font-bold">
               Muro de deseos
             </p>
           </div>
         </div>
         <Link
           href={`/admin/invitations/${invitationId}/quotes`}
-          className="text-xs font-medium text-gold hover:text-primary transition-colors flex items-center gap-1 tracking-wider"
+          className="text-xs font-bold text-gold hover:text-primary transition-colors flex items-center gap-1 tracking-wider uppercase"
         >
-          VER TODOS <ChevronRight size={12} />
+          Ver Todos <ChevronRight size={14} />
         </Link>
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10 min-h-[160px]">
-        <div className="absolute top-0 left-0 text-gold/10">
-          <Quote size={40} className="transform rotate-180" />
+      {/* ESTADO DE CARGA */}
+      {isLoading ? (
+        <div className="flex-1 flex items-center justify-center relative z-10 min-h-[160px]">
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-gold/30 border-t-gold"></div>
         </div>
-        <div
-          className="px-4 animate-in fade-in slide-in-from-right-4 duration-300 w-full"
-          key={currentIndex}
-        >
-          <p className="text-stone-600 font-serif text-lg italic leading-relaxed mb-4 line-clamp-3">
-            "{currentMessage.text}"
-          </p>
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-xs font-bold text-primary bg-paper border border-[#EBE5DA] px-4 py-1.5 rounded-full uppercase tracking-widest">
-              {currentMessage.author}
-            </span>
-            <span className="text-[10px] text-stone-400 mt-1">
-              {currentMessage.time}
-            </span>
+      ) : messages.length === 0 ? (
+        /* ESTADO VACÍO */
+        <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10 min-h-[160px] opacity-70">
+          <div className="w-12 h-12 bg-sand-light border border-sand rounded-full flex items-center justify-center mb-3 text-stone-300">
+            <MessageCircle size={20} />
           </div>
+          <p className="text-sm font-medium text-stone-500">
+            Aún no hay mensajes
+          </p>
+          <p className="text-xs text-stone-400 mt-1 max-w-[200px]">
+            Los buenos deseos de tus invitados aparecerán aquí.
+          </p>
         </div>
-      </div>
+      ) : (
+        /* CONTENIDO DEL CARRUSEL */
+        <>
+          <div className="flex-1 flex flex-col items-center justify-center text-center relative z-10 min-h-[160px]">
+            <div className="absolute top-0 left-0 text-gold/10 pointer-events-none">
+              <Quote size={40} className="transform rotate-180" />
+            </div>
 
-      <div className="flex items-center justify-between mt-6 pt-4 border-t border-sand-light relative z-10">
-        <div className="flex gap-1">
-          {messages.map((_, idx) => (
             <div
-              key={idx}
-              className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentIndex ? "w-6 bg-gold" : "w-1.5 bg-sand"}`}
-            />
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={prevSlide}
-            className="p-2 rounded-full border border-sand text-stone-400 hover:text-gold hover:border-gold hover:bg-sand-light transition-all active:scale-95"
-          >
-            <ChevronLeft size={16} />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="p-2 rounded-full border border-sand text-stone-400 hover:text-gold hover:border-gold hover:bg-sand-light transition-all active:scale-95"
-          >
-            <ChevronRight size={16} />
-          </button>
-        </div>
-      </div>
-      <div className="absolute bottom-0 right-0 w-32 h-32 bg-gold-10 rounded-tl-full opacity-30 pointer-events-none" />
+              className="px-4 animate-in fade-in slide-in-from-right-4 duration-300 w-full relative pt-8"
+              key={currentMessage.id} // Forza re-render de animación al cambiar
+            >
+              {/* Etiqueta Nuevo (Centrada en la parte superior) */}
+              {!currentMessage.leido && (
+                <div className="absolute top-0 right-0 flex justify-center">
+                  <span className="bg-gold text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm flex items-center gap-1 animate-pulse">
+                    <Sparkles size={10} /> Nuevo
+                  </span>
+                </div>
+              )}
+
+              <p className="text-stone-600 font-serif text-lg md:text-xl italic leading-relaxed mb-6 line-clamp-3">
+                {`"${currentMessage.mensaje}"`}
+              </p>
+              <div className="flex flex-col items-center gap-1.5">
+                <span className="text-xs font-bold text-primary bg-paper border border-sand px-4 py-1.5 rounded-full uppercase tracking-widest shadow-sm">
+                  {currentMessage.autor}
+                </span>
+
+                <span className="text-[10px] text-stone-400 font-medium capitalize-first mt-1">
+                  {timeAgoString || currentMessage.fecha}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* CONTROLES DEL CARRUSEL (Solo si hay más de 1 mensaje) */}
+          {messages.length > 1 && (
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-sand relative z-10">
+              <div className="flex gap-1.5">
+                {messages.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentIndex(idx)}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      idx === currentIndex
+                        ? "w-6 bg-gold"
+                        : "w-1.5 bg-stone-200 hover:bg-gold/50"
+                    }`}
+                    aria-label={`Ir al mensaje ${idx + 1}`}
+                  />
+                ))}
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={prevSlide}
+                  className="p-2 rounded-full border border-sand text-stone-400 hover:text-gold hover:border-gold hover:bg-sand-light transition-all active:scale-95 shadow-sm"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={nextSlide}
+                  className="p-2 rounded-full border border-sand text-stone-400 hover:text-gold hover:border-gold hover:bg-sand-light transition-all active:scale-95 shadow-sm"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* Decoración de Fondo (Esquina inferior derecha) */}
+      <div className="absolute bottom-0 right-0 w-32 h-32 bg-gold/5 rounded-tl-full pointer-events-none" />
     </div>
   );
 };
 
-const GuestStatsPieChart = ({ stats }: { stats: any }) => {
+const GuestStatsPieChart = ({ stats }: { stats: DashboardStats }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // AQUÍ usamos los colores importados directamente, sin usar resolveConfig
@@ -311,13 +372,23 @@ const GuestStatsPieChart = ({ stats }: { stats: any }) => {
   );
 };
 
-const ActivityItem = ({ initials, text, time, type }: any) => {
+const ActivityItem = ({
+  initials,
+  text,
+  time,
+  type,
+}: {
+  initials: React.ReactElement;
+  text: React.ReactElement;
+  time: string;
+  type: string;
+}) => {
   let colorClass = "bg-stone-100 text-stone-600 border-stone-200";
   if (type === "success")
     colorClass = "bg-primary/10 text-primary-500/80 border-primary-500/80";
-  if (type === "danger") colorClass = "bg-danger/10 text-danger/80 border-danger/80";
-  if (type === "neutral")
-    colorClass = "bg-gold/10 text-gold/80 border-gold/80";
+  if (type === "danger")
+    colorClass = "bg-danger/10 text-danger/80 border-danger/80";
+  if (type === "neutral") colorClass = "bg-gold/10 text-gold/80 border-gold/80";
 
   return (
     <div className="flex gap-4 relative">
@@ -338,184 +409,205 @@ const ActivityItem = ({ initials, text, time, type }: any) => {
 
 export default function InvitationDashboard({
   invitationId,
+  invitationData,
 }: {
   invitationId: string;
+  invitationData: Invitation | null;
 }) {
   const user = useAuthUser();
   const { toast } = useToast();
+
   const router = useRouter();
 
   const { guests, isLoadingGuests, error } = useGuestsData(invitationId, user);
+
   const stats = useGuestsStats(guests);
 
+  useEffect(() => {
+    if (error) {
+      if (error === "permission-denied" || error === "unauthenticated") {
+        router.replace("/admin/invitations");
+      } else {
+        toast("Ocurrió un error", "error");
+      }
+    }
+  }, [error, router]);
+
   if (isLoadingGuests) return <Loader fullscreen />;
-  if (error) toast("Ocurrió un error", "error");
+
+  if (error === "permission-denied") return null;
 
   return (
-      <div className="max-w-6xl mx-auto p-4 md:px-6 py-4 md:py-10 space-y-6 duration-700">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 p-8 rounded-3xl border border-sand relative overflow-hidden border-white/40 bg-white/80 backdrop-blur-md shadow-sm">
-          <div className="relative z-10">
-            <h1 className="text-3xl md:text-4xl font-serif font-medium text-primary mb-2">
-              Resumen del Evento
-            </h1>
-            <div className="flex items-center gap-2 text-primary/70 text-sm font-semibold">
-              <Clock className="text-gold" size={14} />
-              <span>Última actualización: hace un momento</span>
-            </div>
+    <div className="max-w-6xl mx-auto p-4 md:px-6 py-4 md:py-10 space-y-6 duration-700">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 p-8 rounded-3xl border border-sand relative overflow-hidden border-white/40 bg-white/80 backdrop-blur-md shadow-sm">
+        <div className="relative z-10">
+          <h1 className="text-3xl md:text-4xl font-serif font-medium text-primary mb-2">
+            Resumen del Evento
+          </h1>
+          <div className="flex items-center gap-2 text-primary/70 text-sm font-semibold">
+            <Clock className="text-gold" size={14} />
+            <span>Última actualización: hace un momento</span>
           </div>
-          <TextureButton
-            className="relative z-10 text-white font-semibold px-8 py-3.5 rounded-xl"
-            icon={<Users size={16} />}
-            onClick={() => {
-              router.push(`/admin/invitations/${invitationId}`);
-            }}
-          >
-            Gestionar invitados
-          </TextureButton>
         </div>
+        <TextureButton
+          className="relative z-10 text-white font-semibold px-8 py-3.5 rounded-xl"
+          icon={<Users size={16} />}
+          onClick={() => {
+            router.push(`/admin/invitations/${invitationId}`);
+          }}
+        >
+          Gestionar invitados
+        </TextureButton>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-          <MessagesCarousel invitationId={invitationId} />
-          <GuestStatsPieChart stats={stats} />
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+        <MessagesCarousel invitationId={invitationId} />
+        <GuestStatsPieChart stats={stats} />
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white/80 rounded-2xl shadow-sm border border-sand p-8 relative overflow-hidden">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-sand-light">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-paper rounded-lg border border-sand text-gold">
-                  <Activity size={20} />
-                </div>
-                <h2 className="text-lg font-bold text-primary">
-                  Actividad Reciente
-                </h2>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-white/80 rounded-2xl shadow-sm border border-sand p-8 relative overflow-hidden">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-sand-light">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-paper rounded-lg border border-sand text-gold">
+                <Activity size={20} />
               </div>
-              <span className="text-xs font-medium text-primary bg-paper border border-sand-200 px-4 py-1.5 rounded-full uppercase tracking-wider">
-                Hoy
-              </span>
+              <h2 className="text-lg font-bold text-primary">
+                Actividad Reciente
+              </h2>
             </div>
-
-            <div className="relative grid grid-cols-1 md:grid-cols-2 flex-col gap-5 mx-2">
-              <ActivityItem
-                initials={<CheckCircle2 size={16} />}
-                text={
-                  <>
-                    <strong>Familia González</strong> confirmó asistencia
-                  </>
-                }
-                time="Hace 10 min"
-                type="success"
-              />
-              <ActivityItem
-                initials={<Clock size={16} />}
-                text={
-                  <>
-                    <strong>María López</strong> vio la invitación
-                  </>
-                }
-                time="Hace 1 hora"
-                type="neutral"
-              />
-              <ActivityItem
-                initials={<XCircle size={16} />}
-                text={
-                  <>
-                    <strong>Carlos Ruiz</strong> declinó la invitación
-                  </>
-                }
-                time="Hace 3 horas"
-                type="danger"
-              />
-              <ActivityItem
-                initials={<CheckCircle2 size={16} />}
-                text={
-                  <>
-                    <strong>Familia González</strong> confirmó asistencia
-                  </>
-                }
-                time="Hace 10 min"
-                type="success"
-              />
-              <ActivityItem
-                initials={<Clock size={16} />}
-                text={
-                  <>
-                    <strong>María López</strong> vio la invitación
-                  </>
-                }
-                time="Hace 1 hora"
-                type="neutral"
-              />
-              <ActivityItem
-                initials={<XCircle size={16} />}
-                text={
-                  <>
-                    <strong>Carlos Ruiz</strong> declinó la invitación
-                  </>
-                }
-                time="Hace 3 horas"
-                type="danger"
-              />
-            </div>
+            <span className="text-xs font-medium text-primary bg-paper border border-sand-200 px-4 py-1.5 rounded-full uppercase tracking-wider">
+              Hoy
+            </span>
           </div>
 
-          <div className="bg-primary-800/85 rounded-2xl p-8 shadow-xl relative overflow-hidden text-[#F9F7F2] group">
-            {/* Decoración Fondo */}
-            <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
-              <Gem size={140} />
+          <div className="relative grid grid-cols-1 md:grid-cols-2 flex-col gap-5 mx-2">
+            <ActivityItem
+              initials={<CheckCircle2 size={16} />}
+              text={
+                <>
+                  <strong>Familia González</strong> confirmó asistencia
+                </>
+              }
+              time="Hace 10 min"
+              type="success"
+            />
+            <ActivityItem
+              initials={<Clock size={16} />}
+              text={
+                <>
+                  <strong>María López</strong> vio la invitación
+                </>
+              }
+              time="Hace 1 hora"
+              type="neutral"
+            />
+            <ActivityItem
+              initials={<XCircle size={16} />}
+              text={
+                <>
+                  <strong>Carlos Ruiz</strong> declinó la invitación
+                </>
+              }
+              time="Hace 3 horas"
+              type="danger"
+            />
+            <ActivityItem
+              initials={<CheckCircle2 size={16} />}
+              text={
+                <>
+                  <strong>Familia González</strong> confirmó asistencia
+                </>
+              }
+              time="Hace 10 min"
+              type="success"
+            />
+            <ActivityItem
+              initials={<Clock size={16} />}
+              text={
+                <>
+                  <strong>María López</strong> vio la invitación
+                </>
+              }
+              time="Hace 1 hora"
+              type="neutral"
+            />
+            <ActivityItem
+              initials={<XCircle size={16} />}
+              text={
+                <>
+                  <strong>Carlos Ruiz</strong> declinó la invitación
+                </>
+              }
+              time="Hace 3 horas"
+              type="danger"
+            />
+          </div>
+        </div>
+
+        <div className="bg-primary-800/85 rounded-2xl p-8 shadow-xl relative overflow-hidden text-[#F9F7F2] group">
+          {/* Decoración Fondo */}
+          <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
+            <Gem size={140} />
+          </div>
+
+          <h3 className="text-white font-serif text-2xl mb-8 relative z-10 border-b border-white/20 pb-4">
+            Detalles del Evento
+          </h3>
+
+          <div className="space-y-8 relative z-10">
+            <div className="flex items-start gap-5">
+              <div className="p-3 bg-charcoal/10 rounded-xl border border-white/20 backdrop-blur-sm">
+                <Calendar size={20} className="text-gold" />
+              </div>
+              <div>
+                <p className="text-[10px] text-gold font-bold uppercase tracking-[0.15em] mb-1">
+                  Fecha
+                </p>
+                <p className="text-white font-medium text-lg leading-tight">
+                  {invitationData &&
+                    formatTimeStamp(invitationData.fecha)
+                      .replaceAll("/", "")
+                      .toLocaleLowerCase()}
+                </p>
+                <p className="text-xs text-white/60 mt-1">
+                  {invitationData?.recepcion.hora}
+                </p>
+              </div>
             </div>
 
-            <h3 className="text-white font-serif text-2xl mb-8 relative z-10 border-b border-white/20 pb-4">
-              Detalles del Evento
-            </h3>
-
-            <div className="space-y-8 relative z-10">
-              <div className="flex items-start gap-5">
-                <div className="p-3 bg-charcoal/10 rounded-xl border border-white/20 backdrop-blur-sm">
-                  <Calendar size={20} className="text-gold" />
-                </div>
-                <div>
-                  <p className="text-[10px] text-gold font-bold uppercase tracking-[0.15em] mb-1">
-                    Fecha
-                  </p>
-                  <p className="text-white font-medium text-lg leading-tight">
-                    Sábado, 22 Oct 2025
-                  </p>
-                  <p className="text-xs text-white/60 mt-1">18:00 hrs</p>
-                </div>
+            <div className="flex items-start gap-5">
+              <div className="p-3 bg-charcoal/10 rounded-xl border border-white/20 backdrop-blur-sm">
+                <MapPin size={20} className="text-gold" />
               </div>
-
-              <div className="flex items-start gap-5">
-                <div className="p-3 bg-charcoal/10 rounded-xl border border-white/20 backdrop-blur-sm">
-                  <MapPin size={20} className="text-gold" />
-                </div>
-                <div>
-                  <p className="text-[10px] text-gold font-bold uppercase tracking-[0.15em] mb-1">
-                    Lugar
-                  </p>
-                  <p className="text-white font-medium text-lg leading-tight">
-                    Hacienda Los Arcángeles
-                  </p>
-                  <p className="text-xs text-white/60 mt-1">
-                    San Miguel de Allende, Gto.
-                  </p>
-                </div>
+              <div>
+                <p className="text-[10px] text-gold font-bold uppercase tracking-[0.15em] mb-1">
+                  Lugar
+                </p>
+                <p className="text-white font-medium text-lg leading-tight">
+                  {invitationData?.recepcion.nombreSalon || "Salón de eventos"}
+                </p>
+                <p className="text-xs text-white/60 mt-1">
+                  {invitationData?.recepcion.direccion || "Salón de eventos"}
+                </p>
               </div>
+            </div>
 
-              <div className="pt-6 mt-4">
-                <Link
-                 href={`${router.basePath}/i/${invitationId}`}
-                 className="w-full py-4 rounded-full border border-gold/50 text-gold hover:bg-gold hover:text-primary transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 group/btn">
-                  Ver invitación{" "}
-                  <ArrowRight
-                    size={14}
-                    className="group-hover/btn:translate-x-1 transition-transform"
-                  />
-                </Link>
-              </div>
+            <div className="pt-6 mt-4">
+              <Link
+                href={`${router.basePath}/i/${invitationId}`}
+                className="w-full py-4 rounded-full border border-gold/50 text-gold hover:bg-gold hover:text-primary transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 group/btn"
+              >
+                Ver invitación{" "}
+                <ArrowRight
+                  size={14}
+                  className="group-hover/btn:translate-x-1 transition-transform"
+                />
+              </Link>
             </div>
           </div>
         </div>
       </div>
+    </div>
   );
 }
