@@ -5,6 +5,8 @@ import ArrowsIcon from "@/icons/arrows-icon";
 import useMusicStore from "@/stores/musicStore";
 import { useInvitationStore } from "../../stores/invitationStore";
 import { formatToEventDate } from "@/utils/formatters";
+import { useSearchParams } from "next/navigation";
+import { ActivityService } from "@/services/activityService";
 
 const animateCoverVariants = {
   none: { opacity: 0, y: 40 },
@@ -70,6 +72,11 @@ export default function Cover({ isSealVisible }: Props) {
   ];
   const [index, setIndex] = useState(0);
 
+    const searchParams = useSearchParams();
+    const id = searchParams?.get("guest");
+    const preview = searchParams?.get("preview");
+    const token = searchParams?.get("token");
+
   useEffect(() => {
     if (!isSealVisible) {
       setTimeout(() => {
@@ -77,6 +84,12 @@ export default function Cover({ isSealVisible }: Props) {
       }, 5);
     }
   }, [isSealVisible]);
+
+  useEffect(() => {
+    if(!isSealVisible && id && !preview && !token && invitationData){
+      ActivityService.logActivity(invitationData.id, {action: 'view', guestId: id })
+    }
+  }, [id, preview, token, isSealVisible, invitationData])
 
   useEffect(() => {
     (async () => {

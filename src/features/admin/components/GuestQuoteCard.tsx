@@ -31,13 +31,13 @@ export default function GuestQuoteCard({
     leido,
     asistencia,
     autor,
-    fecha,
+    fechaCreacion,
     id,
     mensaje,
     parentesco,
-    timestamp,
+    fechaModificacion,
   } = msg;
-  const timeAgo = useTimeAgo(timestamp);
+  const timeAgo = useTimeAgo(fechaModificacion);
 
   return (
     <div
@@ -106,7 +106,7 @@ export default function GuestQuoteCard({
               </div>
 
               <span className="text-[11px] text-stone-400 mt-1 capitalize-first">
-                {timeAgo || fecha}
+                {timeAgo || fechaCreacion}
               </span>
             </div>
           </div>

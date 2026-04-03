@@ -128,8 +128,8 @@ interface GuestQuote {
   autor: string;
   parentesco: string;
   mensaje: string;
-  fecha: string;
-  timestamp: number;
+  fechaCreacion: number;
+  fechaModificacion: number;
   leido: boolean;
   asistencia: boolean;
 }
@@ -150,3 +150,13 @@ export type FirestoreResult<T> = Promise<{
   result: T | null;
   error: FirestoreErrorCode | null;
 }>;
+
+export type ActivityActionType = "view" | "confirm" | "decline";
+
+export interface GuestActivity {
+  id?: string;
+  guestId: string;
+  guestName: string;
+  action: ActivityActionType;
+  timestamp: Timestamp;
+}

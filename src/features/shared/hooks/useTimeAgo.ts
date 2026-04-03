@@ -1,17 +1,62 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 
-export function useTimeAgo(timestamp: number | undefined) {
+// --- TIPOS ESTRICTOS ---
+type FirestoreTimestamp = {
+  toDate: () => Date;
+};
+
+type SerializedTimestamp = {
+  seconds: number;
+  nanoseconds?: number;
+};
+
+type ValidTimestamp =
+  | Date
+  | string
+  | number
+  | FirestoreTimestamp
+  | SerializedTimestamp;
+
+export function useTimeAgo(timestamp?: ValidTimestamp | null) {
   const [timeAgo, setTimeAgo] = useState<string>("");
 
   useEffect(() => {
     if (!timestamp) return;
 
     const updateTime = () => {
-      const date = new Date(timestamp);
-      const now = new Date();
+      let date: Date;
 
+      // 1. Normalizamos la fecha utilizando Type Guards estrictos
+      if (timestamp instanceof Date) {
+        date = timestamp;
+      } else if (
+        typeof timestamp === "string" ||
+        typeof timestamp === "number"
+      ) {
+        date = new Date(timestamp);
+      } else if (
+        "toDate" in timestamp &&
+        typeof timestamp.toDate === "function"
+      ) {
+        // Es un Timestamp nativo de Firestore
+        date = timestamp.toDate();
+      } else if (
+        "seconds" in timestamp &&
+        typeof timestamp.seconds === "number"
+      ) {
+        // Es un objeto serializado de Firestore
+        date = new Date(timestamp.seconds * 1000);
+      } else {
+        // Fallback seguro
+        date = new Date(String(timestamp));
+      }
+
+      // Si por alguna razón la fecha no es válida, abortamos
+      if (isNaN(date.getTime())) return;
+
+      const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);

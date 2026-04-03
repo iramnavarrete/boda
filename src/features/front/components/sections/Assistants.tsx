@@ -16,6 +16,7 @@ import CustomLottie from "@/features/shared/components/CustomLottie";
 import { GuestService } from "@/services/guestService";
 import { useInvitationStore } from "../../stores/invitationStore";
 import { GuestQuotesService } from "@/services/guestQuotesService";
+import { ActivityService } from "@/services/activityService";
 
 const defaultGuest: Guest = {
   asistencia: null, // Inicializado como null para que no muestre los campos
@@ -146,7 +147,7 @@ function Assistants() {
                   )}
                 </AnimatePresence>
               </div>
-              <div className="border border-[#EBE5DA] rounded-3xl bg-white shadow-xl px-4 py-8">
+              <div className="border border-sand-200 rounded-3xl bg-white shadow-xl px-4 py-8">
                 <div
                   className={`pt-12 ${isFormSubmitted || (guestData.cambiosPermitidos === false && guestData.asistencia !== true) ? "block" : "hidden"}`}
                 >
@@ -237,6 +238,16 @@ function Assistants() {
                                             mensaje: data.notaInvitado,
                                           },
                                         ).then(() => {
+                                          ActivityService.logActivity(
+                                            invitationData.id,
+                                            {
+                                              action:
+                                                data.asistencia === true
+                                                  ? "confirm"
+                                                  : "decline",
+                                              guestId: data.id!,
+                                            },
+                                          );
                                           setGuestData({
                                             ...data,
                                             id: data.id!,
@@ -294,15 +305,15 @@ function Assistants() {
                                         }}
                                         className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all duration-300 font-medium border ${
                                           values.asistencia === true
-                                            ? "bg-[#EBE5DA] text-primary border-primary-700/80"
-                                            : "bg-transparent border-[#EBE5DA] text-[#A8A29E] hover:bg-[#EBE5DA]/50 hover:text-primary-700/80"
+                                            ? "bg-sand-200 text-primary border-primary-700/80"
+                                            : "bg-transparent border-sand-200 text-[#A8A29E] hover:bg-sand-200/50 hover:text-primary-700/80"
                                         }`}
                                       >
                                         <CheckCircle2
                                           size={18}
                                           className={
                                             values.asistencia === true
-                                              ? "text-[#58624F]"
+                                              ? "text-primary-600"
                                               : "opacity-80"
                                           }
                                         />
@@ -318,7 +329,7 @@ function Assistants() {
                                         className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all duration-300 font-medium border ${
                                           values.asistencia === false
                                             ? "bg-red-200 text-red-700/80 border-red-600/80"
-                                            : "bg-transparent border-[#EBE5DA] text-[#A8A29E] hover:bg-[#EBE5DA]/50 hover:text-[#58624F]"
+                                            : "bg-transparent border-sand-200 text-[#A8A29E] hover:bg-sand-200/50 hover:text-primary-600"
                                         }`}
                                       >
                                         <XCircle
@@ -431,7 +442,7 @@ function Assistants() {
                               </p>
                             )}
                             <button
-                              className="mt-8 px-8 py-3.5 rounded-xl bg-[#EBE5DA] text-[#58624F] font-medium transition-all hover:opacity-90 w-full md:w-auto"
+                              className="mt-8 px-8 py-3.5 rounded-xl bg-sand-200 text-primary-600 font-medium transition-all hover:opacity-90 w-full md:w-auto"
                               onClick={() => {
                                 setIsFormSubmitted(false);
                                 setIsDisabled(false);
