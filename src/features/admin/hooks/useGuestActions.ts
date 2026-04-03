@@ -49,7 +49,6 @@ export function useGuestActions(invitationId?: string) {
       invitationId,
       guest.id,
     );
-    console.log({ contactInfo });
     const telefono = contactInfo?.telefono;
     if (!telefono) {
       toast("Celular no válido", "error");

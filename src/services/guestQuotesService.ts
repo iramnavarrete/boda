@@ -10,10 +10,12 @@ import {
   FirestoreError,
   serverTimestamp,
   DocumentData,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { FirestoreResult, Guest, GuestQuote } from "@/types";
 import { Unsubscribe } from "firebase/auth";
+import { FirebaseError } from "firebase/app";
 
 // Definimos la interfaz para los mensajes tipados correctamente
 type GuestQuoteMap = GuestQuote & {
@@ -275,7 +277,7 @@ export const GuestQuotesService = {
     invitationId: string,
     guestId: string,
     payload: Partial<GuestQuote>,
-  ): FirestoreResult<boolean> => {
+  ): Promise<FirestoreResult<boolean>> => {
     if (!invitationId || !guestId || !payload)
       return { result: null, error: null };
 
@@ -294,20 +296,33 @@ export const GuestQuotesService = {
 
       const { id: _, ...dataToUpdate } = payload;
 
-      await setDoc(
-        docRef,
-        {
+      // Verificamos si el documento existe explícitamente en lugar de depender del try-catch de Firebase
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        // Si ya existe, solo actualizamos (Ideal para cuando el invitado edita)
+        await updateDoc(docRef, {
+          ...dataToUpdate,
+          leido: false,
+          fechaModificacion: timestamp,
+        });
+      } else {
+        // Si no existe, lo creamos con ambas fechas
+        await setDoc(docRef, {
           ...dataToUpdate,
           leido: false,
           fechaCreacion: timestamp,
           fechaModificacion: timestamp,
-        },
-        { merge: true },
-      );
+        });
+      }
+
       return { result: true, error: null };
     } catch (error) {
-      console.error("Error actualizando mensaje para anfitrión:", error);
-      return { result: false, error: (error as FirestoreError).code };
+      console.error("Error guardando mensaje del invitado:", error);
+      return {
+        result: false,
+        error: (error as FirestoreError).code || "unknown-error",
+      };
     }
   },
 

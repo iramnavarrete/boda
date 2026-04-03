@@ -18,6 +18,7 @@ import { useToast } from "@/features/shared/components/Toast";
 import FloatingBulkActionsBar from "@/features/admin/components/FloatingBulkActionsBar";
 import StatsSidebar from "./StatsSidebar";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
+import GuestsTableView from "./GuestTableView";
 
 export default function WeddingAdmin() {
   const invitationData = useInvitationStore((state) => state.invitationData);
@@ -43,6 +44,8 @@ export default function WeddingAdmin() {
     not_sent: guests?.filter((g: Guest) => !g.whatsappEnviado).length || 0,
   };
 
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+
   // 2. Aplicamos la segunda capa de filtrado sobre el resultado del primer filtro
   const finalFilteredGuests = filteredGuests.filter((g: Guest) => {
     if (whatsappFilter === "all") return true;
@@ -50,6 +53,10 @@ export default function WeddingAdmin() {
     if (whatsappFilter === "not_sent") return !g.whatsappEnviado;
     return true;
   });
+
+  // ESTADOS DEL TUTORIAL DE WHATSAPP
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [pendingWappGuest, setPendingWappGuest] = useState<Guest | null>(null);
 
   const {
     selectedGuests,
@@ -182,6 +189,41 @@ export default function WeddingAdmin() {
     handleSaveGuest(e, currentGuestId, formData, handleCloseModal);
   };
 
+  // Función que intercepta el clic en WhatsApp
+  const handleWhatsAppClick = (guest: Guest) => {
+    // Validamos en el lado del cliente (para evitar errores de SSR)
+    const hasSeenTutorial =
+      typeof window !== "undefined"
+        ? localStorage.getItem("tutorial_whatsapp_shown")
+        : false;
+
+    if (!hasSeenTutorial) {
+      // Si es la primera vez, abrimos el modal tutorial
+      setPendingWappGuest(guest);
+      setIsTutorialOpen(true);
+    } else {
+      // Si ya lo vio, ejecuta la acción normal
+      sendWhatsApp(guest);
+      if (invitationData) {
+        GuestService.markWhastappSent(invitationData.id, guest);
+      }
+    }
+  };
+
+  const confirmWhatsAppTutorial = () => {
+    // Marcamos que ya vio el tutorial
+    if (typeof window !== "undefined") {
+      localStorage.setItem("tutorial_whatsapp_shown", "true");
+    }
+    setIsTutorialOpen(false);
+
+    // Ejecutamos la acción pendiente
+    if (pendingWappGuest) {
+      sendWhatsApp(pendingWappGuest);
+      setPendingWappGuest(null);
+    }
+  };
+
   return (
     <div>
       <section className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
@@ -206,7 +248,6 @@ export default function WeddingAdmin() {
               filterStatus={filterStatus}
               setFilterStatus={setFilterStatus}
               filterCounts={filterCounts}
-              // Nuevos Props para WhatsApp
               whatsappFilter={whatsappFilter}
               setWhatsappFilter={setWhatsappFilter}
               whatsappCounts={whatsappCounts}
@@ -218,22 +259,40 @@ export default function WeddingAdmin() {
               }}
               disabled={selectedGuests.size > 0}
               filteredGuestCount={finalFilteredGuests.length} // Actualizado
+              setViewMode={setViewMode}
+              viewMode={viewMode}
             />
-
-            <GuestsGridView
-              filteredGuests={finalFilteredGuests} // Pasamos la lista con todos los filtros combinados
-              selectedGuests={selectedGuests}
-              onSelectGuest={handleSelectGuest}
-              onEdit={(e) => {
-                if (invitationData) {
-                  handleOpenModal(invitationData.id, e);
-                }
-              }}
-              onDelete={handleDeleteGuest}
-              onSendWhatsApp={sendWhatsApp}
-              onLockToggle={handleLockToggle}
-              isLoading={isLoadingGuests}
-            />
+            {viewMode === "grid" ? (
+              <GuestsGridView
+                filteredGuests={finalFilteredGuests} // Pasamos la lista con todos los filtros combinados
+                selectedGuests={selectedGuests}
+                onSelectGuest={handleSelectGuest}
+                onEdit={(e) => {
+                  if (invitationData) {
+                    handleOpenModal(invitationData.id, e);
+                  }
+                }}
+                onDelete={handleDeleteGuest}
+                onSendWhatsApp={handleWhatsAppClick}
+                onLockToggle={handleLockToggle}
+                isLoading={isLoadingGuests}
+              />
+            ) : (
+              <GuestsTableView
+                filteredGuests={finalFilteredGuests} // Pasamos la lista con todos los filtros combinados
+                selectedGuests={selectedGuests}
+                onSelectGuest={handleSelectGuest}
+                onEdit={(e) => {
+                  if (invitationData) {
+                    handleOpenModal(invitationData.id, e);
+                  }
+                }}
+                onDelete={handleDeleteGuest}
+                onSendWhatsApp={handleWhatsAppClick}
+                onLockToggle={handleLockToggle}
+                // isLoading={isLoadingGuests}
+              />
+            )}
           </main>
         </div>
       </section>
@@ -268,6 +327,18 @@ export default function WeddingAdmin() {
         isDanger={confirmModal.isDanger}
         confirmText={confirmModal.isDanger ? "Eliminar" : "Confirmar"}
         onBackdropPress={closeConfirmModal}
+      />
+
+      <ConfirmationModal
+        isOpen={isTutorialOpen}
+        onClose={() => {
+          setIsTutorialOpen(false);
+          setPendingWappGuest(null);
+        }}
+        onConfirm={confirmWhatsAppTutorial}
+        title="Aviso de Envío"
+        message="Al hacer clic en este botón, el invitado se marcará automáticamente como 'WhatsApp enviado'. Asegúrate de enviar correctamente el mensaje desde tu aplicación para evitar diferencias en la información de tu lista."
+        confirmText="Entendido, continuar"
       />
     </div>
   );

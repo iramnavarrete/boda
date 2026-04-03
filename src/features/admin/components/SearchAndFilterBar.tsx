@@ -12,6 +12,8 @@ import {
   FileSpreadsheet,
   Send,
   MessageCircle,
+  List,
+  LayoutGrid,
 } from "lucide-react";
 import {
   FilterCounts,
@@ -46,6 +48,9 @@ interface SearchAndFilterBarProps {
   whatsappFilter: WhatsappFilterType;
   setWhatsappFilter: (status: WhatsappFilterType) => void;
   whatsappCounts: WhatsappCounts;
+  // Control de Vista (Grid / Table)
+  viewMode?: "grid" | "table";
+  setViewMode?: (mode: "grid" | "table") => void;
 
   onExportExcel: () => void;
   onNewGuest: () => void;
@@ -62,6 +67,8 @@ export default function SearchAndFilterBar({
   whatsappFilter,
   setWhatsappFilter,
   whatsappCounts,
+  viewMode,
+  setViewMode,
   onExportExcel,
   onNewGuest,
   disabled,
@@ -147,10 +154,7 @@ export default function SearchAndFilterBar({
               </button>
             )}
           </div>
-        </div>
 
-        {/* GRUPO DERECHO: Acciones */}
-        <div className="flex gap-3 shrink-0 relative">
           {/* FILTRO COMPACTO (Dropdown) */}
           <div className="relative" ref={filterRef}>
             <button
@@ -163,7 +167,7 @@ export default function SearchAndFilterBar({
                   !hasActiveFilters ? "text-stone-light" : "currentColor"
                 }
               />
-              <span>{getFilterLabel()}</span>
+              <span className="hidden sm:inline">{getFilterLabel()}</span>
               <ChevronDown
                 size={14}
                 className={`transition-transform duration-200 opacity-60 ${
@@ -174,7 +178,7 @@ export default function SearchAndFilterBar({
 
             <div
               className={cn(
-                "absolute top-full left-0 w-56 bg-white/95 backdrop-blur-sm text-stone-800 rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
+                "absolute top-full right-0 md:left-0 w-56 bg-white/95 backdrop-blur-sm text-stone-800 rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
                 "transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) z-50 flex flex-col",
                 isFilterOpen
                   ? "opacity-100 translate-y-1 scale-100"
@@ -395,9 +399,43 @@ export default function SearchAndFilterBar({
               )}
             </div>
           </div>
+        </div>
+
+        {/* GRUPO DERECHO: Acciones */}
+        <div className="flex gap-3 shrink-0 relative h-[46px]">
+          {/* Toggle Vista (Solo Desktop) */}
+          {viewMode && setViewMode && (
+            <div className="hidden md:flex items-center bg-white/90 border border-[#EBE5DA] rounded-xl p-1 shadow-sm h-full">
+              <button
+                onClick={() => setViewMode("grid")}
+                className={cn(
+                  "p-2 rounded-lg transition-all flex items-center justify-center h-full",
+                  viewMode === "grid"
+                    ? "bg-[#FDFBF7] text-[#C5A669] shadow-sm border border-[#EBE5DA]"
+                    : "text-[#A8A29E] hover:text-[#5A5A5A] border border-transparent",
+                )}
+                title="Vista de cuadrícula"
+              >
+                <LayoutGrid size={16} />
+              </button>
+              <button
+                onClick={() => setViewMode("table")}
+                className={cn(
+                  "p-2 rounded-lg transition-all flex items-center justify-center h-full",
+                  viewMode === "table"
+                    ? "bg-[#FDFBF7] text-[#C5A669] shadow-sm border border-[#EBE5DA]"
+                    : "text-[#A8A29E] hover:text-[#5A5A5A] border border-transparent",
+                )}
+                title="Vista de lista"
+              >
+                <List size={16} />
+              </button>
+            </div>
+          )}
+
           <button
             onClick={onExportExcel}
-            className="hidden md:flex items-center justify-center px-4 py-3 bg-white/90 text-stone-custom border border-sand rounded-xl hover:bg-[#C5A669]/80 hover:text-white hover:border-[#C5A669]/80 transition-all text-sm font-medium gap-2 shadow-sm group duration-400"
+            className="hidden md:flex items-center justify-center px-4 py-0 h-full bg-white/90 text-stone-custom border border-sand rounded-xl hover:bg-[#C5A669]/80 hover:text-white hover:border-[#C5A669]/80 transition-all text-sm font-medium gap-2 shadow-sm group duration-400"
             title="Exportar Excel"
           >
             <FileSpreadsheet
@@ -410,7 +448,7 @@ export default function SearchAndFilterBar({
           <TextureButton
             icon={<Plus size={18} />}
             onClick={onNewGuest}
-            className="px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#C5A669]/20 hover:shadow-[#C5A669]/30 hover:-translate-y-0.5 font-bold"
+            className="px-6 py-0 h-full rounded-xl transition-all shadow-lg shadow-[#C5A669]/20 hover:shadow-[#C5A669]/30 hover:-translate-y-0.5 font-bold"
           >
             <span>Nuevo Invitado</span>
           </TextureButton>

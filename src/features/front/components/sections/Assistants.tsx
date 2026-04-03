@@ -55,11 +55,9 @@ function Assistants() {
 
   const handleGetGuestData = useCallback(
     (id: string) => {
-      console.log({ id, invitationData });
       if (!isDefaultId(id) && invitationData) {
         GuestService.getGuest(invitationData.id, id).then(
           ({ guest, error }) => {
-            console.log({ guest });
             if (error || !guest) {
               setGuestData(defaultGuest);
               return;
@@ -225,6 +223,7 @@ function Assistants() {
                                     data.id!,
                                     data,
                                     false,
+                                    true
                                   )
                                     .then(() => {
                                       setIsFormSubmitted(true);
@@ -259,7 +258,6 @@ function Assistants() {
                                       }
                                     })
                                     .catch((error) => {
-                                      console.log(error, "ERROR");
                                       setIsDisabled(false);
                                     });
                                 } else {

@@ -47,7 +47,6 @@ export default function EnvelopeSplash({
 
   const handleLottieComplete = () => {
     setIsLottieLoaded(true);
-    console.log("DOM CARGADO");
   };
 
   const handleSealClick = () => {

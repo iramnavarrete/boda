@@ -44,49 +44,12 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
 
   const { invitationId } = router.query;
 
-  // ESTADOS DEL TUTORIAL DE WHATSAPP
-  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
-  const [pendingWappGuest, setPendingWappGuest] = useState<Guest | null>(null);
-
   const handleActionButtonClick = (
     event: MouseEvent<HTMLButtonElement>,
     callback: () => void,
   ) => {
     event.stopPropagation();
     callback();
-  };
-
-  // Función que intercepta el clic en WhatsApp
-  const handleWhatsAppClick = (guest: Guest) => {
-    // Validamos en el lado del cliente (para evitar errores de SSR)
-    const hasSeenTutorial =
-      typeof window !== "undefined"
-        ? localStorage.getItem("tutorial_whatsapp_shown")
-        : false;
-
-    if (!hasSeenTutorial) {
-      // Si es la primera vez, abrimos el modal tutorial
-      setPendingWappGuest(guest);
-      setIsTutorialOpen(true);
-    } else {
-      // Si ya lo vio, ejecuta la acción normal
-      onSendWhatsApp(guest);
-      GuestService.markWhastappSent(invitationId as string, guest);
-    }
-  };
-
-  const confirmWhatsAppTutorial = () => {
-    // Marcamos que ya vio el tutorial
-    if (typeof window !== "undefined") {
-      localStorage.setItem("tutorial_whatsapp_shown", "true");
-    }
-    setIsTutorialOpen(false);
-
-    // Ejecutamos la acción pendiente
-    if (pendingWappGuest) {
-      onSendWhatsApp(pendingWappGuest);
-      setPendingWappGuest(null);
-    }
   };
 
   return (
@@ -224,7 +187,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                         title="Enviar Whatsapp"
                         onClick={(e) =>
                           handleActionButtonClick(e, () =>
-                            handleWhatsAppClick(g),
+                            onSendWhatsApp(g),
                           )
                         }
                         className="p-2 rounded-xl text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors duration-300 border border-sand hover:border-green-600 relative"
@@ -285,17 +248,6 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
           </div>
         ))}
       </div>
-      <ConfirmationModal
-        isOpen={isTutorialOpen}
-        onClose={() => {
-          setIsTutorialOpen(false);
-          setPendingWappGuest(null);
-        }}
-        onConfirm={confirmWhatsAppTutorial}
-        title="Aviso de Envío"
-        message="Al hacer clic en este botón, el invitado se marcará automáticamente como 'WhatsApp enviado'. Asegúrate de enviar correctamente el mensaje desde tu aplicación para evitar diferencias en la información de tu lista."
-        confirmText="Entendido, continuar"
-      />
     </>
   );
 };

@@ -103,48 +103,67 @@ export const GuestService = {
     guestId: string,
     data: GuestFormData,
     isNew: boolean,
+    isPublic: boolean = false,
   ) => {
     const batch = writeBatch(db);
     const timestamp = serverTimestamp();
 
     const publicRef = doc(db, "invitations", invitationId, "guests", guestId);
-    const privateRef = doc(
-      db,
-      "invitations",
-      invitationId,
-      "guests",
-      guestId,
-      "private",
-      "contactInfo",
-    );
 
-    const tieneTelefono = !!(data.telefono && data.telefono.trim().length > 0);
+    let publicPayload: Partial<Guest> = {};
 
-    const publicPayload: Partial<Guest> = {
-      nombre: data.nombre,
-      invitados: Number(data.invitados) || 1,
-      notaAnfitrion: data.notaAnfitrion || null,
-      cambiosPermitidos: data.cambiosPermitidos ?? true,
-      tieneTelefono,
-      ultimaModificacion: timestamp,
-      asistencia: data.asistencia,
-      confirmados: Number(data.confirmados),
-    };
+    if (isPublic) {
+      // 🌍 SI ES UN INVITADO PÚBLICO:
+      // Enviamos ÚNICAMENTE los campos permitidos en las reglas de Firestore
+      publicPayload = {
+        asistencia: data.asistencia,
+        confirmados: Number(data.confirmados) || 0,
+        ultimaModificacion: timestamp,
+      } as Partial<Guest>;
+    } else {
+      const privateRef = doc(
+        db,
+        "invitations",
+        invitationId,
+        "guests",
+        guestId,
+        "private",
+        "contactInfo",
+      );
 
-    if (isNew) {
-      publicPayload.id = guestId;
-      publicPayload.fechaCreacion = timestamp;
-      publicPayload.notaInvitado = null;
-      publicPayload.asistencia = null;
-      publicPayload.confirmados = null;
+      const tieneTelefono = !!(
+        data.telefono && data.telefono.trim().length > 0
+      );
+      // 🔒 SI ES EL ADMINISTRADOR:
+      // Enviamos toda la información (Nombre, cantidad permitida, permisos, etc)
+      publicPayload = {
+        nombre: data.nombre,
+        invitados: Number(data.invitados) || 1,
+        notaAnfitrion: data.notaAnfitrion || null,
+        cambiosPermitidos: data.cambiosPermitidos ?? true,
+        tieneTelefono,
+        ultimaModificacion: timestamp,
+        asistencia: data.asistencia,
+        confirmados: Number(data.confirmados) || 0,
+      };
+
+      if (isNew) {
+        publicPayload.id = guestId;
+        publicPayload.fechaCreacion = timestamp;
+        publicPayload.notaInvitado = null;
+        publicPayload.asistencia = null;
+        publicPayload.confirmados = null;
+      }
+
+      const privatePayload = {
+        telefono: data.telefono || null,
+      };
+
+      batch.set(privateRef, privatePayload, { merge: true });
     }
 
-    const privatePayload = {
-      telefono: data.telefono || null,
-    };
-
+    // Usamos merge: true para no borrar los datos del admin cuando el invitado confirma
     batch.set(publicRef, publicPayload, { merge: true });
-    batch.set(privateRef, privatePayload, { merge: true });
 
     await batch.commit();
   },
