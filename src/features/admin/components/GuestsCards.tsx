@@ -200,8 +200,8 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                     }
                     title={
                       g.cambiosPermitidos
-                        ? "Edición permitida"
-                        : "Edición bloqueada"
+                        ? "Cambios permitidos"
+                        : "Cambios bloqueados"
                     }
                   >
                     {g.cambiosPermitidos ? (
@@ -209,8 +209,8 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                     ) : (
                       <Lock size={14} />
                     )}
-                    <span>
-                      Cambios{" "}
+                    <span className="text-left whitespace-pre-wrap">
+                      Cambios{"\n"}
                       {g.cambiosPermitidos ? "permitidos" : "bloqueados"}
                     </span>
                   </button>
