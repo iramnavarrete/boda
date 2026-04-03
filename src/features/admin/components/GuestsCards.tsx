@@ -14,6 +14,7 @@ import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { MouseEvent } from "react";
 import DashedSeparator from "./DashedSeparator";
 import { cn } from "@heroui/theme";
+import { useRouter } from "next/router";
 
 interface GuestsCardsProps {
   guests: Guest[];
@@ -36,6 +37,10 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
 }) => {
   const isOneOrMoreSelected = selectedGuests.size > 0;
   const compactMode = false;
+
+  const router = useRouter();
+
+  const { invitationId } = router.query;
 
   const handleActionButtonClick = (
     event: MouseEvent<HTMLButtonElement>,
@@ -164,7 +169,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                   ) : (
                     <Lock size={14} />
                   )}
-                  <span>{g.cambiosPermitidos ? "Abierto" : "Cerrado"}</span>
+                  <span>Cambios {g.cambiosPermitidos ? "permitidos" : "bloqueados"}</span>
                 </button>
               </div>
 
@@ -183,6 +188,14 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                 )}
 
                 <button
+                  onClick={(e) =>
+                    handleActionButtonClick(e, () =>
+                      window.open(
+                        `/i/${invitationId}?guest=${g.id}&preview=1&token=AQWOLdldspWRKDOSAKkwqppals`,
+                        "_blank",
+                      ),
+                    )
+                  }
                   className="p-2 rounded-xl text-stone-custom hover:bg-sand-100 hover:text-charcoal hover:border-gold/30 transition-all duration-300 border border-sand shadow-sm"
                   title="Vista previa"
                 >
