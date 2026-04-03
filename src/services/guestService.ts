@@ -256,8 +256,8 @@ export const GuestService = {
     await setDoc(
       docRef,
       {
-        whatsappSent: true,
-      },
+        whatsappEnviado: true,
+      } as Partial<Guest>,
       { merge: true },
     );
   },

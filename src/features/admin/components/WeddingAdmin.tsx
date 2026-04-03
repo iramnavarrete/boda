@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { Guest } from "@/types";
+import { useEffect, useState } from "react";
+import { Guest, WhatsappFilterType } from "@/types";
 import { GuestService } from "@/services/guestService";
 import GuestFormModal from "@/features/admin/components/GuestFormModal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
@@ -28,9 +28,29 @@ export default function WeddingAdmin() {
     setSearchTerm,
     filterStatus,
     setFilterStatus,
-    filteredGuests,
+    filteredGuests, // Lista filtrada por texto y asistencia
     filterCounts,
   } = useGuestsFilter(guests);
+
+  // --- NUEVO ESTADO PARA EL FILTRO DE WHATSAPP ---
+  const [whatsappFilter, setWhatsappFilter] =
+    useState<WhatsappFilterType>("all");
+
+  // 1. Calculamos los contadores totales para WhatsApp basados en la lista original completa
+  const whatsappCounts = {
+    all: guests?.length || 0,
+    sent: guests?.filter((g: Guest) => g.whatsappEnviado).length || 0,
+    not_sent: guests?.filter((g: Guest) => !g.whatsappEnviado).length || 0,
+  };
+
+  // 2. Aplicamos la segunda capa de filtrado sobre el resultado del primer filtro
+  const finalFilteredGuests = filteredGuests.filter((g: Guest) => {
+    if (whatsappFilter === "all") return true;
+    if (whatsappFilter === "sent") return g.whatsappEnviado === true;
+    if (whatsappFilter === "not_sent") return !g.whatsappEnviado;
+    return true;
+  });
+
   const {
     selectedGuests,
     handleSelectGuest,
@@ -38,6 +58,7 @@ export default function WeddingAdmin() {
     clearSelection,
     removeFromSelection,
   } = useGuestsSelection();
+
   const {
     isModalOpen,
     currentGuestId,
@@ -46,24 +67,28 @@ export default function WeddingAdmin() {
     handleOpenModal,
     handleCloseModal,
   } = useGuestForm();
+
   const {
     confirmModal,
     openConfirmModal,
     closeConfirmModal,
     handleExecuteConfirmation,
   } = useConfirmModal();
+
   const { handleSaveGuest, sendWhatsApp, handleExportExcel } = useGuestActions(
     invitationData?.id,
   );
-  const stats = useGuestsStats(filteredGuests);
-  const isFiltered = filteredGuests.length !== guests.length;
+
+  // 3. Pasamos la lista final (con ambos filtros) a las estadísticas
+  const stats = useGuestsStats(finalFilteredGuests);
+  const isFiltered = finalFilteredGuests.length !== (guests?.length || 0);
   const { toast } = useToast();
 
   useEffect(() => {
     if (error) {
       toast(error, "error");
     }
-  }, [error]);
+  }, [error, toast]);
 
   // --- HANDLERS ---
   const handleBulkUpdateLock = (shouldLock: boolean) => {
@@ -173,13 +198,18 @@ export default function WeddingAdmin() {
             <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1 ml-1">
               Familias {(isFiltered || searchTerm !== "") && "(filtrado)"}
             </h3>
-            {/* BARRA DE BÚSQUEDA Y FILTROS (Siempre visible) */}
+
+            {/* BARRA DE BÚSQUEDA Y FILTROS */}
             <SearchAndFilterBar
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               filterStatus={filterStatus}
               setFilterStatus={setFilterStatus}
               filterCounts={filterCounts}
+              // Nuevos Props para WhatsApp
+              whatsappFilter={whatsappFilter}
+              setWhatsappFilter={setWhatsappFilter}
+              whatsappCounts={whatsappCounts}
               onExportExcel={() => handleExportExcel(guests)}
               onNewGuest={() => {
                 if (invitationData) {
@@ -187,11 +217,11 @@ export default function WeddingAdmin() {
                 }
               }}
               disabled={selectedGuests.size > 0}
-              filteredGuestCount={filteredGuests.length}
+              filteredGuestCount={finalFilteredGuests.length} // Actualizado
             />
 
             <GuestsGridView
-              filteredGuests={filteredGuests}
+              filteredGuests={finalFilteredGuests} // Pasamos la lista con todos los filtros combinados
               selectedGuests={selectedGuests}
               onSelectGuest={handleSelectGuest}
               onEdit={(e) => {
@@ -211,11 +241,11 @@ export default function WeddingAdmin() {
       {/* BARRA FLOTANTE DE ACCIONES MASIVAS */}
       <FloatingBulkActionsBar
         count={selectedGuests.size}
-        isSelectedAll={selectedGuests.size === filteredGuests.length}
+        isSelectedAll={selectedGuests.size === finalFilteredGuests.length} // Actualizado
         onUpdateLock={handleBulkUpdateLock}
         onDelete={handleBulkDelete}
         onCancel={clearSelection}
-        onSelectAll={() => handleSelectAll(filteredGuests)}
+        onSelectAll={() => handleSelectAll(finalFilteredGuests)} // Actualizado
       />
 
       <GuestFormModal

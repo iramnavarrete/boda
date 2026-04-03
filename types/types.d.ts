@@ -24,7 +24,7 @@ export type Guest = {
   cambiosPermitidos: boolean;
   fechaCreacion: Timestamp | FieldValue | null;
   ultimaModificacion: Timestamp | FieldValue | null;
-  whatsappSent?: boolean;
+  whatsappEnviado?: boolean;
 };
 
 export type GuestContactInfo = {
@@ -160,4 +160,13 @@ export interface GuestActivity {
   guestName: string;
   action: ActivityActionType;
   timestamp: Timestamp;
+}
+
+// --- NUEVOS TIPOS PARA EL FILTRO DE WHATSAPP ---
+export type WhatsappFilterType = "all" | "sent" | "not_sent";
+
+export interface WhatsappCounts {
+  all: number;
+  sent: number;
+  not_sent: number;
 }

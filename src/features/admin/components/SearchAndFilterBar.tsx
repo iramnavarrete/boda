@@ -10,8 +10,15 @@ import {
   XCircle,
   X,
   FileSpreadsheet,
+  Send,
+  MessageCircle,
 } from "lucide-react";
-import { FilterCounts, FilterType } from "@/types";
+import {
+  FilterCounts,
+  FilterType,
+  WhatsappCounts,
+  WhatsappFilterType,
+} from "@/types";
 import DashedSeparator from "./DashedSeparator";
 import { cn } from "@heroui/theme";
 import TextureButton from "@/features/shared/components/TextureButton";
@@ -28,12 +35,33 @@ interface SearchAndFilterBarProps {
   filteredGuestCount: number;
 }
 
+interface SearchAndFilterBarProps {
+  searchTerm: string;
+  setSearchTerm: (term: string) => void;
+  // Filtro de Asistencia
+  filterStatus: FilterType;
+  setFilterStatus: (status: FilterType) => void;
+  filterCounts: FilterCounts;
+  // Filtro de WhatsApp (Independiente)
+  whatsappFilter: WhatsappFilterType;
+  setWhatsappFilter: (status: WhatsappFilterType) => void;
+  whatsappCounts: WhatsappCounts;
+
+  onExportExcel: () => void;
+  onNewGuest: () => void;
+  disabled: boolean;
+  filteredGuestCount: number;
+}
+
 export default function SearchAndFilterBar({
   searchTerm,
   setSearchTerm,
   filterStatus,
   setFilterStatus,
   filterCounts,
+  whatsappFilter,
+  setWhatsappFilter,
+  whatsappCounts,
   onExportExcel,
   onNewGuest,
   disabled,
@@ -56,30 +84,40 @@ export default function SearchAndFilterBar({
   }, []);
 
   const getFilterLabel = () => {
-    switch (filterStatus) {
-      case "confirmed":
-        return "Confirmados";
-      case "pending":
-        return "Pendientes";
-      case "rejected":
-        return "Rechazados";
-      default:
-        return "Todos";
-    }
+    let baseLabel = "Todos";
+    if (filterStatus === "confirmed") baseLabel = "Confirmados";
+    if (filterStatus === "pending") baseLabel = "Pendientes";
+    if (filterStatus === "rejected") baseLabel = "Rechazados";
+
+    if (whatsappFilter === "sent") return `${baseLabel} + WA Enviado`;
+    if (whatsappFilter === "not_sent") return `${baseLabel} + WA Pendiente`;
+
+    return baseLabel;
   };
 
-  // Colores adaptados a la paleta Stone & Gold (más sutiles)
   const getFilterColor = () => {
-    switch (filterStatus) {
-      case "confirmed":
-        return "text-green-700 bg-green-50 border-green-200 ring-1 ring-green-100";
-      case "pending":
-        return "text-gold bg-sand/30 border-sand ring-1 ring-gold/20";
-      case "rejected":
-        return "text-red-700 bg-red-50 border-red-200 ring-1 ring-red-100";
-      default:
-        return "text-stone-custom bg-white/90 border-sand hover:border-gold/50";
-    }
+    if (filterStatus === "confirmed")
+      return "text-green-700 bg-green-50 border-green-200 ring-1 ring-green-100";
+    if (filterStatus === "pending")
+      return "text-gold bg-sand/30 border-sand ring-1 ring-gold/20";
+    if (filterStatus === "rejected")
+      return "text-red-700 bg-red-50 border-red-200 ring-1 ring-red-100";
+
+    if (whatsappFilter === "sent")
+      return "text-green-700 bg-green-50 border-green-200 ring-1 ring-green-100";
+    if (whatsappFilter === "not_sent")
+      return "text-stone-700 bg-stone-100 border-stone-200 ring-1 ring-stone-200";
+
+    return "text-stone-custom bg-white/90 border-sand hover:border-gold/50";
+  };
+
+  // Determina si hay algún filtro aplicado para mostrar el botón de limpiar
+  const hasActiveFilters = filterStatus !== "all" || whatsappFilter !== "all";
+
+  const clearFilters = () => {
+    setFilterStatus("all");
+    setWhatsappFilter("all");
+    setIsFilterOpen(false);
   };
 
   return (
@@ -88,7 +126,6 @@ export default function SearchAndFilterBar({
         disabled={disabled}
         className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 mb-3 transition-opacity disabled:opacity-60 disabled:pointer-events-none"
       >
-        {/* GRUPO IZQUIERDO: Búsqueda + Filtro */}
         <div className="flex flex-1 gap-3">
           {/* Búsqueda */}
           <div className="relative flex-1 group">
@@ -110,7 +147,10 @@ export default function SearchAndFilterBar({
               </button>
             )}
           </div>
+        </div>
 
+        {/* GRUPO DERECHO: Acciones */}
+        <div className="flex gap-3 shrink-0 relative">
           {/* FILTRO COMPACTO (Dropdown) */}
           <div className="relative" ref={filterRef}>
             <button
@@ -120,10 +160,10 @@ export default function SearchAndFilterBar({
               <Filter
                 size={16}
                 className={
-                  filterStatus === "all" ? "text-stone-light" : "currentColor"
+                  !hasActiveFilters ? "text-stone-light" : "currentColor"
                 }
               />
-              <span className="hidden sm:inline">{getFilterLabel()}</span>
+              <span>{getFilterLabel()}</span>
               <ChevronDown
                 size={14}
                 className={`transition-transform duration-200 opacity-60 ${
@@ -132,25 +172,24 @@ export default function SearchAndFilterBar({
               />
             </button>
 
-            {/* MENÚ DESPLEGABLE - Sombra Difuminada Coherente */}
             <div
               className={cn(
-                "absolute top-full right-0 md:left-0 w-48 bg-white/90 text-stone-800 rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
-                "transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) z-50",
+                "absolute top-full left-0 w-56 bg-white/95 backdrop-blur-sm text-stone-800 rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
+                "transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) z-50 flex flex-col",
                 isFilterOpen
                   ? "opacity-100 translate-y-1 scale-100"
                   : "opacity-0 translate-y-0 scale-95 pointer-events-none",
               )}
             >
-              <div className="p-1.5 space-y-0.5">
-                <div className="px-3 py-1 text-[10px] font-bold text-gold uppercase tracking-widest bg-sand-light/50 rounded-lg mb-1">
-                  Filtrar por estado
+              <div className="p-2 space-y-0.5 max-h-[50vh] overflow-y-auto no-scrollbar flex-1">
+                {/* --- SECCIÓN 1: ASISTENCIA --- */}
+                <div className="px-3 py-1.5 text-[10px] font-bold text-gold uppercase tracking-widest bg-sand-light/50 rounded-lg mb-1">
+                  Asistencia
                 </div>
 
                 <button
                   onClick={() => {
                     setFilterStatus("all");
-                    setIsFilterOpen(false);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     filterStatus === "all"
@@ -170,7 +209,7 @@ export default function SearchAndFilterBar({
                     Todos
                   </span>
                   <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                    {filterCounts.all}
+                    {filterCounts?.all || 0}
                   </span>
                 </button>
 
@@ -179,7 +218,6 @@ export default function SearchAndFilterBar({
                 <button
                   onClick={() => {
                     setFilterStatus("confirmed");
-                    setIsFilterOpen(false);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     filterStatus === "confirmed"
@@ -199,14 +237,13 @@ export default function SearchAndFilterBar({
                     Confirmados
                   </span>
                   <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                    {filterCounts.confirmed}
+                    {filterCounts?.confirmed || 0}
                   </span>
                 </button>
 
                 <button
                   onClick={() => {
                     setFilterStatus("pending");
-                    setIsFilterOpen(false);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     filterStatus === "pending"
@@ -226,14 +263,13 @@ export default function SearchAndFilterBar({
                     Pendientes
                   </span>
                   <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                    {filterCounts.pending}
+                    {filterCounts?.pending || 0}
                   </span>
                 </button>
 
                 <button
                   onClick={() => {
                     setFilterStatus("rejected");
-                    setIsFilterOpen(false);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
                     filterStatus === "rejected"
@@ -253,20 +289,115 @@ export default function SearchAndFilterBar({
                     Rechazados
                   </span>
                   <span className="text-stone-light text-xs bg-white/90 px-1.5 py-0.5 rounded border border-sand">
-                    {filterCounts.rejected}
+                    {filterCounts?.rejected || 0}
                   </span>
                 </button>
+
+                {/* --- SECCIÓN 2: ESTADO WHATSAPP --- */}
+                <div className="mt-2 pt-2 border-t border-sand">
+                  <div className="px-3 py-1.5 text-[10px] font-bold text-gold uppercase tracking-widest bg-sand-light/50 rounded-lg mb-1">
+                    WhatsApp
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setWhatsappFilter("all");
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      whatsappFilter === "all"
+                        ? "bg-sand-light text-charcoal font-medium border border-sand"
+                        : "text-stone-custom hover:bg-sand-light hover:text-charcoal border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <LayoutList
+                        size={16}
+                        className={
+                          whatsappFilter === "all"
+                            ? "text-gold"
+                            : "text-stone-light"
+                        }
+                      />
+                      Todos
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {whatsappCounts?.all || 0}
+                    </span>
+                  </button>
+
+                  <DashedSeparator className="m-0" />
+
+                  <button
+                    onClick={() => {
+                      setWhatsappFilter("sent");
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      whatsappFilter === "sent"
+                        ? "bg-green-50 text-green-800 font-medium border border-green-100"
+                        : "text-stone-custom hover:bg-green-50/50 hover:text-green-700 border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Send
+                        size={16}
+                        className={
+                          whatsappFilter === "sent"
+                            ? "text-green-600"
+                            : "text-stone-light"
+                        }
+                      />
+                      Enviados
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {whatsappCounts?.sent || 0}
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setWhatsappFilter("not_sent");
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      whatsappFilter === "not_sent"
+                        ? "bg-stone-100 text-stone-800 font-medium border border-stone-200"
+                        : "text-stone-custom hover:bg-stone-50 hover:text-stone-700 border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <MessageCircle
+                        size={16}
+                        className={
+                          whatsappFilter === "not_sent"
+                            ? "text-stone-500"
+                            : "text-stone-light"
+                        }
+                      />
+                      No enviados
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {whatsappCounts?.not_sent || 0}
+                    </span>
+                  </button>
+                </div>
               </div>
+
+              {/* PIE DEL MENÚ: BOTÓN DE LIMPIAR FILTROS (Aparece solo si hay filtros activos) */}
+              {hasActiveFilters && (
+                <div className="p-2 border-t border-[#EBE5DA] bg-[#FDFBF7] shrink-0">
+                  <button
+                    onClick={clearFilters}
+                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors border border-transparent hover:border-red-100"
+                  >
+                    <X size={14} />
+                    Limpiar filtros
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-
-        {/* GRUPO DERECHO: Acciones */}
-        <div className="flex gap-3 shrink-0 relative">
-          {/* Excel (Solo Desktop) */}
           <button
             onClick={onExportExcel}
-            className="hidden md:flex items-center justify-center px-4 py-3 bg-white/90 text-stone-custom border border-sand rounded-xl hover:bg-primary/80 hover:text-white hover:border-primary/80 transition-all text-sm font-medium gap-2 shadow-sm group duration-400"
+            className="hidden md:flex items-center justify-center px-4 py-3 bg-white/90 text-stone-custom border border-sand rounded-xl hover:bg-[#C5A669]/80 hover:text-white hover:border-[#C5A669]/80 transition-all text-sm font-medium gap-2 shadow-sm group duration-400"
             title="Exportar Excel"
           >
             <FileSpreadsheet
@@ -276,12 +407,10 @@ export default function SearchAndFilterBar({
             <span>Exportar</span>
           </button>
 
-          {/* Nuevo Invitado */}
           <TextureButton
-            lighting={false}
             icon={<Plus size={18} />}
             onClick={onNewGuest}
-            className="px-6 py-3 rounded-xl transition-all shadow-lg shadow-gold/20 hover:shadow-gold/30 hover:-translate-y-0.5 font-bold"
+            className="px-6 py-3 rounded-xl transition-all shadow-lg shadow-[#C5A669]/20 hover:shadow-[#C5A669]/30 hover:-translate-y-0.5 font-bold"
           >
             <span>Nuevo Invitado</span>
           </TextureButton>

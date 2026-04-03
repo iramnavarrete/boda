@@ -230,7 +230,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                         className="p-2 rounded-xl text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors duration-300 border border-sand hover:border-green-600 relative"
                       >
                         <IconBrandWhatsapp className="w-4 h-4" />
-                        {g.whatsappSent === true && (
+                        {g.whatsappEnviado === true ? (
                           <div
                             title="Whatsapp enviado"
                             className="absolute bottom-[6px] right-[3px] bg-white rounded-full p-[1px] shadow-sm cursor-help"
@@ -238,6 +238,16 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                             <CheckCircle2
                               size={10}
                               className="text-green-500 bg-green-50 rounded-full"
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            title="Whatsapp pendiente de enviar"
+                            className="absolute bottom-[6px] right-[3px] bg-white rounded-full p-[1px] shadow-sm cursor-help"
+                          >
+                            <Clock
+                              size={10}
+                              className="text-sand-400 bg-green-50 rounded-full"
                             />
                           </div>
                         )}
