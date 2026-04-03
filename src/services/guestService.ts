@@ -250,4 +250,15 @@ export const GuestService = {
       };
     }
   },
+  markWhastappSent: async (invitationId: string, guest: Guest) => {
+    const docRef = doc(db, "invitations", invitationId, "guests", guest.id);
+
+    await setDoc(
+      docRef,
+      {
+        whatsappSent: true,
+      },
+      { merge: true },
+    );
+  },
 };

@@ -24,6 +24,7 @@ export type Guest = {
   cambiosPermitidos: boolean;
   fechaCreacion: Timestamp | FieldValue | null;
   ultimaModificacion: Timestamp | FieldValue | null;
+  whatsappSent?: boolean;
 };
 
 export type GuestContactInfo = {
