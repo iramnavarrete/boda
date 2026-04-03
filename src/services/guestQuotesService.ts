@@ -9,9 +9,10 @@ import {
   getDocs,
   FirestoreError,
   Unsubscribe,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { GuestQuote } from "@/types";
+import { FirestoreResult, Guest, GuestQuote } from "@/types";
 
 // Definimos la interfaz para los mensajes tipados correctamente
 type GuestQuoteMap = GuestQuote & {
@@ -57,7 +58,7 @@ export const GuestQuotesService = {
         }
         docs.forEach((change) => {
           const guestId = change.doc.id;
-          const guestData = change.doc.data();
+          const guestData = change.doc.data() as Guest;
 
           // Si se agrega o modifica un invitado, aseguramos de escuchar su mensaje
           if (change.type === "added" || change.type === "modified") {
@@ -96,7 +97,7 @@ export const GuestQuotesService = {
                       messagesMap.set(guestId, {
                         id: guestId,
                         autor: guestData.nombre || "Invitado",
-                        parentesco: guestData.grupo || "Invitado",
+                        parentesco: "Invitado",
                         mensaje: text,
                         fecha: dateFormatted,
                         timestamp: qData.fechaCreacion?.toMillis
@@ -104,6 +105,7 @@ export const GuestQuotesService = {
                           : Date.now(),
                         leido: currentLeido,
                         sortLeido: initialSortLeido,
+                        asistencia: guestData.asistencia === true,
                       });
                     } else {
                       messagesMap.delete(guestId);
@@ -128,7 +130,7 @@ export const GuestQuotesService = {
                 messagesMap.set(guestId, {
                   ...existingMsg,
                   autor: guestData.nombre || "Invitado",
-                  parentesco: guestData.grupo || "Invitado",
+                  parentesco: "Invitado",
                 });
                 notifyChanges();
               }
@@ -251,6 +253,76 @@ export const GuestQuotesService = {
     } catch (error) {
       console.error("Error fetching guest messages:", error);
       throw error;
+    }
+  },
+
+  saveGuestQuote: async (
+    invitationId: string,
+    guestId: string,
+    payload: Partial<GuestQuote>,
+  ): FirestoreResult<boolean> => {
+    if (!invitationId || !guestId || !payload)
+      return { result: null, error: null };
+
+    try {
+      const timestamp = serverTimestamp();
+
+      const docRef = doc(
+        db,
+        "invitations",
+        invitationId,
+        "guests",
+        guestId,
+        "quotes",
+        "quote",
+      );
+
+      const { id: _, ...dataToUpdate } = payload;
+
+      await setDoc(
+        docRef,
+        {
+          ...dataToUpdate,
+          leido: false,
+          fecha: timestamp,
+          timestamp,
+        },
+        { merge: true },
+      );
+      return { result: true, error: null };
+    } catch (error) {
+      console.error("Error actualizando mensaje para anfitrión:", error);
+      return { result: false, error: (error as FirestoreError).code };
+    }
+  },
+
+  getGuestQuote: async (
+    invitationId: string,
+    guestId: string,
+  ): FirestoreResult<GuestQuote> => {
+    try {
+      const docRef = doc(
+        db,
+        "invitations",
+        invitationId,
+        "guests",
+        guestId,
+        "quotes",
+        "quote",
+      );
+
+      const snapshot = await getDoc(docRef);
+
+      if (snapshot.exists()) {
+        return { result: snapshot.data() as GuestQuote, error: null };
+      }
+      return { result: null, error: null };
+    } catch (error) {
+      const firestoreError = error as FirestoreError;
+      return {
+        result: null,
+        error: firestoreError.code || "Error desconocido",
+      };
     }
   },
 };

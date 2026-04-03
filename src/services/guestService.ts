@@ -8,6 +8,7 @@ import {
   writeBatch,
   getDoc,
   FirestoreError,
+  FirestoreErrorCode,
 } from "firebase/firestore";
 import { Guest, GuestContactInfo, GuestFormData } from "../../types/types";
 import { db } from "@/lib/firebase/config";
@@ -215,5 +216,35 @@ export const GuestService = {
     });
 
     await batch.commit();
+  },
+
+  getGuest: async (
+    invitationId: string,
+    guestId: string,
+  ): Promise<{
+    guest: Guest | null;
+    error: FirestoreErrorCode | null;
+  }> => {
+    try {
+      const privateRef = doc(
+        db,
+        "invitations",
+        invitationId,
+        "guests",
+        guestId,
+      );
+      const snapshot = await getDoc(privateRef);
+
+      if (snapshot.exists()) {
+        return { guest: snapshot.data() as Guest, error: null };
+      }
+      return { guest: null, error: null };
+    } catch (error) {
+      const firestoreError = error as FirestoreError;
+      return {
+        guest: null,
+        error: firestoreError.code || "Error desconocido",
+      };
+    }
   },
 };
