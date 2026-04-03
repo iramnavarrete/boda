@@ -1,16 +1,25 @@
 import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
 import { GuestQuote } from "@/types";
-import { Mail, MailOpen, Quote, Sparkles } from "lucide-react";
+import {
+  CheckCircle2,
+  Mail,
+  MailOpen,
+  Quote,
+  Sparkles,
+  XCircle,
+} from "lucide-react";
 
 const getInitials = (name: string) => {
   let parts = name.trim().split(" ");
-  parts = parts.filter(el => el.toLowerCase() !== '&' && el.toLocaleLowerCase() !== 'y')
+  parts = parts.filter(
+    (el) => el.toLowerCase() !== "&" && el.toLocaleLowerCase() !== "y",
+  );
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return name.substring(0, 2).toUpperCase();
 };
 
 interface GuestQuoteCardProps {
-  msg: GuestQuote;
+  msg: GuestQuote & { asistencia?: string | boolean | null }; // Tipado extendido por si asistencia no está en GuestQuote
   onManualToggle: (id: string, currentStatus: boolean) => void;
 }
 
@@ -18,8 +27,17 @@ export default function GuestQuoteCard({
   msg,
   onManualToggle,
 }: GuestQuoteCardProps) {
-  const { leido } = msg;
-  const timeAgo = useTimeAgo(msg.timestamp);
+  const {
+    leido,
+    asistencia,
+    autor,
+    fecha,
+    id,
+    mensaje,
+    parentesco,
+    timestamp,
+  } = msg;
+  const timeAgo = useTimeAgo(timestamp);
 
   return (
     <div
@@ -28,7 +46,7 @@ export default function GuestQuoteCard({
         transition-[box-shadow,transform] duration-300 bg-white/70 shadow-[0_8px_30px_rgba(197,166,105,0.15)] hover:-translate-y-1 hover:shadow-[0_14px_40px_rgba(197,166,105,0.22)]
       `}
       // Si hace click en la tarjeta lo marcamos como leído en automático
-      onClick={() => onManualToggle(msg.id, false)}
+      onClick={() => onManualToggle(id, false)}
     >
       <div className="p-6 md:p-8 flex flex-col flex-1 relative">
         {!leido && (
@@ -42,26 +60,53 @@ export default function GuestQuoteCard({
         </div>
 
         <p className="font-serif text-lg md:text-xl italic leading-relaxed mb-8 flex-1 text-stone-custom">
-          {`${msg.mensaje}`}
+          {`${mensaje}`}
         </p>
 
         <div className="flex items-start justify-between pt-5 mt-auto border-t border-sand-200/60">
           <div className="flex items-center gap-4">
-            <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shadow-sm bg-gold-500 text-white shrink-0">
-              {getInitials(msg.autor)}
+            <div className="relative shrink-0">
+              <div className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shadow-sm bg-gold-500 text-white">
+                {getInitials(autor)}
+              </div>
+
+              {/* Badge de Asistencia (Aparece sobre el círculo) */}
+              {asistencia ? (
+                <div
+                  title="Asistencia confirmada"
+                  className="absolute -bottom-1 -right-1 bg-white rounded-full p-[2px] shadow-sm cursor-help"
+                >
+                  <CheckCircle2
+                    size={16}
+                    className="text-green-500 bg-green-50 rounded-full"
+                  />
+                </div>
+              ) : (
+                <div
+                  title="No podrá asistir"
+                  className="absolute -bottom-1 -right-1 bg-white rounded-full p-[2px] shadow-sm cursor-help"
+                >
+                  <XCircle
+                    size={16}
+                    className="text-red-500 bg-red-50 rounded-full"
+                  />
+                </div>
+              )}
             </div>
             <div className="flex flex-col">
               <p className="font-bold text-charcoal-800 text-sm tracking-wide uppercase">
-                {msg.autor}
+                {autor}
               </p>
 
-              {/* Alineamos el Rol y la Fecha uno arriba del otro (o al lado si prefieres) */}
-              <span className="text-[10px] uppercase tracking-widest text-gold-500 font-bold mt-0.5">
-                {msg.parentesco}
-              </span>
+              {/* Alineamos el Rol y el Indicador de Asistencia uno al lado del otro */}
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[10px] uppercase tracking-widest text-gold-500 font-bold">
+                  {parentesco}
+                </span>
+              </div>
 
               <span className="text-[11px] text-stone-400 mt-1 capitalize-first">
-                {timeAgo || msg.fecha}
+                {timeAgo || fecha}
               </span>
             </div>
           </div>
@@ -69,7 +114,7 @@ export default function GuestQuoteCard({
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onManualToggle(msg.id, leido || false);
+              onManualToggle(id, leido || false);
             }}
             className={`p-3 rounded-full transition-colors z-20 ml-2 shrink-0 ${
               leido

@@ -131,6 +131,7 @@ interface GuestQuote {
   fecha: string;
   timestamp: number;
   leido: boolean;
+  asistencia: boolean;
 }
 
 export type EventType = "boda" | "xv_anos" | "bautizo" | "cumpleanos" | string;
@@ -144,3 +145,8 @@ export interface EventLocation {
 }
 
 export type Modify<T, R> = Omit<T, keyof R> & R;
+
+export type FirestoreResult<T> = Promise<{
+  result: T | null;
+  error: FirestoreErrorCode | null;
+}>;
