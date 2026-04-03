@@ -8,16 +8,16 @@ interface SectionTitleProps {
 
 const SectionTitle: React.FC<SectionTitleProps> = ({ children, subtitle }) => (
   <div className="text-center mb-12 px-4 relative z-10">
-    <span className="inline-block py-1 px-5 rounded-full border border-[#C5A669]/30 text-[#58624F] text-[10px] font-bold tracking-[0.25em] uppercase mb-4 bg-[#F9F7F2]/80 backdrop-blur-sm">
+    <span className="inline-block py-1 px-5 rounded-full border border-gold-500/30 text-[#58624F] text-[10px] font-bold tracking-[0.25em] uppercase mb-4 bg-paper/80 backdrop-blur-sm">
       {subtitle}
     </span>
     <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-[#58624F] mb-6 drop-shadow-sm leading-tight">
       {children}
     </h2>
     <div className="flex items-center justify-center gap-2 opacity-60">
-      <div className="w-8 h-[1px] bg-[#C5A669]"></div>
-      <div className="w-1.5 h-1.5 rotate-45 border border-[#C5A669]"></div>
-      <div className="w-8 h-[1px] bg-[#C5A669]"></div>
+      <div className="w-8 h-[1px] bg-gold-500"></div>
+      <div className="w-1.5 h-1.5 rotate-45 border border-gold-500"></div>
+      <div className="w-8 h-[1px] bg-gold-500"></div>
     </div>
   </div>
 );
