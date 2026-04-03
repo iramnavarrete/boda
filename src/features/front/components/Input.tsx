@@ -5,9 +5,10 @@ type Props = {
   inputType?: "text" | "number" | "textarea";
   title: string;
   name: GuestFormDataKeys;
+  placeholder?: string;
 };
 
-function Input({ title, name, inputType }: Props) {
+function Input({ title, name, inputType, placeholder = '' }: Props) {
   const { handleChange, values, errors, touched } =
     useFormikContext<GuestFormData>();
   return (
@@ -20,6 +21,7 @@ function Input({ title, name, inputType }: Props) {
           value={name !== "asistencia" ? values[name]?.toString() : ""}
           className={`w-full h-28 px-3 py-2 bg-white border border-primary rounded-md text-sm shadow-sm
             focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none`}
+            placeholder={placeholder}
         />
       ) : (
         <input
@@ -29,6 +31,7 @@ function Input({ title, name, inputType }: Props) {
           className={`w-full px-3 py-2 bg-white border border-primary rounded-md text-sm shadow-sm
             focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary`}
           type={inputType || "text"}
+          placeholder={placeholder}
         />
       )}
       {touched[name] && (
