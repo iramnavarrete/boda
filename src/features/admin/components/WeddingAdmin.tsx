@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Guest, WhatsappFilterType } from "@/types";
+import { Guest, WhatsappCounts, WhatsappFilterType } from "@/types";
 import { GuestService } from "@/services/guestService";
 import GuestFormModal from "@/features/admin/components/GuestFormModal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
@@ -38,10 +38,13 @@ export default function WeddingAdmin() {
     useState<WhatsappFilterType>("all");
 
   // 1. Calculamos los contadores totales para WhatsApp basados en la lista original completa
-  const whatsappCounts = {
+  const whatsappCounts: WhatsappCounts = {
     all: guests?.length || 0,
-    sent: guests?.filter((g: Guest) => g.whatsappEnviado).length || 0,
+    sent:
+      guests?.filter((g: Guest) => g.whatsappEnviado && g.tieneTelefono)
+        .length || 0,
     not_sent: guests?.filter((g: Guest) => !g.whatsappEnviado).length || 0,
+    empty: guests?.filter((g: Guest) => !g.tieneTelefono).length || 0,
   };
 
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
@@ -49,8 +52,9 @@ export default function WeddingAdmin() {
   // 2. Aplicamos la segunda capa de filtrado sobre el resultado del primer filtro
   const finalFilteredGuests = filteredGuests.filter((g: Guest) => {
     if (whatsappFilter === "all") return true;
-    if (whatsappFilter === "sent") return g.whatsappEnviado === true;
+    if (whatsappFilter === "sent") return g.whatsappEnviado === true && g.tieneTelefono;
     if (whatsappFilter === "not_sent") return !g.whatsappEnviado;
+    if (whatsappFilter === "empty") return !g.tieneTelefono;
     return true;
   });
 

@@ -11,12 +11,9 @@ export const exportGuestsToExcel = async (guests: Guest[]) => {
   worksheet.columns = [
     { header: "ID", key: "id", width: 10 },
     { header: "Nombre Completo", key: "nombre", width: 30 },
-    { header: "WhatsApp", key: "telefono", width: 15 },
     { header: "Estado Asistencia", key: "estado", width: 18 },
     { header: "Cupos Totales", key: "invitados", width: 12 },
     { header: "Confirmados", key: "confirmados", width: 12 },
-    { header: "Mensaje", key: "mensaje", width: 35 },
-    { header: "Comentarios", key: "comentarios", width: 35 },
     { header: "Cambios permitidos", key: "cambiosPermitidos", width: 12 },
     { header: "Fecha Registro", key: "fechaCreacion", width: 15 },
   ];
@@ -64,12 +61,9 @@ export const exportGuestsToExcel = async (guests: Guest[]) => {
     const row = worksheet.addRow({
       id: guest.id,
       nombre: guest.nombre,
-      telefono: guest.tieneTelefono || "",
       estado: estadoTexto,
       invitados: guest.invitados,
       confirmados: guest.confirmados || "",
-      mensaje: guest.notaAnfitrion || "",
-      comentarios: guest.notaInvitado || "",
       cambiosPermitidos: guest.cambiosPermitidos ? "Permitido" : "Bloqueado",
       fechaCreacion: fechaCreacionStr,
       ultimaModificacion: ultimaModificacionStr,

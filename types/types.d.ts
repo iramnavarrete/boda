@@ -163,10 +163,11 @@ export interface GuestActivity {
 }
 
 // --- NUEVOS TIPOS PARA EL FILTRO DE WHATSAPP ---
-export type WhatsappFilterType = "all" | "sent" | "not_sent";
+export type WhatsappFilterType = "all" | "sent" | "not_sent" | "empty";
 
 export interface WhatsappCounts {
   all: number;
   sent: number;
   not_sent: number;
+  empty: number;
 }

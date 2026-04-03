@@ -55,11 +55,9 @@ export function useGuestActions(invitationId?: string) {
       return;
     }
     const link = `https://bodajy.info/invitacion/${guest.id}`;
-    const msg = `¡Hola ${guest.nombre.split(" ")[0]}! ${
-      guest.notaAnfitrion || ""
-    } Confirma aquí: ${link}`;
+    const msg = `¡Hola ${guest.nombre.split(" ")[0]}! Confirma aquí: ${link}`;
     window.open(
-      `https://wa.me/+52${telefono
+      `https://wa.me/+${telefono
         .replace(/\+/g, "")
         .replace(/\s/g, "")}?text=${encodeURIComponent(msg)}`,
       "_blank",

@@ -14,6 +14,7 @@ import {
   MessageCircle,
   List,
   LayoutGrid,
+  MessageCircleOffIcon,
 } from "lucide-react";
 import {
   FilterCounts,
@@ -98,6 +99,7 @@ export default function SearchAndFilterBar({
 
     if (whatsappFilter === "sent") return `${baseLabel} + WA Enviado`;
     if (whatsappFilter === "not_sent") return `${baseLabel} + WA Pendiente`;
+    if (whatsappFilter === "empty") return `${baseLabel} + Sin WA`;
 
     return baseLabel;
   };
@@ -178,7 +180,7 @@ export default function SearchAndFilterBar({
 
             <div
               className={cn(
-                "absolute top-full right-0 md:left-0 w-56 bg-white/95 backdrop-blur-sm text-stone-800 rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
+                "absolute top-full right-0 w-56 bg-white/95 backdrop-blur-sm text-stone-800 rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
                 "transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) z-50 flex flex-col",
                 isFilterOpen
                   ? "opacity-100 translate-y-1 scale-100"
@@ -380,6 +382,31 @@ export default function SearchAndFilterBar({
                     </span>
                     <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
                       {whatsappCounts?.not_sent || 0}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setWhatsappFilter("empty");
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      whatsappFilter === "empty"
+                        ? "bg-stone-100 text-stone-800 font-medium border border-stone-200"
+                        : "text-stone-custom hover:bg-stone-50 hover:text-stone-700 border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <MessageCircleOffIcon
+                        size={16}
+                        className={
+                          whatsappFilter === "empty"
+                            ? "text-stone-500"
+                            : "text-stone-light"
+                        }
+                      />
+                      Sin WhatsApp
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {whatsappCounts?.empty || 0}
                     </span>
                   </button>
                 </div>
