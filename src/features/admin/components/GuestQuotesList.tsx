@@ -171,7 +171,7 @@ const GuestQuotesList: FC<{ invitationId: string }> = ({ invitationId }) => {
               </div>
               <input
                 className="w-full pl-10 pr-10 py-3 bg-white/90 border border-sand rounded-xl outline-none focus:ring-0 focus:ring-gold focus:border-gold/50 transition-all duration-300 text-sm text-charcoal placeholder:text-stone-light shadow-sm"
-                placeholder={`Buscar entre ${filteredMessages.length} mensaje${filteredMessages.length > 1 ? "s" : ""}...`}
+                placeholder={`Buscar entre ${filteredMessages.length} mensaje${filteredMessages.length >= 2 ? "s" : ""}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
