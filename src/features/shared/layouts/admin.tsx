@@ -14,7 +14,6 @@ export default function AdminLayout({
   preload("/img/textures/cream-paper.png", { as: "image" });
 
   useEffect(() => {
-    console.log("CARGA EL EFECTO");
     const fetchInvitationData = async () => {
       const { invitation: invitationData } =
         await InvitationsService.getInvitation(invitationId);
