@@ -11,8 +11,8 @@ export default function QuotesPage() {
     return <Loader fullscreen />;
   }
   return (
-    <AdminLayout>
-      <GuestQuotesList invitationId={invitationId} />
+    <AdminLayout invitationId={invitationId}>
+      <GuestQuotesList />
     </AdminLayout>
   );
 }

@@ -43,39 +43,41 @@ import { DashboardStats, GuestActivity, GuestQuote } from "@/types";
 import { formatTimeStamp } from "@/utils/formatters";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import { ActivityService } from "@/services/activityService";
-import { InvitationsService } from "@/services/invitationsService";
 
-export const MessagesCarousel: FC<{ invitationId: string }> = ({
-  invitationId,
-}) => {
+export const MessagesCarousel: FC = () => {
   const [messages, setMessages] = useState<GuestQuote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  const invitationData = useInvitationStore((state) => state.invitationData);
+
   // Suscripción a Firestore en tiempo real
   useEffect(() => {
-    const unsubscribe = GuestQuotesService.subscribeToGuestMessages(
-      invitationId,
-      (allMessages: GuestQuote[]) => {
-        // Extraemos solo los primeros 5 mensajes del arreglo ordenado
-        const top5Messages = allMessages.slice(0, 5);
-        setMessages(top5Messages);
-        setIsLoading(false);
+    let unsubscribe = () => {};
+    if (invitationData) {
+      unsubscribe = GuestQuotesService.subscribeToGuestMessages(
+        invitationData.id,
+        (allMessages: GuestQuote[]) => {
+          // Extraemos solo los primeros 5 mensajes del arreglo ordenado
+          const top5Messages = allMessages.slice(0, 5);
+          setMessages(top5Messages);
+          setIsLoading(false);
 
-        // Si el índice actual quedó fuera de rango tras una actualización, lo reiniciamos
-        setCurrentIndex((prev) => {
-          if (top5Messages.length === 0) return 0;
-          return prev >= top5Messages.length ? 0 : prev;
-        });
-      },
-      (error) => {
-        console.error("Error cargando mensajes:", error);
-        setIsLoading(false);
-      },
-    );
+          // Si el índice actual quedó fuera de rango tras una actualización, lo reiniciamos
+          setCurrentIndex((prev) => {
+            if (top5Messages.length === 0) return 0;
+            return prev >= top5Messages.length ? 0 : prev;
+          });
+        },
+        (error) => {
+          console.error("Error cargando mensajes:", error);
+          setIsLoading(false);
+        },
+      );
+    }
 
     return () => unsubscribe();
-  }, [invitationId]);
+  }, [invitationData]);
 
   const currentMessage = messages[currentIndex];
 
@@ -105,7 +107,7 @@ export const MessagesCarousel: FC<{ invitationId: string }> = ({
           </div>
         </div>
         <Link
-          href={`/admin/invitations/${invitationId}/quotes`}
+          href={`/admin/invitations/${invitationData?.id}/quotes`}
           className="text-xs font-bold text-gold hover:text-primary transition-colors flex items-center gap-1 tracking-wider uppercase"
         >
           Ver Todos <ChevronRight size={14} />
@@ -433,20 +435,20 @@ const ActivityItem = ({ activity }: { activity: GuestActivity }) => {
 };
 
 function RecentActivity({
-  invitationId,
   setLastActivity,
 }: {
-  invitationId: string;
   setLastActivity: Dispatch<SetStateAction<GuestActivity | null>>;
 }) {
   const [activities, setActivities] = useState<GuestActivity[]>([]);
 
+  const invitationData = useInvitationStore((state) => state.invitationData);
+
   useEffect(() => {
-    if (!invitationId) return;
+    if (!invitationData) return;
 
     // Se suscribe a los últimos 20 eventos
     const unsubscribe = ActivityService.subscribeToRecentActivity(
-      invitationId,
+      invitationData.id,
       20,
       (data) => {
         setLastActivity(data[0] || null);
@@ -455,7 +457,7 @@ function RecentActivity({
     );
 
     return () => unsubscribe();
-  }, [invitationId]);
+  }, [invitationData]);
 
   return (
     <div className="lg:col-span-2 bg-white/80 rounded-2xl shadow-[0_8px_30px_rgba(44,44,41,0.04)] border border-sand-200 p-8 relative overflow-hidden flex flex-col max-h-[420px]">
@@ -491,11 +493,7 @@ function RecentActivity({
   );
 }
 
-export default function InvitationDashboard({
-  invitationId,
-}: {
-  invitationId: string;
-}) {
+export default function InvitationDashboard() {
   const user = useAuthUser();
   const [lastActivity, setLastActivity] = useState<GuestActivity | null>(null);
   const { toast } = useToast();
@@ -504,9 +502,9 @@ export default function InvitationDashboard({
 
   const router = useRouter();
 
-  const { guests, isLoadingGuests, error } = useGuestsData(invitationId, user);
-
   const invitationData = useInvitationStore((state) => state.invitationData);
+
+  const { guests, isLoadingGuests, error } = useGuestsData(invitationData?.id);
 
   const stats = useGuestsStats(guests);
 
@@ -542,7 +540,7 @@ export default function InvitationDashboard({
           className="relative z-10 text-white font-semibold px-8 py-3.5 rounded-xl"
           icon={<Users size={16} />}
           onClick={() => {
-            router.push(`/admin/invitations/${invitationId}`);
+            router.push(`/admin/invitations/${invitationData?.id}`);
           }}
         >
           Gestionar invitados
@@ -550,15 +548,12 @@ export default function InvitationDashboard({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-        <MessagesCarousel invitationId={invitationId} />
+        <MessagesCarousel />
         <GuestStatsPieChart stats={stats} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <RecentActivity
-          invitationId={invitationId}
-          setLastActivity={setLastActivity}
-        />
+        <RecentActivity setLastActivity={setLastActivity} />
 
         <div className="bg-primary-800/85 rounded-2xl p-8 shadow-xl relative overflow-hidden text-paper group">
           {/* Decoración Fondo */}
@@ -610,7 +605,7 @@ export default function InvitationDashboard({
 
             <div>
               <Link
-                href={`${router.basePath}/i/${invitationId}`}
+                href={`${router.basePath}/i/${invitationData?.id}`}
                 className="w-full py-4 rounded-full border border-gold/50 text-gold hover:bg-gold hover:text-primary transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 group/btn"
               >
                 Ver invitación{" "}

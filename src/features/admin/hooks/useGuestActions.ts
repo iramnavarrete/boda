@@ -1,11 +1,17 @@
-import { User } from "firebase/auth";
 import { GuestService } from "@/services/guestService";
 import { useToast } from "@/features/shared/components/Toast";
 import { exportGuestsToExcel } from "@/services/excelService";
 import { Guest, GuestFormData } from "@/types";
 
-export function useGuestActions(invitationId: string, user: User | null) {
+export function useGuestActions(invitationId?: string) {
   const { toast } = useToast();
+  if (!invitationId) {
+    return {
+      handleSaveGuest: () => {},
+      sendWhatsApp: () => {},
+      handleExportExcel: () => {},
+    };
+  }
 
   const handleSaveGuest = async (
     e: React.FormEvent,
@@ -15,7 +21,6 @@ export function useGuestActions(invitationId: string, user: User | null) {
   ) => {
     e.preventDefault();
     try {
-      if (!user) return;
       const guestId =
         currentGuestId || (await GuestService.getUniqueGuestId(invitationId));
       await GuestService.saveGuest(

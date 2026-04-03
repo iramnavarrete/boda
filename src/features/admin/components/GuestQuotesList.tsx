@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import GuestQuoteCard from "./GuestQuoteCard";
 import { GuestQuotesService } from "@/services/guestQuotesService";
 import Loader from "@/features/front/components/Loader";
+import { useInvitationStore } from "@/features/front/stores/invitationStore";
 
 type FilterType = "all" | "unread" | "read";
 
@@ -25,40 +26,52 @@ const useMasonryColumns = () => {
   return columns;
 };
 
-const GuestQuotesList: FC<{ invitationId: string }> = ({ invitationId }) => {
+const GuestQuotesList: FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [messages, setMessages] = useState<GuestQuote[]>([]);
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const colCount = useMasonryColumns();
 
+  const invitationData = useInvitationStore((state) => state.invitationData);
+
   // Escuchar a Firebase en tiempo real
   useEffect(() => {
-    const unsubscribe = GuestQuotesService.subscribeToGuestMessages(
-      invitationId,
-      (fetchedMessages) => {
-        setMessages([...fetchedMessages]);
-        setIsLoading(false);
-      },
-    );
+    let unsubscribe = () => {};
+    if (invitationData) {
+      unsubscribe = GuestQuotesService.subscribeToGuestMessages(
+        invitationData.id,
+        (fetchedMessages) => {
+          setMessages([...fetchedMessages]);
+          setIsLoading(false);
+        },
+      );
+    }
 
     return () => unsubscribe();
-  }, []);
+  }, [invitationData]);
 
   const handleManualToggle = useCallback(
     async (id: string, currentStatus: boolean) => {
-      await GuestQuotesService.toggleMessageReadStatus(
-        invitationId,
-        id,
-        currentStatus,
-      );
+      if (invitationData) {
+        await GuestQuotesService.toggleMessageReadStatus(
+          invitationData.id,
+          id,
+          currentStatus,
+        );
+      }
     },
-    [invitationId],
+    [invitationData],
   );
 
   const markAllAsRead = async () => {
     const unreadIds = messages.filter((m) => !m.leido).map((m) => m.id);
-    await GuestQuotesService.markAllMessagesAsRead(invitationId, unreadIds);
+    if (invitationData) {
+      await GuestQuotesService.markAllMessagesAsRead(
+        invitationData.id,
+        unreadIds,
+      );
+    }
   };
 
   const filteredMessages = useMemo(

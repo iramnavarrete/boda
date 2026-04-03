@@ -169,10 +169,13 @@ export const GuestService = {
   },
 
   batchUpdateLock: async (
-    invitationId: string,
+    invitationId: string | null,
     guestIds: string[],
     shouldLock: boolean,
   ) => {
+    if (!invitationId) {
+      return;
+    }
     const batch = writeBatch(db);
 
     guestIds.forEach((id) => {

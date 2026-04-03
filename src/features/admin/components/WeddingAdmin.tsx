@@ -15,18 +15,14 @@ import { useConfirmModal } from "@/features/admin/hooks/useConfirmModal";
 import { useGuestsStats } from "@/features/admin/hooks/useGuestsStats";
 import { useGuestActions } from "@/features/admin/hooks/useGuestActions";
 import { useToast } from "@/features/shared/components/Toast";
-import { useAuthUser } from "@/features/shared/contexts/AuthUserContext";
 import FloatingBulkActionsBar from "@/features/admin/components/FloatingBulkActionsBar";
 import StatsSidebar from "./StatsSidebar";
+import { useInvitationStore } from "@/features/front/stores/invitationStore";
 
-export default function WeddingAdmin({
-  invitationId,
-}: {
-  invitationId: string;
-}) {
-  const user = useAuthUser();
+export default function WeddingAdmin() {
+  const invitationData = useInvitationStore((state) => state.invitationData);
 
-  const { guests, isLoadingGuests, error } = useGuestsData(invitationId, user);
+  const { guests, isLoadingGuests, error } = useGuestsData(invitationData?.id);
   const {
     searchTerm,
     setSearchTerm,
@@ -57,8 +53,7 @@ export default function WeddingAdmin({
     handleExecuteConfirmation,
   } = useConfirmModal();
   const { handleSaveGuest, sendWhatsApp, handleExportExcel } = useGuestActions(
-    invitationId,
-    user,
+    invitationData?.id,
   );
   const stats = useGuestsStats(filteredGuests);
   const isFiltered = filteredGuests.length !== guests.length;
@@ -84,11 +79,13 @@ export default function WeddingAdmin({
         : `¿Deseas permitir la edición para ${selectedGuests.size} invitados? Podrán modificar su mensaje de felicitación y confirmar cantidad de invitados.`,
       isDanger: false,
       action: async () => {
-        await GuestService.batchUpdateLock(
-          invitationId,
-          Array.from(selectedGuests),
-          shouldLock,
-        );
+        if (invitationData) {
+          await GuestService.batchUpdateLock(
+            invitationData.id,
+            Array.from(selectedGuests),
+            shouldLock,
+          );
+        }
         clearSelection();
       },
     });
@@ -102,10 +99,12 @@ export default function WeddingAdmin({
       message: `¿Estás seguro de que deseas eliminar permanentemente a los ${selectedGuests.size} invitados seleccionados? Esta acción no se puede deshacer.`,
       isDanger: true,
       action: async () => {
-        await GuestService.batchDeleteGuests(
-          invitationId,
-          Array.from(selectedGuests),
-        );
+        if (invitationData) {
+          await GuestService.batchDeleteGuests(
+            invitationData.id,
+            Array.from(selectedGuests),
+          );
+        }
         clearSelection();
       },
     });
@@ -121,7 +120,9 @@ export default function WeddingAdmin({
         "Esta acción es permanente y no se puede deshacer. ¿Estás seguro de que quieres eliminar este registro?",
       isDanger: true,
       action: async () => {
-        await GuestService.deleteGuest(invitationId, id);
+        if (invitationData) {
+          await GuestService.deleteGuest(invitationData.id, id);
+        }
         if (selectedGuests.has(id)) {
           removeFromSelection(id);
         }
@@ -145,7 +146,9 @@ export default function WeddingAdmin({
       message,
       isDanger: false,
       action: async () => {
-        await GuestService.toggleGuestLock(invitationId, guest);
+        if (invitationData) {
+          await GuestService.toggleGuestLock(invitationData.id, guest);
+        }
       },
     });
   };
@@ -178,7 +181,11 @@ export default function WeddingAdmin({
               setFilterStatus={setFilterStatus}
               filterCounts={filterCounts}
               onExportExcel={() => handleExportExcel(guests)}
-              onNewGuest={() => handleOpenModal(invitationId)}
+              onNewGuest={() => {
+                if (invitationData) {
+                  handleOpenModal(invitationData.id);
+                }
+              }}
               disabled={selectedGuests.size > 0}
               filteredGuestCount={filteredGuests.length}
             />
@@ -187,7 +194,11 @@ export default function WeddingAdmin({
               filteredGuests={filteredGuests}
               selectedGuests={selectedGuests}
               onSelectGuest={handleSelectGuest}
-              onEdit={(e) => handleOpenModal(invitationId, e)}
+              onEdit={(e) => {
+                if (invitationData) {
+                  handleOpenModal(invitationData.id, e);
+                }
+              }}
               onDelete={handleDeleteGuest}
               onSendWhatsApp={sendWhatsApp}
               onLockToggle={handleLockToggle}
