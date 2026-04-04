@@ -190,7 +190,7 @@ function Assistants() {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="px-6 py-12 font-nourdLight flex flex-col items-center text-primary"
+                          className="px-2 py-12 font-nourdLight flex flex-col items-center text-primary"
                           key="assistance-form"
                         >
                           <>
@@ -290,7 +290,7 @@ function Assistants() {
                                     className="w-full flex flex-col items-center"
                                   >
                                     {/* BOTONES SEGMENTADOS ESTILO IMAGEN */}
-                                    <div className="flex flex-col sm:flex-row gap-3 w-full mb-6 mt-4">
+                                    <div className="flex gap-3 w-full mb-6 mt-4">
                                       <button
                                         type="button"
                                         onClick={() => {
@@ -315,7 +315,7 @@ function Assistants() {
                                               : "opacity-80"
                                           }
                                         />
-                                        Sí, asistiré
+                                        Sí
                                       </button>
 
                                       <button
@@ -338,7 +338,7 @@ function Assistants() {
                                               : "opacity-80"
                                           }
                                         />
-                                        No podré
+                                        No
                                       </button>
                                     </div>
 
