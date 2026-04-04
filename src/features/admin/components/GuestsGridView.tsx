@@ -1,4 +1,4 @@
-import { SearchX, Users } from "lucide-react";
+import { SearchX } from "lucide-react";
 import GuestsCards from "./GuestsCards";
 import { Guest } from "@/types";
 import Loader from "@/features/front/components/Loader";
@@ -44,7 +44,7 @@ export default function GuestsGridView({
                No se encontraron invitados
              </h3>
              <p className="text-sm text-stone-400 max-w-sm leading-relaxed">
-               Puedes crear un invitado en el botón "+ Nuevo"
+               Puedes crear un invitado en el botón &quot;+ Nuevo&quot;
              </p>
            </div>
          )}

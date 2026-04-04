@@ -8,8 +8,14 @@ import {
   writeBatch,
   getDoc,
   FirestoreError,
+  FirestoreErrorCode,
 } from "firebase/firestore";
-import { Guest, GuestContactInfo, GuestFormData } from "../../types/types";
+import {
+  Guest,
+  GuestContactInfo,
+  GuestFormData,
+  ImportedGuest,
+} from "../../types/types";
 import { db } from "@/lib/firebase/config";
 import { generateGuestID } from "@/utils/generators";
 
@@ -102,48 +108,67 @@ export const GuestService = {
     guestId: string,
     data: GuestFormData,
     isNew: boolean,
+    isPublic: boolean = false,
   ) => {
     const batch = writeBatch(db);
     const timestamp = serverTimestamp();
 
     const publicRef = doc(db, "invitations", invitationId, "guests", guestId);
-    const privateRef = doc(
-      db,
-      "invitations",
-      invitationId,
-      "guests",
-      guestId,
-      "private",
-      "contactInfo",
-    );
 
-    const tieneTelefono = !!(data.telefono && data.telefono.trim().length > 0);
+    let publicPayload: Partial<Guest> = {};
 
-    const publicPayload: Partial<Guest> = {
-      nombre: data.nombre,
-      invitados: Number(data.invitados) || 1,
-      notaAnfitrion: data.notaAnfitrion || null,
-      cambiosPermitidos: data.cambiosPermitidos ?? true,
-      tieneTelefono,
-      ultimaModificacion: timestamp,
-      asistencia: data.asistencia,
-      confirmados: Number(data.confirmados),
-    };
+    if (isPublic) {
+      // 🌍 SI ES UN INVITADO PÚBLICO:
+      // Enviamos ÚNICAMENTE los campos permitidos en las reglas de Firestore
+      publicPayload = {
+        asistencia: data.asistencia,
+        confirmados: Number(data.confirmados) || 0,
+        ultimaModificacion: timestamp,
+      } as Partial<Guest>;
+    } else {
+      const privateRef = doc(
+        db,
+        "invitations",
+        invitationId,
+        "guests",
+        guestId,
+        "private",
+        "contactInfo",
+      );
 
-    if (isNew) {
-      publicPayload.id = guestId;
-      publicPayload.fechaCreacion = timestamp;
-      publicPayload.notaInvitado = null;
-      publicPayload.asistencia = null;
-      publicPayload.confirmados = null;
+      const tieneTelefono = !!(
+        data.telefono && data.telefono.trim().length > 0
+      );
+      // 🔒 SI ES EL ADMINISTRADOR:
+      // Enviamos toda la información (Nombre, cantidad permitida, permisos, etc)
+      publicPayload = {
+        nombre: data.nombre,
+        invitados: Number(data.invitados) || 1,
+        notaAnfitrion: data.notaAnfitrion || null,
+        cambiosPermitidos: data.cambiosPermitidos ?? true,
+        tieneTelefono,
+        ultimaModificacion: timestamp,
+        asistencia: data.asistencia,
+        confirmados: Number(data.confirmados) || 0,
+      };
+
+      if (isNew) {
+        publicPayload.id = guestId;
+        publicPayload.fechaCreacion = timestamp;
+        publicPayload.notaInvitado = null;
+        publicPayload.asistencia = null;
+        publicPayload.confirmados = null;
+      }
+
+      const privatePayload = {
+        telefono: data.telefono || null,
+      };
+
+      batch.set(privateRef, privatePayload, { merge: true });
     }
 
-    const privatePayload = {
-      telefono: data.telefono || null,
-    };
-
+    // Usamos merge: true para no borrar los datos del admin cuando el invitado confirma
     batch.set(publicRef, publicPayload, { merge: true });
-    batch.set(privateRef, privatePayload, { merge: true });
 
     await batch.commit();
   },
@@ -168,10 +193,13 @@ export const GuestService = {
   },
 
   batchUpdateLock: async (
-    invitationId: string,
+    invitationId: string | null,
     guestIds: string[],
     shouldLock: boolean,
   ) => {
+    if (!invitationId) {
+      return;
+    }
     const batch = writeBatch(db);
 
     guestIds.forEach((id) => {
@@ -214,6 +242,101 @@ export const GuestService = {
       batch.delete(publicRef);
     });
 
+    await batch.commit();
+  },
+
+  getGuest: async (
+    invitationId: string,
+    guestId: string,
+  ): Promise<{
+    guest: Guest | null;
+    error: FirestoreErrorCode | null;
+  }> => {
+    try {
+      const privateRef = doc(
+        db,
+        "invitations",
+        invitationId,
+        "guests",
+        guestId,
+      );
+      const snapshot = await getDoc(privateRef);
+
+      if (snapshot.exists()) {
+        return { guest: snapshot.data() as Guest, error: null };
+      }
+      return { guest: null, error: null };
+    } catch (error) {
+      const firestoreError = error as FirestoreError;
+      return {
+        guest: null,
+        error: firestoreError.code || "Error desconocido",
+      };
+    }
+  },
+  markWhastappSent: async (invitationId: string, guest: Guest) => {
+    const docRef = doc(db, "invitations", invitationId, "guests", guest.id);
+
+    await setDoc(
+      docRef,
+      {
+        whatsappEnviado: true,
+      } as Partial<Guest>,
+      { merge: true },
+    );
+  },
+
+  batchImportGuests: async (
+    invitationId: string,
+    parsedGuests: ImportedGuest[],
+  ) => {
+    const batch = writeBatch(db);
+    const timestamp = serverTimestamp();
+
+    // ✅ Promise.all espera TODOS los async antes de continuar
+    await Promise.all(
+      parsedGuests.map(async (guest) => {
+        const guestId = await GuestService.getUniqueGuestId(invitationId);
+        const publicRef = doc(
+          db,
+          "invitations",
+          invitationId,
+          "guests",
+          guestId,
+        );
+        const privateRef = doc(
+          db,
+          "invitations",
+          invitationId,
+          "guests",
+          guestId,
+          "private",
+          "contactInfo",
+        );
+
+        const tieneTelefono = !!(
+          guest.telefono && guest.telefono.trim().length > 0
+        );
+
+        batch.set(publicRef, {
+          id: guestId,
+          nombre: guest.nombre,
+          invitados: Number(guest.invitados) || 1,
+          notaAnfitrion: guest.notaAnfitrion || null,
+          cambiosPermitidos: true,
+          tieneTelefono,
+          ultimaModificacion: timestamp,
+          fechaCreacion: timestamp,
+          asistencia: null,
+          confirmados: 0,
+          notaInvitado: null,
+        });
+
+        batch.set(privateRef, { telefono: guest.telefono || null });
+      }),
+    );
+
+    // ✅ Commit solo cuando todos los .set() ya están listos
     await batch.commit();
   },
 };

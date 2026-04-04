@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   CheckCircle2,
   XCircle as XCircleIcon,
@@ -6,6 +6,7 @@ import {
   X,
   Check,
   MinusCircle,
+  ChevronDown,
 } from "lucide-react";
 import Modal from "@/features/shared/components/Modal";
 import { cn } from "@heroui/theme";
@@ -30,6 +31,54 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
   isEdit,
   onBackdropPress,
 }) => {
+  // --- ESTADOS LOCALES PARA EL WHATSAPP ---
+  const [countryCode, setCountryCode] = useState("52");
+  const [phoneNumber, setPhoneNumber] = useState("");
+
+  // Sincronizar el número de teléfono cuando se abre el modal o cambia la prop externamente
+  useEffect(() => {
+    if (!formData.telefono) {
+      setPhoneNumber("");
+      // Mantenemos el código de país actual por comodidad si está agregando varios
+    } else if (formData.telefono && !phoneNumber) {
+      // Extraemos el código de país si existe en el string guardado
+      let parsedCode = "52";
+      let parsedNum = formData.telefono;
+      const codes = ["52", "1", "34", "57", "54", "56"];
+
+      for (const code of codes) {
+        if (parsedNum.startsWith(code) && parsedNum.length > code.length) {
+          parsedCode = code;
+          parsedNum = parsedNum.substring(code.length);
+          break;
+        }
+      }
+      setCountryCode(parsedCode);
+      setPhoneNumber(parsedNum);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData.telefono]);
+
+  // Handlers para el Input de Teléfono
+  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const code = e.target.value;
+    setCountryCode(code);
+    if (phoneNumber) {
+      setFormData((prev) => ({ ...prev, telefono: code + phoneNumber }));
+    }
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const num = e.target.value.replace(/\D/g, "");
+    setPhoneNumber(num);
+    if (num) {
+      setFormData((prev) => ({ ...prev, telefono: countryCode + num }));
+    } else {
+      // Si borra el número completo, limpiamos el campo en el formData
+      setFormData((prev) => ({ ...prev, telefono: "" }));
+    }
+  };
+
   const handleNumberChange = (field: keyof GuestFormData, value: string) => {
     const numValue = value === "" ? 0 : parseInt(value, 10);
     const finalValue = isNaN(numValue) ? 0 : numValue;
@@ -69,6 +118,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
           </p>
         </div>
         <button
+          type="button"
           onClick={onClose}
           className="group bg-transparent hover:bg-red-50 border border-transparent hover:border-red-100 text-stone-400 hover:text-red-500 rounded-xl p-2 transition-all ml-1"
           title="Cancelar selección"
@@ -223,19 +273,43 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                   (Opcional)
                 </span>
               </label>
-              <input
-                type="tel"
-                inputMode="numeric"
-                pattern="[0-9]{10}"
-                className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all placeholder:text-stone-300 shadow-sm"
-                value={formData.telefono || ""}
-                onChange={(e) => {
-                  const input = e.target;
-                  const value = input.value.replace(/\D/g, "");
-                  setFormData({ ...formData, telefono: value });
-                }}
-                placeholder="Ej. 6141234567"
-              />
+
+              {/* --- NUEVO INPUT INTEGRADO CON SELECTOR DE PAÍS --- */}
+              <div className="relative flex items-center">
+                {/* Contenedor del Selector Absoluto sobre el Input */}
+                <div className="absolute inset-y-0 left-0 flex items-center">
+                  <select
+                    className="h-full py-0 pl-4 pr-7 bg-transparent text-stone-custom font-medium focus:ring-0 focus:border-transparent outline-none text-sm cursor-pointer appearance-none z-10"
+                    value={countryCode}
+                    onChange={handleCountryChange}
+                  >
+                    <option value="52">🇲🇽 +52</option>
+                    <option value="1">🇺🇸 +1</option>
+                    <option value="34">🇪🇸 +34</option>
+                    <option value="57">🇨🇴 +57</option>
+                    <option value="54">🇦🇷 +54</option>
+                    <option value="56">🇨🇱 +56</option>
+                  </select>
+
+                  {/* Flechita Personalizada */}
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
+                    <ChevronDown size={14} />
+                  </div>
+
+                  {/* Separador Visual */}
+                  <div className="w-px h-6 bg-sand ml-1"></div>
+                </div>
+
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]{9,15}"
+                  className="w-full pl-[105px] pr-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all placeholder:text-stone-300 shadow-sm"
+                  value={phoneNumber}
+                  onChange={handlePhoneChange}
+                  placeholder="Ej. 6141234567"
+                />
+              </div>
             </div>
 
             <div>
@@ -252,7 +326,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                     notaAnfitrion: e.target.value,
                   })
                 }
-                placeholder="Ej. 'Mesa principal', 'Alergia nueces'..."
+            placeholder="Ej. 'Que no se te olviden los macarrones'..."
               />
             </div>
 

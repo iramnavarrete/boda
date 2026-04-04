@@ -54,7 +54,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
       )}
     >
       {/* BARRA FLOTANTE - SOMBRA DIFUMINADA */}
-      <div className="bg-white/80 text-stone-800 border border-gold/50 rounded-2xl shadow-[0_12px_40px_-8px_rgba(80,85,73,0.4)] p-2 pr-3 flex items-center gap-3 md:gap-5 w-full md:w-auto max-w-2xl relative">
+      <div className="bg-white/80 text-stone-800 border-2 border-gold/50 rounded-2xl shadow-[0_12px_40px_-8px_rgba(80,85,73,0.4)] p-2 pr-3 flex items-center gap-3 md:gap-5 w-full md:w-auto max-w-2xl relative">
         {/* CONTADOR - Fondo Dorado */}
         <div className="flex items-center gap-3 pl-1.5">
           <span className="bg-gold text-white px-3 py-1.5 rounded-xl font-bold text-sm whitespace-nowrap flex items-center gap-2 shadow-sm">

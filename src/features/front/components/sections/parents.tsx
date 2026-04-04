@@ -1,13 +1,13 @@
 import AnimatedEntrance from "@/features/front/components/AnimatedEntrance";
 import CountdownTimer from "@/features/front/components/CountDownTimer";
 import ElegantText from "@/features/shared/components/ElegantText";
-import { weddingDate } from "@/constants/constants";
 import BeigeWaves from "@/icons/beige-waves";
 import FlowersBackground1 from "@/icons/flowers-background-1";
 import Separator from "@/icons/separator";
-import React from "react";
+import { useInvitationStore } from "../../stores/invitationStore";
 
 export default function ParentsGodFathers() {
+  const invitationData = useInvitationStore((state) => state.invitationData);
   return (
     <article className="bg-accent border-t-1 drop border-primary flex flex-col items-center justify-center relative pt-20">
       <FlowersBackground1 className="w-full h-[85%] 2xl:h-full absolute top-0" />
@@ -26,10 +26,18 @@ export default function ParentsGodFathers() {
               <ElegantText delay={0.63} text="Novia" duration={0.2} />
             </div>
             <div className="font-nourdMedium text-xl">
-              <ElegantText delay={0.73} text="Margarita Hernández" duration={0.2} />
+              <ElegantText
+                delay={0.73}
+                text={invitationData?.padresNovia.mama || "Mamá novia"}
+                duration={0.2}
+              />
             </div>
             <div className="font-nourdMedium text-xl">
-              <ElegantText delay={0.73} text="Miguel González" duration={0.2} />
+              <ElegantText
+                delay={0.73}
+                text={invitationData?.padresNovia.papa || "Papá novia"}
+                duration={0.2}
+              />
             </div>
           </div>
           <div className="mb-12 mt-5">
@@ -37,12 +45,16 @@ export default function ParentsGodFathers() {
               <ElegantText delay={1.04} text="Novio" duration={0.2} />
             </div>
             <div className="font-nourdMedium text-xl">
-              <ElegantText delay={1.16} text="Ana Caraveo" duration={0.2} />
+              <ElegantText
+                delay={1.16}
+                text={invitationData?.padresNovio.mama || "Mamá Novio"}
+                duration={0.2}
+              />
             </div>
             <div className="font-nourdMedium text-xl">
               <ElegantText
                 delay={1.16}
-                text="Juan Navarrete"
+                text={invitationData?.padresNovio.papa || "Papá novio"}
                 duration={0.2}
               />
             </div>
@@ -57,7 +69,7 @@ export default function ParentsGodFathers() {
         </div>
         <Separator className="w-full" />
         <AnimatedEntrance>
-          <CountdownTimer targetDate={weddingDate} />
+          <CountdownTimer />
         </AnimatedEntrance>
 
         <BeigeWaves className="w-full absolute h-12 left-0 bottom-[-40px]" />

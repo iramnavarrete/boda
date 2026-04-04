@@ -6,7 +6,7 @@ const RANGE = "invitacion!A:F";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<void | { message: string }>
+  res: NextApiResponse<void | { message: string }>,
 ) {
   if (req.method === "PUT") {
     const { id, data } = req.body; // 'data' contendrá la info del formulario
@@ -47,8 +47,6 @@ export default async function handler(
           break;
         }
       }
-
-      console.log(rowIndexToUpdate, "INDEX A ACTUALIZAR");
 
       if (rowIndexToUpdate === -1) {
         return res

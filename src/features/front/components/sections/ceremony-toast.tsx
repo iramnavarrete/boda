@@ -6,14 +6,17 @@ import ChurchIcon from "@/icons/church-icon";
 import DressCodeIcon from "@/icons/church-icon copy";
 import BeigeWaves from "@/icons/beige-waves";
 import FlowersBackground2 from "@/icons/flowers-background-2";
-import { churchSequence, glassesSequence } from "@/constants/animationSequences";
+import {
+  churchSequence,
+  glassesSequence,
+} from "@/constants/animationSequences";
+import { useInvitationStore } from "../../stores/invitationStore";
+import { formatTo12Hour } from "@/utils/formatters";
 
 interface CardEventProps {
   time: string;
   place: string;
-  address1: string;
-  address2: string;
-  address3: string;
+  address: string;
   link: string;
   IconComponent: () => React.ReactNode;
   title: string;
@@ -21,9 +24,7 @@ interface CardEventProps {
 }
 
 const CardEvent: React.FC<CardEventProps> = ({
-  address1,
-  address2,
-  address3,
+  address,
   place,
   time,
   link,
@@ -49,15 +50,15 @@ const CardEvent: React.FC<CardEventProps> = ({
             {title}
           </p>
           <div className="text-primary text-center leading-6 pt-5 text-lg font-nourdMedium">
-            <p>{time}</p>
+            <p>{formatTo12Hour(time)}</p>
           </div>
           <div className="my-3 text-primary text-center text-lg font-nourdMedium">
             <p>{place}</p>
           </div>
           <div className="text-primary text-center leading-5 text-sm">
-            <p>{address1}</p>
-            <p>{address2}</p>
-            <p>{address3}</p>
+            <p className="whitespace-pre-wrap">
+              {address.replaceAll(",", "\n")}
+            </p>
           </div>
           <a
             className="border-border-button border-1 mt-8 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary"
@@ -116,6 +117,7 @@ const DressCode: React.FC<PropsWithChildren<DressCodeProps>> = ({
 };
 
 export default function CeremonyToast() {
+  const invitationData = useInvitationStore((state) => state.invitationData);
 
   return (
     <div className="mt-[-100%]">
@@ -128,12 +130,10 @@ export default function CeremonyToast() {
                 <ChurchIcon className="w-[70px] h-[70px] animated-church" />
               )}
               sequence={churchSequence}
-              address1="Juan de Dios Martin Barba Antes #6112,"
-              address2="Nombre de Dios, 31110,"
-              address3="Chihuahua, Chih."
-              link="https://maps.app.goo.gl/6tZo4PFqmskX2nsa8"
-              place="Parroquia San Juan Bautista"
-              time="6:30 pm"
+              address={invitationData?.ceremonia.direccion || ""}
+              link={invitationData?.ceremonia.enlaceMaps || "#"}
+              place={invitationData?.ceremonia.nombreTemplo || ""}
+              time={invitationData?.ceremonia.hora || ""}
               title="Ceremonia"
             />
             <CardEvent
@@ -141,12 +141,10 @@ export default function CeremonyToast() {
                 <CheersIcon className="w-[70px] h-[70px] animated-glasses" />
               )}
               sequence={glassesSequence}
-              address1="Ctra. Chihuahua-Aldama Km 1 #6902,"
-              address2="Privada Ejido Robinson, 31313"
-              address3="Chihuahua, Chih."
-              link="https://maps.app.goo.gl/dgtiBetWv66uCrRi6"
-              place="Hacienda el refugio"
-              time="9:00 pm"
+              address={invitationData?.recepcion.direccion || ""}
+              link={invitationData?.recepcion.enlaceMaps || "#"}
+              place={invitationData?.recepcion.nombreSalon || ""}
+              time={invitationData?.recepcion.hora || ""}
               title="Recepción"
             />
           </div>

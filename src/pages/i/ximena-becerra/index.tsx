@@ -49,7 +49,11 @@ export default function Home({ invitationData }: InvitationPageProps) {
     <>
       <Head>
         <title>
-          {`${getEventTypeName(invitationData.tipo)} ${eventName} | JN Invitaciones`}
+          {(
+            getEventTypeName(invitationData.tipo) +
+            eventName +
+            "| JN Invitaciones"
+          ).toString()}
         </title>
         <meta name="description" content={description} />
         <link rel="canonical" href={eventUrl} />

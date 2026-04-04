@@ -1,6 +1,14 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef, FC } from "react";
+import {
+  useMemo,
+  useState,
+  useEffect,
+  useRef,
+  FC,
+  Dispatch,
+  SetStateAction,
+} from "react";
 import {
   Users,
   Clock,
@@ -18,6 +26,7 @@ import {
   Quote,
   Gem,
   Sparkles,
+  Eye,
 } from "lucide-react";
 import Link from "next/link";
 import theme from "@/utils/theme";
@@ -30,46 +39,50 @@ import TextureButton from "@/features/shared/components/TextureButton";
 import { useRouter } from "next/router";
 import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
 import { GuestQuotesService } from "@/services/guestQuotesService";
-import { DashboardStats, GuestQuote, Invitation } from "@/types";
+import { DashboardStats, GuestActivity, GuestQuote } from "@/types";
 import { formatTimeStamp } from "@/utils/formatters";
+import { useInvitationStore } from "@/features/front/stores/invitationStore";
+import { ActivityService } from "@/services/activityService";
 
-export const MessagesCarousel: FC<{ invitationId: string }> = ({
-  invitationId,
-}) => {
+export const MessagesCarousel: FC = () => {
   const [messages, setMessages] = useState<GuestQuote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  const invitationData = useInvitationStore((state) => state.invitationData);
+
   // Suscripción a Firestore en tiempo real
   useEffect(() => {
-    setIsLoading(true);
-    const unsubscribe = GuestQuotesService.subscribeToGuestMessages(
-      invitationId,
-      (allMessages) => {
-        // Extraemos solo los primeros 5 mensajes del arreglo ordenado
-        const top5Messages = allMessages.slice(0, 5);
-        setMessages(top5Messages);
-        setIsLoading(false);
+    let unsubscribe = () => {};
+    if (invitationData) {
+      unsubscribe = GuestQuotesService.subscribeToGuestMessages(
+        invitationData.id,
+        (allMessages: GuestQuote[]) => {
+          // Extraemos solo los primeros 5 mensajes del arreglo ordenado
+          const top5Messages = allMessages.slice(0, 5);
+          setMessages(top5Messages);
+          setIsLoading(false);
 
-        // Si el índice actual quedó fuera de rango tras una actualización, lo reiniciamos
-        setCurrentIndex((prev) => {
-          if (top5Messages.length === 0) return 0;
-          return prev >= top5Messages.length ? 0 : prev;
-        });
-      },
-      (error) => {
-        console.error("Error cargando mensajes:", error);
-        setIsLoading(false);
-      },
-    );
+          // Si el índice actual quedó fuera de rango tras una actualización, lo reiniciamos
+          setCurrentIndex((prev) => {
+            if (top5Messages.length === 0) return 0;
+            return prev >= top5Messages.length ? 0 : prev;
+          });
+        },
+        (error) => {
+          console.error("Error cargando mensajes:", error);
+          setIsLoading(false);
+        },
+      );
+    }
 
     return () => unsubscribe();
-  }, [invitationId]);
+  }, [invitationData]);
 
   const currentMessage = messages[currentIndex];
 
   // Uso del hook de tiempo (se actualiza cuando cambia el mensaje actual)
-  const timeAgoString = useTimeAgo(currentMessage?.timestamp);
+  const timeAgoString = useTimeAgo(currentMessage?.fechaModificacion);
 
   const nextSlide = () =>
     setCurrentIndex((prev) => (prev + 1) % messages.length);
@@ -94,7 +107,7 @@ export const MessagesCarousel: FC<{ invitationId: string }> = ({
           </div>
         </div>
         <Link
-          href={`/admin/invitations/${invitationId}/quotes`}
+          href={`/admin/invitations/${invitationData?.id}/quotes`}
           className="text-xs font-bold text-gold hover:text-primary transition-colors flex items-center gap-1 tracking-wider uppercase"
         >
           Ver Todos <ChevronRight size={14} />
@@ -149,7 +162,7 @@ export const MessagesCarousel: FC<{ invitationId: string }> = ({
                 </span>
 
                 <span className="text-[10px] text-stone-400 font-medium capitalize-first mt-1">
-                  {timeAgoString || currentMessage.fecha}
+                  {timeAgoString || currentMessage.fechaCreacion}
                 </span>
               </div>
             </div>
@@ -372,54 +385,126 @@ const GuestStatsPieChart = ({ stats }: { stats: DashboardStats }) => {
   );
 };
 
-const ActivityItem = ({
-  initials,
-  text,
-  time,
-  type,
-}: {
-  initials: React.ReactElement;
-  text: React.ReactElement;
-  time: string;
-  type: string;
-}) => {
-  let colorClass = "bg-stone-100 text-stone-600 border-stone-200";
-  if (type === "success")
-    colorClass = "bg-primary/10 text-primary-500/80 border-primary-500/80";
-  if (type === "danger")
-    colorClass = "bg-danger/10 text-danger/80 border-danger/80";
-  if (type === "neutral") colorClass = "bg-gold/10 text-gold/80 border-gold/80";
+const ActivityItem = ({ activity }: { activity: GuestActivity }) => {
+  const timeAgo = useTimeAgo(activity.timestamp);
+
+  // Configuramos colores y textos dependiendo del tipo de acción
+  let config = {
+    icon: <Eye size={16} />,
+    text: "vio la invitación",
+    bgColor: "bg-stone-100",
+    iconColor: "text-stone-500",
+  };
+
+  if (activity.action === "confirm") {
+    config = {
+      icon: <CheckCircle2 size={16} />,
+      text: "confirmó asistencia",
+      bgColor: "bg-[#E7F3EF]", // Verde suave
+      iconColor: "text-[#2D5B4F]",
+    };
+  } else if (activity.action === "decline") {
+    config = {
+      icon: <XCircle size={16} />,
+      text: "declinó la invitación",
+      bgColor: "bg-[#F9EAE9]", // Rojo suave
+      iconColor: "text-[#853935]",
+    };
+  }
 
   return (
-    <div className="flex gap-4 relative">
+    <div className="flex items-start gap-4 p-3 hover:bg-sand-light rounded-lg transition-colors cursor-default border border-transparent hover:border-sand group">
       <div
-        className={`w-9 h-9 shrink-0 rounded-full border shadow-sm z-10 flex items-center justify-center text-xs font-bold transition-transform ${colorClass}`}
+        className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${config.bgColor} ${config.iconColor} shadow-sm border border-black/5 group-hover:scale-110 transition-transform`}
       >
-        {initials}
+        {config.icon}
       </div>
-      <div className="pb-1 pt-1">
-        <p className="text-sm text-stone-600 leading-tight">{text}</p>
-        <p className="text-[10px] text-stone-400 mt-1 font-medium uppercase tracking-wide">
-          {time}
+      <div className="flex-1 pt-0.5">
+        <p className="text-sm text-stone-600 leading-snug">
+          <strong className="text-charcoal-800 font-bold">
+            {activity.guestName}
+          </strong>{" "}
+          {config.text}
         </p>
+        <span className="text-[10px] text-stone-400 font-medium capitalize-first mt-1">
+          {timeAgo}
+        </span>
       </div>
     </div>
   );
 };
 
-export default function InvitationDashboard({
-  invitationId,
-  invitationData,
+function RecentActivity({
+  setLastActivity,
 }: {
-  invitationId: string;
-  invitationData: Invitation | null;
+  setLastActivity: Dispatch<SetStateAction<GuestActivity | null>>;
 }) {
+  const [activities, setActivities] = useState<GuestActivity[]>([]);
+
+  const invitationData = useInvitationStore((state) => state.invitationData);
+
+  useEffect(() => {
+    if (!invitationData) return;
+
+    // Se suscribe a los últimos 20 eventos
+    const unsubscribe = ActivityService.subscribeToRecentActivity(
+      invitationData.id,
+      20,
+      (data) => {
+        setLastActivity(data[0] || null);
+        setActivities(data);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [invitationData]);
+
+  return (
+    <div className="lg:col-span-2 bg-white/80 rounded-2xl shadow-[0_8px_30px_rgba(44,44,41,0.04)] border border-sand-200 p-8 relative overflow-hidden flex flex-col max-h-[420px]">
+      {/* HEADER */}
+      <div className="flex items-center justify-between mb-4 pb-4 border-b border-sand-200 shrink-0">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-[#FDFBF7] rounded-lg border border-sand-200 text-gold-500">
+            <Activity size={20} />
+          </div>
+          <h2 className="text-lg font-bold text-primary">Actividad Reciente</h2>
+        </div>
+        <span className="text-[10px] font-bold text-gold-500 bg-[#FDFBF7] border border-sand-200 px-3 py-1 rounded-full uppercase tracking-wider">
+          En vivo
+        </span>
+      </div>
+
+      {/* CONTENEDOR CON SCROLL PARA LOS ITEMS */}
+      <div className="flex-1 overflow-y-auto no-scrollbar -mx-2 px-2">
+        {activities.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-stone-400 py-10">
+            <Activity size={32} className="opacity-20 mb-3" />
+            <p className="text-sm">Aún no hay actividad registrada.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pb-4">
+            {activities.map((act) => (
+              <ActivityItem key={act.id} activity={act} />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default function InvitationDashboard() {
   const user = useAuthUser();
+  const [lastActivity, setLastActivity] = useState<GuestActivity | null>(null);
   const { toast } = useToast();
+
+  const timeAgo = useTimeAgo(lastActivity?.timestamp);
 
   const router = useRouter();
 
-  const { guests, isLoadingGuests, error } = useGuestsData(invitationId, user);
+  const invitationData = useInvitationStore((state) => state.invitationData);
+
+  const { guests, isLoadingGuests, error } = useGuestsData(invitationData?.id);
 
   const stats = useGuestsStats(guests);
 
@@ -444,16 +529,18 @@ export default function InvitationDashboard({
           <h1 className="text-3xl md:text-4xl font-serif font-medium text-primary mb-2">
             Resumen del Evento
           </h1>
-          <div className="flex items-center gap-2 text-primary/70 text-sm font-semibold">
-            <Clock className="text-gold" size={14} />
-            <span>Última actualización: hace un momento</span>
-          </div>
+          {timeAgo && (
+            <div className="flex items-center gap-2 text-primary/70 text-sm font-semibold">
+              <Clock className="text-gold" size={14} />
+              <span>{`Última actualización: ${timeAgo}`}</span>
+            </div>
+          )}
         </div>
         <TextureButton
           className="relative z-10 text-white font-semibold px-8 py-3.5 rounded-xl"
           icon={<Users size={16} />}
           onClick={() => {
-            router.push(`/admin/invitations/${invitationId}`);
+            router.push(`/admin/invitations/${invitationData?.id}`);
           }}
         >
           Gestionar invitados
@@ -461,91 +548,14 @@ export default function InvitationDashboard({
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
-        <MessagesCarousel invitationId={invitationId} />
+        <MessagesCarousel />
         <GuestStatsPieChart stats={stats} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-white/80 rounded-2xl shadow-sm border border-sand p-8 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-sand-light">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-paper rounded-lg border border-sand text-gold">
-                <Activity size={20} />
-              </div>
-              <h2 className="text-lg font-bold text-primary">
-                Actividad Reciente
-              </h2>
-            </div>
-            <span className="text-xs font-medium text-primary bg-paper border border-sand-200 px-4 py-1.5 rounded-full uppercase tracking-wider">
-              Hoy
-            </span>
-          </div>
+        <RecentActivity setLastActivity={setLastActivity} />
 
-          <div className="relative grid grid-cols-1 md:grid-cols-2 flex-col gap-5 mx-2">
-            <ActivityItem
-              initials={<CheckCircle2 size={16} />}
-              text={
-                <>
-                  <strong>Familia González</strong> confirmó asistencia
-                </>
-              }
-              time="Hace 10 min"
-              type="success"
-            />
-            <ActivityItem
-              initials={<Clock size={16} />}
-              text={
-                <>
-                  <strong>María López</strong> vio la invitación
-                </>
-              }
-              time="Hace 1 hora"
-              type="neutral"
-            />
-            <ActivityItem
-              initials={<XCircle size={16} />}
-              text={
-                <>
-                  <strong>Carlos Ruiz</strong> declinó la invitación
-                </>
-              }
-              time="Hace 3 horas"
-              type="danger"
-            />
-            <ActivityItem
-              initials={<CheckCircle2 size={16} />}
-              text={
-                <>
-                  <strong>Familia González</strong> confirmó asistencia
-                </>
-              }
-              time="Hace 10 min"
-              type="success"
-            />
-            <ActivityItem
-              initials={<Clock size={16} />}
-              text={
-                <>
-                  <strong>María López</strong> vio la invitación
-                </>
-              }
-              time="Hace 1 hora"
-              type="neutral"
-            />
-            <ActivityItem
-              initials={<XCircle size={16} />}
-              text={
-                <>
-                  <strong>Carlos Ruiz</strong> declinó la invitación
-                </>
-              }
-              time="Hace 3 horas"
-              type="danger"
-            />
-          </div>
-        </div>
-
-        <div className="bg-primary-800/85 rounded-2xl p-8 shadow-xl relative overflow-hidden text-[#F9F7F2] group">
+        <div className="bg-primary-800/85 rounded-2xl p-8 shadow-xl relative overflow-hidden text-paper group">
           {/* Decoración Fondo */}
           <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-110 transition-transform duration-700">
             <Gem size={140} />
@@ -593,9 +603,9 @@ export default function InvitationDashboard({
               </div>
             </div>
 
-            <div className="pt-6 mt-4">
+            <div>
               <Link
-                href={`${router.basePath}/i/${invitationId}`}
+                href={`${router.basePath}/i/${invitationData?.id}`}
                 className="w-full py-4 rounded-full border border-gold/50 text-gold hover:bg-gold hover:text-primary transition-all text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 group/btn"
               >
                 Ver invitación{" "}

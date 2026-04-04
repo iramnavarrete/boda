@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { Guest } from "@/types";
+import { useEffect, useState } from "react";
+import { Guest, ImportedGuest, WhatsappCounts, WhatsappFilterType } from "@/types";
 import { GuestService } from "@/services/guestService";
 import GuestFormModal from "@/features/admin/components/GuestFormModal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
@@ -15,26 +15,62 @@ import { useConfirmModal } from "@/features/admin/hooks/useConfirmModal";
 import { useGuestsStats } from "@/features/admin/hooks/useGuestsStats";
 import { useGuestActions } from "@/features/admin/hooks/useGuestActions";
 import { useToast } from "@/features/shared/components/Toast";
-import { useAuthUser } from "@/features/shared/contexts/AuthUserContext";
 import FloatingBulkActionsBar from "@/features/admin/components/FloatingBulkActionsBar";
 import StatsSidebar from "./StatsSidebar";
+import { useInvitationStore } from "@/features/front/stores/invitationStore";
+import GuestsTableView from "./GuestTableView";
+import ImportGuestsModal from "./ImportGuestsModal";
 
-export default function WeddingAdmin({
-  invitationId,
-}: {
-  invitationId: string;
-}) {
-  const user = useAuthUser();
+export default function WeddingAdmin() {
+  const invitationData = useInvitationStore((state) => state.invitationData);
 
-  const { guests, isLoadingGuests, error } = useGuestsData(invitationId, user);
+  const { guests, isLoadingGuests, error } = useGuestsData(invitationData?.id);
   const {
     searchTerm,
     setSearchTerm,
     filterStatus,
     setFilterStatus,
-    filteredGuests,
+    filteredGuests, // Lista filtrada por texto y asistencia
     filterCounts,
   } = useGuestsFilter(guests);
+
+  // --- NUEVO ESTADO PARA EL FILTRO DE WHATSAPP ---
+  const [whatsappFilter, setWhatsappFilter] =
+    useState<WhatsappFilterType>("all");
+
+  // 1. Calculamos los contadores totales para WhatsApp basados en la lista original completa
+  const whatsappCounts: WhatsappCounts = {
+    all: filteredGuests?.length || 0,
+    sent:
+      filteredGuests?.filter((g: Guest) => g.whatsappEnviado && g.tieneTelefono)
+        .length || 0,
+    not_sent:
+      filteredGuests?.filter(
+        (g: Guest) => !g.whatsappEnviado && g.tieneTelefono,
+      ).length || 0,
+    empty: filteredGuests?.filter((g: Guest) => !g.tieneTelefono).length || 0,
+  };
+
+  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+
+  // --- NUEVOS ESTADOS PARA IMPORTACIÓN ---
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+
+  // 2. Aplicamos la segunda capa de filtrado sobre el resultado del primer filtro
+  const finalFilteredGuests = filteredGuests.filter((g: Guest) => {
+    if (whatsappFilter === "all") return true;
+    if (whatsappFilter === "sent")
+      return g.whatsappEnviado === true && g.tieneTelefono;
+    if (whatsappFilter === "not_sent") return !g.whatsappEnviado && g.tieneTelefono;
+    if (whatsappFilter === "empty") return !g.tieneTelefono;
+    return true;
+  });
+
+  // ESTADOS DEL TUTORIAL DE WHATSAPP
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+  const [pendingWappGuest, setPendingWappGuest] = useState<Guest | null>(null);
+
   const {
     selectedGuests,
     handleSelectGuest,
@@ -42,6 +78,7 @@ export default function WeddingAdmin({
     clearSelection,
     removeFromSelection,
   } = useGuestsSelection();
+
   const {
     isModalOpen,
     currentGuestId,
@@ -50,25 +87,28 @@ export default function WeddingAdmin({
     handleOpenModal,
     handleCloseModal,
   } = useGuestForm();
+
   const {
     confirmModal,
     openConfirmModal,
     closeConfirmModal,
     handleExecuteConfirmation,
   } = useConfirmModal();
+
   const { handleSaveGuest, sendWhatsApp, handleExportExcel } = useGuestActions(
-    invitationId,
-    user,
+    invitationData?.id,
   );
-  const stats = useGuestsStats(filteredGuests);
-  const isFiltered = filteredGuests.length !== guests.length;
+
+  // 3. Pasamos la lista final (con ambos filtros) a las estadísticas
+  const stats = useGuestsStats(finalFilteredGuests);
+  const isFiltered = finalFilteredGuests.length !== (guests?.length || 0);
   const { toast } = useToast();
 
   useEffect(() => {
     if (error) {
       toast(error, "error");
     }
-  }, [error]);
+  }, [error, toast]);
 
   // --- HANDLERS ---
   const handleBulkUpdateLock = (shouldLock: boolean) => {
@@ -84,15 +124,40 @@ export default function WeddingAdmin({
         : `¿Deseas permitir la edición para ${selectedGuests.size} invitados? Podrán modificar su mensaje de felicitación y confirmar cantidad de invitados.`,
       isDanger: false,
       action: async () => {
-        await GuestService.batchUpdateLock(
-          invitationId,
-          Array.from(selectedGuests),
-          shouldLock,
-        );
+        if (invitationData) {
+          await GuestService.batchUpdateLock(
+            invitationData.id,
+            Array.from(selectedGuests),
+            shouldLock,
+          );
+        }
         clearSelection();
       },
     });
   };
+
+  // --- MANEJADOR DE IMPORTACIÓN ---
+    const handleImportGuests = async (parsedGuests: ImportedGuest[]) => {
+      if (!invitationData?.id) return;
+
+      setIsImporting(true);
+      try {
+        // Utilizamos el método batch que agrupa todas las inserciones en una sola transacción de Firestore
+        await GuestService.batchImportGuests(invitationData.id, parsedGuests);
+
+        toast(
+          `${parsedGuests.length} invitados importados exitosamente.`,
+          "success",
+        );
+        setIsImportModalOpen(false);
+      } catch (e) {
+        console.error(e);
+        toast("Ocurrió un error al importar los invitados.", "error");
+      } finally {
+        setIsImporting(false);
+      }
+    };
+
 
   const handleBulkDelete = () => {
     if (selectedGuests.size === 0) return;
@@ -102,10 +167,12 @@ export default function WeddingAdmin({
       message: `¿Estás seguro de que deseas eliminar permanentemente a los ${selectedGuests.size} invitados seleccionados? Esta acción no se puede deshacer.`,
       isDanger: true,
       action: async () => {
-        await GuestService.batchDeleteGuests(
-          invitationId,
-          Array.from(selectedGuests),
-        );
+        if (invitationData) {
+          await GuestService.batchDeleteGuests(
+            invitationData.id,
+            Array.from(selectedGuests),
+          );
+        }
         clearSelection();
       },
     });
@@ -121,7 +188,9 @@ export default function WeddingAdmin({
         "Esta acción es permanente y no se puede deshacer. ¿Estás seguro de que quieres eliminar este registro?",
       isDanger: true,
       action: async () => {
-        await GuestService.deleteGuest(invitationId, id);
+        if (invitationData) {
+          await GuestService.deleteGuest(invitationData.id, id);
+        }
         if (selectedGuests.has(id)) {
           removeFromSelection(id);
         }
@@ -145,13 +214,50 @@ export default function WeddingAdmin({
       message,
       isDanger: false,
       action: async () => {
-        await GuestService.toggleGuestLock(invitationId, guest);
+        if (invitationData) {
+          await GuestService.toggleGuestLock(invitationData.id, guest);
+        }
       },
     });
   };
 
   const onSaveGuest = (e: React.FormEvent) => {
     handleSaveGuest(e, currentGuestId, formData, handleCloseModal);
+  };
+
+  // Función que intercepta el clic en WhatsApp
+  const handleWhatsAppClick = (guest: Guest) => {
+    // Validamos en el lado del cliente (para evitar errores de SSR)
+    const hasSeenTutorial =
+      typeof window !== "undefined"
+        ? localStorage.getItem("tutorial_whatsapp_shown")
+        : false;
+
+    if (!hasSeenTutorial) {
+      // Si es la primera vez, abrimos el modal tutorial
+      setPendingWappGuest(guest);
+      setIsTutorialOpen(true);
+    } else {
+      // Si ya lo vio, ejecuta la acción normal
+      sendWhatsApp(guest);
+      if (invitationData) {
+        GuestService.markWhastappSent(invitationData.id, guest);
+      }
+    }
+  };
+
+  const confirmWhatsAppTutorial = () => {
+    // Marcamos que ya vio el tutorial
+    if (typeof window !== "undefined") {
+      localStorage.setItem("tutorial_whatsapp_shown", "true");
+    }
+    setIsTutorialOpen(false);
+
+    // Ejecutamos la acción pendiente
+    if (pendingWappGuest) {
+      sendWhatsApp(pendingWappGuest);
+      setPendingWappGuest(null);
+    }
   };
 
   return (
@@ -170,29 +276,60 @@ export default function WeddingAdmin({
             <h3 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-1 ml-1">
               Familias {(isFiltered || searchTerm !== "") && "(filtrado)"}
             </h3>
-            {/* BARRA DE BÚSQUEDA Y FILTROS (Siempre visible) */}
+
+            {/* BARRA DE BÚSQUEDA Y FILTROS */}
             <SearchAndFilterBar
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               filterStatus={filterStatus}
               setFilterStatus={setFilterStatus}
               filterCounts={filterCounts}
+              whatsappFilter={whatsappFilter}
+              setWhatsappFilter={setWhatsappFilter}
+              whatsappCounts={whatsappCounts}
+              onImportExcel={() => setIsImportModalOpen(true)}
               onExportExcel={() => handleExportExcel(guests)}
-              onNewGuest={() => handleOpenModal(invitationId)}
+              onNewGuest={() => {
+                if (invitationData) {
+                  handleOpenModal(invitationData.id);
+                }
+              }}
               disabled={selectedGuests.size > 0}
-              filteredGuestCount={filteredGuests.length}
+              filteredGuestCount={finalFilteredGuests.length} // Actualizado
+              setViewMode={setViewMode}
+              viewMode={viewMode}
             />
-
-            <GuestsGridView
-              filteredGuests={filteredGuests}
-              selectedGuests={selectedGuests}
-              onSelectGuest={handleSelectGuest}
-              onEdit={(e) => handleOpenModal(invitationId, e)}
-              onDelete={handleDeleteGuest}
-              onSendWhatsApp={sendWhatsApp}
-              onLockToggle={handleLockToggle}
-              isLoading={isLoadingGuests}
-            />
+            {viewMode === "grid" ? (
+              <GuestsGridView
+                filteredGuests={finalFilteredGuests} // Pasamos la lista con todos los filtros combinados
+                selectedGuests={selectedGuests}
+                onSelectGuest={handleSelectGuest}
+                onEdit={(e) => {
+                  if (invitationData) {
+                    handleOpenModal(invitationData.id, e);
+                  }
+                }}
+                onDelete={handleDeleteGuest}
+                onSendWhatsApp={handleWhatsAppClick}
+                onLockToggle={handleLockToggle}
+                isLoading={isLoadingGuests}
+              />
+            ) : (
+              <GuestsTableView
+                filteredGuests={finalFilteredGuests} // Pasamos la lista con todos los filtros combinados
+                selectedGuests={selectedGuests}
+                onSelectGuest={handleSelectGuest}
+                onEdit={(e) => {
+                  if (invitationData) {
+                    handleOpenModal(invitationData.id, e);
+                  }
+                }}
+                onDelete={handleDeleteGuest}
+                onSendWhatsApp={handleWhatsAppClick}
+                onLockToggle={handleLockToggle}
+                // isLoading={isLoadingGuests}
+              />
+            )}
           </main>
         </div>
       </section>
@@ -200,11 +337,11 @@ export default function WeddingAdmin({
       {/* BARRA FLOTANTE DE ACCIONES MASIVAS */}
       <FloatingBulkActionsBar
         count={selectedGuests.size}
-        isSelectedAll={selectedGuests.size === filteredGuests.length}
+        isSelectedAll={selectedGuests.size === finalFilteredGuests.length} // Actualizado
         onUpdateLock={handleBulkUpdateLock}
         onDelete={handleBulkDelete}
         onCancel={clearSelection}
-        onSelectAll={() => handleSelectAll(filteredGuests)}
+        onSelectAll={() => handleSelectAll(finalFilteredGuests)} // Actualizado
       />
 
       <GuestFormModal
@@ -227,6 +364,26 @@ export default function WeddingAdmin({
         isDanger={confirmModal.isDanger}
         confirmText={confirmModal.isDanger ? "Eliminar" : "Confirmar"}
         onBackdropPress={closeConfirmModal}
+      />
+
+      <ConfirmationModal
+        isOpen={isTutorialOpen}
+        onClose={() => {
+          setIsTutorialOpen(false);
+          setPendingWappGuest(null);
+        }}
+        onConfirm={confirmWhatsAppTutorial}
+        title="Aviso de Envío"
+        message="Al hacer clic en este botón, el invitado se marcará automáticamente como 'WhatsApp enviado'. Asegúrate de enviar correctamente el mensaje desde tu aplicación para evitar diferencias en la información de tu lista."
+        confirmText="Entendido, continuar"
+      />
+
+      {/* --- NUEVO MODAL DE IMPORTACIÓN --- */}
+      <ImportGuestsModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleImportGuests}
+        isImporting={isImporting}
       />
     </div>
   );

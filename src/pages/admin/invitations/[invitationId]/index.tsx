@@ -6,12 +6,13 @@ import AdminLayout from "@/features/shared/layouts/admin";
 export default function Index() {
   const params = useParams();
   const invitationId = params?.invitationId as string;
+
   if (!invitationId) {
     return <Loader fullscreen />;
   }
   return (
-    <AdminLayout>
-      <WeddingAdmin invitationId={invitationId} />
+    <AdminLayout invitationId={invitationId}>
+      <WeddingAdmin />
     </AdminLayout>
   );
 }

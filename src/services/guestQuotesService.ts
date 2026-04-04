@@ -8,10 +8,14 @@ import {
   getDoc,
   getDocs,
   FirestoreError,
-  Unsubscribe,
+  serverTimestamp,
+  DocumentData,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { GuestQuote } from "@/types";
+import { FirestoreResult, Guest, GuestQuote } from "@/types";
+import { Unsubscribe } from "firebase/auth";
+import { FirebaseError } from "firebase/app";
 
 // Definimos la interfaz para los mensajes tipados correctamente
 type GuestQuoteMap = GuestQuote & {
@@ -19,30 +23,25 @@ type GuestQuoteMap = GuestQuote & {
 };
 
 export const GuestQuotesService = {
-  // SUSCRIPCIÓN EN TIEMPO REAL A LOS MENSAJES (QUOTES)
   subscribeToGuestMessages: (
     invitationId: string,
-    callback: (messages: GuestQuoteMap[]) => void,
-    onError?: (error: FirestoreError) => void,
+    callback: (messages: GuestQuoteMap[]) => void, // Sustituye "any" por tu tipo GuestQuoteMap
+    onError?: (error: FirestoreError) => void, // Sustituye "any" por FirestoreError
   ) => {
     if (!invitationId) return () => {};
 
-    const messagesMap = new Map<string, GuestQuoteMap>();
-    const quoteUnsubscribes = new Map<string, Unsubscribe>();
+    const messagesMap = new Map<string, GuestQuote>(); // Mapa de mensajes
+    const guestsCache = new Map<string, DocumentData>(); // Caché en vivo de invitados
+    const quoteUnsubscribes = new Map<string, Unsubscribe>(); // Mapa de desuscripciones
 
     const guestsRef = collection(db, "invitations", invitationId, "guests");
     const q = query(guestsRef);
 
     const notifyChanges = () => {
       const sorted = Array.from(messagesMap.values()).sort((a, b) => {
-        // 1. PRIMER NIVEL: Ordenar por estado inicial de lectura
-        if (a.sortLeido !== b.sortLeido) {
-          return a.sortLeido ? 1 : -1;
-        }
-
-        // 2. SEGUNDO NIVEL: Fecha descendente
-        const timeA = a.timestamp || 0;
-        const timeB = b.timestamp || 0;
+        // ÚNICO NIVEL: Ordenar estrictamente por fechaModificacion descendente.
+        const timeA = a.fechaModificacion || 0;
+        const timeB = b.fechaModificacion || 0;
         return timeB - timeA;
       });
       callback(sorted);
@@ -51,16 +50,34 @@ export const GuestQuotesService = {
     const mainUnsub = onSnapshot(
       q,
       (snapshot) => {
-        const docs = snapshot.docChanges();
         if (snapshot.empty) {
           callback([]);
         }
+
+        const docs = snapshot.docChanges();
+
         docs.forEach((change) => {
           const guestId = change.doc.id;
           const guestData = change.doc.data();
 
-          // Si se agrega o modifica un invitado, aseguramos de escuchar su mensaje
-          if (change.type === "added" || change.type === "modified") {
+          // Si se elimina al invitado, limpiamos sus listeners y cachés
+          if (change.type === "removed") {
+            const unsub = quoteUnsubscribes.get(guestId);
+            if (unsub) {
+              unsub();
+              quoteUnsubscribes.delete(guestId);
+            }
+            guestsCache.delete(guestId);
+            messagesMap.delete(guestId);
+            notifyChanges();
+            return; // Terminamos la ejecución para este doc
+          }
+
+          // GUARDAMOS SIEMPRE LA VERSIÓN MÁS RECIENTE DEL INVITADO
+          guestsCache.set(guestId, guestData);
+
+          if (change.type === "added") {
+            // Solo creamos el listener del Quote la primera vez
             if (!quoteUnsubscribes.has(guestId)) {
               const quoteRef = doc(guestsRef, guestId, "quotes", "quote");
 
@@ -68,42 +85,47 @@ export const GuestQuotesService = {
                 quoteRef,
                 (quoteSnap) => {
                   if (quoteSnap.exists()) {
-                    const qData = quoteSnap.data();
-                    const text = qData.mensaje || qData.message;
+                    const qData = quoteSnap.data({
+                      serverTimestamps: "estimate",
+                    });
+                    const text = qData.mensaje;
 
                     if (text) {
-                      const dateObj = qData.fechaCreacion?.toDate
-                        ? qData.fechaCreacion.toDate()
-                        : new Date();
-                      const dateFormatted = dateObj.toLocaleDateString(
-                        "es-MX",
-                        {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        },
-                      );
-
-                      const existingMsg = messagesMap.get(guestId);
+                      const currentGuestData = guestsCache.get(guestId) || {};
                       const currentLeido = qData.leido || false;
 
-                      const initialSortLeido = existingMsg
-                        ? existingMsg.sortLeido
-                        : currentLeido;
+                      let msCreacion = 0;
+                      if (qData.fechaCreacion) {
+                        if (typeof qData.fechaCreacion === "number") {
+                          msCreacion = qData.fechaCreacion;
+                        } else if (
+                          typeof qData.fechaCreacion.toMillis === "function"
+                        ) {
+                          msCreacion = qData.fechaCreacion.toMillis();
+                        }
+                      }
+
+                      // Extracción segura de fechaModificacion
+                      let msModificacion = msCreacion;
+                      if (qData.fechaModificacion) {
+                        if (typeof qData.fechaModificacion === "number") {
+                          msModificacion = qData.fechaModificacion;
+                        } else if (
+                          typeof qData.fechaModificacion.toMillis === "function"
+                        ) {
+                          msModificacion = qData.fechaModificacion.toMillis();
+                        }
+                      }
 
                       messagesMap.set(guestId, {
                         id: guestId,
-                        autor: guestData.nombre || "Invitado",
-                        parentesco: guestData.grupo || "Invitado",
+                        autor: currentGuestData.nombre || "Invitado",
+                        parentesco: "Invitado",
                         mensaje: text,
-                        fecha: dateFormatted,
-                        timestamp: qData.fechaCreacion?.toMillis
-                          ? qData.fechaCreacion.toMillis()
-                          : Date.now(),
+                        fechaCreacion: msCreacion,
+                        fechaModificacion: msModificacion,
                         leido: currentLeido,
-                        sortLeido: initialSortLeido,
+                        asistencia: currentGuestData.asistencia === true,
                       });
                     } else {
                       messagesMap.delete(guestId);
@@ -121,29 +143,20 @@ export const GuestQuotesService = {
                 },
               );
               quoteUnsubscribes.set(guestId, qUnsub);
-            } else {
-              // Si el invitado se actualiza (ej: cambia su nombre) pero el listener ya existe
-              const existingMsg = messagesMap.get(guestId);
-              if (existingMsg) {
-                messagesMap.set(guestId, {
-                  ...existingMsg,
-                  autor: guestData.nombre || "Invitado",
-                  parentesco: guestData.grupo || "Invitado",
-                });
-                notifyChanges();
-              }
             }
-          }
+          } else if (change.type === "modified") {
+            // Si el invitado se modificó (ej. cambió asistencia o nombre)
+            // pero el quote listener ya existía, actualizamos el mapa directamente
+            const existingMsg = messagesMap.get(guestId);
 
-          // Si se elimina al invitado, limpiamos sus listeners
-          if (change.type === "removed") {
-            const unsub = quoteUnsubscribes.get(guestId);
-            if (unsub) {
-              unsub();
-              quoteUnsubscribes.delete(guestId);
+            if (existingMsg) {
+              messagesMap.set(guestId, {
+                ...existingMsg,
+                autor: guestData.nombre || "Invitado",
+                asistencia: guestData.asistencia === true,
+              });
+              notifyChanges();
             }
-            messagesMap.delete(guestId);
-            notifyChanges();
           }
         });
       },
@@ -220,8 +233,19 @@ export const GuestQuotesService = {
         const quoteSnapshot = await getDoc(quoteRef);
 
         if (quoteSnapshot.exists()) {
-          const quoteData = quoteSnapshot.data();
-          const text = quoteData.mensaje || quoteData.message;
+          const quoteData = quoteSnapshot.data({
+            serverTimestamps: "estimate",
+          });
+          const text = quoteData.mensaje;
+
+          // Convertimos de forma segura a milisegundos
+          const msCreacion = quoteData.fechaCreacion?.toMillis
+            ? quoteData.fechaCreacion.toMillis()
+            : Date.now();
+
+          const msModificacion = quoteData.fechaModificacion?.toMillis
+            ? quoteData.fechaModificacion.toMillis()
+            : msCreacion;
 
           if (text) {
             return {
@@ -229,15 +253,10 @@ export const GuestQuotesService = {
               autor: guestData.nombre || "Invitado",
               parentesco: guestData.grupo || "Invitado",
               mensaje: text,
-              fecha: quoteData.fechaCreacion
-                ? new Date(
-                    quoteData.fechaCreacion.seconds * 1000,
-                  ).toLocaleDateString()
-                : "Reciente",
-              timestamp: quoteData.fechaCreacion?.toMillis
-                ? quoteData.fechaCreacion.toMillis()
-                : Date.now(),
+              fechaCreacion: msCreacion,
+              fechaModificacion: msModificacion,
               leido: quoteData.leido || false,
+              asistencia: guestData.asistencia || false,
             } as GuestQuoteMap;
           }
         }
@@ -251,6 +270,89 @@ export const GuestQuotesService = {
     } catch (error) {
       console.error("Error fetching guest messages:", error);
       throw error;
+    }
+  },
+
+  saveGuestQuote: async (
+    invitationId: string,
+    guestId: string,
+    payload: Partial<GuestQuote>,
+  ): Promise<FirestoreResult<boolean>> => {
+    if (!invitationId || !guestId || !payload)
+      return { result: null, error: null };
+
+    try {
+      const timestamp = serverTimestamp();
+
+      const docRef = doc(
+        db,
+        "invitations",
+        invitationId,
+        "guests",
+        guestId,
+        "quotes",
+        "quote",
+      );
+
+      const { id: _, ...dataToUpdate } = payload;
+
+      // Verificamos si el documento existe explícitamente en lugar de depender del try-catch de Firebase
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        // Si ya existe, solo actualizamos (Ideal para cuando el invitado edita)
+        await updateDoc(docRef, {
+          ...dataToUpdate,
+          leido: false,
+          fechaModificacion: timestamp,
+        });
+      } else {
+        // Si no existe, lo creamos con ambas fechas
+        await setDoc(docRef, {
+          ...dataToUpdate,
+          leido: false,
+          fechaCreacion: timestamp,
+          fechaModificacion: timestamp,
+        });
+      }
+
+      return { result: true, error: null };
+    } catch (error) {
+      console.error("Error guardando mensaje del invitado:", error);
+      return {
+        result: false,
+        error: (error as FirestoreError).code || "unknown-error",
+      };
+    }
+  },
+
+  getGuestQuote: async (
+    invitationId: string,
+    guestId: string,
+  ): FirestoreResult<GuestQuote> => {
+    try {
+      const docRef = doc(
+        db,
+        "invitations",
+        invitationId,
+        "guests",
+        guestId,
+        "quotes",
+        "quote",
+      );
+
+      const snapshot = await getDoc(docRef);
+
+      if (snapshot.exists()) {
+        return { result: snapshot.data() as GuestQuote, error: null };
+      }
+      return { result: null, error: null };
+    } catch (error) {
+      const firestoreError = error as FirestoreError;
+      return {
+        result: null,
+        error: firestoreError.code || "Error desconocido",
+      };
     }
   },
 };

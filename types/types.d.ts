@@ -24,6 +24,7 @@ export type Guest = {
   cambiosPermitidos: boolean;
   fechaCreacion: Timestamp | FieldValue | null;
   ultimaModificacion: Timestamp | FieldValue | null;
+  whatsappEnviado?: boolean;
 };
 
 export type GuestContactInfo = {
@@ -67,16 +68,24 @@ export interface ConfirmModalState {
   action: (() => Promise<void>) | null;
 }
 
+interface Padres {
+  mama: string;
+  papa: string;
+}
+
 export interface Invitation {
   id: string;
   nombre: string;
   fecha: Timestamp;
-  ubicacion: string;
+  ubicacion?: string;
+  padresNovia: Padres;
+  padresNovio: Padres;
   tipo: string;
   imagenPortada?: string;
   recepcion: EventLocation;
   ceremonia: EventLocation;
   usuariosPermitidos: string[];
+  fechaISO?: string;
 }
 
 // Tipo auxiliar para las escalas de color completas (50-950)
@@ -120,9 +129,10 @@ interface GuestQuote {
   autor: string;
   parentesco: string;
   mensaje: string;
-  fecha: string;
-  timestamp: number;
+  fechaCreacion: number;
+  fechaModificacion: number;
   leido: boolean;
+  asistencia: boolean;
 }
 
 export type EventType = "boda" | "xv_anos" | "bautizo" | "cumpleanos" | string;
@@ -133,4 +143,38 @@ export interface EventLocation {
   hora: string;
   direccion: string;
   enlaceMaps: string;
+}
+
+export type Modify<T, R> = Omit<T, keyof R> & R;
+
+export type FirestoreResult<T> = Promise<{
+  result: T | null;
+  error: FirestoreErrorCode | null;
+}>;
+
+export type ActivityActionType = "view" | "confirm" | "decline";
+
+export interface GuestActivity {
+  id?: string;
+  guestId: string;
+  guestName: string;
+  action: ActivityActionType;
+  timestamp: Timestamp;
+}
+
+// --- NUEVOS TIPOS PARA EL FILTRO DE WHATSAPP ---
+export type WhatsappFilterType = "all" | "sent" | "not_sent" | "empty";
+
+export interface WhatsappCounts {
+  all: number;
+  sent: number;
+  not_sent: number;
+  empty: number;
+}
+
+export interface ImportedGuest {
+  nombre: string;
+  invitados: number;
+  telefono: string;
+  notaAnfitrion: string;
 }

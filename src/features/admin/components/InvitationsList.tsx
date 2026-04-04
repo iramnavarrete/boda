@@ -44,7 +44,7 @@ const InvitationCard = ({
             e.preventDefault(); // Evita que se abra el enlace al Dashboard
             onEdit(invitation);
           }}
-          className="absolute top-3 left-3 z-30 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-[#2C2C29] hover:text-[#C5A669] hover:bg-white transition-all shadow-sm border border-white/40"
+          className="absolute top-3 left-3 z-30 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-charcoal-800 hover:text-gold-500 hover:bg-white transition-all shadow-sm border border-white/40"
         >
           <Edit2 size={14} />
         </button>
@@ -244,7 +244,7 @@ export default function InvitationsListPage() {
                     setEditingInvitation(null);
                     setIsModalOpen(true);
                   }}
-                  className="bg-[#2C2C29] hover:bg-black text-white px-6 py-3 rounded-full flex items-center gap-2 font-bold uppercase tracking-widest text-xs transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5 border border-[#2C2C29]"
+                  className="bg-charcoal-800 hover:bg-black text-white px-6 py-3 rounded-full flex items-center gap-2 font-bold uppercase tracking-widest text-xs transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5 border border-charcoal-800"
                 >
                   <Plus size={16} /> Crear Nueva Invitación
                 </button>

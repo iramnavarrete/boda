@@ -1,9 +1,11 @@
 import { FC } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { brideName, groomName, weddingDateFormatted } from "@/constants/constants";
+import { useInvitationStore } from "../../stores/invitationStore";
+import { formatToEventDate } from "@/utils/formatters";
 
 const QrPhotos: FC = () => {
+  const invitationData = useInvitationStore((state) => state.invitationData);
   return (
     <div className="px-8 bg-primary w-full py-16">
       <AnimatePresence>
@@ -58,11 +60,9 @@ const QrPhotos: FC = () => {
           className="flex flex-col justify-center items-center mt-12 gap-2 text-accent"
         >
           <p className="font-nourdLight text-md">
-            {weddingDateFormatted}
+            {formatToEventDate(invitationData?.fechaISO)}
           </p>
-          <p className="font-newIconScript text-2xl">
-            {brideName} <span className="text-sm">&</span> {groomName}
-          </p>
+          <p className="font-newIconScript text-2xl">{invitationData?.nombre}</p>
           <p className="font-nourdLight text-md">¡Te esperamos!</p>
         </motion.div>
       </AnimatePresence>

@@ -3,7 +3,10 @@ import Music from "./music";
 import { useEffect, useRef, useState } from "react";
 import ArrowsIcon from "@/icons/arrows-icon";
 import useMusicStore from "@/stores/musicStore";
-import { brideName, groomName, weddingDateFormatted } from "@/constants/constants";
+import { useInvitationStore } from "../../stores/invitationStore";
+import { formatToEventDate } from "@/utils/formatters";
+import { useSearchParams } from "next/navigation";
+import { ActivityService } from "@/services/activityService";
 
 const animateCoverVariants = {
   none: { opacity: 0, y: 40 },
@@ -57,6 +60,7 @@ const animateFixedVariants = {
 type Props = { isSealVisible: boolean };
 
 export default function Cover({ isSealVisible }: Props) {
+  const invitationData = useInvitationStore((state) => state.invitationData);
   const [arrowsScope, animateArrows] = useAnimate();
   const { toggleAudio } = useMusicStore();
   const triggerRef = useRef(null);
@@ -68,6 +72,11 @@ export default function Cover({ isSealVisible }: Props) {
   ];
   const [index, setIndex] = useState(0);
 
+    const searchParams = useSearchParams();
+    const id = searchParams?.get("guest");
+    const preview = searchParams?.get("preview");
+    const token = searchParams?.get("token");
+
   useEffect(() => {
     if (!isSealVisible) {
       setTimeout(() => {
@@ -77,12 +86,18 @@ export default function Cover({ isSealVisible }: Props) {
   }, [isSealVisible]);
 
   useEffect(() => {
+    if(!isSealVisible && id && !preview && !token && invitationData){
+      ActivityService.logActivity(invitationData.id, {action: 'view', guestId: id })
+    }
+  }, [id, preview, token, isSealVisible, invitationData])
+
+  useEffect(() => {
     (async () => {
       if (isSealVisible === false) {
         await animateArrows(
           arrowsScope.current,
           { opacity: 1, y: 0 },
-          { delay: 2.2 }
+          { delay: 2.2 },
         );
         animateArrows(
           arrowsScope.current,
@@ -93,7 +108,7 @@ export default function Cover({ isSealVisible }: Props) {
             repeatType: "reverse",
             delay: 0.5,
             duration: 0.8,
-          }
+          },
         );
       }
     })();
@@ -142,13 +157,16 @@ export default function Cover({ isSealVisible }: Props) {
               <div className="relative pr-6">
                 <div className="flex flex-1 justify-end items-end flex-col pt-14 relative">
                   <p className="font-newIconScript text-white text-4xl drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]">
-                    {brideName} <span className="text-2xl">&</span> {groomName}
+                    {/* {brideName} <span className="text-2xl">&</span> {groomName} */}
+                    {invitationData?.nombre}
                   </p>
                   <p className="font-nourdLight text-white text-lg mt-2">
                     NUESTRA BODA
                   </p>
                   <p className="font-nourdLight text-white text-md mt-1">
-                    {weddingDateFormatted}
+                    {invitationData &&
+                      invitationData.fechaISO &&
+                      formatToEventDate(invitationData.fechaISO)}
                   </p>
                 </div>
               </div>
