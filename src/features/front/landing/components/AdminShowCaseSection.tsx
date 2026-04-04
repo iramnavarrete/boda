@@ -11,9 +11,9 @@ import {
   Filter,
   Lock,
   MousePointerClick,
-  QrCode,
   RotateCcw,
   Send,
+  UserPen,
   Users,
 } from "lucide-react";
 import Image from "next/image";
@@ -109,9 +109,9 @@ const ADMIN_SLIDES = [
         text: "Gestiona pases por grupo o familia.",
       },
       {
-        icon: <QrCode size={20} />,
-        title: "Pases QR",
-        text: "Generación automática de accesos.",
+        icon: <UserPen size={20} />,
+        title: "Acceso personalizado",
+        text: "Cada grupo ve su propia invitación con información y mensaje exclusivo.",
       },
       {
         icon: <MousePointerClick size={20} />,
