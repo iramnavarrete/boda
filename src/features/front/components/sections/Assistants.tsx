@@ -204,9 +204,15 @@ function Assistants() {
                                 ? "persona"
                                 : "personas"}
                             </p>
-                            <p className="py-6 text-lg font-nourdMedium">
+                            {guestData.notaAnfitrion && (
+                              <p className="pt-2 px-2 text-center text-sm">
+                                {guestData.notaAnfitrion}
+                              </p>
+                            )}
+                            <p className="py-4 text-lg font-nourdMedium">
                               ¡NO NIÑOS!
                             </p>
+
                             <p className="font-bold">¿Asistirás?</p>
 
                             <Formik
@@ -223,7 +229,7 @@ function Assistants() {
                                     data.id!,
                                     data,
                                     false,
-                                    true
+                                    true,
                                   )
                                     .then(() => {
                                       setIsFormSubmitted(true);

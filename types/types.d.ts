@@ -1,5 +1,11 @@
 import { Timestamp, FieldValue } from "firebase/firestore";
 
+declare module "react" {
+  interface TextareaHTMLAttributes {
+    style?: React.CSSProperties & { fieldSizing?: "content" | "fixed" };
+  }
+}
+
 export type GuestFormData = {
   id?: string; // Opcional al registrar
   nombre: string;

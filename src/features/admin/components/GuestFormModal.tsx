@@ -268,10 +268,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
-                WhatsApp{" "}
-                <span className="text-stone-light font-normal text-xs">
-                  (Opcional)
-                </span>
+                WhatsApp <span className="font-normal text-xs">(Opcional)</span>
               </label>
 
               {/* --- NUEVO INPUT INTEGRADO CON SELECTOR DE PAÍS --- */}
@@ -314,11 +311,12 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
-                Nota para invitado
+                Nota para invitado {" "}
+                <span className="font-normal text-xs">(Opcional)</span>
               </label>
-              <input
-                type="text"
-                className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all placeholder:text-stone-300 shadow-sm"
+              <textarea
+                style={{fieldSizing: 'content'}}
+                className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all placeholder:text-stone-300 shadow-sm max-h-20"
                 value={formData.notaAnfitrion || ""}
                 onChange={(e) =>
                   setFormData({
@@ -326,7 +324,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                     notaAnfitrion: e.target.value,
                   })
                 }
-            placeholder="Ej. 'Que no se te olviden los macarrones'..."
+                placeholder="Ej. 'Que no se te olviden los macarrones'..."
               />
             </div>
 
