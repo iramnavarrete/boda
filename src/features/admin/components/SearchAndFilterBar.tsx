@@ -437,7 +437,7 @@ export default function SearchAndFilterBar({
           )}
 
           {/* Menú de Más Opciones (Importar/Exportar) */}
-          <div className="relative h-full" ref={optionsRef}>
+          <div className="relative h-full hidden md:block" ref={optionsRef}>
             <button
               onClick={() => setIsOptionsOpen(!isOptionsOpen)}
               className={cn(
@@ -487,9 +487,9 @@ export default function SearchAndFilterBar({
           <TextureButton
             icon={<Plus size={18} />}
             onClick={onNewGuest}
-            className="px-4 xl:px-6 py-0 h-full rounded-xl transition-all shadow-lg shadow-[#C5A669]/20 hover:shadow-[#C5A669]/30 hover:-translate-y-0.5 font-bold"
+            className="px-4 xl:px-6 py-0 h-full w-full md:w-auto rounded-xl transition-all shadow-lg shadow-[#C5A669]/20 hover:shadow-[#C5A669]/30 hover:-translate-y-0.5 font-bold"
           >
-            <span className="hidden sm:inline">Nuevo Invitado</span>
+            <span>Nuevo Invitado</span>
           </TextureButton>
         </div>
       </fieldset>

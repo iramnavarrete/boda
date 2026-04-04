@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
-import { Guest, ImportedGuest, WhatsappCounts, WhatsappFilterType } from "@/types";
+import {
+  FilterCounts,
+  Guest,
+  ImportedGuest,
+  WhatsappCounts,
+  WhatsappFilterType,
+} from "@/types";
 import { GuestService } from "@/services/guestService";
 import GuestFormModal from "@/features/admin/components/GuestFormModal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
@@ -30,8 +36,7 @@ export default function WeddingAdmin() {
     setSearchTerm,
     filterStatus,
     setFilterStatus,
-    filteredGuests, // Lista filtrada por texto y asistencia
-    filterCounts,
+    filteredGuests,
   } = useGuestsFilter(guests);
 
   // --- NUEVO ESTADO PARA EL FILTRO DE WHATSAPP ---
@@ -51,22 +56,36 @@ export default function WeddingAdmin() {
     empty: filteredGuests?.filter((g: Guest) => !g.tieneTelefono).length || 0,
   };
 
+  
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
   // --- NUEVOS ESTADOS PARA IMPORTACIÓN ---
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-
+  
   // 2. Aplicamos la segunda capa de filtrado sobre el resultado del primer filtro
   const finalFilteredGuests = filteredGuests.filter((g: Guest) => {
     if (whatsappFilter === "all") return true;
     if (whatsappFilter === "sent")
       return g.whatsappEnviado === true && g.tieneTelefono;
-    if (whatsappFilter === "not_sent") return !g.whatsappEnviado && g.tieneTelefono;
+    if (whatsappFilter === "not_sent")
+      return !g.whatsappEnviado && g.tieneTelefono;
     if (whatsappFilter === "empty") return !g.tieneTelefono;
     return true;
   });
 
+  const filterCounts: FilterCounts = finalFilteredGuests.reduce(
+    (acc, curr) => ({
+      all: acc.all + 1,
+      confirmed: acc.confirmed + (curr.asistencia === true ? 1 : 0),
+      rejected: acc.rejected + (curr.asistencia === false ? 1 : 0),
+      pending:
+        acc.pending +
+        (curr.asistencia === null || curr.asistencia === undefined ? 1 : 0),
+    }),
+    { all: 0, confirmed: 0, rejected: 0, pending: 0 },
+  );
+  
   // ESTADOS DEL TUTORIAL DE WHATSAPP
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [pendingWappGuest, setPendingWappGuest] = useState<Guest | null>(null);
@@ -137,27 +156,26 @@ export default function WeddingAdmin() {
   };
 
   // --- MANEJADOR DE IMPORTACIÓN ---
-    const handleImportGuests = async (parsedGuests: ImportedGuest[]) => {
-      if (!invitationData?.id) return;
+  const handleImportGuests = async (parsedGuests: ImportedGuest[]) => {
+    if (!invitationData?.id) return;
 
-      setIsImporting(true);
-      try {
-        // Utilizamos el método batch que agrupa todas las inserciones en una sola transacción de Firestore
-        await GuestService.batchImportGuests(invitationData.id, parsedGuests);
+    setIsImporting(true);
+    try {
+      // Utilizamos el método batch que agrupa todas las inserciones en una sola transacción de Firestore
+      await GuestService.batchImportGuests(invitationData.id, parsedGuests);
 
-        toast(
-          `${parsedGuests.length} invitados importados exitosamente.`,
-          "success",
-        );
-        setIsImportModalOpen(false);
-      } catch (e) {
-        console.error(e);
-        toast("Ocurrió un error al importar los invitados.", "error");
-      } finally {
-        setIsImporting(false);
-      }
-    };
-
+      toast(
+        `${parsedGuests.length} invitados importados exitosamente.`,
+        "success",
+      );
+      setIsImportModalOpen(false);
+    } catch (e) {
+      console.error(e);
+      toast("Ocurrió un error al importar los invitados.", "error");
+    } finally {
+      setIsImporting(false);
+    }
+  };
 
   const handleBulkDelete = () => {
     if (selectedGuests.size === 0) return;

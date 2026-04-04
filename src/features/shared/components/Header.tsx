@@ -375,6 +375,7 @@ const Header = ({
                   {variant === "landing" ? (
                     <>
                       <Link
+                      onClick={() => toggleMenu()}
                         href="/#paquetes"
                         className="flex items-center justify-center gap-3 w-full p-3 rounded-xl text-paper bg-primary hover:bg-charcoal-700 transition-colors font-medium text-sm mt-2 shadow-md"
                       >

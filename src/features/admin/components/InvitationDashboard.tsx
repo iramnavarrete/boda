@@ -334,7 +334,7 @@ const GuestStatsPieChart = ({ stats }: { stats: DashboardStats }) => {
             </div>
           </div>
         </div>
-        <div className="flex h-full items-center justify-center w-full">
+        <div className="flex h-full items-center justify-center w-full flex-wrap">
           <div className="relative flex-shrink-0 flex items-center justify-center p-2">
             <canvas ref={canvasRef} />
           </div>
@@ -460,14 +460,16 @@ function RecentActivity({
   }, [invitationData]);
 
   return (
-    <div className="lg:col-span-2 bg-white/80 rounded-2xl shadow-[0_8px_30px_rgba(44,44,41,0.04)] border border-sand-200 p-8 relative overflow-hidden flex flex-col max-h-[420px]">
+    <div className="lg:col-span-2 bg-white/80 rounded-2xl shadow-[0_8px_30px_rgba(44,44,41,0.04)] border border-sand-200 p-6 relative overflow-hidden flex flex-col max-h-[420px]">
       {/* HEADER */}
       <div className="flex items-center justify-between mb-4 pb-4 border-b border-sand-200 shrink-0">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-[#FDFBF7] rounded-lg border border-sand-200 text-gold-500">
-            <Activity size={20} />
+            <Activity size={18} />
           </div>
-          <h2 className="text-lg font-bold text-primary">Actividad Reciente</h2>
+          <h2 className="font-serif text-lg font-semibold text-primary leading-none">
+            Actividad Reciente
+          </h2>
         </div>
         <span className="text-[10px] font-bold text-gold-500 bg-[#FDFBF7] border border-sand-200 px-3 py-1 rounded-full uppercase tracking-wider">
           En vivo
