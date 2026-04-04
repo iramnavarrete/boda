@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Guest, WhatsappCounts, WhatsappFilterType } from "@/types";
+import { Guest, ImportedGuest, WhatsappCounts, WhatsappFilterType } from "@/types";
 import { GuestService } from "@/services/guestService";
 import GuestFormModal from "@/features/admin/components/GuestFormModal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
@@ -19,6 +19,7 @@ import FloatingBulkActionsBar from "@/features/admin/components/FloatingBulkActi
 import StatsSidebar from "./StatsSidebar";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import GuestsTableView from "./GuestTableView";
+import ImportGuestsModal from "./ImportGuestsModal";
 
 export default function WeddingAdmin() {
   const invitationData = useInvitationStore((state) => state.invitationData);
@@ -39,21 +40,29 @@ export default function WeddingAdmin() {
 
   // 1. Calculamos los contadores totales para WhatsApp basados en la lista original completa
   const whatsappCounts: WhatsappCounts = {
-    all: guests?.length || 0,
+    all: filteredGuests?.length || 0,
     sent:
-      guests?.filter((g: Guest) => g.whatsappEnviado && g.tieneTelefono)
+      filteredGuests?.filter((g: Guest) => g.whatsappEnviado && g.tieneTelefono)
         .length || 0,
-    not_sent: guests?.filter((g: Guest) => !g.whatsappEnviado).length || 0,
-    empty: guests?.filter((g: Guest) => !g.tieneTelefono).length || 0,
+    not_sent:
+      filteredGuests?.filter(
+        (g: Guest) => !g.whatsappEnviado && g.tieneTelefono,
+      ).length || 0,
+    empty: filteredGuests?.filter((g: Guest) => !g.tieneTelefono).length || 0,
   };
 
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
+  // --- NUEVOS ESTADOS PARA IMPORTACIÓN ---
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+
   // 2. Aplicamos la segunda capa de filtrado sobre el resultado del primer filtro
   const finalFilteredGuests = filteredGuests.filter((g: Guest) => {
     if (whatsappFilter === "all") return true;
-    if (whatsappFilter === "sent") return g.whatsappEnviado === true && g.tieneTelefono;
-    if (whatsappFilter === "not_sent") return !g.whatsappEnviado;
+    if (whatsappFilter === "sent")
+      return g.whatsappEnviado === true && g.tieneTelefono;
+    if (whatsappFilter === "not_sent") return !g.whatsappEnviado && g.tieneTelefono;
     if (whatsappFilter === "empty") return !g.tieneTelefono;
     return true;
   });
@@ -126,6 +135,29 @@ export default function WeddingAdmin() {
       },
     });
   };
+
+  // --- MANEJADOR DE IMPORTACIÓN ---
+    const handleImportGuests = async (parsedGuests: ImportedGuest[]) => {
+      if (!invitationData?.id) return;
+
+      setIsImporting(true);
+      try {
+        // Utilizamos el método batch que agrupa todas las inserciones en una sola transacción de Firestore
+        await GuestService.batchImportGuests(invitationData.id, parsedGuests);
+
+        toast(
+          `${parsedGuests.length} invitados importados exitosamente.`,
+          "success",
+        );
+        setIsImportModalOpen(false);
+      } catch (e) {
+        console.error(e);
+        toast("Ocurrió un error al importar los invitados.", "error");
+      } finally {
+        setIsImporting(false);
+      }
+    };
+
 
   const handleBulkDelete = () => {
     if (selectedGuests.size === 0) return;
@@ -255,6 +287,7 @@ export default function WeddingAdmin() {
               whatsappFilter={whatsappFilter}
               setWhatsappFilter={setWhatsappFilter}
               whatsappCounts={whatsappCounts}
+              onImportExcel={() => setIsImportModalOpen(true)}
               onExportExcel={() => handleExportExcel(guests)}
               onNewGuest={() => {
                 if (invitationData) {
@@ -343,6 +376,14 @@ export default function WeddingAdmin() {
         title="Aviso de Envío"
         message="Al hacer clic en este botón, el invitado se marcará automáticamente como 'WhatsApp enviado'. Asegúrate de enviar correctamente el mensaje desde tu aplicación para evitar diferencias en la información de tu lista."
         confirmText="Entendido, continuar"
+      />
+
+      {/* --- NUEVO MODAL DE IMPORTACIÓN --- */}
+      <ImportGuestsModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onImport={handleImportGuests}
+        isImporting={isImporting}
       />
     </div>
   );

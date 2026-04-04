@@ -10,7 +10,12 @@ import {
   FirestoreError,
   FirestoreErrorCode,
 } from "firebase/firestore";
-import { Guest, GuestContactInfo, GuestFormData } from "../../types/types";
+import {
+  Guest,
+  GuestContactInfo,
+  GuestFormData,
+  ImportedGuest,
+} from "../../types/types";
 import { db } from "@/lib/firebase/config";
 import { generateGuestID } from "@/utils/generators";
 
@@ -279,5 +284,59 @@ export const GuestService = {
       } as Partial<Guest>,
       { merge: true },
     );
+  },
+
+  batchImportGuests: async (
+    invitationId: string,
+    parsedGuests: ImportedGuest[],
+  ) => {
+    const batch = writeBatch(db);
+    const timestamp = serverTimestamp();
+
+    // ✅ Promise.all espera TODOS los async antes de continuar
+    await Promise.all(
+      parsedGuests.map(async (guest) => {
+        const guestId = await GuestService.getUniqueGuestId(invitationId);
+        const publicRef = doc(
+          db,
+          "invitations",
+          invitationId,
+          "guests",
+          guestId,
+        );
+        const privateRef = doc(
+          db,
+          "invitations",
+          invitationId,
+          "guests",
+          guestId,
+          "private",
+          "contactInfo",
+        );
+
+        const tieneTelefono = !!(
+          guest.telefono && guest.telefono.trim().length > 0
+        );
+
+        batch.set(publicRef, {
+          id: guestId,
+          nombre: guest.nombre,
+          invitados: Number(guest.invitados) || 1,
+          notaAnfitrion: guest.notaAnfitrion || null,
+          cambiosPermitidos: true,
+          tieneTelefono,
+          ultimaModificacion: timestamp,
+          fechaCreacion: timestamp,
+          asistencia: null,
+          confirmados: 0,
+          notaInvitado: null,
+        });
+
+        batch.set(privateRef, { telefono: guest.telefono || null });
+      }),
+    );
+
+    // ✅ Commit solo cuando todos los .set() ya están listos
+    await batch.commit();
   },
 };

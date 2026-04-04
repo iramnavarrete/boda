@@ -171,3 +171,10 @@ export interface WhatsappCounts {
   not_sent: number;
   empty: number;
 }
+
+export interface ImportedGuest {
+  nombre: string;
+  invitados: number;
+  telefono: string;
+  notaAnfitrion: string;
+}
