@@ -170,7 +170,7 @@ const GuestsTableView: React.FC<GuestsTableViewProps> = ({
                     ) : (
                       <Lock size={14} />
                     )}
-                    <span>{g.cambiosPermitidos ? "Abierto" : "Cerrado"}</span>
+                    <span>Cambios {g.cambiosPermitidos ? "permitidos" : "bloqueados"}</span>
                   </button>
                 </td>
 
