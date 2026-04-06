@@ -3,6 +3,8 @@ import {
   FilterCounts,
   Guest,
   ImportedGuest,
+  TagCounts,
+  TagFilterType,
   WhatsappCounts,
   WhatsappFilterType,
 } from "@/types";
@@ -39,40 +41,62 @@ export default function WeddingAdmin() {
     filteredGuests,
   } = useGuestsFilter(guests);
 
-  // --- NUEVO ESTADO PARA EL FILTRO DE WHATSAPP ---
+  // --- ESTADOS DE FILTROS ADICIONALES ---
   const [whatsappFilter, setWhatsappFilter] =
     useState<WhatsappFilterType>("all");
-
-  // 1. Calculamos los contadores totales para WhatsApp basados en la lista original completa
-  const whatsappCounts: WhatsappCounts = {
-    all: filteredGuests?.length || 0,
-    sent:
-      filteredGuests?.filter((g: Guest) => g.whatsappEnviado && g.tieneTelefono)
-        .length || 0,
-    not_sent:
-      filteredGuests?.filter(
-        (g: Guest) => !g.whatsappEnviado && g.tieneTelefono,
-      ).length || 0,
-    empty: filteredGuests?.filter((g: Guest) => !g.tieneTelefono).length || 0,
-  };
-
-  
+  const [tagFilter, setTagFilter] = useState<TagFilterType>("all"); // NUEVO ESTADO
   const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
-  // --- NUEVOS ESTADOS PARA IMPORTACIÓN ---
+  // --- ESTADOS PARA IMPORTACIÓN ---
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  
-  // 2. Aplicamos la segunda capa de filtrado sobre el resultado del primer filtro
+
+  // 3. Aplicamos la segunda capa de filtrado COMBINADA
   const finalFilteredGuests = filteredGuests.filter((g: Guest) => {
-    if (whatsappFilter === "all") return true;
+    // A. Validar Filtro de WhatsApp
+    let passWhatsapp = true;
     if (whatsappFilter === "sent")
-      return g.whatsappEnviado === true && g.tieneTelefono;
+      passWhatsapp = !!(g.whatsappEnviado && g.tieneTelefono);
     if (whatsappFilter === "not_sent")
-      return !g.whatsappEnviado && g.tieneTelefono;
-    if (whatsappFilter === "empty") return !g.tieneTelefono;
-    return true;
+      passWhatsapp = !!(!g.whatsappEnviado && g.tieneTelefono);
+    if (whatsappFilter === "empty") passWhatsapp = !g.tieneTelefono;
+
+    // B. Validar Filtro de Etiqueta (NUEVO)
+    let passTag = true;
+    if (tagFilter !== "all") passTag = g.etiqueta === tagFilter;
+
+    // Solo si pasa AMBAS pruebas (WhatsApp Y Etiqueta) se muestra
+    return passWhatsapp && passTag;
   });
+
+  // 1. Contadores para WhatsApp
+  const whatsappCounts: WhatsappCounts = {
+    all: finalFilteredGuests?.length || 0,
+    sent:
+      finalFilteredGuests?.filter(
+        (g: Guest) => g.whatsappEnviado && g.tieneTelefono,
+      ).length || 0,
+    not_sent:
+      finalFilteredGuests?.filter(
+        (g: Guest) => !g.whatsappEnviado && g.tieneTelefono,
+      ).length || 0,
+    empty:
+      finalFilteredGuests?.filter((g: Guest) => !g.tieneTelefono).length || 0,
+  };
+
+  // 2. Contadores para Etiquetas (NUEVO)
+  const tagCounts: TagCounts = {
+    all: finalFilteredGuests?.length || 0,
+    Novia:
+      finalFilteredGuests?.filter((g: Guest) => g.etiqueta === "Novia")
+        .length || 0,
+    Novio:
+      finalFilteredGuests?.filter((g: Guest) => g.etiqueta === "Novio")
+        .length || 0,
+    Ambos:
+      finalFilteredGuests?.filter((g: Guest) => g.etiqueta === "Ambos")
+        .length || 0,
+  };
 
   const filterCounts: FilterCounts = finalFilteredGuests.reduce(
     (acc, curr) => ({
@@ -85,7 +109,7 @@ export default function WeddingAdmin() {
     }),
     { all: 0, confirmed: 0, rejected: 0, pending: 0 },
   );
-  
+
   // ESTADOS DEL TUTORIAL DE WHATSAPP
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
   const [pendingWappGuest, setPendingWappGuest] = useState<Guest | null>(null);
@@ -118,7 +142,6 @@ export default function WeddingAdmin() {
     invitationData?.id,
   );
 
-  // 3. Pasamos la lista final (con ambos filtros) a las estadísticas
   const stats = useGuestsStats(finalFilteredGuests);
   const isFiltered = finalFilteredGuests.length !== (guests?.length || 0);
   const { toast } = useToast();
@@ -132,7 +155,6 @@ export default function WeddingAdmin() {
   // --- HANDLERS ---
   const handleBulkUpdateLock = (shouldLock: boolean) => {
     if (selectedGuests.size === 0) return;
-
     const actionWord = shouldLock ? "Bloquear" : "Permitir";
 
     openConfirmModal({
@@ -155,15 +177,12 @@ export default function WeddingAdmin() {
     });
   };
 
-  // --- MANEJADOR DE IMPORTACIÓN ---
   const handleImportGuests = async (parsedGuests: ImportedGuest[]) => {
     if (!invitationData?.id) return;
 
     setIsImporting(true);
     try {
-      // Utilizamos el método batch que agrupa todas las inserciones en una sola transacción de Firestore
       await GuestService.batchImportGuests(invitationData.id, parsedGuests);
-
       toast(
         `${parsedGuests.length} invitados importados exitosamente.`,
         "success",
@@ -243,20 +262,16 @@ export default function WeddingAdmin() {
     handleSaveGuest(e, currentGuestId, formData, handleCloseModal);
   };
 
-  // Función que intercepta el clic en WhatsApp
   const handleWhatsAppClick = (guest: Guest) => {
-    // Validamos en el lado del cliente (para evitar errores de SSR)
     const hasSeenTutorial =
       typeof window !== "undefined"
         ? localStorage.getItem("tutorial_whatsapp_shown")
         : false;
 
     if (!hasSeenTutorial) {
-      // Si es la primera vez, abrimos el modal tutorial
       setPendingWappGuest(guest);
       setIsTutorialOpen(true);
     } else {
-      // Si ya lo vio, ejecuta la acción normal
       sendWhatsApp(guest);
       if (invitationData) {
         GuestService.markWhastappSent(invitationData.id, guest);
@@ -265,13 +280,11 @@ export default function WeddingAdmin() {
   };
 
   const confirmWhatsAppTutorial = () => {
-    // Marcamos que ya vio el tutorial
     if (typeof window !== "undefined") {
       localStorage.setItem("tutorial_whatsapp_shown", "true");
     }
     setIsTutorialOpen(false);
 
-    // Ejecutamos la acción pendiente
     if (pendingWappGuest) {
       sendWhatsApp(pendingWappGuest);
       setPendingWappGuest(null);
@@ -305,6 +318,10 @@ export default function WeddingAdmin() {
               whatsappFilter={whatsappFilter}
               setWhatsappFilter={setWhatsappFilter}
               whatsappCounts={whatsappCounts}
+              // NUEVOS PROPS PARA ETIQUETAS (Deberás agregarlos a tu SearchAndFilterBarProps)
+              tagFilter={tagFilter}
+              setTagFilter={setTagFilter}
+              tagCounts={tagCounts}
               onImportExcel={() => setIsImportModalOpen(true)}
               onExportExcel={() => handleExportExcel(guests)}
               onNewGuest={() => {
@@ -313,13 +330,14 @@ export default function WeddingAdmin() {
                 }
               }}
               disabled={selectedGuests.size > 0}
-              filteredGuestCount={finalFilteredGuests.length} // Actualizado
+              filteredGuestCount={finalFilteredGuests.length}
               setViewMode={setViewMode}
               viewMode={viewMode}
             />
+
             {viewMode === "grid" ? (
               <GuestsGridView
-                filteredGuests={finalFilteredGuests} // Pasamos la lista con todos los filtros combinados
+                filteredGuests={finalFilteredGuests}
                 selectedGuests={selectedGuests}
                 onSelectGuest={handleSelectGuest}
                 onEdit={(e) => {
@@ -334,7 +352,7 @@ export default function WeddingAdmin() {
               />
             ) : (
               <GuestsTableView
-                filteredGuests={finalFilteredGuests} // Pasamos la lista con todos los filtros combinados
+                filteredGuests={finalFilteredGuests}
                 selectedGuests={selectedGuests}
                 onSelectGuest={handleSelectGuest}
                 onEdit={(e) => {
@@ -355,11 +373,11 @@ export default function WeddingAdmin() {
       {/* BARRA FLOTANTE DE ACCIONES MASIVAS */}
       <FloatingBulkActionsBar
         count={selectedGuests.size}
-        isSelectedAll={selectedGuests.size === finalFilteredGuests.length} // Actualizado
+        isSelectedAll={selectedGuests.size === finalFilteredGuests.length}
         onUpdateLock={handleBulkUpdateLock}
         onDelete={handleBulkDelete}
         onCancel={clearSelection}
-        onSelectAll={() => handleSelectAll(finalFilteredGuests)} // Actualizado
+        onSelectAll={() => handleSelectAll(finalFilteredGuests)}
       />
 
       <GuestFormModal
@@ -396,7 +414,6 @@ export default function WeddingAdmin() {
         confirmText="Entendido, continuar"
       />
 
-      {/* --- NUEVO MODAL DE IMPORTACIÓN --- */}
       <ImportGuestsModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}

@@ -7,6 +7,7 @@ import {
   Check,
   MinusCircle,
   ChevronDown,
+  Tag,
 } from "lucide-react";
 import Modal from "@/features/shared/components/Modal";
 import { cn } from "@heroui/theme";
@@ -21,6 +22,13 @@ interface GuestFormModalProps {
   isEdit: boolean;
   onBackdropPress?: () => void;
 }
+
+// Opciones predefinidas de etiquetas
+const TAG_OPTIONS = [
+  "Novia", 
+  "Novio", 
+  "Ambos",
+];
 
 const GuestFormModal: React.FC<GuestFormModalProps> = ({
   isOpen,
@@ -45,7 +53,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
       let parsedCode = "52";
       let parsedNum = formData.telefono;
       const codes = ["52", "1", "34", "57", "54", "56"];
-
+      
       for (const code of codes) {
         if (parsedNum.startsWith(code) && parsedNum.length > code.length) {
           parsedCode = code;
@@ -104,6 +112,14 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
     });
   };
 
+  const handleTagToggle = (tag: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      // Si ya está seleccionada, la deseleccionamos (null), si no, la asignamos
+      etiqueta: prev.etiqueta === tag ? null : tag,
+    }));
+  };
+
   return (
     <Modal isOpen={isOpen} onBackdropPress={onBackdropPress || onClose}>
       <div className="px-6 py-4 border-b border-sand flex justify-between items-center bg-white shrink-0 z-10">
@@ -136,6 +152,8 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
         className="flex flex-col flex-1 overflow-hidden min-h-0 bg-sand-light/30"
       >
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          
+          {/* Asistencia Toggle */}
           <div className="relative">
             <div className="mb-2 px-1">
               <label className="text-xs font-bold text-charcoal uppercase tracking-wider">
@@ -266,14 +284,40 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
               </div>
             </div>
 
+            {/* --- SECCIÓN DE ETIQUETAS (NUEVO) --- */}
+            <div>
+              <label className="flex items-center gap-1.5 text-sm font-medium text-charcoal mb-2 ml-1">
+                <Tag size={14} className="text-gold" />
+                Etiqueta <span className="font-normal text-xs text-stone-400">(Opcional)</span>
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {TAG_OPTIONS.map((tag) => {
+                  const isSelected = formData.etiqueta === tag;
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => handleTagToggle(tag)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border",
+                        isSelected
+                          ? "bg-gold border-gold text-white shadow-sm shadow-gold/20"
+                          : "bg-white border-sand text-stone-500 hover:border-gold/40 hover:text-charcoal hover:bg-sand-light/50"
+                      )}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
                 WhatsApp <span className="font-normal text-xs">(Opcional)</span>
               </label>
 
-              {/* --- NUEVO INPUT INTEGRADO CON SELECTOR DE PAÍS --- */}
               <div className="relative flex items-center">
-                {/* Contenedor del Selector Absoluto sobre el Input */}
                 <div className="absolute inset-y-0 left-0 flex items-center">
                   <select
                     className="h-full py-0 pl-4 pr-7 bg-transparent text-stone-custom font-medium focus:ring-0 focus:border-transparent outline-none text-sm cursor-pointer appearance-none z-10"
@@ -288,12 +332,10 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                     <option value="56">🇨🇱 +56</option>
                   </select>
 
-                  {/* Flechita Personalizada */}
                   <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
                     <ChevronDown size={14} />
                   </div>
 
-                  {/* Separador Visual */}
                   <div className="w-px h-6 bg-sand ml-1"></div>
                 </div>
 
@@ -311,12 +353,11 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
-                Nota para invitado {" "}
-                <span className="font-normal text-xs">(Opcional)</span>
+                Nota para invitado <span className="font-normal text-xs">(Opcional)</span>
               </label>
               <textarea
                 style={{fieldSizing: 'content'}}
-                className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all placeholder:text-stone-300 shadow-sm max-h-20"
+                className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all placeholder:text-stone-300 shadow-sm max-h-20 resize-none"
                 value={formData.notaAnfitrion || ""}
                 onChange={(e) =>
                   setFormData({
@@ -324,7 +365,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                     notaAnfitrion: e.target.value,
                   })
                 }
-                placeholder="Ej. 'Que no se te olviden los macarrones'..."
+                placeholder="Ej. 'Mesa principal', 'Alergia nueces'..."
               />
             </div>
 
