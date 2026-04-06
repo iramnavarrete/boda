@@ -240,28 +240,33 @@ function Assistants() {
                                           data.id!,
                                           {
                                             autor: data.nombre,
-                                            mensaje: data.notaInvitado,
+                                            mensaje: data.notaInvitado || '',
                                           },
-                                        ).then(() => {
-                                          ActivityService.logActivity(
-                                            invitationData.id,
-                                            {
-                                              action:
-                                                data.asistencia === true
-                                                  ? "confirm"
-                                                  : "decline",
-                                              guestId: data.id!,
-                                            },
-                                          );
-                                          setGuestData({
-                                            ...data,
-                                            id: data.id!,
-                                            tieneTelefono: false,
-                                            fechaCreacion: null,
-                                            ultimaModificacion: null,
-                                          });
-                                        });
+                                        )
                                       }
+                                      ActivityService.logActivity(
+                                        invitationData.id,
+                                        {
+                                          action:
+                                            data.asistencia === true
+                                              ? "confirm"
+                                              : "decline",
+                                          guestId: data.id!,
+                                          confirmedGuests:
+                                            data.asistencia === true &&
+                                            data.confirmados &&
+                                            data.confirmados > 0
+                                              ? data.confirmados
+                                              : null,
+                                        },
+                                      );
+                                      setGuestData({
+                                        ...data,
+                                        id: data.id!,
+                                        tieneTelefono: false,
+                                        fechaCreacion: null,
+                                        ultimaModificacion: null,
+                                      });
                                     })
                                     .catch((error) => {
                                       setIsDisabled(false);

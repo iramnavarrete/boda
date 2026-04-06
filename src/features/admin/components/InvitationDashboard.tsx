@@ -395,11 +395,12 @@ const ActivityItem = ({ activity }: { activity: GuestActivity }) => {
     bgColor: "bg-stone-100",
     iconColor: "text-stone-500",
   };
+  console.log({activity});
 
   if (activity.action === "confirm") {
     config = {
       icon: <CheckCircle2 size={16} />,
-      text: "confirmó asistencia",
+      text: `confirmó asistencia${activity.confirmedGuests ? ` de ${activity.confirmedGuests} invitado${activity.confirmedGuests === 1 ? "" : "s"}` : ''}`,
       bgColor: "bg-[#E7F3EF]", // Verde suave
       iconColor: "text-[#2D5B4F]",
     };
