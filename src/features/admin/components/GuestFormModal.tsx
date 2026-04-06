@@ -365,7 +365,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                     notaAnfitrion: e.target.value,
                   })
                 }
-                placeholder="Ej. 'Mesa principal', 'Alergia nueces'..."
+                placeholder="Ej. 'Los esperamos con ansias', 'No olviden sus lentes'..."
               />
             </div>
 

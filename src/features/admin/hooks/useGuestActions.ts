@@ -43,25 +43,41 @@ export function useGuestActions(invitationId?: string) {
   };
 
   const sendWhatsApp = async (guest: Guest) => {
+    if (!invitationId) return;
+
     toast("Abriendo WhatsApp...", "info");
 
-    const contactInfo = await GuestService.getGuestContactInfo(
-      invitationId,
-      guest.id,
-    );
-    const telefono = contactInfo?.telefono;
-    if (!telefono) {
-      toast("Celular no válido", "error");
-      return;
+    try {
+      const contactInfo = await GuestService.getGuestContactInfo(
+        invitationId,
+        guest.id,
+      );
+
+      const telefono = contactInfo?.telefono;
+
+      if (!telefono) {
+        toast("Celular no válido", "error");
+        return;
+      }
+
+      const link = `https://jninvitaciones.com/i/${invitationId}?guest=${guest.id}`;
+
+      // Generamos los emojis de forma segura en memoria
+      const sparkle = String.fromCodePoint(0x2728);
+      const letter = String.fromCodePoint(0x1f48c);
+
+      const msg = `¡Hola ${guest.nombre}\n${sparkle}! Con mucha ilusión queremos compartir con ustedes el inicio de nuestra historia de amor. ${sparkle}\nNos encantaría que nos acompañen en este día tan importante\n\n${letter} La confirmación será únicamente para la recepción, cada invitado cuenta con un lugar asignado. Reservamos ${guest.invitados} lugares en su nombre!\n\n${link}`;
+
+      const phoneFormatted = telefono.replace(/\+/g, "").replace(/\s/g, "");
+
+      window.open(
+        `https://api.whatsapp.com/send?phone=${phoneFormatted}&text=${encodeURIComponent(msg)}&lang=es`,
+        "_blank",
+      );
+    } catch (error) {
+      console.error("Error al obtener información de contacto:", error);
+      toast("Error al intentar abrir WhatsApp", "error");
     }
-    const link = `https://bodajy.info/invitacion/${guest.id}`;
-    const msg = `¡Hola ${guest.nombre.split(" ")[0]}! Confirma aquí: ${link}`;
-    window.open(
-      `https://wa.me/+${telefono
-        .replace(/\+/g, "")
-        .replace(/\s/g, "")}?text=${encodeURIComponent(msg)}`,
-      "_blank",
-    );
   };
 
   const handleExportExcel = async (guests: Guest[]) => {
