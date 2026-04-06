@@ -167,6 +167,7 @@ export interface GuestActivity {
   guestId: string;
   guestName: string;
   action: ActivityActionType;
+  confirmedGuests?: number | null;
   timestamp: Timestamp;
 }
 
