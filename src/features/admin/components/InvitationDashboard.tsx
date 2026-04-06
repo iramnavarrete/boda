@@ -153,7 +153,7 @@ export const MessagesCarousel: FC = () => {
                 </div>
               )}
 
-              <p className="text-stone-600 font-serif text-lg md:text-xl italic leading-relaxed mb-6 line-clamp-3">
+              <p className="text-stone-600 font-serif text-lg md:text-xl italic leading-relaxed mb-2 line-clamp-3 h-24 content-center">
                 {`"${currentMessage.mensaje}"`}
               </p>
               <div className="flex flex-col items-center gap-1.5">

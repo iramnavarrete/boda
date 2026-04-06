@@ -8,15 +8,14 @@ import {
   Clock,
   CheckCircle2,
   XCircle,
+  Tag,
 } from "lucide-react";
 import { Guest } from "@/types";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
-import { MouseEvent, useState } from "react";
+import { MouseEvent } from "react";
 import DashedSeparator from "./DashedSeparator";
 import { cn } from "@heroui/theme";
 import { useRouter } from "next/router";
-import ConfirmationModal from "./ConfirmationModal";
-import { GuestService } from "@/services/guestService";
 
 interface GuestsCardsProps {
   guests: Guest[];
@@ -74,15 +73,15 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
             }
           `}
           >
-            <div className="flex flex-1 justify-between items-start mb-4 gap-3">
-              <div className="flex items-start gap-4">
+            <div className="flex flex-1 justify-between items-center mb-4 gap-3">
+              <div className="flex items-center gap-4">
                 {/* Checkbox de Selección */}
                 <button
                   onClick={(e) =>
                     handleActionButtonClick(e, () => onSelectGuest(g.id))
                   }
                   className={`
-                  mt-1 p-1 rounded-lg transition-all duration-200 shrink-0
+                  p-1 rounded-lg transition-all duration-200 shrink-0
                   ${
                     selectedGuests.has(g.id)
                       ? "text-gold bg-paper/30"
@@ -102,9 +101,12 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                   <h3 className="font-serif text-base font-bold text-charcoal leading-snug line-clamp-2">
                     {g.nombre}
                   </h3>
-                  <p className="text-[10px] text-stone-400 font-mono uppercase tracking-widest bg-paper/30 inline-block px-1.5 py-0.5 rounded border border-sand">
-                    ID: {g.id.slice(0, 8)}
-                  </p>
+                  {g.etiqueta && (
+                    <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#EBE5DA] bg-[#FDFBF7] text-[#C5A669]">
+                      <Tag size={10} />
+                      {g.etiqueta}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -199,7 +201,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                             className="absolute bottom-[6px] right-[3px] bg-white rounded-full p-[1px] shadow-sm cursor-help"
                           >
                             <CheckCircle2
-                              size={10}
+                              size={11}
                               className="text-green-500 bg-green-50 rounded-full"
                             />
                           </div>
@@ -209,7 +211,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                             className="absolute bottom-[6px] right-[3px] bg-white rounded-full p-[1px] shadow-sm cursor-help"
                           >
                             <Clock
-                              size={10}
+                              size={11}
                               className="text-sand-400 bg-green-50 rounded-full"
                             />
                           </div>

@@ -9,10 +9,11 @@ import {
   Lock,
   Eye,
   Trash2,
-  MoreVertical,
+  Tag,
 } from "lucide-react";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { Guest } from "@/types";
+import { useRouter } from "next/router";
 
 interface GuestsTableViewProps {
   filteredGuests: Guest[];
@@ -35,6 +36,10 @@ const GuestsTableView: React.FC<GuestsTableViewProps> = ({
 }) => {
   const safeSelectedGuests = selectedGuests || new Set();
   const isOneOrMoreSelected = safeSelectedGuests.size > 0;
+
+  const router = useRouter();
+
+  const { invitationId } = router.query;
 
   const handleActionButtonClick = (
     event: MouseEvent<HTMLButtonElement>,
@@ -61,11 +66,12 @@ const GuestsTableView: React.FC<GuestsTableViewProps> = ({
       <table className="w-full text-left border-collapse min-w-[800px]">
         <thead>
           <tr className="bg-[#FDFBF7] border-b border-[#EBE5DA] text-[10px] uppercase tracking-widest text-[#A8A29E] select-none">
-            <th className="p-4 w-14 text-center"></th>
-            <th className="p-4 font-bold text-[#5A5A5A]">Invitado</th>
-            <th className="p-4 font-bold text-[#5A5A5A]">Asistencia</th>
-            <th className="p-4 font-bold text-[#5A5A5A]">Edición</th>
-            <th className="p-4 font-bold text-[#5A5A5A] text-right">
+            <th className="p-3 w-14 text-center"></th>
+            <th className="p-3 font-bold text-[#5A5A5A]">Invitado</th>
+            <th className="p-3 font-bold text-[#5A5A5A]">Etiqueta</th>
+            <th className="p-3 font-bold text-[#5A5A5A]">Asistencia</th>
+            <th className="p-3 font-bold text-[#5A5A5A]">Edición</th>
+            <th className="p-3 font-bold text-[#5A5A5A] text-right">
               Acciones
             </th>
           </tr>
@@ -109,21 +115,28 @@ const GuestsTableView: React.FC<GuestsTableViewProps> = ({
                 </td>
 
                 {/* 2. INFO PRINCIPAL */}
-                <td className="p-4 align-middle">
+                <td className="p-2 align-middle">
                   <div>
                     <h3
                       className={`font-serif text-base font-bold leading-snug mb-1 transition-colors ${isSelected ? "text-[#C5A669]" : "text-[#2C2C29]"}`}
                     >
                       {g.nombre}
                     </h3>
-                    <p className="text-[9px] text-[#A8A29E] font-mono uppercase tracking-widest">
-                      ID: {g.id ? String(g.id).slice(0, 8) : "N/A"}
-                    </p>
                   </div>
                 </td>
 
+                {/* Etiqueta */}
+                <td className="p-2 align-middle">
+                  {g.etiqueta && (
+                    <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#EBE5DA] bg-[#FDFBF7] text-[#C5A669]">
+                      <Tag size={10} />
+                      {g.etiqueta}
+                    </span>
+                  )}
+                </td>
+
                 {/* 3. ASISTENCIA (BADGE) */}
-                <td className="p-4 align-middle">
+                <td className="p-2 align-middle">
                   <span
                     className={`
                       inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border
@@ -144,7 +157,7 @@ const GuestsTableView: React.FC<GuestsTableViewProps> = ({
                 </td>
 
                 {/* 4. PERMISOS DE EDICIÓN */}
-                <td className="p-4 align-middle">
+                <td className="p-2 align-middle">
                   <button
                     type="button"
                     disabled={isOneOrMoreSelected}
@@ -170,12 +183,15 @@ const GuestsTableView: React.FC<GuestsTableViewProps> = ({
                     ) : (
                       <Lock size={14} />
                     )}
-                    <span>Cambios {g.cambiosPermitidos ? "permitidos" : "bloqueados"}</span>
+                    <span>
+                      Cambios{" "}
+                      {g.cambiosPermitidos ? "permitidos" : "bloqueados"}
+                    </span>
                   </button>
                 </td>
 
                 {/* 5. BOTONES DE ACCIÓN */}
-                <td className="p-4 align-middle text-right">
+                <td className="p-2 align-middle text-right">
                   <fieldset
                     disabled={isOneOrMoreSelected}
                     className="transition-opacity duration-300 disabled:opacity-30 disabled:pointer-events-none"
@@ -224,9 +240,14 @@ const GuestsTableView: React.FC<GuestsTableViewProps> = ({
                         type="button"
                         disabled={isOneOrMoreSelected}
                         onClick={(e) =>
-                          handleActionButtonClick(e, () => onEdit(g))
+                          handleActionButtonClick(e, () =>
+                            window.open(
+                              `/i/${invitationId}?guest=${g.id}&preview=1&token=AQWOLdldspWRKDOSAKkwqppals`,
+                              "_blank",
+                            ),
+                          )
                         }
-                        className="p-1.5 rounded-lg text-[#5A5A5A] bg-[#FDFBF7] hover:bg-white hover:text-[#2C2C29] transition-all border border-[#EBE5DA] disabled:opacity-30 disabled:pointer-events-none"
+                        className="p-2 rounded-lg text-[#5A5A5A] bg-[#FDFBF7] hover:bg-white hover:text-[#2C2C29] transition-all border border-[#EBE5DA] disabled:opacity-30 disabled:pointer-events-none"
                         title="Vista previa / Editar"
                       >
                         <Eye size={16} />
@@ -239,7 +260,7 @@ const GuestsTableView: React.FC<GuestsTableViewProps> = ({
                         onClick={(e) =>
                           handleActionButtonClick(e, () => onDelete(g))
                         }
-                        className="p-1.5 rounded-lg text-[#853935] bg-white border border-[#EBE5DA] hover:bg-[#F9EAE9] hover:text-[#B71C1C] hover:border-[#EED7D6] transition-all disabled:opacity-30 disabled:pointer-events-none"
+                        className="p-2 rounded-lg text-[#853935] bg-white border border-[#EBE5DA] hover:bg-[#F9EAE9] hover:text-[#B71C1C] hover:border-[#EED7D6] transition-all disabled:opacity-30 disabled:pointer-events-none"
                         title="Eliminar"
                       >
                         <Trash2 size={16} />

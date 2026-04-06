@@ -16,10 +16,13 @@ import {
   LayoutGrid,
   ClipboardPaste,
   MoreVertical,
+  Tag,
 } from "lucide-react";
 import {
   FilterCounts,
   FilterType,
+  TagCounts,
+  TagFilterType,
   WhatsappCounts,
   WhatsappFilterType,
 } from "@/types";
@@ -48,6 +51,9 @@ interface SearchAndFilterBarProps {
   whatsappFilter: WhatsappFilterType;
   setWhatsappFilter: (status: WhatsappFilterType) => void;
   whatsappCounts: WhatsappCounts;
+  tagFilter: TagFilterType;
+  setTagFilter: (status: TagFilterType) => void;
+  tagCounts: TagCounts;
   viewMode?: "grid" | "table";
   setViewMode?: (mode: "grid" | "table") => void;
   onExportExcel: () => void;
@@ -66,10 +72,13 @@ export default function SearchAndFilterBar({
   whatsappFilter,
   setWhatsappFilter,
   whatsappCounts,
+  setTagFilter,
+  tagCounts,
+  tagFilter,
   viewMode,
   setViewMode,
   onExportExcel,
-  onImportExcel, // DESESTRUCTURADO
+  onImportExcel,
   onNewGuest,
   disabled,
   filteredGuestCount,
@@ -77,7 +86,7 @@ export default function SearchAndFilterBar({
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
 
-  // --- NUEVO ESTADO PARA EL MENÚ DE OPCIONES ---
+  // --- ESTADO PARA EL MENÚ DE OPCIONES ---
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const optionsRef = useRef<HTMLDivElement>(null);
 
@@ -89,25 +98,58 @@ export default function SearchAndFilterBar({
       ) {
         setIsFilterOpen(false);
       }
+      if (
+        optionsRef.current &&
+        !optionsRef.current.contains(event.target as Node)
+      ) {
+        setIsOptionsOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const getFilterLabel = () => {
-    let baseLabel = "Todos";
-    if (filterStatus === "confirmed") baseLabel = "Confirmados";
-    if (filterStatus === "pending") baseLabel = "Pendientes";
-    if (filterStatus === "rejected") baseLabel = "Rechazados";
+    let activeCount = 0;
+    let lastActiveLabel = "";
 
-    if (whatsappFilter === "sent") return `${baseLabel} + WA Enviado`;
-    if (whatsappFilter === "not_sent") return `${baseLabel} + WA Pendiente`;
-    if (whatsappFilter === "empty") return `${baseLabel} + Sin WA`;
+    if (filterStatus !== "all") {
+      activeCount++;
+      if (filterStatus === "confirmed") lastActiveLabel = "Confirmados";
+      if (filterStatus === "pending") lastActiveLabel = "Pendientes";
+      if (filterStatus === "rejected") lastActiveLabel = "Rechazados";
+    }
 
-    return baseLabel;
+    if (whatsappFilter !== "all") {
+      activeCount++;
+      if (whatsappFilter === "sent") lastActiveLabel = "WA Enviado";
+      if (whatsappFilter === "not_sent") lastActiveLabel = "WA Pendiente";
+      if (whatsappFilter === "empty") lastActiveLabel = "Sin Teléfono";
+    }
+
+    if (tagFilter !== "all") {
+      activeCount++;
+      lastActiveLabel = 'Invitados ' + tagFilter;
+    }
+
+    if (activeCount === 0) return "Todos";
+    if (activeCount === 1) return lastActiveLabel;
+    return `${activeCount} filtros`;
   };
 
+  // --- NUEVA LÓGICA DE COLOR ADAPTADA A MÚLTIPLES FILTROS ---
   const getFilterColor = () => {
+    const activeCount =
+      (filterStatus !== "all" ? 1 : 0) +
+      (whatsappFilter !== "all" ? 1 : 0) +
+      (tagFilter !== "all" ? 1 : 0);
+
+    // Si hay más de un filtro activo, usamos un estilo dorado para destacar la combinación
+    if (activeCount > 1) {
+      return "text-[#C5A669] bg-[#FDFBF7] border-[#C5A669] ring-1 ring-[#C5A669]/20";
+    }
+
+    // Si solo hay un filtro activo, respetamos su color semántico
     if (filterStatus === "confirmed")
       return "text-green-700 bg-green-50 border-green-200 ring-1 ring-green-100";
     if (filterStatus === "pending")
@@ -122,17 +164,23 @@ export default function SearchAndFilterBar({
     if (whatsappFilter === "empty")
       return "text-red-700 bg-red-50 border-red-200 ring-1 ring-red-200";
 
+    if (tagFilter !== "all")
+      return "text-gold bg-sand-light border-gold ring-1 ring-gold/20";
+
+    // Estado por defecto (Todos)
     return "text-stone-custom bg-white/90 border-sand hover:border-gold/50";
   };
 
-  const hasActiveFilters = filterStatus !== "all" || whatsappFilter !== "all";
+  const hasActiveFilters =
+    filterStatus !== "all" || whatsappFilter !== "all" || tagFilter !== "all";
 
   const clearFilters = () => {
     setFilterStatus("all");
     setWhatsappFilter("all");
+    setTagFilter("all");
     setIsFilterOpen(false);
   };
-
+  
   return (
     <div className="w-full font-sans">
       <fieldset
@@ -182,115 +230,118 @@ export default function SearchAndFilterBar({
 
             <div
               className={cn(
-                "absolute top-full right-0 md:left-0 w-56 bg-white/95 backdrop-blur-sm text-stone-800 rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
+                // Cambio: En móvil w-56 (columna), en desktop w-max para acomodar horizontalmente todas las columnas sin scroll
+                "absolute top-full right-0 w-56 md:w-max bg-white/95 backdrop-blur-sm text-stone-800 rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
                 "transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) z-50 flex flex-col",
                 isFilterOpen
                   ? "opacity-100 translate-y-1 scale-100"
                   : "opacity-0 translate-y-0 scale-95 pointer-events-none",
               )}
             >
-              <div className="p-2 space-y-0.5 max-h-[50vh] overflow-y-auto no-scrollbar flex-1">
-                {/* --- SECCIÓN 1: ASISTENCIA --- */}
-                <div className="px-3 py-1.5 text-[10px] font-bold text-gold uppercase tracking-widest bg-sand-light/50 rounded-lg mb-1">
-                  Asistencia
+              {/* Contenedor que cambia a fila (row) en pantallas grandes y deshabilita el scroll */}
+              <div className="p-2 max-h-[60vh] md:max-h-none overflow-y-auto md:overflow-visible no-scrollbar flex-1 flex flex-col md:flex-row md:p-4 md:gap-4 md:space-y-0 space-y-0.5">
+                {/* --- COLUMNA 1: ASISTENCIA --- */}
+                <div className="flex flex-col gap-0.5 w-full md:w-52 shrink-0">
+                  <div className="px-3 py-1.5 text-[10px] font-bold text-gold uppercase tracking-widest bg-sand-light/50 rounded-lg mb-1">
+                    Asistencia
+                  </div>
+                  <button
+                    onClick={() => setFilterStatus("all")}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      filterStatus === "all"
+                        ? "bg-sand-light text-charcoal font-medium border border-sand"
+                        : "text-stone-custom hover:bg-sand-light hover:text-charcoal border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <LayoutList
+                        size={16}
+                        className={
+                          filterStatus === "all"
+                            ? "text-gold"
+                            : "text-stone-light"
+                        }
+                      />
+                      Todos
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {filterCounts?.all || 0}
+                    </span>
+                  </button>
+                  <DashedSeparator className="m-0 hidden md:block" />
+                  <button
+                    onClick={() => setFilterStatus("confirmed")}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      filterStatus === "confirmed"
+                        ? "bg-green-50 text-green-800 font-medium border border-green-100"
+                        : "text-stone-custom hover:bg-green-50/50 hover:text-green-700 border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <CheckCircle2
+                        size={16}
+                        className={
+                          filterStatus === "confirmed"
+                            ? "text-green-600"
+                            : "text-stone-light"
+                        }
+                      />
+                      Confirmados
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {filterCounts?.confirmed || 0}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setFilterStatus("pending")}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      filterStatus === "pending"
+                        ? "bg-paper/30 text-gold font-medium border border-sand"
+                        : "text-stone-custom hover:bg-paper/30 hover:text-gold border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Clock
+                        size={16}
+                        className={
+                          filterStatus === "pending"
+                            ? "text-gold"
+                            : "text-stone-light"
+                        }
+                      />
+                      Pendientes
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {filterCounts?.pending || 0}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setFilterStatus("rejected")}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      filterStatus === "rejected"
+                        ? "bg-red-50 text-red-800 font-medium border border-red-100"
+                        : "text-stone-custom hover:bg-red-50/50 hover:text-red-700 border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <XCircle
+                        size={16}
+                        className={
+                          filterStatus === "rejected"
+                            ? "text-red-500"
+                            : "text-stone-light"
+                        }
+                      />
+                      Rechazados
+                    </span>
+                    <span className="text-stone-light text-xs bg-white/90 px-1.5 py-0.5 rounded border border-sand">
+                      {filterCounts?.rejected || 0}
+                    </span>
+                  </button>
                 </div>
 
-                <button
-                  onClick={() => setFilterStatus("all")}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                    filterStatus === "all"
-                      ? "bg-sand-light text-charcoal font-medium border border-sand"
-                      : "text-stone-custom hover:bg-sand-light hover:text-charcoal border border-transparent"
-                  }`}
-                >
-                  <span className="flex items-center gap-2.5">
-                    <LayoutList
-                      size={16}
-                      className={
-                        filterStatus === "all"
-                          ? "text-gold"
-                          : "text-stone-light"
-                      }
-                    />
-                    Todos
-                  </span>
-                  <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                    {filterCounts?.all || 0}
-                  </span>
-                </button>
-                <DashedSeparator className="m-0" />
-                <button
-                  onClick={() => setFilterStatus("confirmed")}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                    filterStatus === "confirmed"
-                      ? "bg-green-50 text-green-800 font-medium border border-green-100"
-                      : "text-stone-custom hover:bg-green-50/50 hover:text-green-700 border border-transparent"
-                  }`}
-                >
-                  <span className="flex items-center gap-2.5">
-                    <CheckCircle2
-                      size={16}
-                      className={
-                        filterStatus === "confirmed"
-                          ? "text-green-600"
-                          : "text-stone-light"
-                      }
-                    />
-                    Confirmados
-                  </span>
-                  <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                    {filterCounts?.confirmed || 0}
-                  </span>
-                </button>
-                <button
-                  onClick={() => setFilterStatus("pending")}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                    filterStatus === "pending"
-                      ? "bg-paper/30 text-gold font-medium border border-sand"
-                      : "text-stone-custom hover:bg-paper/30 hover:text-gold border border-transparent"
-                  }`}
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Clock
-                      size={16}
-                      className={
-                        filterStatus === "pending"
-                          ? "text-gold"
-                          : "text-stone-light"
-                      }
-                    />
-                    Pendientes
-                  </span>
-                  <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                    {filterCounts?.pending || 0}
-                  </span>
-                </button>
-                <button
-                  onClick={() => setFilterStatus("rejected")}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                    filterStatus === "rejected"
-                      ? "bg-red-50 text-red-800 font-medium border border-red-100"
-                      : "text-stone-custom hover:bg-red-50/50 hover:text-red-700 border border-transparent"
-                  }`}
-                >
-                  <span className="flex items-center gap-2.5">
-                    <XCircle
-                      size={16}
-                      className={
-                        filterStatus === "rejected"
-                          ? "text-red-500"
-                          : "text-stone-light"
-                      }
-                    />
-                    Rechazados
-                  </span>
-                  <span className="text-stone-light text-xs bg-white/90 px-1.5 py-0.5 rounded border border-sand">
-                    {filterCounts?.rejected || 0}
-                  </span>
-                </button>
-
-                {/* --- SECCIÓN 2: ESTADO WHATSAPP --- */}
-                <div className="mt-2 pt-2 border-t border-sand">
+                {/* --- COLUMNA 2: ESTADO WHATSAPP --- */}
+                <div className="mt-2 pt-2 border-t border-sand md:mt-0 md:pt-0 md:border-t-0 md:border-l md:pl-4 flex flex-col gap-0.5 w-full md:w-52 shrink-0">
                   <div className="px-3 py-1.5 text-[10px] font-bold text-gold uppercase tracking-widest bg-sand-light/50 rounded-lg mb-1">
                     WhatsApp
                   </div>
@@ -317,7 +368,7 @@ export default function SearchAndFilterBar({
                       {whatsappCounts?.all || 0}
                     </span>
                   </button>
-                  <DashedSeparator className="m-0" />
+                  <DashedSeparator className="m-0 hidden md:block" />
                   <button
                     onClick={() => setWhatsappFilter("sent")}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
@@ -388,10 +439,108 @@ export default function SearchAndFilterBar({
                     </span>
                   </button>
                 </div>
+
+                {/* --- COLUMNA 3: ETIQUETAS --- */}
+                <div className="mt-2 pt-2 border-t border-sand md:mt-0 md:pt-0 md:border-t-0 md:border-l md:pl-4 flex flex-col gap-0.5 w-full md:w-52 shrink-0">
+                  <div className="px-3 py-1.5 text-[10px] font-bold text-gold uppercase tracking-widest bg-sand-light/50 rounded-lg mb-1">
+                    Etiquetas
+                  </div>
+                  <button
+                    onClick={() => setTagFilter("all")}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      tagFilter === "all"
+                        ? "bg-sand-light text-charcoal font-medium border border-sand"
+                        : "text-stone-custom hover:bg-sand-light hover:text-charcoal border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <LayoutList
+                        size={16}
+                        className={
+                          tagFilter === "all" ? "text-gold" : "text-stone-light"
+                        }
+                      />
+                      Todos
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {tagCounts?.all || 0}
+                    </span>
+                  </button>
+                  <DashedSeparator className="m-0 hidden md:block" />
+                  <button
+                    onClick={() => setTagFilter("Novia")}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      tagFilter === "Novia"
+                        ? "bg-paper/30 text-gold font-medium border border-sand"
+                        : "text-stone-custom hover:bg-paper/30 hover:text-gold border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Tag
+                        size={16}
+                        className={
+                          tagFilter === "Novia"
+                            ? "text-gold"
+                            : "text-stone-light"
+                        }
+                      />
+                      Novia
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {tagCounts?.Novia || 0}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setTagFilter("Novio")}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      tagFilter === "Novio"
+                        ? "bg-paper/30 text-gold font-medium border border-sand"
+                        : "text-stone-custom hover:bg-paper/30 hover:text-gold border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Tag
+                        size={16}
+                        className={
+                          tagFilter === "Novio"
+                            ? "text-gold"
+                            : "text-stone-light"
+                        }
+                      />
+                      Novio
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {tagCounts?.Novio || 0}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setTagFilter("Ambos")}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      tagFilter === "Ambos"
+                        ? "bg-paper/30 text-gold font-medium border border-sand"
+                        : "text-stone-custom hover:bg-paper/30 hover:text-gold border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Tag
+                        size={16}
+                        className={
+                          tagFilter === "Ambos"
+                            ? "text-gold"
+                            : "text-stone-light"
+                        }
+                      />
+                      Ambos
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {tagCounts?.Ambos || 0}
+                    </span>
+                  </button>
+                </div>
               </div>
 
               {hasActiveFilters && (
-                <div className="p-2 border-t border-[#EBE5DA] bg-[#FDFBF7] shrink-0">
+                <div className="p-2 md:p-3 border-t border-[#EBE5DA] bg-[#FDFBF7] shrink-0">
                   <button
                     onClick={clearFilters}
                     className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors border border-transparent hover:border-red-100"

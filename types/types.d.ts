@@ -16,6 +16,7 @@ export type GuestFormData = {
   telefono: string | null;
   notaAnfitrion: string | null;
   cambiosPermitidos: boolean;
+  etiqueta?: string | null;
 };
 
 export type Guest = {
@@ -31,6 +32,7 @@ export type Guest = {
   fechaCreacion: Timestamp | FieldValue | null;
   ultimaModificacion: Timestamp | FieldValue | null;
   whatsappEnviado?: boolean;
+  etiqueta?: string | null;
 };
 
 export type GuestContactInfo = {
@@ -178,6 +180,14 @@ export interface WhatsappCounts {
   empty: number;
 }
 
+export type TagFilterType = "all" | "Novia" | "Novio" | "Ambos";
+
+export interface TagCounts {
+  all: number;
+  Novia: number;
+  Novio: number;
+  Ambos: number;
+}
 export interface ImportedGuest {
   nombre: string;
   invitados: number;
