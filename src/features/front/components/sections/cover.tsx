@@ -57,25 +57,37 @@ const animateFixedVariants = {
   },
 };
 
-type Props = { isSealVisible: boolean };
+type ImageConfig = {
+  src: string;
+  style: { backgroundPosition: string };
+};
 
-export default function Cover({ isSealVisible }: Props) {
+type Props = {
+  isSealVisible: boolean;
+  imagesConfig?: ImageConfig[];
+  musicIconClassName?: string;
+};
+
+export default function Cover({
+  isSealVisible,
+  imagesConfig = [
+    { src: "/img/cover1.webp", style: { backgroundPosition: "right" } },
+    { src: "/img/cover2.webp", style: { backgroundPosition: "60%" } },
+    { src: "/img/cover3.webp", style: { backgroundPosition: "right" } },
+  ],
+  musicIconClassName = ''
+}: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
   const [arrowsScope, animateArrows] = useAnimate();
   const { toggleAudio } = useMusicStore();
   const triggerRef = useRef(null);
   const isInView = useInView(triggerRef); // top visible
-  const images = [
-    { src: "/img/cover1.webp", style: { backgroundPosition: "right" } },
-    { src: "/img/cover2.webp", style: { backgroundPosition: "60%" } },
-    { src: "/img/cover3.webp", style: { backgroundPosition: "right" } },
-  ];
   const [index, setIndex] = useState(0);
 
-    const searchParams = useSearchParams();
-    const id = searchParams?.get("guest");
-    const preview = searchParams?.get("preview");
-    const token = searchParams?.get("token");
+  const searchParams = useSearchParams();
+  const id = searchParams?.get("guest");
+  const preview = searchParams?.get("preview");
+  const token = searchParams?.get("token");
 
   useEffect(() => {
     if (!isSealVisible) {
@@ -86,10 +98,13 @@ export default function Cover({ isSealVisible }: Props) {
   }, [isSealVisible]);
 
   useEffect(() => {
-    if(!isSealVisible && id && !preview && !token && invitationData){
-      ActivityService.logActivity(invitationData.id, {action: 'view', guestId: id })
+    if (!isSealVisible && id && !preview && !token && invitationData) {
+      ActivityService.logActivity(invitationData.id, {
+        action: "view",
+        guestId: id,
+      });
     }
-  }, [id, preview, token, isSealVisible, invitationData])
+  }, [id, preview, token, isSealVisible, invitationData]);
 
   useEffect(() => {
     (async () => {
@@ -121,7 +136,7 @@ export default function Cover({ isSealVisible }: Props) {
 
     if (!isSealVisible) {
       interval = setInterval(() => {
-        setIndex((prev) => (prev + 1) % images.length);
+        setIndex((prev) => (prev + 1) % imagesConfig.length);
       }, 5000); // 5s por imagen
     } else {
       // resetear al inicio mientras el sello no es visible
@@ -136,7 +151,7 @@ export default function Cover({ isSealVisible }: Props) {
   return (
     <>
       <div className="bg_fixed">
-        {images.map((img, i) => (
+        {imagesConfig.map((img, i) => (
           <motion.div
             key={img.src}
             className="absolute overlay will-change-opacity"
@@ -157,7 +172,6 @@ export default function Cover({ isSealVisible }: Props) {
               <div className="relative pr-6">
                 <div className="flex flex-1 justify-end items-end flex-col pt-14 relative">
                   <p className="font-newIconScript text-white text-4xl drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]">
-                    {/* {brideName} <span className="text-2xl">&</span> {groomName} */}
                     {invitationData?.nombre}
                   </p>
                   <p className="font-nourdLight text-white text-lg mt-2">
@@ -183,7 +197,7 @@ export default function Cover({ isSealVisible }: Props) {
             initial={{ opacity: 0, y: 40 }}
             className="absolute bottom-11 right-5"
           >
-            <Music />
+            <Music iconClassName={musicIconClassName} />
           </motion.div>
           <motion.div
             ref={arrowsScope}
@@ -201,7 +215,7 @@ export default function Cover({ isSealVisible }: Props) {
         initial={{ opacity: 0, y: 40 }}
         className="fixed top-5 right-5 min-[500px]:right-[calc(50%-230px)] 2xl:right-[calc(50%-280px)] z-[51]"
       >
-        <Music />
+        <Music iconClassName={musicIconClassName} />
       </motion.div>
     </>
   );

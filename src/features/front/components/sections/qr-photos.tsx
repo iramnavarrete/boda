@@ -3,11 +3,19 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useInvitationStore } from "../../stores/invitationStore";
 import { formatToEventDate } from "@/utils/formatters";
+import { cn } from "@heroui/theme";
 
-const QrPhotos: FC = () => {
+type Props = {
+  containerClassName?: string;
+  btnClassName?: string;
+  qrImage?: string;
+  urlPhotos?: string;
+}
+
+const QrPhotos: FC<Props> = ({containerClassName = '', btnClassName = '', qrImage, urlPhotos}) => {
   const invitationData = useInvitationStore((state) => state.invitationData);
   return (
-    <div className="px-8 bg-primary w-full py-16">
+    <div className={cn("px-8 bg-primary w-full py-16", containerClassName)}>
       <AnimatePresence>
         <motion.div
           initial={{ opacity: 0 }}
@@ -32,13 +40,13 @@ const QrPhotos: FC = () => {
                 width={0}
                 height={0}
                 sizes="100vw"
-                src={`/img/qr-album.png`}
+                src={qrImage || `/img/qr-album.png`}
               />
             </div>
             <p>O sólo haz click en este botón</p>
             <a
-              className="border-border-button border-1 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary"
-              href="https://photos.app.goo.gl/sDAssibZmqngTZmz8"
+              className={cn("border-border-button border-1 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary", btnClassName)}
+              href={urlPhotos || "https://photos.app.goo.gl/sDAssibZmqngTZmz8"}
               target="_blank"
               rel="noopener noreferrer"
             >

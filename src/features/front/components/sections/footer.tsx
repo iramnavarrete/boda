@@ -6,8 +6,17 @@ import animationData from "../../../../lottie/logojn.json";
 import { useEffect, useRef } from "react";
 import WhatsappIcon from "@/icons/whatsappIcon";
 import CustomLottie from "@/features/shared/components/CustomLottie";
+import { cn } from "@heroui/theme";
 
-export default function Footer() {
+export default function Footer({
+  textClassName = "",
+  containerClassName = "",
+  svgsColor
+}: {
+  textClassName?: string;
+  containerClassName?: string;
+  svgsColor?: string;
+}) {
   const playerRef = useRef<LottieRefCurrentProps>(null);
   const divRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(divRef);
@@ -30,17 +39,32 @@ export default function Footer() {
   }, [isInView]);
 
   return (
-    <div className="bg-accent flex flex-col items-center justify-center py-5">
+    <div
+      className={cn(
+        "bg-accent flex flex-col items-center justify-center py-5",
+        containerClassName,
+      )}
+    >
       <AnimatedEntrance>
-        <div className="flex flex-col items-center justify-center gap-4 text-sm font-nourdLight text-primary">
+        <div
+          className={cn(
+            "flex flex-col items-center justify-center gap-4 text-sm font-nourdLight text-primary",
+            textClassName,
+          )}
+        >
           <div className="flex flex-row gap-1">
             <p>Hecho con</p>
-            <HeartIcon className="h-6 w-6 text-primary" />
+            <HeartIcon className="h-6 w-6" />
             <p>por</p>
           </div>
-          <div ref={divRef} className="flex justify-center">
+          <div ref={divRef} onClick={() => {window.open("https://jninvitaciones.com", "_blank")}} className="flex justify-center">
             <CustomLottie
-              className="w-[70%]"
+              className={cn(
+                "w-[70%]",
+                svgsColor
+                  ? `[&_path]:!fill-[${svgsColor}]`
+                  : "",
+              )}
               animationData={animationData}
               lottieRef={playerRef}
               autoPlay={false}
@@ -57,7 +81,7 @@ export default function Footer() {
               rel="noopener noreferrer"
               className="flex justify-center items-center mt-4"
             >
-              <WhatsappIcon className="w-12 h-12" />
+              <WhatsappIcon className={cn("w-12 h-12", textClassName)} />
             </a>
           </div>
           <div>

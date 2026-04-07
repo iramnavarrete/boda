@@ -1,8 +1,9 @@
+import { cn } from "@heroui/theme";
 import { useInvitationStore } from "../stores/invitationStore";
 import { getEventTypeName } from "@/utils/formatters";
 
 
-export default function AddToCalendar() {
+export default function AddToCalendar({addToCalendarBtnClassName = ''}: {addToCalendarBtnClassName?: string;}) {
   // Extraemos la información directamente desde Zustand
   const invitationData = useInvitationStore((state) => state.invitationData);
 
@@ -108,7 +109,7 @@ END:VCALENDAR`.trim();
 
   return (
     <button
-      className="border-border-button border-1 mt-8 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary"
+      className={cn("border-border-button border-1 mt-8 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary", addToCalendarBtnClassName)}
       onClick={abrirCalendario}
     >
       Agregar al Calendario

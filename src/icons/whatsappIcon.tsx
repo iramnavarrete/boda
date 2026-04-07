@@ -1,6 +1,6 @@
 const WhatsappIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <svg
-    fill="#58624f"
+    fill="currentColor"
     viewBox="0 0 24 24"
     xmlns="http://www.w3.org/2000/svg"
     {...props}
