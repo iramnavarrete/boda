@@ -12,6 +12,7 @@ import {
 } from "@/constants/animationSequences";
 import { useInvitationStore } from "../../stores/invitationStore";
 import { formatTo12Hour } from "@/utils/formatters";
+import { cn } from "@heroui/theme";
 
 interface CardEventProps {
   time: string;
@@ -21,6 +22,8 @@ interface CardEventProps {
   IconComponent: () => React.ReactNode;
   title: string;
   sequence: AnimationSequence;
+  textClassName?: string;
+  mapBtnClassName?: string;
 }
 
 const CardEvent: React.FC<CardEventProps> = ({
@@ -31,6 +34,8 @@ const CardEvent: React.FC<CardEventProps> = ({
   IconComponent,
   title,
   sequence,
+  textClassName = '',
+  mapBtnClassName = ''
 }) => {
   const ref = useRef(null);
   const isInView = useInView(ref);
@@ -46,22 +51,45 @@ const CardEvent: React.FC<CardEventProps> = ({
       </motion.div>
       <AnimatedEntrance>
         <div className="flex flex-col items-center justify-center">
-          <p className="pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-primary">
+          <p
+            className={cn(
+              "pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-primary",
+              textClassName,
+            )}
+          >
             {title}
           </p>
-          <div className="text-primary text-center leading-6 pt-5 text-lg font-nourdMedium">
+          <div
+            className={cn(
+              "text-primary text-center leading-6 pt-5 text-lg font-nourdMedium",
+              textClassName,
+            )}
+          >
             <p>{formatTo12Hour(time)}</p>
           </div>
-          <div className="my-3 text-primary text-center text-lg font-nourdMedium">
+          <div
+            className={cn(
+              "my-3 text-primary text-center text-lg font-nourdMedium",
+              textClassName,
+            )}
+          >
             <p>{place}</p>
           </div>
-          <div className="text-primary text-center leading-5 text-sm">
+          <div
+            className={cn(
+              "text-primary text-center leading-5 text-sm",
+              textClassName,
+            )}
+          >
             <p className="whitespace-pre-wrap">
               {address.replaceAll(",", "\n")}
             </p>
           </div>
           <a
-            className="border-border-button border-1 mt-8 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary"
+            className={cn(
+              "border-border-button border-1 mt-8 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary",
+              mapBtnClassName,
+            )}
             href={link}
             target="_blank"
             rel="noopener noreferrer"
@@ -116,18 +144,36 @@ const DressCode: React.FC<PropsWithChildren<DressCodeProps>> = ({
   );
 };
 
-export default function CeremonyToast() {
+type Props = {
+  containerClassName?: string;
+  textClassName?: string;
+  svgsColor?: string;
+  mapBtnClassName?: string;
+};
+
+export default function CeremonyToast({ containerClassName = "", textClassName = '', svgsColor, mapBtnClassName = '' }: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
 
   return (
     <div className="mt-[-100%]">
-      <div className="w-full relative text-medium bg-accent">
+      <div
+        className={cn(
+          "w-full relative text-medium bg-accent",
+          containerClassName,
+        )}
+      >
         <div className="px-5 relative">
-          <FlowersBackground2 className="absolute h-[70%] 2xl:h-[95%] w-full left-0 top-12 z-0" />
+          <FlowersBackground2
+            className="absolute h-[70%] 2xl:h-[95%] w-full left-0 top-12 z-0"
+            color={svgsColor}
+          />
           <div className="px-8 py-20 flex flex-col gap-16 relative">
             <CardEvent
               IconComponent={() => (
-                <ChurchIcon className="w-[70px] h-[70px] animated-church" />
+                <ChurchIcon
+                  className="w-[70px] h-[70px] animated-church"
+                  color={svgsColor}
+                />
               )}
               sequence={churchSequence}
               address={invitationData?.ceremonia.direccion || ""}
@@ -135,10 +181,15 @@ export default function CeremonyToast() {
               place={invitationData?.ceremonia.nombreTemplo || ""}
               time={invitationData?.ceremonia.hora || ""}
               title="Ceremonia"
+              textClassName={textClassName}
+              mapBtnClassName={mapBtnClassName}
             />
             <CardEvent
               IconComponent={() => (
-                <CheersIcon className="w-[70px] h-[70px] animated-glasses" />
+                <CheersIcon
+                  className="w-[70px] h-[70px] animated-glasses"
+                  color={svgsColor}
+                />
               )}
               sequence={glassesSequence}
               address={invitationData?.recepcion.direccion || ""}
@@ -146,10 +197,12 @@ export default function CeremonyToast() {
               place={invitationData?.recepcion.nombreSalon || ""}
               time={invitationData?.recepcion.hora || ""}
               title="Recepción"
+              textClassName={textClassName}
+              mapBtnClassName={mapBtnClassName}
             />
           </div>
         </div>
-        <div className="px-5 bg-primary w-full py-20">
+        <div className={cn("px-5 bg-primary w-full py-20", svgsColor ? `bg-[${svgsColor}]` : '')}>
           <div className=" flex flex-col gap-16">
             <DressCode
               IconComponent={() => (

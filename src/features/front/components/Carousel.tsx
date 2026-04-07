@@ -8,6 +8,7 @@ import ArrowLeftIcon from "@/icons/arrow-left-icon";
 import AnimatedEntrance from "./AnimatedEntrance";
 import { GalleryImage } from "@/types";
 import Autoplay from "embla-carousel-autoplay";
+import { cn } from "@heroui/theme";
 
 const autoplay = Autoplay({
   delay: 2000, // milisegundos entre slides
@@ -16,7 +17,7 @@ const autoplay = Autoplay({
   playOnInit: true, // inicia automáticamente
 });
 
-const slides: GalleryImage[] = [
+const defaultSlides: GalleryImage[] = [
   {
     src: "/img/gallery/g1.jpg",
     alt: "Imagen de la galería 1",
@@ -105,7 +106,13 @@ function Arrow({
   );
 }
 
-export default function SimpleSlider() {
+export default function SimpleSlider({
+  slides = defaultSlides,
+  activeDotClassName = "",
+}: {
+  slides?: GalleryImage[];
+  activeDotClassName?: string;
+}) {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [autoplay]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const galleryRef = useRef<HTMLDivElement>(null);
@@ -163,14 +170,13 @@ export default function SimpleSlider() {
                     data-pswp-msrc={slide.thumb}
                     target="_blank"
                     rel="noreferrer"
-                    className="block w-full h-full"
+                    className="block w-full relative h-[70vh]"
                   >
                     <Image
                       alt={slide.alt}
                       src={slide.thumb}
-                      width={800}
-                      height={600}
-                      className="w-full h-auto"
+                      fill
+                      className="w-full h-auto object-cover"
                       placeholder="blur"
                       blurDataURL={slide.thumb}
                       priority={idx === 0}
@@ -199,7 +205,9 @@ export default function SimpleSlider() {
               key={idx}
               onClick={() => emblaApi?.scrollTo(idx)}
               className={`w-1 h-1 rounded-full ${
-                idx === selectedIndex ? "bg-primary" : "bg-gray-400"
+                idx === selectedIndex
+                  ? cn("bg-primary", activeDotClassName)
+                  : "bg-gray-400"
               }`}
             />
           ))}

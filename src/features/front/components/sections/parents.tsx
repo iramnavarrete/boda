@@ -5,14 +5,36 @@ import BeigeWaves from "@/icons/beige-waves";
 import FlowersBackground1 from "@/icons/flowers-background-1";
 import Separator from "@/icons/separator";
 import { useInvitationStore } from "../../stores/invitationStore";
+import { cn } from "@heroui/theme";
 
-export default function ParentsGodFathers() {
+type Props = {
+  textClassName?: string;
+  containerClassName?: string;
+  svgsColor?: string;
+  addToCalendarBtnClassName?: string;
+  bottomWavesColor?: string;
+};
+
+export default function ParentsGodFathers({textClassName = '', containerClassName = '', svgsColor, addToCalendarBtnClassName = '', bottomWavesColor= ''}: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
   return (
-    <article className="bg-accent border-t-1 drop border-primary flex flex-col items-center justify-center relative pt-20">
-      <FlowersBackground1 className="w-full h-[85%] 2xl:h-full absolute top-0" />
-      <div className="mx-10 text-center text-sm text-cool-gray z-10">
-        <Separator className="w-full" />
+    <article
+      className={cn(
+        "bg-accent border-t-1  border-primary flex flex-col items-center justify-center relative pt-20",
+        containerClassName,
+      )}
+    >
+      <FlowersBackground1
+        className="w-full h-[85%] 2xl:h-full absolute top-0"
+        color={svgsColor}
+      />
+      <div
+        className={cn(
+          "mx-10 text-center text-sm text-cool-gray z-10",
+          textClassName,
+        )}
+      >
+        <Separator className="w-full" color={svgsColor} />
         <div className="flex flex-col gap-2 my-12">
           <div className="font-newIconScript text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]">
             <ElegantText
@@ -67,12 +89,18 @@ export default function ParentsGodFathers() {
             />
           </div>
         </div>
-        <Separator className="w-full" />
+        <Separator className="w-full" color={svgsColor} />
         <AnimatedEntrance>
-          <CountdownTimer />
+          <CountdownTimer
+            textClassName={textClassName}
+            addToCalendarBtnClassName={addToCalendarBtnClassName}
+          />
         </AnimatedEntrance>
 
-        <BeigeWaves className="w-full absolute h-12 left-0 bottom-[-40px]" />
+        <BeigeWaves
+          className="w-full absolute h-12 left-0 bottom-[-40px]"
+          color={bottomWavesColor}
+        />
       </div>
     </article>
   );

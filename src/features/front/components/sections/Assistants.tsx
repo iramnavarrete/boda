@@ -1,6 +1,6 @@
 import assistanceSchema from "@/validation/yupSchema";
 import { Formik, FormikProps } from "formik";
-import { useCallback, useRef, useState } from "react";
+import { FC, useCallback, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Separator from "@/icons/separator";
 import Image from "next/image";
@@ -17,6 +17,7 @@ import { GuestService } from "@/services/guestService";
 import { useInvitationStore } from "../../stores/invitationStore";
 import { GuestQuotesService } from "@/services/guestQuotesService";
 import { ActivityService } from "@/services/activityService";
+import { cn } from "@heroui/theme";
 
 const defaultGuest: Guest = {
   asistencia: null, // Inicializado como null para que no muestre los campos
@@ -27,7 +28,7 @@ const defaultGuest: Guest = {
   invitados: 1,
   cambiosPermitidos: true,
   fechaCreacion: null,
-  notaAnfitrion: "Te esperamos en la boda",
+  notaAnfitrion: "",
   tieneTelefono: false,
   ultimaModificacion: null,
 };
@@ -40,7 +41,31 @@ const defaultOptions = {
 
 const isDefaultId = (id?: string) => id === "_";
 
-function Assistants() {
+type Props = {
+  containerClassName?: string;
+  textClassName?: string;
+  svgsColor?: string;
+  btnClassName?: string;
+  activeConfirmBtnClassName?: string;
+  activeDeclineBtnClassName?: string;
+  inactiveConfirmBtnClassName?: string;
+  inactiveDeclineBtnClassName?: string;
+  sendFormBtnClassName?: string;
+  sealImage?: string;
+};
+
+
+const Assistants: FC<Props> = ({
+  containerClassName = "",
+  textClassName = "",
+  svgsColor,
+  activeConfirmBtnClassName = '',
+  activeDeclineBtnClassName = '',
+  inactiveConfirmBtnClassName = '',
+  inactiveDeclineBtnClassName = '',
+  sendFormBtnClassName = '',
+  sealImage
+}) => {
   const [isDisabled, setIsDisabled] = useState(false);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [isAssistant, setIsAssistant] = useState(false);
@@ -96,8 +121,8 @@ function Assistants() {
 
   if (!guestData) {
     return (
-      <div className="w-full h-24 bg-accent flex justify-center">
-        <p className="text-primary font-newIconScript">
+      <div className={cn("w-full h-24 bg-accent flex justify-center", containerClassName)}>
+        <p className={cn("text-primary font-newIconScript", textClassName)}>
           Cargando información...
         </p>
       </div>
@@ -107,11 +132,21 @@ function Assistants() {
   return (
     <div>
       <hr className="w-full" />
-      <div className="bg-accent flex flex-col items-center justify-center py-20">
+      <div
+        className={cn(
+          "bg-accent flex flex-col items-center justify-center py-20",
+          containerClassName,
+        )}
+      >
         <AnimatedEntrance>
           <div className="flex flex-col items-center justify-center gap-4 pb-5">
-            <Separator className="mx-10" />
-            <p className="pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-primary px-5 text-center">
+            <Separator className="mx-10" color={svgsColor} />
+            <p
+              className={cn(
+                "pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-primary px-5 text-center",
+                textClassName,
+              )}
+            >
               Confirmación de asistencia
             </p>
             <p className="font-nourdLight text-medium text-center px-10">
@@ -139,25 +174,33 @@ function Assistants() {
                         width={100}
                         height={100}
                         sizes="100vw"
-                        src={`/img/sello.png`}
+                        src={sealImage || `/img/sello.png`}
                       />
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
-              <div className="border border-sand-200 rounded-3xl bg-white shadow-xl px-4 py-8">
+              <div className="rounded-3xl bg-white shadow-xl px-4 py-8">
                 <div
                   className={`pt-12 ${isFormSubmitted || (guestData.cambiosPermitidos === false && guestData.asistencia !== true) ? "block" : "hidden"}`}
                 >
                   <CustomLottie
-                    className="w-1/2 m-auto pb-4"
+                    className={cn(
+                      "w-1/2 m-auto pb-4",
+                      svgsColor ? `[&_path]:!fill-[${svgsColor}] [&_path]:!stroke-[${svgsColor}]` : '',
+                    )}
                     options={defaultOptions}
                     animationData={animationData}
                   />
                 </div>
 
                 {guestData.cambiosPermitidos === false ? (
-                  <div className="px-6 pt-8 pb-12 font-nourdLight flex flex-col items-center text-primary text-center">
+                  <div
+                    className={cn(
+                      "px-6 pt-8 pb-12 font-nourdLight flex flex-col items-center text-primary text-center",
+                      textClassName,
+                    )}
+                  >
                     <p>
                       El registro de asistencia está cerrado. <br />
                       <br />
@@ -190,11 +233,19 @@ function Assistants() {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="px-2 py-12 font-nourdLight flex flex-col items-center text-primary"
+                          className={cn(
+                            "px-2 py-12 font-nourdLight flex flex-col items-center text-primary",
+                            textClassName,
+                          )}
                           key="assistance-form"
                         >
                           <>
-                            <p className="py-2 text-2xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-primary text-center">
+                            <p
+                              className={cn(
+                                "py-2 text-2xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-primary text-center",
+                                textClassName,
+                              )}
+                            >
                               {guestData.nombre}
                             </p>
                             <p className="text-sm">
@@ -240,9 +291,9 @@ function Assistants() {
                                           data.id!,
                                           {
                                             autor: data.nombre,
-                                            mensaje: data.notaInvitado || '',
+                                            mensaje: data.notaInvitado || "",
                                           },
-                                        )
+                                        );
                                       }
                                       ActivityService.logActivity(
                                         invitationData.id,
@@ -314,17 +365,23 @@ function Assistants() {
                                         }}
                                         className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all duration-300 font-medium border ${
                                           values.asistencia === true
-                                            ? "bg-sand-200 text-primary border-primary-700/80"
-                                            : "bg-transparent border-sand-200 text-[#A8A29E] hover:bg-sand-200/50 hover:text-primary-700/80"
+                                            ? cn(
+                                                "bg-sand-200 text-primary border-primary-700/80",
+                                                activeConfirmBtnClassName,
+                                              )
+                                            : cn(
+                                                "bg-transparent border-sand-200 text-[#A8A29E] hover:bg-sand-200/50 hover:text-primary-700/80",
+                                                inactiveConfirmBtnClassName,
+                                              )
                                         }`}
                                       >
                                         <CheckCircle2
                                           size={18}
-                                          className={
-                                            values.asistencia === true
-                                              ? "text-primary-600"
-                                              : "opacity-80"
-                                          }
+                                          // className={
+                                          //   values.asistencia === true
+                                          //     ? "text-primary-600"
+                                          //     : "opacity-80"
+                                          // }
                                         />
                                         Sí
                                       </button>
@@ -337,17 +394,23 @@ function Assistants() {
                                         }}
                                         className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all duration-300 font-medium border ${
                                           values.asistencia === false
-                                            ? "bg-red-200 text-red-700/80 border-red-600/80"
-                                            : "bg-transparent border-sand-200 text-[#A8A29E] hover:bg-sand-200/50 hover:text-primary-600"
+                                            ? cn(
+                                                "bg-red-200 text-red-700/80 border-red-600/80",
+                                                activeDeclineBtnClassName,
+                                              )
+                                            : cn(
+                                                "bg-transparent border-sand-200 text-[#A8A29E] hover:bg-sand-200/50 hover:text-primary-600",
+                                                inactiveDeclineBtnClassName,
+                                              )
                                         }`}
                                       >
                                         <XCircle
                                           size={18}
-                                          className={
-                                            values.asistencia === false
-                                              ? "text-red-700/80"
-                                              : "opacity-80"
-                                          }
+                                          // className={
+                                          //   values.asistencia === false
+                                          //     ? "text-red-700/80"
+                                          //     : "opacity-80"
+                                          // }
                                         />
                                         No
                                       </button>
@@ -411,6 +474,7 @@ function Assistants() {
 
                                             <div className="w-full flex justify-center mt-2">
                                               <ButtonSubmit
+                                                className={sendFormBtnClassName}
                                                 isDisabled={isDisabled}
                                               />
                                             </div>
@@ -432,7 +496,12 @@ function Assistants() {
                         key="thanks"
                       >
                         <div className="px-7 pb-12 font-nourdLight text-center w-full h-full flex flex-col justify-center items-center">
-                          <div className="text-center font-nourdLight py-2 text-primary">
+                          <div
+                            className={cn(
+                              "text-center font-nourdLight py-2 text-primary",
+                              textClassName,
+                            )}
+                          >
                             {isAssistant ? (
                               <p>
                                 Muchas gracias por tu confirmación <span></span>{" "}
@@ -451,7 +520,10 @@ function Assistants() {
                               </p>
                             )}
                             <button
-                              className="mt-8 px-8 py-3.5 rounded-xl bg-sand-200 text-primary-600 font-medium transition-all hover:opacity-90 w-full md:w-auto"
+                              className={cn(
+                                "mt-8 px-8 py-3.5 rounded-xl bg-sand-200 text-primary-600 font-medium transition-all hover:opacity-90 w-full md:w-auto",
+                                sendFormBtnClassName,
+                              )}
                               onClick={() => {
                                 setIsFormSubmitted(false);
                                 setIsDisabled(false);

@@ -2,27 +2,66 @@ import FlowersCoverUp from "@/icons/flowers-cover-up";
 import FlowersCoverDown from "@/icons/flowers-cover-down";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import { formatToEventDate } from "@/utils/formatters";
+import { cn } from "@heroui/theme";
 
-export default function DesktopSidebars() {
+type Props = {
+  flowersClassName?: string;
+  textClassName?: string;
+};
+
+export default function DesktopSidebars({
+  flowersClassName = '',
+  textClassName = '',
+}: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
   return (
     <>
       {/* Sidebar Izquierdo (Nombres) */}
-      <div className="hidden sm:block fixed left-0 top-0 bottom-0 w-[calc(50%-250px)] 2xl:w-[calc(50%-300px)] opacity-60 place-content-center text-center">
-        <FlowersCoverUp className="w-full text-primary drop-shadow-none hidden 2xl:block" />
-        <p className="flex items-center justify-center font-newIconScript text-primary text-4xl 2xl:text-4xl -rotate-90 2xl:-rotate-0 2xl:py-12">
+      <div className="hidden sm:block fixed left-0 top-0 bottom-0 w-[calc(50%-250px)] 2xl:w-[calc(50%-300px)] opacity-60 place-content-center text-center bg-texture">
+        <FlowersCoverUp
+          className={cn(
+            "w-full text-primary drop-shadow-none hidden 2xl:block",
+            flowersClassName,
+          )}
+        />
+        <p
+          className={cn(
+            "flex items-center justify-center font-newIconScript text-primary text-4xl 2xl:text-4xl -rotate-90 2xl:-rotate-0 2xl:py-12",
+            textClassName,
+          )}
+        >
           {invitationData?.nombre || ""}
         </p>
-        <FlowersCoverDown className="w-full drop-shadow-none text-primary hidden 2xl:block" />
+        <FlowersCoverDown
+          className={cn(
+            "w-full drop-shadow-none text-primary hidden 2xl:block",
+            flowersClassName,
+          )}
+        />
       </div>
 
       {/* Sidebar Derecho (Fecha) */}
       <div className="hidden sm:block fixed right-0 top-0 bottom-0 w-[calc(50%-250px)] 2xl:w-[calc(50%-300px)] opacity-60 place-content-center text-center bg-texture">
-        <FlowersCoverUp className="w-full text-primary drop-shadow-none hidden 2xl:block scale-x-[-1]" />
-        <p className="flex gap-2 items-center justify-center font-newIconScript text-primary text-4xl 2xl:text-4xl rotate-90 2xl:rotate-0 2xl:py-12">
+        <FlowersCoverUp
+          className={cn(
+            "w-full text-primary drop-shadow-none hidden 2xl:block scale-x-[-1]",
+            flowersClassName,
+          )}
+        />
+        <p
+          className={cn(
+            "flex gap-2 items-center justify-center font-newIconScript text-primary text-4xl 2xl:text-4xl rotate-90 2xl:rotate-0 2xl:py-12",
+            flowersClassName,
+          )}
+        >
           {formatToEventDate(invitationData?.fechaISO, true)}
         </p>
-        <FlowersCoverDown className="w-full drop-shadow-none text-primary hidden 2xl:block scale-x-[-1]" />
+        <FlowersCoverDown
+          className={cn(
+            "w-full drop-shadow-none text-primary hidden 2xl:block scale-x-[-1]",
+            flowersClassName,
+          )}
+        />
       </div>
     </>
   );

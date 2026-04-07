@@ -20,11 +20,13 @@ const variants = {
 interface EnvelopeSplashProps {
   className?: string;
   onOpen: () => void; // Callback para avisarle al Home que el sobre se abrió
+  sealImage?: string;
 }
 
 export default function EnvelopeSplash({
   className = "",
   onOpen,
+  sealImage
 }: EnvelopeSplashProps) {
   const [isSealVisible, setIsSealVisible] = useState(true);
   const [envolpeDivHidden, setEnvolpeDivHidden] = useState(false);
@@ -128,7 +130,7 @@ export default function EnvelopeSplash({
           priority
           height={0}
           sizes="100vw"
-          src={`/img/sello.png`}
+          src={sealImage || `/img/sello.png`}
         />
       </motion.div>
     </div>

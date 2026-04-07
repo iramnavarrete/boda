@@ -1,8 +1,9 @@
 import PauseIcon from "@/icons/pause-icon";
 import PlayIcon from "@/icons/play-icon";
 import useMusicStore from "@/stores/musicStore";
-import React, { useEffect, useRef } from "react";
+import { FC, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
+import { cn } from "@heroui/theme";
 
 export function AudioController() {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -17,8 +18,9 @@ export function AudioController() {
   return <audio ref={audioRef} loop src="/music.mp3" />;
 }
 
-function Music() {
+const Music: FC<{iconClassName?: string}> = ({iconClassName = ''}) => {
   const { isPlaying, toggleAudio } = useMusicStore();
+
 
   return (
     <motion.div
@@ -29,9 +31,9 @@ function Music() {
       <div className="flex flex-row gap-4 w-full">
         <div>
           {isPlaying ? (
-            <PauseIcon className="w-7 h-7 text-primary" />
+            <PauseIcon className={cn("w-7 h-7 text-primary", iconClassName)} />
           ) : (
-            <PlayIcon className="w-7 h-7 text-primary" />
+            <PlayIcon className={cn("w-7 h-7 text-primary", iconClassName)} />
           )}
         </div>
       </div>
