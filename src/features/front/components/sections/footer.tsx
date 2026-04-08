@@ -66,7 +66,7 @@ export default function Footer({
                   ? `[&_path]:!fill-[${svgsColor}]`
                   : "",
               )}
-              animationData={svgsColor ? colorizeLottie(animationData, "jn_logo", {main: '#000', secondary: svgsColor}) : animationData}
+              animationData={svgsColor ? colorizeLottie(animationData, "jn_logo", {main: svgsColor, secondary: svgsColor}) : animationData}
               lottieRef={playerRef}
               autoPlay={false}
               loop={false}
