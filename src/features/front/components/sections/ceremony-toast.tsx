@@ -34,8 +34,8 @@ const CardEvent: React.FC<CardEventProps> = ({
   IconComponent,
   title,
   sequence,
-  textClassName = '',
-  mapBtnClassName = ''
+  textClassName = "",
+  mapBtnClassName = "",
 }) => {
   const ref = useRef(null);
   const isInView = useInView(ref);
@@ -107,6 +107,7 @@ interface DressCodeProps {
   title: string;
   sequence: AnimationSequence;
   text: string;
+  arrayRestrictions?: string[];
 }
 
 const DressCode: React.FC<PropsWithChildren<DressCodeProps>> = ({
@@ -149,9 +150,20 @@ type Props = {
   textClassName?: string;
   svgsColor?: string;
   mapBtnClassName?: string;
+  arrayRestrictions?: string[];
+  textDressCode?: string;
+  hasNoDinner?: boolean;
 };
 
-export default function CeremonyToast({ containerClassName = "", textClassName = '', svgsColor, mapBtnClassName = '' }: Props) {
+export default function CeremonyToast({
+  containerClassName = "",
+  textClassName = "",
+  svgsColor,
+  mapBtnClassName = "",
+  arrayRestrictions = ["¡NO BLANCO!"],
+  textDressCode = "Formal",
+  hasNoDinner = false,
+}: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
 
   return (
@@ -200,9 +212,44 @@ export default function CeremonyToast({ containerClassName = "", textClassName =
               textClassName={textClassName}
               mapBtnClassName={mapBtnClassName}
             />
+            {hasNoDinner && (
+              <AnimatedEntrance>
+                <div className="flex flex-col items-center justify-center w-full px-4 mt-8 mb-4">
+                  <h2
+                    className={cn(
+                      "text-xl font-newIconScript text-amber-900 mb-6 drop-shadow-[1px_1px_1px_rgba(0,0,0,0.1)]",
+                      textClassName,
+                    )}
+                  >
+                    Información Importante
+                  </h2>
+                  <div className="border border-amber-900/20 rounded-xl p-3 bg-amber-900/5 max-w-md mx-auto">
+                    <p
+                      className={cn(
+                        "text-amber-900 text-center font-nourdLight text-sm",
+                        textClassName,
+                      )}
+                    >
+                      Queremos que disfruten al máximo de nuestra celebración.
+                      Por ello, les informamos que{" "}
+                      <span className="font-bold italic">
+                        no se servirá cena formal
+                      </span>{" "}
+                      durante el evento, para que puedan tomar sus precauciones.
+                      ¡Habrá mucha música, brindis y alegría!
+                    </p>
+                  </div>
+                </div>
+              </AnimatedEntrance>
+            )}
           </div>
         </div>
-        <div className={cn("px-5 bg-primary w-full py-20", svgsColor ? `bg-[${svgsColor}]` : '')}>
+        <div
+          className={cn(
+            "px-5 bg-primary w-full py-20",
+            svgsColor ? `bg-[${svgsColor}]` : "",
+          )}
+        >
           <div className=" flex flex-col gap-16">
             <DressCode
               IconComponent={() => (
@@ -210,11 +257,12 @@ export default function CeremonyToast({ containerClassName = "", textClassName =
               )}
               sequence={churchSequence}
               title="Código de vestimenta"
-              text="Formal"
+              text={textDressCode}
             >
               <div className="text-accent text-center leading-7 text-md font-nourdBold">
-                <p>¡NO BLANCO!</p>
-                <p>¡NO VERDE!</p>
+                {arrayRestrictions.map((s) => (
+                  <p key={"restriction-" + s}>{s}</p>
+                ))}
               </div>
             </DressCode>
           </div>
