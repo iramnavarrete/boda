@@ -79,13 +79,13 @@ export default function AddToCalendar({addToCalendarBtnClassName = ''}: {addToCa
       window.open(url, "_blank");
       
     } else if (platform === "apple") {
-      const uid = `evento-${invitationData.id}-${Date.now()}@bodajy.info`;
+      const uid = `evento-${invitationData.id}-${Date.now()}@jninvitaciones.com`;
 
       // Se usa un regex para cambiar saltos de línea normales por los "\n" literales requeridos en formato .ics
       const contenidoICS = `
 BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//boda//bodajy.info//ES
+PRODID:-//boda//jninvitaciones.com//ES
 BEGIN:VEVENT
 UID:${uid}
 DTSTAMP:${fechaInicioUTC}

@@ -186,14 +186,18 @@ const Assistants: FC<Props> = ({
                     className={cn("w-1/2 m-auto pb-4")}
                     loop
                     autoPlay
-                    animationData={colorizeLottie(animationData, "heart", {
-                      main: svgsColor || "#000",
-                      secondary: svgsColor|| '#000',
-                      tertiary: svgsColor || '#000',
-                      quarterly: svgsColor|| '#000',
-                      fiftriary: svgsColor || "#000",
-                      sixtriary: svgsColor || '#000',
-                    })}
+                    animationData={
+                      svgsColor
+                        ? colorizeLottie(animationData, "heart", {
+                            main: svgsColor,
+                            secondary: svgsColor,
+                            tertiary: svgsColor,
+                            quarterly: svgsColor,
+                            fiftriary: svgsColor,
+                            sixtriary: svgsColor,
+                          })
+                        : animationData
+                    }
                   />
                 </div>
 
@@ -378,9 +382,7 @@ const Assistants: FC<Props> = ({
                                               )
                                         }`}
                                       >
-                                        <CheckCircle2
-                                          size={18}
-                                        />
+                                        <CheckCircle2 size={18} />
                                         Sí
                                       </button>
 
@@ -402,9 +404,7 @@ const Assistants: FC<Props> = ({
                                               )
                                         }`}
                                       >
-                                        <XCircle
-                                          size={18}
-                                        />
+                                        <XCircle size={18} />
                                         No
                                       </button>
                                     </div>

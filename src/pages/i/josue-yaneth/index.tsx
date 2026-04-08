@@ -90,7 +90,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
               <CountDown />
               <CeremonyToast />
               <Gallery />
-              <GiftsTable />
+              <GiftsTable showCash transfer={{bank: 'bbva', beneficiary: 'Beneficiario', cardNumber: '0000 0000 0000 0000'}} />
               <Assistants />
               <QrPhotos />
               <Footer />
