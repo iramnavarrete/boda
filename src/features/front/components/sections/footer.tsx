@@ -7,6 +7,7 @@ import { useEffect, useRef } from "react";
 import WhatsappIcon from "@/icons/whatsappIcon";
 import CustomLottie from "@/features/shared/components/CustomLottie";
 import { cn } from "@heroui/theme";
+import { colorizeLottie } from "@/utils/lottie";
 
 export default function Footer({
   textClassName = "",
@@ -65,7 +66,7 @@ export default function Footer({
                   ? `[&_path]:!fill-[${svgsColor}]`
                   : "",
               )}
-              animationData={animationData}
+              animationData={svgsColor ? colorizeLottie(animationData, "jn_logo", {main: '#000', secondary: svgsColor}) : animationData}
               lottieRef={playerRef}
               autoPlay={false}
               loop={false}

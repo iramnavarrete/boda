@@ -18,6 +18,7 @@ import { useInvitationStore } from "../../stores/invitationStore";
 import { GuestQuotesService } from "@/services/guestQuotesService";
 import { ActivityService } from "@/services/activityService";
 import { cn } from "@heroui/theme";
+import { colorizeLottie } from "@/utils/lottie";
 
 const defaultGuest: Guest = {
   asistencia: null, // Inicializado como null para que no muestre los campos
@@ -32,13 +33,6 @@ const defaultGuest: Guest = {
   tieneTelefono: false,
   ultimaModificacion: null,
 };
-
-const defaultOptions = {
-  loop: true,
-  animationData,
-  autoplay: true,
-};
-
 const isDefaultId = (id?: string) => id === "_";
 
 type Props = {
@@ -54,17 +48,16 @@ type Props = {
   sealImage?: string;
 };
 
-
 const Assistants: FC<Props> = ({
   containerClassName = "",
   textClassName = "",
   svgsColor,
-  activeConfirmBtnClassName = '',
-  activeDeclineBtnClassName = '',
-  inactiveConfirmBtnClassName = '',
-  inactiveDeclineBtnClassName = '',
-  sendFormBtnClassName = '',
-  sealImage
+  activeConfirmBtnClassName = "",
+  activeDeclineBtnClassName = "",
+  inactiveConfirmBtnClassName = "",
+  inactiveDeclineBtnClassName = "",
+  sendFormBtnClassName = "",
+  sealImage,
 }) => {
   const [isDisabled, setIsDisabled] = useState(false);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
@@ -121,7 +114,12 @@ const Assistants: FC<Props> = ({
 
   if (!guestData) {
     return (
-      <div className={cn("w-full h-24 bg-accent flex justify-center", containerClassName)}>
+      <div
+        className={cn(
+          "w-full h-24 bg-accent flex justify-center",
+          containerClassName,
+        )}
+      >
         <p className={cn("text-primary font-newIconScript", textClassName)}>
           Cargando información...
         </p>
@@ -185,12 +183,17 @@ const Assistants: FC<Props> = ({
                   className={`pt-12 ${isFormSubmitted || (guestData.cambiosPermitidos === false && guestData.asistencia !== true) ? "block" : "hidden"}`}
                 >
                   <CustomLottie
-                    className={cn(
-                      "w-1/2 m-auto pb-4",
-                      svgsColor ? `[&_path]:!fill-[${svgsColor}] [&_path]:!stroke-[${svgsColor}]` : '',
-                    )}
-                    options={defaultOptions}
-                    animationData={animationData}
+                    className={cn("w-1/2 m-auto pb-4")}
+                    loop
+                    autoPlay
+                    animationData={colorizeLottie(animationData, "heart", {
+                      main: svgsColor || "#000",
+                      secondary: svgsColor|| '#000',
+                      tertiary: svgsColor || '#000',
+                      quarterly: svgsColor|| '#000',
+                      fiftriary: svgsColor || "#000",
+                      sixtriary: svgsColor || '#000',
+                    })}
                   />
                 </div>
 
@@ -377,11 +380,6 @@ const Assistants: FC<Props> = ({
                                       >
                                         <CheckCircle2
                                           size={18}
-                                          // className={
-                                          //   values.asistencia === true
-                                          //     ? "text-primary-600"
-                                          //     : "opacity-80"
-                                          // }
                                         />
                                         Sí
                                       </button>
@@ -406,11 +404,6 @@ const Assistants: FC<Props> = ({
                                       >
                                         <XCircle
                                           size={18}
-                                          // className={
-                                          //   values.asistencia === false
-                                          //     ? "text-red-700/80"
-                                          //     : "opacity-80"
-                                          // }
                                         />
                                         No
                                       </button>
@@ -544,6 +537,6 @@ const Assistants: FC<Props> = ({
       </div>
     </div>
   );
-}
+};
 
 export default Assistants;
