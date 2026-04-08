@@ -200,71 +200,82 @@ export const getServerSideProps = async (
 ) => {
   try {
     const host = context.req?.headers?.host || "bodajy.info";
-    // Verificamos si estamos en un entorno seguro (https) o local (http)
     const protocol =
       context.req?.headers?.["x-forwarded-proto"] ||
       (host.includes("localhost") ? "http" : "https");
-    // Construimos la URL Base dinámica
     const baseUrl = `${protocol}://${host}`;
 
-    // 1. Extracción dinámica del ID de la URL
-    const resolvedUrl = context.resolvedUrl || "/i/mariana-erik";
+    const resolvedUrl = context.resolvedUrl || "/i/josue-yaneth";
     const pathWithoutQuery = resolvedUrl.split("?")[0];
     const pathSegments = pathWithoutQuery.split("/").filter(Boolean);
     const INVITATION_ID = pathSegments[pathSegments.length - 1];
 
-    // 2. Consulta a la base de datos
     const { invitation } =
       await InvitationsService.getInvitation(INVITATION_ID);
     if (!invitation) {
       return { notFound: true };
     }
 
-    if (invitation.fecha && typeof invitation.fecha.toDate === "function") {
-      invitation.fechaISO = invitation.fecha.toDate().toISOString();
-    } else if (invitation.fecha instanceof Date) {
-      invitation.fechaISO = invitation.fecha.toISOString();
+    // ── Fecha ISO con zona horaria correcta de Chihuahua ──────────────────────
+    const firestoreDate =
+      typeof invitation.fecha?.toDate === "function"
+        ? invitation.fecha.toDate()
+        : invitation.fecha instanceof Date
+          ? invitation.fecha
+          : null;
+
+    if (firestoreDate) {
+      const horaRecepcion = invitation.recepcion?.hora || "12:00";
+      const [horaStr, minStr] = horaRecepcion.split(":");
+      const hours = parseInt(horaStr, 10);
+      const minutes = parseInt(minStr ?? "0", 10);
+
+      const tz = "America/Chihuahua";
+      const fmt = (opts: Intl.DateTimeFormatOptions) =>
+        new Intl.DateTimeFormat("en-US", { ...opts, timeZone: tz }).format(
+          firestoreDate,
+        );
+
+      const year = fmt({ year: "numeric" });
+      const month = fmt({ month: "2-digit" });
+      const day = fmt({ day: "2-digit" });
+
+      const hh = isNaN(hours) ? "12" : String(hours).padStart(2, "0");
+      const mm = isNaN(minutes) ? "00" : String(minutes).padStart(2, "0");
+
+      // Offset real de Chihuahua en esa fecha (maneja horario de verano automáticamente)
+      const tzNamePart =
+        new Intl.DateTimeFormat("en-US", {
+          timeZone: tz,
+          timeZoneName: "shortOffset",
+        })
+          .formatToParts(firestoreDate)
+          .find((p) => p.type === "timeZoneName")?.value ?? "GMT-6";
+
+      const offsetMatch = tzNamePart.match(/GMT([+-])(\d+)/);
+      const sign = offsetMatch?.[1] ?? "-";
+      const offsetH = (offsetMatch?.[2] ?? "6").padStart(2, "0");
+
+      invitation.fechaISO = `${year}-${month}-${day}T${hh}:${mm}:00${sign}${offsetH}:00`;
+      // Resultado: "2026-05-10T21:00:00-06:00"
     }
+    // ─────────────────────────────────────────────────────────────────────────
 
-    // 2. Tomamos la hora de la recepción (si no existe, usamos "12:00" por defecto)
-    const horaRecepcion = invitation.recepcion?.hora || "12:00";
-    const [hours, minutes] = horaRecepcion.split(":").map(Number);
-
-    // 3. Combinamos el día base con la hora de la recepción
-    const targetDate = new Date(invitation.fecha.toDate());
-    if (!isNaN(hours) && !isNaN(minutes)) {
-      targetDate.setHours(hours, minutes, 0, 0);
-    }
-
-    // 4. Guardamos el resultado en la nueva variable
-    invitation.fechaISO = targetDate.toISOString();
-
-    // 3. Serialización de datos (evita errores de timestamp)
     const serializedData = JSON.parse(JSON.stringify(invitation));
 
-    // 4. PREPARACIÓN DE URLS PARA SEO DIRECTO EN EL SERVIDOR
-
-    // a) Formateo de Imagen Portada a URL Absoluta (usando nuestro baseUrl dinámico)
-    let absoluteImageUrl = `${baseUrl}/img/og-cover.jpg`; // Imagen por defecto
-
+    let absoluteImageUrl = `${baseUrl}/img/og-cover.jpg`;
     if (serializedData.imagenPortada) {
       if (serializedData.imagenPortada.startsWith("http")) {
-        // Ya es absoluta (ej. subida a un bucket externo de Firebase)
         absoluteImageUrl = serializedData.imagenPortada;
       } else {
-        // Es relativa, garantizamos que no se duplique el "/"
         const relativePath = serializedData.imagenPortada.startsWith("/")
           ? serializedData.imagenPortada
           : `/${serializedData.imagenPortada}`;
-
         absoluteImageUrl = `${baseUrl}${relativePath}`;
       }
     }
 
-    // Asignamos la ruta absoluta convertida al objeto serializado
     serializedData.imagenPortada = absoluteImageUrl;
-
-    // b) Agregamos la URL del evento lista para usar en `og:url`
     serializedData.eventUrl = `${baseUrl}/i/${INVITATION_ID}`;
 
     return {
