@@ -94,11 +94,11 @@ export default function Home({ invitationData }: InvitationPageProps) {
                 isSealVisible={!isEnvelopeOpened}
                 imagesConfig={[
                   {
-                    src: "/img/mariana-erik/gallery/g1.webp",
+                    src: "/img/mariana-erik/gallery/g2.webp",
                     style: { backgroundPosition: "center" },
                   },
                   {
-                    src: "/img/mariana-erik/gallery/g2.webp",
+                    src: "/img/mariana-erik/gallery/g1.webp",
                     style: { backgroundPosition: "center" },
                   },
                 ]}
@@ -121,6 +121,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
                 textClassName="text-[#581817]"
                 mapBtnClassName="text-[#581817] border-[#581817] bg-gold/5"
                 containerClassName="#f3ede1"
+                textDressCode="Formal / Vaquero"
               />
               <Gallery
                 svgsColor="#581817"
@@ -159,8 +160,8 @@ export default function Home({ invitationData }: InvitationPageProps) {
                 showCash={true}
                 transfer={{
                   bank: "bbva",
-                  cardNumber: "4152 3139 4438 3681",
-                  beneficiary: "Iram Navarrete",
+                  cardNumber: "4152 3141 7242 0781",
+                  beneficiary: "Mariana Saucedo",
                 }}
               />
               <Assistants
