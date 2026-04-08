@@ -34,8 +34,8 @@ const CardEvent: React.FC<CardEventProps> = ({
   IconComponent,
   title,
   sequence,
-  textClassName = '',
-  mapBtnClassName = ''
+  textClassName = "",
+  mapBtnClassName = "",
 }) => {
   const ref = useRef(null);
   const isInView = useInView(ref);
@@ -107,6 +107,7 @@ interface DressCodeProps {
   title: string;
   sequence: AnimationSequence;
   text: string;
+  arrayRestrictions?: string[];
 }
 
 const DressCode: React.FC<PropsWithChildren<DressCodeProps>> = ({
@@ -149,9 +150,18 @@ type Props = {
   textClassName?: string;
   svgsColor?: string;
   mapBtnClassName?: string;
+  arrayRestrictions?: string[];
+  textDressCode?: string;
 };
 
-export default function CeremonyToast({ containerClassName = "", textClassName = '', svgsColor, mapBtnClassName = '' }: Props) {
+export default function CeremonyToast({
+  containerClassName = "",
+  textClassName = "",
+  svgsColor,
+  mapBtnClassName = "",
+  arrayRestrictions = ["¡NO BLANCO!"],
+  textDressCode = "Formal",
+}: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
 
   return (
@@ -202,7 +212,12 @@ export default function CeremonyToast({ containerClassName = "", textClassName =
             />
           </div>
         </div>
-        <div className={cn("px-5 bg-primary w-full py-20", svgsColor ? `bg-[${svgsColor}]` : '')}>
+        <div
+          className={cn(
+            "px-5 bg-primary w-full py-20",
+            svgsColor ? `bg-[${svgsColor}]` : "",
+          )}
+        >
           <div className=" flex flex-col gap-16">
             <DressCode
               IconComponent={() => (
@@ -210,11 +225,12 @@ export default function CeremonyToast({ containerClassName = "", textClassName =
               )}
               sequence={churchSequence}
               title="Código de vestimenta"
-              text="Formal"
+              text={textDressCode}
             >
               <div className="text-accent text-center leading-7 text-md font-nourdBold">
-                <p>¡NO BLANCO!</p>
-                <p>¡NO VERDE!</p>
+                {arrayRestrictions.map((s) => (
+                  <p key={"restriction-" + s}>{s}</p>
+                ))}
               </div>
             </DressCode>
           </div>
