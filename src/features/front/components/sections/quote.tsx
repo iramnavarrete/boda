@@ -6,9 +6,10 @@ import { FC } from "react";
 type Props = {
   containerClassname?: string;
   svgColor?: string;
+  quote?: string;
 };
 
-const Quote: FC<Props> = ({ containerClassname = "", svgColor }) => {
+const Quote: FC<Props> = ({ containerClassname = "", svgColor, quote }) => {
   return (
     <article
       className={cn(
@@ -21,7 +22,11 @@ const Quote: FC<Props> = ({ containerClassname = "", svgColor }) => {
         <div className="text-md">
           <div className="text-white font-nourdLight text-center">
             <ElegantText
-              text='"Me quedé corto cuando dije para siempre, quiero tres vidas cuando menos junto a ti. Que nuestra historia tenga un principio, pero nunca un fin"'
+              text={
+                quote
+                  ? `"${quote}"`
+                  : "Ves que no es casualidad que estemos aquí de pie, jurándonos amor eterno con tanta fe. Que un para siempre es poco estando a tu lado amándote"
+              }
               duration={0.2}
               delay={0}
             />

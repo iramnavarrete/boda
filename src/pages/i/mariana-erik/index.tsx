@@ -104,7 +104,11 @@ export default function Home({ invitationData }: InvitationPageProps) {
                 ]}
                 musicIconClassName="text-[#581817]"
               />
-              <Quote svgColor="#581817" containerClassname="bg-[#581817]" />
+              <Quote
+                svgColor="#581817"
+                containerClassname="bg-[#581817]"
+                quote="Me quedé corto cuando dije para siempre, quiero tres vidas cuando menos junto a ti. Que nuestra historia tenga un principio, pero nunca un fin"
+              />
               <ParentsGodFathers
                 containerClassName="border-[#581817] bg-gold/20"
                 textClassName="text-[#581817]"
