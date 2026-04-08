@@ -152,6 +152,7 @@ type Props = {
   mapBtnClassName?: string;
   arrayRestrictions?: string[];
   textDressCode?: string;
+  hasNoDinner?: boolean;
 };
 
 export default function CeremonyToast({
@@ -161,6 +162,7 @@ export default function CeremonyToast({
   mapBtnClassName = "",
   arrayRestrictions = ["¡NO BLANCO!"],
   textDressCode = "Formal",
+  hasNoDinner = false,
 }: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
 
@@ -210,6 +212,36 @@ export default function CeremonyToast({
               textClassName={textClassName}
               mapBtnClassName={mapBtnClassName}
             />
+            {hasNoDinner && (
+              <AnimatedEntrance>
+                <div className="flex flex-col items-center justify-center w-full px-4 mt-8 mb-4">
+                  <h2
+                    className={cn(
+                      "text-xl font-newIconScript text-amber-900 mb-6 drop-shadow-[1px_1px_1px_rgba(0,0,0,0.1)]",
+                      textClassName,
+                    )}
+                  >
+                    Información Importante
+                  </h2>
+                  <div className="border border-amber-900/20 rounded-xl p-3 bg-amber-900/5 max-w-md mx-auto">
+                    <p
+                      className={cn(
+                        "text-amber-900 text-center font-nourdLight text-sm",
+                        textClassName,
+                      )}
+                    >
+                      Queremos que disfruten al máximo de nuestra celebración.
+                      Por ello, les informamos que{" "}
+                      <span className="font-bold italic">
+                        no se servirá cena formal
+                      </span>{" "}
+                      durante el evento, para que puedan tomar sus precauciones.
+                      ¡Habrá mucha música, brindis y alegría!
+                    </p>
+                  </div>
+                </div>
+              </AnimatedEntrance>
+            )}
           </div>
         </div>
         <div

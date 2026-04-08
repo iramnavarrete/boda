@@ -122,6 +122,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
                 mapBtnClassName="text-[#581817] border-[#581817] bg-gold/5"
                 containerClassName="#f3ede1"
                 textDressCode="Formal / Vaquero"
+                hasNoDinner
               />
               <Gallery
                 svgsColor="#581817"
