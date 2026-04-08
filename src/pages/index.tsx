@@ -17,7 +17,7 @@ export default function AppCurvedTextured() {
 
         {/* Open Graph / Facebook / WhatsApp */}
         <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://bodajy.info/" />
+        <meta property="og:url" content="https://jninvitaciones.com/" />
         <meta
           property="og:title"
           content="✨ Invitaciones Digitales Premium | Descuento de Apertura"
@@ -28,7 +28,7 @@ export default function AppCurvedTextured() {
         />
         <meta
           property="og:image"
-          content="https://bodajy.info/img/cover_jn.png"
+          content="https://jninvitaciones.com/img/cover_jn.png"
         />
         <meta property="og:image:width" content="1108" />
         <meta property="og:image:height" content="410" />
@@ -47,7 +47,7 @@ export default function AppCurvedTextured() {
         />
         <meta
           name="twitter:image"
-          content="https://bodajy.info/img/cover_jn.png"
+          content="https://jninvitaciones.com/img/cover_jn.png"
         />
       </Head>
       <LandingLayout>
