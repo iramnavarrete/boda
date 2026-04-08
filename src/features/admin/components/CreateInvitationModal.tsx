@@ -220,7 +220,7 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
                 />
                 {!invitationToEdit && (
                   <p className="text-[10px] text-[#A8A29E] mt-1 ml-1">
-                    Este será el enlace: bodajy.info/i/
+                    Este será el enlace: https://jninvitaciones.com/i/
                     <strong>{formData.id || "..."}</strong>
                   </p>
                 )}
