@@ -111,7 +111,7 @@ export const getServerSideProps = async (
   context: GetServerSidePropsContext,
 ) => {
   try {
-    const host = context.req?.headers?.host || "bodajy.info";
+    const host = context.req?.headers?.host || "jninvitaciones.com";
     // Verificamos si estamos en un entorno seguro (https) o local (http)
     const protocol =
       context.req?.headers?.["x-forwarded-proto"] ||
