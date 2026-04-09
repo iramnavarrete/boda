@@ -5,7 +5,7 @@ import { FC, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@heroui/theme";
 
-export function AudioController() {
+export function AudioController({ musicPath = "/music.mp3" }: { musicPath?: string }) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const setAudioRef = useMusicStore((s) => s.setAudioRef);
 
@@ -13,9 +13,9 @@ export function AudioController() {
     if (audioRef.current) {
       setAudioRef(audioRef.current);
     }
-  }, [setAudioRef]); // Solo se llama una vez
+  }, [setAudioRef]);
 
-  return <audio ref={audioRef} loop src="/music.mp3" />;
+  return <audio ref={audioRef} loop src={musicPath} />;
 }
 
 const Music: FC<{iconClassName?: string}> = ({iconClassName = ''}) => {

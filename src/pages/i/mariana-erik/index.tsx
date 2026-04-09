@@ -107,7 +107,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
               <Quote
                 svgColor="#581817"
                 containerClassname="bg-[#581817]"
-                quote="Me quedé corto cuando dije para siempre, quiero tres vidas cuando menos junto a ti. Que nuestra historia tenga un principio, pero nunca un fin"
+                quote="Dios escribió nuestra historia mucho antes de este día; hoy, bajo su bendición, nuestros corazones se unen para amarse y cuidarse por siempre."
               />
               <ParentsGodFathers
                 containerClassName="border-[#581817] bg-gold/20"
@@ -192,7 +192,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
                 containerClassName="bg-gold/5"
                 svgsColor="#581817"
               />
-              <AudioController />
+              <AudioController musicPath="/music/creo-en-ti.mp3" />
             </div>
           </div>
         </div>
