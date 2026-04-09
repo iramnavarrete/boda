@@ -2,6 +2,7 @@ import HeartIcon from "@/icons/heart-icon";
 import JnInvitacionesIcon from "@/icons/jn-invitaciones-icon";
 import theme from "@/utils/theme";
 import { IconBrandFacebook, IconBrandInstagram } from "@tabler/icons-react";
+import Link from "next/link";
 import { useRouter } from "next/router";
 
 const Footer: React.FC = () => {
@@ -25,13 +26,15 @@ const Footer: React.FC = () => {
             </p>
             <div className="flex gap-3 mt-4">
               <a
-                href="#"
+                href="https://www.instagram.com/jn_invitaciones"
+                target="_blank"
                 className="w-8 h-8 rounded-full border border-paper/20 flex items-center justify-center hover:text-primary hover:bg-paper transition-all"
               >
                 <IconBrandInstagram size={16} />
               </a>
               <a
-                href="#"
+                href="https://www.facebook.com/share/1H9VeoN3Ci/"
+                target="_blank"
                 className="w-8 h-8 rounded-full border border-paper/20 flex items-center justify-center hover:text-primary hover:bg-paper transition-all"
               >
                 <IconBrandFacebook size={16} />
@@ -45,25 +48,28 @@ const Footer: React.FC = () => {
             </h5>
             <ul className="space-y-3 text-sm">
               <li>
-                <a href="/#demo" className="hover:text-gold transition-colors">
+                <Link
+                  href="/#demo"
+                  className="hover:text-gold transition-colors"
+                >
                   Características
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/#dashboard"
                   className="hover:text-gold transition-colors"
                 >
                   Gestión inteligente
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/#paquetes"
                   className="hover:text-gold transition-colors"
                 >
                   Precios
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -75,14 +81,17 @@ const Footer: React.FC = () => {
             </h5>
             <ul className="space-y-3 text-sm">
               <li>
-                <a href="#" className="hover:text-gold transition-colors">
+                <Link href="#" className="hover:text-gold transition-colors">
                   Sobre Nosotros
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/admin" className="hover:text-gold transition-colors">
+                <Link
+                  href="/admin"
+                  className="hover:text-gold transition-colors"
+                >
                   Acceso Clientes
-                </a>
+                </Link>
               </li>
               <li>
                 <a
