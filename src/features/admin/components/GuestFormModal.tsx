@@ -8,6 +8,7 @@ import {
   MinusCircle,
   ChevronDown,
   Tag,
+  Calendar,
 } from "lucide-react";
 import Modal from "@/features/shared/components/Modal";
 import { cn } from "@heroui/theme";
@@ -24,11 +25,7 @@ interface GuestFormModalProps {
 }
 
 // Opciones predefinidas de etiquetas
-const TAG_OPTIONS = [
-  "Novia", 
-  "Novio", 
-  "Ambos",
-];
+const TAG_OPTIONS = ["Novia", "Novio", "Ambos"];
 
 const GuestFormModal: React.FC<GuestFormModalProps> = ({
   isOpen,
@@ -53,7 +50,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
       let parsedCode = "52";
       let parsedNum = formData.telefono;
       const codes = ["52", "1", "34", "57", "54", "56"];
-      
+
       for (const code of codes) {
         if (parsedNum.startsWith(code) && parsedNum.length > code.length) {
           parsedCode = code;
@@ -152,7 +149,6 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
         className="flex flex-col flex-1 overflow-hidden min-h-0 bg-sand-light/30"
       >
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          
           {/* Asistencia Toggle */}
           <div className="relative">
             <div className="mb-2 px-1">
@@ -284,11 +280,14 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
               </div>
             </div>
 
-            {/* --- SECCIÓN DE ETIQUETAS (NUEVO) --- */}
+            {/* --- SECCIÓN DE ETIQUETAS --- */}
             <div>
               <label className="flex items-center gap-1.5 text-sm font-medium text-charcoal mb-2 ml-1">
                 <Tag size={14} className="text-gold" />
-                Etiqueta <span className="font-normal text-xs text-stone-400">(Opcional)</span>
+                Etiqueta{" "}
+                <span className="font-normal text-xs text-stone-400">
+                  (Opcional)
+                </span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {TAG_OPTIONS.map((tag) => {
@@ -302,7 +301,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                         "px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border",
                         isSelected
                           ? "bg-gold border-gold text-white shadow-sm shadow-gold/20"
-                          : "bg-white border-sand text-stone-500 hover:border-gold/40 hover:text-charcoal hover:bg-sand-light/50"
+                          : "bg-white border-sand text-stone-500 hover:border-gold/40 hover:text-charcoal hover:bg-sand-light/50",
                       )}
                     >
                       {tag}
@@ -353,10 +352,11 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
-                Nota para invitado <span className="font-normal text-xs">(Opcional)</span>
+                Nota para invitado{" "}
+                <span className="font-normal text-xs">(Opcional)</span>
               </label>
               <textarea
-                style={{fieldSizing: 'content'}}
+                style={{ fieldSizing: "content" }}
                 className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all placeholder:text-stone-300 shadow-sm max-h-20 resize-none"
                 value={formData.notaAnfitrion || ""}
                 onChange={(e) =>
@@ -369,42 +369,101 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
               />
             </div>
 
-            <button
-              type="button"
-              onClick={() =>
-                setFormData({
-                  ...formData,
-                  cambiosPermitidos: !formData.cambiosPermitidos,
-                })
-              }
-              className="flex items-center gap-3 p-3 w-full text-left rounded-xl hover:bg-white/50 transition-colors group"
+            {/* SECCIÓN DE PERMISOS DE EDICIÓN Y FECHA LÍMITE */}
+            <div
+              className={cn(
+                "rounded-xl transition-all",
+                formData.cambiosPermitidos
+                  ? "bg-white border border-sand shadow-sm"
+                  : "border border-transparent hover:bg-white/50",
+              )}
             >
-              <div
-                className={cn(
-                  "w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0",
-                  formData.cambiosPermitidos
-                    ? "bg-gold border-gold text-white"
-                    : "bg-white border-stone-300 text-transparent",
-                )}
+              <button
+                type="button"
+                onClick={() => {
+                  const newState = !formData.cambiosPermitidos;
+                  setFormData({
+                    ...formData,
+                    cambiosPermitidos: newState,
+                    // Si se desactiva, limpiamos la fecha para evitar un bloqueo automático no deseado
+                    ...(!newState ? { fechaLimiteConfirmacion: null } : {}),
+                  });
+                }}
+                className="flex items-center gap-3 p-3 w-full text-left rounded-xl group"
               >
-                <Check size={14} strokeWidth={3} />
-              </div>
-              <div>
-                <span
+                <div
                   className={cn(
-                    "block text-sm font-medium select-none transition-colors",
+                    "w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0",
                     formData.cambiosPermitidos
-                      ? "text-gold"
-                      : "text-stone-custom",
+                      ? "bg-gold border-gold text-white"
+                      : "bg-white border-stone-300 text-transparent group-hover:border-stone-400",
                   )}
                 >
-                  Permitir cambios de asistencia
-                </span>
-                <span className="text-xs text-stone-light hidden sm:block">
-                  Si esta activo, el invitado podrá modificar su respuesta.
-                </span>
-              </div>
-            </button>
+                  <Check size={14} strokeWidth={3} />
+                </div>
+                <div>
+                  <span
+                    className={cn(
+                      "block text-sm font-medium select-none transition-colors",
+                      formData.cambiosPermitidos
+                        ? "text-gold"
+                        : "text-stone-custom",
+                    )}
+                  >
+                    Permitir cambios de asistencia
+                  </span>
+                  <span className="text-xs text-stone-light hidden sm:block">
+                    Si esta activo, el invitado podrá modificar su respuesta.
+                  </span>
+                </div>
+              </button>
+
+              {/* INPUT OPCIONAL DE FECHA LÍMITE */}
+              {formData.cambiosPermitidos && (
+                <div className="pl-11 pr-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
+                    Fecha límite de confirmación{" "}
+                    <span className="font-normal normal-case text-stone-400">
+                      (Opcional)
+                    </span>
+                  </label>
+                  <div className="relative flex items-center">
+                    <Calendar
+                      size={14}
+                      className="absolute left-3 text-stone-400 pointer-events-none"
+                    />
+                    <input
+                      type="date"
+                      className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-sand bg-[#FDFBF7] text-stone-custom focus:bg-white focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all shadow-sm text-sm"
+                      value={formData.fechaLimiteConfirmacion || ""}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          fechaLimiteConfirmacion: e.target.value || null,
+                        })
+                      }
+                    />
+
+                    {/* Botón para limpiar la fecha opcional */}
+                    {formData.fechaLimiteConfirmacion && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData({
+                            ...formData,
+                            fechaLimiteConfirmacion: null,
+                          })
+                        }
+                        className="absolute right-3 p-1 rounded-full text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                        title="Quitar fecha límite"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

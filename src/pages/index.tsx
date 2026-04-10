@@ -24,7 +24,7 @@ export default function AppCurvedTextured() {
         />
         <meta
           property="og:description"
-          content="Sorprende a tus invitados con una experiencia digital única. ¡Aprovecha nuestra promoción exclusiva de lanzamiento y obtén hasta un 20% de descuento antes del 15 de abril! 🥂"
+          content="Sorprende a tus invitados con una experiencia digital única. ¡Aprovecha nuestra promoción exclusiva de lanzamiento y obtén hasta un 20% de descuento durante el mes de abril! 🥂"
         />
         <meta
           property="og:image"

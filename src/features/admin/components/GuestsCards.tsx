@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   XCircle,
   Tag,
+  Bell,
 } from "lucide-react";
 import { Guest } from "@/types";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
@@ -24,6 +25,7 @@ interface GuestsCardsProps {
   onEdit: (guest: Guest) => void;
   onDelete: (guest: Guest) => void;
   onSendWhatsApp: (guest: Guest) => void;
+  onSendReminder: (guest: Guest) => void;
   onLockToggle: (guest: Guest) => void;
 }
 
@@ -34,6 +36,7 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
   onEdit,
   onDelete,
   onSendWhatsApp,
+  onSendReminder,
   onLockToggle,
 }) => {
   const isOneOrMoreSelected = selectedGuests.size > 0;
@@ -185,12 +188,32 @@ const GuestsCards: React.FC<GuestsCardsProps> = ({
                 <div className="flex gap-2">
                   {g.tieneTelefono && (
                     <>
+                      {g.whatsappEnviado === true && (
+                        <button
+                          title="Enviar Recordatorio"
+                          onClick={(e) =>
+                            handleActionButtonClick(e, () => onSendReminder(g))
+                          }
+                          className="p-2 rounded-xl text-orange-500 hover:bg-orange-50 hover:text-orange-600 transition-colors duration-300 border border-sand hover:border-orange-300 shadow-sm relative"
+                        >
+                          <Bell size={18} />
+                          {g.recordatorioEnviado === true && (
+                            <div
+                              title="Recordatorio enviado"
+                              className="absolute bottom-[6px] right-[3px] bg-white rounded-full p-[1px] shadow-sm cursor-help"
+                            >
+                              <CheckCircle2
+                                size={11}
+                                className="text-green-500 bg-green-50 rounded-full"
+                              />
+                            </div>
+                          )}
+                        </button>
+                      )}
                       <button
                         title="Enviar Whatsapp"
                         onClick={(e) =>
-                          handleActionButtonClick(e, () =>
-                            onSendWhatsApp(g),
-                          )
+                          handleActionButtonClick(e, () => onSendWhatsApp(g))
                         }
                         className="p-2 rounded-xl text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors duration-300 border border-sand hover:border-green-600 relative"
                       >

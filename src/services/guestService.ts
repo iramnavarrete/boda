@@ -1,7 +1,6 @@
 import {
   collection,
   doc,
-  setDoc,
   onSnapshot,
   serverTimestamp,
   query,
@@ -9,6 +8,7 @@ import {
   getDoc,
   FirestoreError,
   FirestoreErrorCode,
+  updateDoc,
 } from "firebase/firestore";
 import {
   Guest,
@@ -151,6 +151,7 @@ export const GuestService = {
         asistencia: data.asistencia,
         confirmados: Number(data.confirmados) || 0,
         etiqueta: data.etiqueta,
+        fechaLimiteConfirmacion: data.fechaLimiteConfirmacion,
       };
 
       if (isNew) {
@@ -197,32 +198,72 @@ export const GuestService = {
     invitationId: string | null,
     guestIds: string[],
     shouldLock: boolean,
+    newDate?: string,
   ) => {
     if (!invitationId) {
       return;
     }
-    const batch = writeBatch(db);
+    const timestamp = serverTimestamp();
+    const CHUNK_SIZE = 500;
 
-    guestIds.forEach((id) => {
-      batch.update(doc(db, "invitations", invitationId, "guests", id), {
-        cambiosPermitidos: !shouldLock,
-        ultimaModificacion: serverTimestamp(),
+    for (let i = 0; i < guestIds.length; i += CHUNK_SIZE) {
+      const batch = writeBatch(db);
+      const chunk = guestIds.slice(i, i + CHUNK_SIZE);
+
+      chunk.forEach((guestId) => {
+        const guestRef = doc(
+          db,
+          "invitations",
+          invitationId,
+          "guests",
+          guestId,
+        );
+        const payload: Partial<Guest> = {
+          cambiosPermitidos: !shouldLock,
+          ultimaModificacion: timestamp,
+        };
+
+        // Si estamos DESBLOQUEANDO y mandamos fecha, la guardamos
+        if (!shouldLock && newDate) {
+          if (newDate) {
+            payload.fechaLimiteConfirmacion = newDate;
+          } else {
+            payload.fechaLimiteConfirmacion = null;
+          }
+        }
+
+        batch.update(guestRef, payload);
       });
-    });
-    await batch.commit();
+
+      await batch.commit();
+    }
   },
 
-  toggleGuestLock: async (invitationId: string, guest: Guest) => {
-    const docRef = doc(db, "invitations", invitationId, "guests", guest.id);
+  toggleGuestLock: async (
+    invitationId: string,
+    guest: Guest,
+    forceLock?: boolean,
+    newDate?: string,
+  ) => {
+    const guestRef = doc(db, "invitations", invitationId, "guests", guest.id);
+    const isLocking =
+      forceLock !== undefined ? forceLock : guest.cambiosPermitidos;
 
-    await setDoc(
-      docRef,
-      {
-        cambiosPermitidos: !guest.cambiosPermitidos,
-        ultimaModificacion: serverTimestamp(),
-      },
-      { merge: true },
-    );
+    const payload: Partial<Guest> = {
+      cambiosPermitidos: !isLocking,
+      ultimaModificacion: serverTimestamp(),
+    };
+
+    // Si estamos desbloqueando
+    if (!isLocking) {
+      if (newDate) {
+        payload.fechaLimiteConfirmacion = newDate;
+      } else {
+        payload.fechaLimiteConfirmacion = null;
+      }
+    }
+
+    await updateDoc(guestRef, payload);
   },
 
   batchDeleteGuests: async (invitationId: string, guestIds: string[]) => {
@@ -275,16 +316,49 @@ export const GuestService = {
       };
     }
   },
-  markWhastappSent: async (invitationId: string, guest: Guest) => {
-    const docRef = doc(db, "invitations", invitationId, "guests", guest.id);
 
-    await setDoc(
-      docRef,
-      {
-        whatsappEnviado: true,
-      } as Partial<Guest>,
-      { merge: true },
-    );
+  markWhastappSent: async (
+    invitationId: string,
+    guest: Pick<Guest, "id">,
+    deadlineDate?: string,
+  ) => {
+    const guestRef = doc(db, "invitations", invitationId, "guests", guest.id);
+
+    const payload: Partial<Guest> = {
+      cambiosPermitidos: true,
+      whatsappEnviado: true,
+      fechaWhatsappEnviado: serverTimestamp(),
+    };
+
+    if (deadlineDate) {
+      payload.fechaLimiteConfirmacion = deadlineDate;
+    } else {
+      payload.fechaLimiteConfirmacion = null;
+    }
+
+    await updateDoc(guestRef, payload);
+  },
+
+  markReminderAsSent: async (
+    invitationId: string,
+    guest: Pick<Guest, "id">,
+    deadlineDate?: string,
+  ) => {
+    const guestRef = doc(db, "invitations", invitationId, "guests", guest.id);
+
+    const payload: Partial<Guest> = {
+      cambiosPermitidos: true,
+      recordatorioEnviado: true,
+      fechaRecordatorioEnviado: serverTimestamp(),
+    };
+
+    if (deadlineDate) {
+      payload.fechaLimiteConfirmacion = deadlineDate;
+    } else {
+      payload.fechaLimiteConfirmacion = null;
+    }
+
+    await updateDoc(guestRef, payload);
   },
 
   batchImportGuests: async (
