@@ -10,6 +10,7 @@ interface GuestsGridViewProps {
   onEdit: (guest: Guest) => void;
   onDelete: (guest: Guest) => void;
   onSendWhatsApp: (guest: Guest) => void;
+  onSendReminder: (guest: Guest) => void;
   onLockToggle: (guest: Guest) => void;
   isLoading: boolean;
 }
@@ -21,6 +22,7 @@ export default function GuestsGridView({
   onEdit,
   onDelete,
   onSendWhatsApp,
+  onSendReminder,
   onLockToggle,
   isLoading,
 }: GuestsGridViewProps) {
@@ -60,6 +62,7 @@ export default function GuestsGridView({
       onEdit={onEdit}
       onDelete={onDelete}
       onSendWhatsApp={onSendWhatsApp}
+      onSendReminder={onSendReminder}
       onLockToggle={onLockToggle}
     />
   );

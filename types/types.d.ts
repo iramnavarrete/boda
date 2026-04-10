@@ -17,6 +17,7 @@ export type GuestFormData = {
   notaAnfitrion: string | null;
   cambiosPermitidos: boolean;
   etiqueta?: string | null;
+  fechaLimiteConfirmacion?: string | null;
 };
 
 export type Guest = {
@@ -32,7 +33,11 @@ export type Guest = {
   fechaCreacion: Timestamp | FieldValue | null;
   ultimaModificacion: Timestamp | FieldValue | null;
   whatsappEnviado?: boolean;
+  fechaWhatsappEnviado: Timestamp | FieldValue | null;
   etiqueta?: string | null;
+  fechaLimiteConfirmacion?: string | null;
+  recordatorioEnviado?: boolean;
+  fechaRecordatorioEnviado: Timestamp | FieldValue | null;
 };
 
 export type GuestContactInfo = {
