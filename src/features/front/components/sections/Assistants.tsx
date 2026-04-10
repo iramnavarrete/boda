@@ -71,6 +71,14 @@ const Assistants: FC<Props> = ({
   const searchParams = useSearchParams();
   const id = searchParams?.get("guest");
 
+  const isExpiredLocal = () => {
+    if (!guestData?.fechaLimiteConfirmacion) return false;
+    const dateFormatted = new Date().toLocaleDateString("en-CA");
+    return guestData.fechaLimiteConfirmacion < dateFormatted;
+  };
+
+  const isFormLocked = guestData.cambiosPermitidos === false || isExpiredLocal();
+
   const handleGetGuestData = useCallback(
     (id: string) => {
       if (!isDefaultId(id) && invitationData) {
@@ -201,7 +209,7 @@ const Assistants: FC<Props> = ({
                   />
                 </div>
 
-                {guestData.cambiosPermitidos === false ? (
+                {isFormLocked ? (
                   <div
                     className={cn(
                       "px-6 pt-8 pb-12 font-nourdLight flex flex-col items-center text-primary text-center",
