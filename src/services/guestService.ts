@@ -13,7 +13,6 @@ import {
   CollectionReference,
   Timestamp,
 } from "firebase/firestore";
-import { nanoid } from "nanoid";
 import {
   Guest,
   GuestContactInfo,
@@ -45,10 +44,6 @@ const BATCH_CHUNK_SIZE = 200; // 200 docs × 2 writes = 400 ops, dentro del lím
 const byCreatedDesc = (a: Guest, b: Guest): number =>
   ((b.fechaCreacion as Timestamp)?.seconds ?? 0) -
   ((a.fechaCreacion as Timestamp)?.seconds ?? 0);
-
-// Genera un ID único sin roundtrips a Firestore.
-// Con nanoid(10) la probabilidad de colisión con <100k registros es despreciable (~1 en 10^12).
-const generateGuestId = (): string => nanoid(10);
 
 // ─── Servicio ─────────────────────────────────────────────────────────────────
 
@@ -182,9 +177,9 @@ export const GuestService = {
         cambiosPermitidos: data.cambiosPermitidos ?? true,
         tieneTelefono,
         ultimaModificacion: timestamp,
-        asistencia: data.asistencia,
+        asistencia: data.asistencia || null,
         confirmados: Number(data.confirmados) || 0,
-        etiqueta: data.etiqueta,
+        etiqueta: data.etiqueta || null,
         fechaLimiteConfirmacion: data.fechaLimiteConfirmacion || null,
       };
 
@@ -324,7 +319,9 @@ export const GuestService = {
       const chunk = parsedGuests.slice(i, i + BATCH_CHUNK_SIZE);
 
       // Generamos todos los IDs del chunk en paralelo
-      const guestIds = await Promise.all(chunk.map(() => generateGuestId()));
+      const guestIds = await Promise.all(
+        chunk.map(() => GuestService.getUniqueGuestId(invitationId)),
+      );
 
       chunk.forEach((guest, index) => {
         const guestId = guestIds[index];
