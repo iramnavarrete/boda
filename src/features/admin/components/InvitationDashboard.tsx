@@ -472,7 +472,7 @@ function RecentActivity({
             Actividad Reciente
           </h2>
         </div>
-        <span className="text-[10px] font-bold text-gold-500 bg-[#FDFBF7] border border-sand-200 px-3 py-1 rounded-full uppercase tracking-wider">
+        <span className="text-[10px] font-bold text-gold-500 bg-[#FDFBF7] border border-sand-200 px-3 py-1 rounded-full uppercase tracking-wider min-w-max">
           En vivo
         </span>
       </div>

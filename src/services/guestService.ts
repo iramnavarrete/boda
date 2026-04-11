@@ -6,9 +6,12 @@ import {
   query,
   writeBatch,
   getDoc,
+  updateDoc,
   FirestoreError,
   FirestoreErrorCode,
-  updateDoc,
+  DocumentReference,
+  CollectionReference,
+  Timestamp,
 } from "firebase/firestore";
 import {
   Guest,
@@ -19,7 +22,34 @@ import {
 import { db } from "@/lib/firebase/config";
 import { generateGuestID } from "@/utils/generators";
 
+// ─── Paths ────────────────────────────────────────────────────────────────────
+// Centraliza todas las referencias a Firestore.
+// Si cambia la estructura de la DB, solo se toca aquí.
+
+const paths = {
+  guest: (invId: string, guestId: string): DocumentReference =>
+    doc(db, "invitations", invId, "guests", guestId),
+
+  guestContact: (invId: string, guestId: string): DocumentReference =>
+    doc(db, "invitations", invId, "guests", guestId, "private", "contactInfo"),
+
+  guestsCollection: (invId: string): CollectionReference =>
+    collection(db, "invitations", invId, "guests"),
+};
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const BATCH_CHUNK_SIZE = 200; // 200 docs × 2 writes = 400 ops, dentro del límite de 500
+
+const byCreatedDesc = (a: Guest, b: Guest): number =>
+  ((b.fechaCreacion as Timestamp)?.seconds ?? 0) -
+  ((a.fechaCreacion as Timestamp)?.seconds ?? 0);
+
+// ─── Servicio ─────────────────────────────────────────────────────────────────
+
 export const GuestService = {
+  // ── Suscripción en tiempo real ──────────────────────────────────────────────
+
   subscribeToGuests: (
     invitationId: string,
     callback: (guests: Guest[]) => void,
@@ -27,55 +57,66 @@ export const GuestService = {
   ) => {
     if (!invitationId) return () => {};
 
-    const q = query(collection(db, "invitations", invitationId, "guests"));
+    const q = query(paths.guestsCollection(invitationId));
+
+    // Mantenemos un Map para preservar referencias de objetos no modificados.
+    // Esto permite que React.memo en las tarjetas funcione correctamente:
+    // solo los invitados que cambiaron en Firestore tendrán nueva referencia.
+    const cache = new Map<string, Guest>();
 
     return onSnapshot(
       q,
       (snapshot) => {
-        const data = snapshot.docs.map((doc) => {
-          const d = doc.data();
-          return {
-            id: doc.id,
-            ...d,
-            tieneTelefono: !!d.tieneTelefono,
-          } as Guest;
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "removed") {
+            cache.delete(change.doc.id);
+          } else {
+            const d = change.doc.data();
+            cache.set(change.doc.id, {
+              id: change.doc.id,
+              ...d,
+              tieneTelefono: !!d.tieneTelefono,
+            } as Guest);
+          }
         });
 
-        callback(
-          data.sort(
-            (a, b) =>
-              // @ts-expect-error Se ignora este error por compatibilidad de campos
-              (b.fechaCreacion?.seconds || 0) - (a.fechaCreacion?.seconds || 0),
-          ),
-        );
+        callback(Array.from(cache.values()).sort(byCreatedDesc));
       },
-      (error) => {
-        onError?.(error);
-      },
+      (error) => onError?.(error),
     );
   },
 
-  getGuestContactInfo: async (invitationId: string, guestId: string) => {
-    try {
-      const privateRef = doc(
-        db,
-        "invitations",
-        invitationId,
-        "guests",
-        guestId,
-        "private",
-        "contactInfo",
-      );
-      const snapshot = await getDoc(privateRef);
+  // ── Lectura ─────────────────────────────────────────────────────────────────
 
-      if (snapshot.exists()) {
-        return snapshot.data() as GuestContactInfo;
-      }
-      return null;
+  getGuest: async (
+    invitationId: string,
+    guestId: string,
+  ): Promise<{ guest: Guest | null; error: FirestoreErrorCode | null }> => {
+    try {
+      const snapshot = await getDoc(paths.guest(invitationId, guestId));
+      if (!snapshot.exists()) return { guest: null, error: null };
+      return { guest: snapshot.data() as Guest, error: null };
     } catch (error) {
+      return {
+        guest: null,
+        error: (error as FirestoreError).code ?? "unknown",
+      };
+    }
+  },
+
+  getGuestContactInfo: async (
+    invitationId: string,
+    guestId: string,
+  ): Promise<GuestContactInfo | null> => {
+    try {
+      const snapshot = await getDoc(paths.guestContact(invitationId, guestId));
+      return snapshot.exists() ? (snapshot.data() as GuestContactInfo) : null;
+    } catch {
       return null;
     }
   },
+
+  // ── Escritura individual ────────────────────────────────────────────────────
 
   getUniqueGuestId: async (invitationId: string) => {
     let isUnique = false;
@@ -112,131 +153,62 @@ export const GuestService = {
   ) => {
     const batch = writeBatch(db);
     const timestamp = serverTimestamp();
-
-    const publicRef = doc(db, "invitations", invitationId, "guests", guestId);
-
-    let publicPayload: Partial<Guest> = {};
+    const publicRef = paths.guest(invitationId, guestId);
 
     if (isPublic) {
-      // 🌍 SI ES UN INVITADO PÚBLICO:
-      // Enviamos ÚNICAMENTE los campos permitidos en las reglas de Firestore
-      publicPayload = {
-        asistencia: data.asistencia,
-        confirmados: Number(data.confirmados) || 0,
-        ultimaModificacion: timestamp,
-      } as Partial<Guest>;
+      // Invitado confirmando su asistencia: solo campos permitidos por las reglas de Firestore
+      batch.set(
+        publicRef,
+        {
+          asistencia: data.asistencia,
+          confirmados: Number(data.confirmados) || 0,
+          ultimaModificacion: timestamp,
+        } as Partial<Guest>,
+        { merge: true },
+      );
     } else {
-      const privateRef = doc(
-        db,
-        "invitations",
-        invitationId,
-        "guests",
-        guestId,
-        "private",
-        "contactInfo",
-      );
+      // Admin: escribe todos los campos
+      const tieneTelefono = !!data.telefono?.trim().length;
 
-      const tieneTelefono = !!(
-        data.telefono && data.telefono.trim().length > 0
-      );
-      // 🔒 SI ES EL ADMINISTRADOR:
-      // Enviamos toda la información (Nombre, cantidad permitida, permisos, etc)
-      publicPayload = {
+      const publicPayload: Partial<Guest> = {
         nombre: data.nombre,
         invitados: Number(data.invitados) || 1,
         notaAnfitrion: data.notaAnfitrion || null,
         cambiosPermitidos: data.cambiosPermitidos ?? true,
         tieneTelefono,
         ultimaModificacion: timestamp,
-        asistencia: data.asistencia,
+        asistencia: data.asistencia || null,
         confirmados: Number(data.confirmados) || 0,
-        etiqueta: data.etiqueta,
-        fechaLimiteConfirmacion: data.fechaLimiteConfirmacion,
+        etiqueta: data.etiqueta || null,
+        fechaLimiteConfirmacion: data.fechaLimiteConfirmacion || null,
       };
 
       if (isNew) {
-        publicPayload.id = guestId;
-        publicPayload.fechaCreacion = timestamp;
-        publicPayload.notaInvitado = null;
-        publicPayload.asistencia = null;
-        publicPayload.confirmados = null;
+        Object.assign(publicPayload, {
+          id: guestId,
+          fechaCreacion: timestamp,
+          notaInvitado: null,
+          asistencia: null,
+          confirmados: null,
+        });
       }
 
-      const privatePayload = {
-        telefono: data.telefono || null,
-      };
-
-      batch.set(privateRef, privatePayload, { merge: true });
+      batch.set(
+        paths.guestContact(invitationId, guestId),
+        { telefono: data.telefono || null },
+        { merge: true },
+      );
+      batch.set(publicRef, publicPayload, { merge: true });
     }
-
-    // Usamos merge: true para no borrar los datos del admin cuando el invitado confirma
-    batch.set(publicRef, publicPayload, { merge: true });
 
     await batch.commit();
   },
 
   deleteGuest: async (invitationId: string, guestId: string) => {
     const batch = writeBatch(db);
-    const publicRef = doc(db, "invitations", invitationId, "guests", guestId);
-    const privateRef = doc(
-      db,
-      "invitations",
-      invitationId,
-      "guests",
-      guestId,
-      "private",
-      "contactInfo",
-    );
-
-    batch.delete(privateRef);
-    batch.delete(publicRef);
-
+    batch.delete(paths.guestContact(invitationId, guestId));
+    batch.delete(paths.guest(invitationId, guestId));
     await batch.commit();
-  },
-
-  batchUpdateLock: async (
-    invitationId: string | null,
-    guestIds: string[],
-    shouldLock: boolean,
-    newDate?: string,
-  ) => {
-    if (!invitationId) {
-      return;
-    }
-    const timestamp = serverTimestamp();
-    const CHUNK_SIZE = 500;
-
-    for (let i = 0; i < guestIds.length; i += CHUNK_SIZE) {
-      const batch = writeBatch(db);
-      const chunk = guestIds.slice(i, i + CHUNK_SIZE);
-
-      chunk.forEach((guestId) => {
-        const guestRef = doc(
-          db,
-          "invitations",
-          invitationId,
-          "guests",
-          guestId,
-        );
-        const payload: Partial<Guest> = {
-          cambiosPermitidos: !shouldLock,
-          ultimaModificacion: timestamp,
-        };
-
-        // Si estamos DESBLOQUEANDO y mandamos fecha, la guardamos
-        if (!shouldLock && newDate) {
-          if (newDate) {
-            payload.fechaLimiteConfirmacion = newDate;
-          } else {
-            payload.fechaLimiteConfirmacion = null;
-          }
-        }
-
-        batch.update(guestRef, payload);
-      });
-
-      await batch.commit();
-    }
   },
 
   toggleGuestLock: async (
@@ -245,7 +217,6 @@ export const GuestService = {
     forceLock?: boolean,
     newDate?: string,
   ) => {
-    const guestRef = doc(db, "invitations", invitationId, "guests", guest.id);
     const isLocking =
       forceLock !== undefined ? forceLock : guest.cambiosPermitidos;
 
@@ -254,89 +225,25 @@ export const GuestService = {
       ultimaModificacion: serverTimestamp(),
     };
 
-    // Si estamos desbloqueando
+    // Al desbloquear, siempre establecemos la fecha (null si no se pasa ninguna)
     if (!isLocking) {
-      if (newDate) {
-        payload.fechaLimiteConfirmacion = newDate;
-      } else {
-        payload.fechaLimiteConfirmacion = null;
-      }
+      payload.fechaLimiteConfirmacion = newDate ?? null;
     }
 
-    await updateDoc(guestRef, payload);
+    await updateDoc(paths.guest(invitationId, guest.id), payload);
   },
 
-  batchDeleteGuests: async (invitationId: string, guestIds: string[]) => {
-    const batch = writeBatch(db);
-
-    guestIds.forEach((id) => {
-      const publicRef = doc(db, "invitations", invitationId, "guests", id);
-      const privateRef = doc(
-        db,
-        "invitations",
-        invitationId,
-        "guests",
-        id,
-        "private",
-        "contactInfo",
-      );
-      batch.delete(privateRef);
-      batch.delete(publicRef);
-    });
-
-    await batch.commit();
-  },
-
-  getGuest: async (
-    invitationId: string,
-    guestId: string,
-  ): Promise<{
-    guest: Guest | null;
-    error: FirestoreErrorCode | null;
-  }> => {
-    try {
-      const privateRef = doc(
-        db,
-        "invitations",
-        invitationId,
-        "guests",
-        guestId,
-      );
-      const snapshot = await getDoc(privateRef);
-
-      if (snapshot.exists()) {
-        return { guest: snapshot.data() as Guest, error: null };
-      }
-      return { guest: null, error: null };
-    } catch (error) {
-      const firestoreError = error as FirestoreError;
-      return {
-        guest: null,
-        error: firestoreError.code || "Error desconocido",
-      };
-    }
-  },
-
-  markWhastappSent: async (
+  markWhatsAppSent: async (
     invitationId: string,
     guest: Pick<Guest, "id">,
     deadlineDate?: string,
   ) => {
-    const guestRef = doc(db, "invitations", invitationId, "guests", guest.id);
-
-    const payload: Partial<Guest> = {
+    await updateDoc(paths.guest(invitationId, guest.id), {
       cambiosPermitidos: true,
       whatsappEnviado: true,
       fechaWhatsappEnviado: serverTimestamp(),
-    };
-
-    if (deadlineDate) {
-      payload.fechaLimiteConfirmacion = deadlineDate;
-    } else {
-      payload.fechaLimiteConfirmacion = null;
-    }
-
-    await updateDoc(guestRef, payload);
+      fechaLimiteConfirmacion: deadlineDate ?? null,
+    } as Partial<Guest>);
   },
 
   markReminderAsSent: async (
@@ -344,56 +251,83 @@ export const GuestService = {
     guest: Pick<Guest, "id">,
     deadlineDate?: string,
   ) => {
-    const guestRef = doc(db, "invitations", invitationId, "guests", guest.id);
-
-    const payload: Partial<Guest> = {
+    await updateDoc(paths.guest(invitationId, guest.id), {
       cambiosPermitidos: true,
       recordatorioEnviado: true,
       fechaRecordatorioEnviado: serverTimestamp(),
-    };
+      fechaLimiteConfirmacion: deadlineDate ?? null,
+    } as Partial<Guest>);
+  },
 
-    if (deadlineDate) {
-      payload.fechaLimiteConfirmacion = deadlineDate;
-    } else {
-      payload.fechaLimiteConfirmacion = null;
+  // ── Operaciones en lote ─────────────────────────────────────────────────────
+
+  batchUpdateLock: async (
+    invitationId: string | null,
+    guestIds: string[],
+    shouldLock: boolean,
+    newDate?: string,
+  ) => {
+    if (!invitationId) return;
+
+    for (let i = 0; i < guestIds.length; i += BATCH_CHUNK_SIZE) {
+      const batch = writeBatch(db);
+      const chunk = guestIds.slice(i, i + BATCH_CHUNK_SIZE);
+
+      chunk.forEach((guestId) => {
+        const payload: Partial<Guest> = {
+          cambiosPermitidos: !shouldLock,
+          ultimaModificacion: serverTimestamp(),
+        };
+
+        // Al desbloquear, siempre establecemos la fecha (null si no se pasa ninguna)
+        if (!shouldLock) {
+          payload.fechaLimiteConfirmacion = newDate ?? null;
+        }
+
+        batch.update(paths.guest(invitationId, guestId), payload);
+      });
+
+      await batch.commit();
     }
+  },
 
-    await updateDoc(guestRef, payload);
+  batchDeleteGuests: async (invitationId: string, guestIds: string[]) => {
+    // Delete también respeta el límite de 500, pero son solo deletes (1 op c/u × 2 refs)
+    for (let i = 0; i < guestIds.length; i += BATCH_CHUNK_SIZE) {
+      const batch = writeBatch(db);
+      const chunk = guestIds.slice(i, i + BATCH_CHUNK_SIZE);
+
+      chunk.forEach((id) => {
+        batch.delete(paths.guestContact(invitationId, id));
+        batch.delete(paths.guest(invitationId, id));
+      });
+
+      await batch.commit();
+    }
   },
 
   batchImportGuests: async (
     invitationId: string,
     parsedGuests: ImportedGuest[],
   ) => {
-    const batch = writeBatch(db);
     const timestamp = serverTimestamp();
 
-    // ✅ Promise.all espera TODOS los async antes de continuar
-    await Promise.all(
-      parsedGuests.map(async (guest) => {
-        const guestId = await GuestService.getUniqueGuestId(invitationId);
-        const publicRef = doc(
-          db,
-          "invitations",
-          invitationId,
-          "guests",
-          guestId,
-        );
-        const privateRef = doc(
-          db,
-          "invitations",
-          invitationId,
-          "guests",
-          guestId,
-          "private",
-          "contactInfo",
-        );
+    // Procesamos en chunks para no superar el límite de 500 ops por batch.
+    // Cada invitado = 2 writes (public + private) → chunk de 200 = 400 ops máx.
+    for (let i = 0; i < parsedGuests.length; i += BATCH_CHUNK_SIZE) {
+      const batch = writeBatch(db);
+      const chunk = parsedGuests.slice(i, i + BATCH_CHUNK_SIZE);
 
-        const tieneTelefono = !!(
-          guest.telefono && guest.telefono.trim().length > 0
-        );
+      // Generamos todos los IDs del chunk en paralelo
+      const guestIds = await Promise.all(
+        chunk.map(() => GuestService.getUniqueGuestId(invitationId)),
+      );
 
-        batch.set(publicRef, {
+      chunk.forEach((guest, index) => {
+        const guestId = guestIds[index];
+        const tieneTelefono = !!guest.telefono?.trim().length;
+
+        batch.set(paths.guest(invitationId, guestId), {
           id: guestId,
           nombre: guest.nombre,
           invitados: Number(guest.invitados) || 1,
@@ -407,11 +341,12 @@ export const GuestService = {
           notaInvitado: null,
         });
 
-        batch.set(privateRef, { telefono: guest.telefono || null });
-      }),
-    );
+        batch.set(paths.guestContact(invitationId, guestId), {
+          telefono: guest.telefono || null,
+        });
+      });
 
-    // ✅ Commit solo cuando todos los .set() ya están listos
-    await batch.commit();
+      await batch.commit();
+    }
   },
 };

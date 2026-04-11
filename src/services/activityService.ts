@@ -48,7 +48,7 @@ export const ActivityService = {
    */
   subscribeToRecentActivity: (
     invitationId: string,
-    limitCount: number = 20,
+    limitCount: number = 30,
     callback: (activities: GuestActivity[]) => void,
   ) => {
     const q = query(

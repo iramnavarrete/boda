@@ -439,7 +439,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          fechaLimiteConfirmacion: e.target.value || null,
+                          fechaLimiteConfirmacion: e.target.value !== "" ? e.target.value : null,
                         })
                       }
                     />
