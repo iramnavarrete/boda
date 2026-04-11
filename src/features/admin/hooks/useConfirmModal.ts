@@ -20,7 +20,7 @@ export function useConfirmModal() {
     setConfirmModal({ ...config, isLoading: false });
   };
 
-  const closeConfirmModal = () => {
+  const closeConfirmModal: () => void = () => {
     setConfirmModal((prev) => ({ ...prev, isOpen: false }));
   };
 

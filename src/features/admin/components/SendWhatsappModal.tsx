@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
 import { X, BellRing, Info, Unlock, Check } from "lucide-react";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { useState } from "react";
 import Modal from "@/features/shared/components/Modal";
 
 interface SendWhatsappModalProps {
@@ -18,54 +18,53 @@ export default function SendWhatsappModal({
   onClose,
   onConfirm,
 }: SendWhatsappModalProps) {
-  const [limitDate, setLimitDate] = useState("");
+  const storageKey =
+    type === "initial" ? "whatsapp_initial_date" : "whatsapp_reminder_date";
+
+  const [limitDate, setLimitDate] = useState(
+    () => localStorage.getItem(storageKey) || "",
+  );
   const [isAutoBlockEnabled, setIsAutoBlockEnabled] = useState(true);
 
-  // Cargar la fecha correspondiente del localStorage
-  useEffect(() => {
-    if (isOpen) {
-      const storageKey =
-        type === "initial" ? "whatsapp_initial_date" : "whatsapp_reminder_date";
-      const savedDate = localStorage.getItem(storageKey);
-      setLimitDate(savedDate || "");
-      // Reseteamos el checkbox al abrir el modal
-      setIsAutoBlockEnabled(true);
-    }
-  }, [isOpen, type]);
+  const isInitial = type === "initial";
 
   const handleConfirm = () => {
     if (!limitDate) return;
-    const storageKey =
-      type === "initial" ? "whatsapp_initial_date" : "whatsapp_reminder_date";
     localStorage.setItem(storageKey, limitDate);
-    // Pasamos la fecha y el booleano al componente padre
     onConfirm(limitDate, isAutoBlockEnabled);
   };
-
-  const isInitial = type === "initial";
 
   return (
     <Modal isOpen={isOpen} onBackdropPress={onClose}>
       <div className="p-8">
-        <div className=" flex items-center gap-3 mb-4">
-
-        <div
-          className={`w-10 h-10 rounded-full flex items-center justify-center border shadow-sm ${isInitial ? "bg-[#E7F3EF] text-[#2D5B4F] border-[#CFE5DD]" : "bg-[#FFF8E1] text-[#B78103] border-[#FFECB3]"}`}
-        >
-          {isInitial ? <IconBrandWhatsapp size={22} /> : <BellRing size={22} />}
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-4">
+          <div
+            className={`w-10 h-10 rounded-full flex items-center justify-center border shadow-sm ${
+              isInitial
+                ? "bg-[#E7F3EF] text-[#2D5B4F] border-[#CFE5DD]"
+                : "bg-[#FFF8E1] text-[#B78103] border-[#FFECB3]"
+            }`}
+          >
+            {isInitial ? (
+              <IconBrandWhatsapp size={22} />
+            ) : (
+              <BellRing size={22} />
+            )}
+          </div>
+          <h3 className="text-xl font-serif font-bold text-[#2C2C29]">
+            {isInitial ? "Enviar Invitación" : "Enviar Recordatorio"}
+          </h3>
         </div>
 
-        <h3 className="text-xl font-serif font-bold text-[#2C2C29]">
-          {isInitial ? "Enviar Invitación" : "Enviar Recordatorio"}
-        </h3>
-        </div>
-
+        {/* Descripción */}
         <p className="text-sm text-[#5A5A5A] mb-4 leading-relaxed">
           Se enviará un {isInitial ? "mensaje" : "recordatorio"} a{" "}
           <b className="text-[#2C2C29]">{guestName}</b>. Selecciona la fecha
           límite de respuesta:
         </p>
 
+        {/* Fecha límite */}
         <div className="mb-4">
           <label className="block text-[10px] font-bold text-[#C5A669] uppercase tracking-widest mb-2">
             Fecha Límite
@@ -78,7 +77,7 @@ export default function SendWhatsappModal({
           />
         </div>
 
-        {/* CHECKBOX DE BLOQUEO AUTOMÁTICO CON TOOLTIP FLOTANTE */}
+        {/* Checkbox de bloqueo automático */}
         <div className="flex items-center justify-between gap-3 mb-6 relative">
           <label className="flex items-start gap-3 cursor-pointer group select-none flex-1">
             <div className="relative flex items-center justify-center shrink-0 mt-0.5">
@@ -99,33 +98,29 @@ export default function SendWhatsappModal({
             </span>
           </label>
 
-          {/* ICONO CON TOOLTIP */}
+          {/* Tooltip */}
           <div className="relative group/tooltip flex items-center justify-center cursor-help shrink-0 p-1">
             <Info
               size={18}
               className="text-[#C5A669] hover:text-[#B39358] transition-colors"
             />
-
-            {/* Contenido del Tooltip */}
-            <div className="absolute bottom-full right-0 mb-2 w-64 p-4 bg-white border border-[#EBE5DA] shadow-[0_10px_40px_-10px_rgba(44,44,41,0.2)] rounded-2xl text-xs text-[#5A5A5A] opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 pointer-events-none">
+            <div className="absolute bottom-full -right-1.5 mb-2 w-64 p-4 bg-white border border-[#EBE5DA] shadow-[0_10px_40px_-10px_rgba(44,44,41,0.2)] rounded-2xl text-xs text-[#5A5A5A] opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 pointer-events-none">
               <p className="leading-relaxed mb-2">
-                El día siguiente de la fecha que selecciones, se bloquearán
-                las ediciones del invitado automáticamente.
+                El día siguiente de la fecha que selecciones, se bloquearán las
+                ediciones del invitado automáticamente.
               </p>
               <p className="leading-relaxed">
                 Para habilitarla de nuevo, haz clic en{" "}
                 <Unlock size={10} className="inline mb-0.5" />{" "}
                 <b>Cambios bloqueados</b> desde tu panel.
               </p>
-
-              {/* Flechita del tooltip (Triángulo invertido) */}
-              <div className="absolute top-full right-2 border-[6px] border-transparent border-t-white"></div>
-              <div className="absolute top-full right-2 border-[7px] border-transparent border-t-[#EBE5DA] -z-10 mt-[1px]"></div>
+              <div className="absolute top-full right-3 border-[6px] border-transparent border-t-white" />
+              <div className="absolute top-full right-3 border-[7px] border-transparent border-t-[#EBE5DA] -z-10 mt-[1px]" />
             </div>
           </div>
         </div>
 
-        {/* BOTONES DE ACCIÓN */}
+        {/* Botones */}
         <div className="flex flex-col gap-3">
           <div className="flex gap-3">
             <button
@@ -137,12 +132,15 @@ export default function SendWhatsappModal({
             <button
               onClick={handleConfirm}
               disabled={!limitDate}
-              className={`flex-1 px-4 py-3.5 rounded-xl text-white font-bold shadow-lg transition-all disabled:opacity-50 disabled:pointer-events-none text-sm ${isInitial ? "bg-[#C5A669] hover:bg-[#B39358] shadow-[#C5A669]/20" : "bg-orange-500 hover:bg-orange-600 shadow-orange-500/20"}`}
+              className={`flex-1 px-4 py-3.5 rounded-xl text-white font-bold shadow-lg transition-all disabled:opacity-50 disabled:pointer-events-none text-sm ${
+                isInitial
+                  ? "bg-[#C5A669] hover:bg-[#B39358] shadow-[#C5A669]/20"
+                  : "bg-orange-500 hover:bg-orange-600 shadow-orange-500/20"
+              }`}
             >
               Enviar
             </button>
           </div>
-
           <button
             onClick={() => onConfirm(null, false)}
             className="w-full py-2.5 text-xs font-bold text-[#A8A29E] hover:text-[#5A5A5A] uppercase tracking-widest transition-colors active:scale-95"

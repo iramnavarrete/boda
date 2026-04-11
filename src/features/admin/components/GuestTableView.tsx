@@ -1,20 +1,16 @@
-import React, { MouseEvent } from "react";
+import React, { memo, useCallback } from "react";
 import {
   CheckSquare,
   Square,
   Clock,
   CheckCircle2,
   XCircle,
-  Unlock,
-  Lock,
-  Eye,
-  Trash2,
   Tag,
-  Bell,
 } from "lucide-react";
-import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { Guest } from "@/types";
 import { useRouter } from "next/router";
+import { cn } from "@heroui/theme";
+import { GuestActionButtons, GuestLockButton } from "./GuestActionButtons";
 
 interface GuestsTableViewProps {
   filteredGuests: Guest[];
@@ -27,6 +23,151 @@ interface GuestsTableViewProps {
   onLockToggle: (guest: Guest) => void;
 }
 
+interface GuestRowProps {
+  guest: Guest;
+  isSelected: boolean;
+  isAnySelected: boolean;
+  invitationId: string | string[] | undefined;
+  onSelectGuest: (id: string) => void;
+  onEdit: (guest: Guest) => void;
+  onDelete: (guest: Guest) => void;
+  onSendWhatsApp: (guest: Guest) => void;
+  onSendReminder: (guest: Guest) => void;
+  onLockToggle: (guest: Guest) => void;
+}
+
+const statusStyles = (asistencia: boolean | null) =>
+  asistencia === true
+    ? "bg-[#E7F3EF] text-[#2D5B4F] border-[#CFE5DD]"
+    : asistencia === false
+      ? "bg-[#F9EAE9] text-[#853935] border-[#EED7D6]"
+      : "bg-[#F5F5F4] text-[#78716C] border-[#E7E5E4]";
+
+const GuestRow = memo(
+  ({
+    guest: g,
+    isSelected,
+    isAnySelected,
+    invitationId,
+    onSelectGuest,
+    onEdit,
+    onDelete,
+    onSendWhatsApp,
+    onSendReminder,
+    onLockToggle,
+  }: GuestRowProps) => {
+    return (
+      <tr
+        onClick={() => (isAnySelected ? onSelectGuest(g.id) : onEdit(g))}
+        className={cn(
+          "border-b last:border-b-0 border-[#EBE5DA] transition-colors cursor-pointer group",
+          isSelected ? "bg-[#FDFBF7]" : "hover:bg-[#F9F7F2]/50 bg-white",
+        )}
+      >
+        {/* Checkbox */}
+        <td className="p-4 text-center align-middle">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectGuest(g.id);
+            }}
+            className={cn(
+              "p-1 rounded-lg transition-colors",
+              isSelected
+                ? "text-[#2C2C29]"
+                : "text-[#A8A29E] group-hover:text-[#2C2C29]",
+            )}
+          >
+            {isSelected ? <CheckSquare size={20} /> : <Square size={20} />}
+          </button>
+        </td>
+
+        {/* Nombre */}
+        <td className="p-2 align-middle">
+          <h3
+            className={cn(
+              "font-serif text-base font-bold leading-snug transition-colors",
+              isSelected ? "text-[#C5A669]" : "text-[#2C2C29]",
+            )}
+          >
+            {g.nombre}
+          </h3>
+        </td>
+
+        {/* Etiqueta */}
+        <td className="p-2 align-middle">
+          {g.etiqueta && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#EBE5DA] bg-[#FDFBF7] text-[#C5A669]">
+              <Tag size={10} />
+              {g.etiqueta}
+            </span>
+          )}
+        </td>
+
+        {/* Asistencia */}
+        <td className="p-2 align-middle">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border",
+              statusStyles(g.asistencia),
+            )}
+          >
+            {g.asistencia === null ? (
+              <Clock size={12} />
+            ) : g.asistencia === true ? (
+              <CheckCircle2 size={12} />
+            ) : (
+              <XCircle size={12} />
+            )}
+            <span>
+              {g.asistencia === true ? g.confirmados : 0}/{g.invitados}
+            </span>
+          </span>
+        </td>
+
+        {/* Edición */}
+        <td className="p-2 align-middle">
+          <fieldset
+            disabled={isAnySelected}
+            className="disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <GuestLockButton
+              guest={g}
+              onClick={(e) => {
+                e.stopPropagation();
+                onLockToggle(g);
+              }}
+            />
+          </fieldset>
+        </td>
+
+        {/* Acciones */}
+        <td className="p-2 align-middle text-right">
+          <fieldset
+            disabled={isAnySelected}
+            className="disabled:opacity-30 disabled:pointer-events-none"
+          >
+            <GuestActionButtons
+              guest={g}
+              invitationId={invitationId}
+              onSendWhatsApp={onSendWhatsApp}
+              onSendReminder={onSendReminder}
+              onDelete={onDelete}
+            />
+          </fieldset>
+        </td>
+      </tr>
+    );
+  },
+  (prev, next) =>
+    prev.guest === next.guest &&
+    prev.isSelected === next.isSelected &&
+    prev.isAnySelected === next.isAnySelected,
+);
+
+GuestRow.displayName = "GuestRow";
+
 const GuestsTableView: React.FC<GuestsTableViewProps> = ({
   filteredGuests: guests = [],
   selectedGuests,
@@ -37,30 +178,24 @@ const GuestsTableView: React.FC<GuestsTableViewProps> = ({
   onSendReminder,
   onLockToggle,
 }) => {
-  const safeSelectedGuests = selectedGuests || new Set();
-  const isOneOrMoreSelected = safeSelectedGuests.size > 0;
+  const { query } = useRouter();
+  const isAnySelected = selectedGuests.size > 0;
 
-  const router = useRouter();
-
-  const { invitationId } = router.query;
-
-  const handleActionButtonClick = (
-    event: MouseEvent<HTMLButtonElement>,
-    callback: () => void,
-  ) => {
-    event.stopPropagation();
-    callback();
-  };
-
-  const getStatusStyles = (asistencia: boolean | null) => {
-    if (asistencia === true) {
-      return "bg-[#E7F3EF] text-[#2D5B4F] border-[#CFE5DD]";
-    } else if (asistencia === false) {
-      return "bg-[#F9EAE9] text-[#853935] border-[#EED7D6]";
-    } else {
-      return "bg-[#F5F5F4] text-[#78716C] border-[#E7E5E4]";
-    }
-  };
+  const handleSelect = useCallback(
+    (id: string) => onSelectGuest(id),
+    [onSelectGuest],
+  );
+  const handleEdit = useCallback((g: Guest) => onEdit(g), [onEdit]);
+  const handleDelete = useCallback((g: Guest) => onDelete(g), [onDelete]);
+  const handleWhatsApp = useCallback(
+    (g: Guest) => onSendWhatsApp(g),
+    [onSendWhatsApp],
+  );
+  const handleReminder = useCallback(
+    (g: Guest) => onSendReminder(g),
+    [onSendReminder],
+  );
+  const handleLock = useCallback((g: Guest) => onLockToggle(g), [onLockToggle]);
 
   if (!Array.isArray(guests)) return null;
 
@@ -69,7 +204,7 @@ const GuestsTableView: React.FC<GuestsTableViewProps> = ({
       <table className="w-full text-left border-collapse min-w-[800px]">
         <thead>
           <tr className="bg-[#FDFBF7] border-b border-[#EBE5DA] text-[10px] uppercase tracking-widest text-[#A8A29E] select-none">
-            <th className="p-3 w-14 text-center"></th>
+            <th className="p-3 w-14 text-center" />
             <th className="p-3 font-bold text-[#5A5A5A]">Invitado</th>
             <th className="p-3 font-bold text-[#5A5A5A]">Etiqueta</th>
             <th className="p-3 font-bold text-[#5A5A5A]">Asistencia</th>
@@ -80,224 +215,21 @@ const GuestsTableView: React.FC<GuestsTableViewProps> = ({
           </tr>
         </thead>
         <tbody className="text-sm">
-          {guests.map((g) => {
-            const isSelected = safeSelectedGuests.has(g.id);
-            return (
-              <tr
-                key={g.id}
-                onClick={() => {
-                  if (isOneOrMoreSelected) {
-                    onSelectGuest(g.id);
-                  } else {
-                    onEdit(g);
-                  }
-                }}
-                className={`
-                  border-b last:border-b-0 border-[#EBE5DA] transition-colors cursor-pointer group
-                  ${isSelected ? "bg-[#FDFBF7]" : "hover:bg-[#F9F7F2]/50 bg-white"}
-                `}
-              >
-                {/* 1. CHECKBOX */}
-                <td className="p-4 text-center align-middle">
-                  <button
-                    type="button"
-                    onClick={(e) =>
-                      handleActionButtonClick(e, () => onSelectGuest(g.id))
-                    }
-                    className={`
-                      p-1 rounded-lg transition-colors
-                      ${isSelected ? "text-[#2C2C29]" : "text-[#A8A29E] group-hover:text-[#2C2C29]"}
-                    `}
-                  >
-                    {isSelected ? (
-                      <CheckSquare size={20} />
-                    ) : (
-                      <Square size={20} />
-                    )}
-                  </button>
-                </td>
-
-                {/* 2. INFO PRINCIPAL */}
-                <td className="p-2 align-middle">
-                  <div>
-                    <h3
-                      className={`font-serif text-base font-bold leading-snug mb-1 transition-colors ${isSelected ? "text-[#C5A669]" : "text-[#2C2C29]"}`}
-                    >
-                      {g.nombre}
-                    </h3>
-                  </div>
-                </td>
-
-                {/* Etiqueta */}
-                <td className="p-2 align-middle">
-                  {g.etiqueta && (
-                    <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#EBE5DA] bg-[#FDFBF7] text-[#C5A669]">
-                      <Tag size={10} />
-                      {g.etiqueta}
-                    </span>
-                  )}
-                </td>
-
-                {/* 3. ASISTENCIA (BADGE) */}
-                <td className="p-2 align-middle">
-                  <span
-                    className={`
-                      inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border
-                      ${getStatusStyles(g.asistencia)}
-                    `}
-                  >
-                    {g.asistencia === null ? (
-                      <Clock size={12} />
-                    ) : g.asistencia === true ? (
-                      <CheckCircle2 size={12} />
-                    ) : (
-                      <XCircle size={12} />
-                    )}
-                    <span>
-                      {g.asistencia === true ? g.confirmados : 0}/{g.invitados}
-                    </span>
-                  </span>
-                </td>
-
-                {/* 4. PERMISOS DE EDICIÓN */}
-                <td className="p-2 align-middle">
-                  <button
-                    type="button"
-                    disabled={isOneOrMoreSelected}
-                    onClick={(e) =>
-                      handleActionButtonClick(e, () => onLockToggle(g))
-                    }
-                    className={`
-                      inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-colors disabled:opacity-30 disabled:pointer-events-none
-                      ${
-                        g.cambiosPermitidos
-                          ? "text-[#2D5B4F] bg-[#E7F3EF] hover:bg-[#D4EBE4]"
-                          : "text-[#853935] bg-[#F9EAE9] hover:bg-[#F3DCD9]"
-                      }
-                    `}
-                    title={
-                      g.cambiosPermitidos
-                        ? "Bloquear edición"
-                        : "Permitir edición"
-                    }
-                  >
-                    {g.cambiosPermitidos ? (
-                      <Unlock size={14} />
-                    ) : (
-                      <Lock size={14} />
-                    )}
-                    <span>
-                      Cambios{" "}
-                      {g.cambiosPermitidos ? "permitidos" : "bloqueados"}
-                    </span>
-                  </button>
-                </td>
-
-                {/* 5. BOTONES DE ACCIÓN */}
-                <td className="p-2 align-middle text-right">
-                  <fieldset
-                    disabled={isOneOrMoreSelected}
-                    className="transition-opacity duration-300 disabled:opacity-30 disabled:pointer-events-none"
-                  >
-                    <div className="flex items-center justify-end gap-2">
-                      {/* Botón WhatsApp */}
-                      {g.tieneTelefono && (
-                        <>
-                          {g.whatsappEnviado === true && (
-                            <button
-                              title="Enviar Recordatorio"
-                              onClick={(e) =>
-                                handleActionButtonClick(e, () =>
-                                  onSendReminder(g),
-                                )
-                              }
-                              className="p-2 rounded-xl text-orange-500 hover:bg-orange-50 hover:text-orange-600 transition-colors duration-300 border border-sand hover:border-orange-300 shadow-sm relative"
-                            >
-                              <Bell size={18} />
-                              {g.recordatorioEnviado === true && (
-                                <div
-                                  title="Recordatorio enviado"
-                                  className="absolute bottom-[6px] right-[3px] bg-white rounded-full p-[1px] shadow-sm cursor-help"
-                                >
-                                  <CheckCircle2
-                                    size={11}
-                                    className="text-green-500 bg-green-50 rounded-full"
-                                  />
-                                </div>
-                              )}
-                            </button>
-                          )}
-                          <button
-                            title="Enviar Whatsapp"
-                            onClick={(e) =>
-                              handleActionButtonClick(e, () =>
-                                onSendWhatsApp(g),
-                              )
-                            }
-                            className="p-2 rounded-xl text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors duration-300 border border-sand hover:border-green-600 relative"
-                          >
-                            <IconBrandWhatsapp className="w-4 h-4" />
-                            {g.whatsappEnviado === true ? (
-                              <div
-                                title="Whatsapp enviado"
-                                className="absolute bottom-[6px] right-[3px] bg-white rounded-full p-[1px] shadow-sm cursor-help"
-                              >
-                                <CheckCircle2
-                                  size={10}
-                                  className="text-green-500 bg-green-50 rounded-full"
-                                />
-                              </div>
-                            ) : (
-                              <div
-                                title="Whatsapp pendiente de enviar"
-                                className="absolute bottom-[6px] right-[3px] bg-white rounded-full p-[1px] shadow-sm cursor-help"
-                              >
-                                <Clock
-                                  size={10}
-                                  className="text-sand-400 bg-green-50 rounded-full"
-                                />
-                              </div>
-                            )}
-                          </button>
-                        </>
-                      )}
-
-                      {/* Botón Preview */}
-                      <button
-                        type="button"
-                        disabled={isOneOrMoreSelected}
-                        onClick={(e) =>
-                          handleActionButtonClick(e, () =>
-                            window.open(
-                              `/i/${invitationId}?guest=${g.id}&preview=1&token=AQWOLdldspWRKDOSAKkwqppals`,
-                              "_blank",
-                            ),
-                          )
-                        }
-                        className="p-2 rounded-lg text-[#5A5A5A] bg-[#FDFBF7] hover:bg-white hover:text-[#2C2C29] transition-all border border-[#EBE5DA] disabled:opacity-30 disabled:pointer-events-none"
-                        title="Vista previa / Editar"
-                      >
-                        <Eye size={16} />
-                      </button>
-
-                      {/* Botón Eliminar */}
-                      <button
-                        type="button"
-                        disabled={isOneOrMoreSelected}
-                        onClick={(e) =>
-                          handleActionButtonClick(e, () => onDelete(g))
-                        }
-                        className="p-2 rounded-lg text-[#853935] bg-white border border-[#EBE5DA] hover:bg-[#F9EAE9] hover:text-[#B71C1C] hover:border-[#EED7D6] transition-all disabled:opacity-30 disabled:pointer-events-none"
-                        title="Eliminar"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </fieldset>
-                </td>
-              </tr>
-            );
-          })}
+          {guests.map((g) => (
+            <GuestRow
+              key={g.id}
+              guest={g}
+              isSelected={selectedGuests.has(g.id)}
+              isAnySelected={isAnySelected}
+              invitationId={query.invitationId}
+              onSelectGuest={handleSelect}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onSendWhatsApp={handleWhatsApp}
+              onSendReminder={handleReminder}
+              onLockToggle={handleLock}
+            />
+          ))}
         </tbody>
       </table>
     </div>
