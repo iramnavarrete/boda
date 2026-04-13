@@ -66,6 +66,7 @@ export interface DashboardStats {
 export interface FilterCounts {
   all: number;
   confirmed: number;
+  partial: number;
   rejected: number;
   pending: number;
 }

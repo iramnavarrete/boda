@@ -12,6 +12,7 @@ import { useRouter } from "next/router";
 import { cn } from "@heroui/theme";
 import { GuestActionButtons, GuestLockButton } from "./GuestActionButtons";
 import PartialConfirmationBadge from "./PartialConfirmationBadge";
+import { isPartialConfirmation } from "@/utils/guest";
 
 interface GuestsTableViewProps {
   filteredGuests: Guest[];
@@ -37,12 +38,16 @@ interface GuestRowProps {
   onLockToggle: (guest: Guest) => void;
 }
 
-const statusStyles = (asistencia: boolean | null) =>
-  asistencia === true
-    ? "bg-[#E7F3EF] text-[#2D5B4F] border-[#CFE5DD]"
-    : asistencia === false
-      ? "bg-[#F9EAE9] text-[#853935] border-[#EED7D6]"
-      : "bg-[#F5F5F4] text-[#78716C] border-[#E7E5E4]";
+const statusStyles = (g: Guest) => {
+  const partial = isPartialConfirmation(g);
+  return g.asistencia === null
+    ? "bg-paper/30 text-gold border-gold/20"
+    : g.asistencia === true && partial
+      ? "bg-orange-50 text-orange-800 border-orange-100"
+      : g.asistencia === true && !partial
+        ? "bg-primary-50 text-primary border-primary-100"
+        : "bg-danger-50 text-danger-700 border-danger-100";
+};
 
 const GuestRow = memo(
   ({
@@ -98,13 +103,21 @@ const GuestRow = memo(
 
         {/* Etiqueta */}
         <td className="p-2 align-middle">
-          {g.etiqueta && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#EBE5DA] bg-[#FDFBF7] text-[#C5A669]">
-              <Tag size={10} />
-              {g.etiqueta}
+          {g.etiqueta || isPartialConfirmation(g) ? (
+            <div className="flex flex-wrap items-center gap-1">
+              {g.etiqueta && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#EBE5DA] bg-[#FDFBF7] text-[#C5A669]">
+                  <Tag size={10} />
+                  {g.etiqueta}
+                </span>
+              )}
+              <PartialConfirmationBadge guest={g} />
+            </div>
+          ) : (
+            <span className="inline-flex items-center  max-w-fit gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-dashed border-[#DDD8D0] text-[#C8C2BA]">
+              Sin etiquetas
             </span>
           )}
-          <PartialConfirmationBadge guest={g} />
         </td>
 
         {/* Asistencia */}
@@ -112,7 +125,7 @@ const GuestRow = memo(
           <span
             className={cn(
               "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border",
-              statusStyles(g.asistencia),
+              statusStyles(g),
             )}
           >
             {g.asistencia === null ? (

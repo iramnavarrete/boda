@@ -10,23 +10,36 @@ export function useGuestsFilter(guests: Guest[]) {
     if (!guests) return [];
 
     return guests.filter((g) => {
-      // Filtro de búsqueda
       const passSearch =
         searchTerm === "" ||
         g.nombre.toLowerCase().includes(searchTerm.toLowerCase());
 
-      // Filtro de estado
-      // Un invitado con confirmación parcial aparece en "confirmed" Y en "rejected"
-      const passStatus =
-        filterStatus === "all"
-          ? true
-          : filterStatus === "confirmed"
-            ? g.asistencia === true // parciales incluidos
-            : filterStatus === "rejected"
-              ? g.asistencia === false || isPartialConfirmation(g) // parciales incluidos
-              : filterStatus === "pending"
-                ? g.asistencia === null || g.asistencia === undefined
-                : true;
+      let passStatus = true;
+
+      switch (filterStatus) {
+        case "confirmed":
+          passStatus = g.asistencia === true && g.confirmados === g.invitados;
+          break;
+
+        case "partial":
+          passStatus = isPartialConfirmation(g);
+          break;
+
+        case "rejected":
+          passStatus =
+            g.asistencia === false ||
+            (g.asistencia === true && g.confirmados === 0);
+          break;
+
+        case "pending":
+          passStatus = g.asistencia === null || g.asistencia === undefined;
+          break;
+
+        case "all":
+        default:
+          passStatus = true;
+          break;
+      }
 
       return passSearch && passStatus;
     });

@@ -38,12 +38,14 @@ export function useGuestFiltersAndCounts(
         const partial = isPartialConfirmation(g);
         return {
           all: acc.all + 1,
-          confirmed: acc.confirmed + (g.asistencia === true ? 1 : 0),
-          rejected: acc.rejected + (g.asistencia === false || partial ? 1 : 0),
+          confirmed:
+            acc.confirmed + (g.asistencia === true && !partial ? 1 : 0),
+          partial: acc.partial + (partial ? 1 : 0),
+          rejected: acc.rejected + (g.asistencia === false ? 1 : 0),
           pending: acc.pending + (g.asistencia == null ? 1 : 0),
         };
       },
-      { all: 0, confirmed: 0, rejected: 0, pending: 0 },
+      { all: 0, confirmed: 0, rejected: 0, pending: 0, partial: 0 },
     );
 
     const whatsappCounts: WhatsappCounts = {
