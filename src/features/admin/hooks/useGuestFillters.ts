@@ -1,38 +1,36 @@
 import { useMemo, useState } from "react";
-import { FilterCounts, FilterType, Guest } from "@/types";
+import { FilterType, Guest } from "@/types";
+import { isPartialConfirmation } from "@/utils/guest";
 
 export function useGuestsFilter(guests: Guest[]) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState<FilterType>("all");
 
   const filteredGuests = useMemo(() => {
+    if (!guests) return [];
+
     return guests.filter((g) => {
-      const matchesSearch = g.nombre
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      let matchesFilter = true;
-      if (filterStatus === "confirmed") matchesFilter = g.asistencia === true;
-      else if (filterStatus === "rejected")
-        matchesFilter = g.asistencia === false;
-      else if (filterStatus === "pending")
-        matchesFilter = g.asistencia === null || g.asistencia === undefined;
-      return matchesSearch && matchesFilter;
+      // Filtro de búsqueda
+      const passSearch =
+        searchTerm === "" ||
+        g.nombre.toLowerCase().includes(searchTerm.toLowerCase());
+
+      // Filtro de estado
+      // Un invitado con confirmación parcial aparece en "confirmed" Y en "rejected"
+      const passStatus =
+        filterStatus === "all"
+          ? true
+          : filterStatus === "confirmed"
+            ? g.asistencia === true // parciales incluidos
+            : filterStatus === "rejected"
+              ? g.asistencia === false || isPartialConfirmation(g) // parciales incluidos
+              : filterStatus === "pending"
+                ? g.asistencia === null || g.asistencia === undefined
+                : true;
+
+      return passSearch && passStatus;
     });
   }, [guests, searchTerm, filterStatus]);
-
-  const filterCounts: FilterCounts = useMemo(() => {
-    return guests.reduce(
-      (acc, curr) => ({
-        all: acc.all + 1,
-        confirmed: acc.confirmed + (curr.asistencia === true ? 1 : 0),
-        rejected: acc.rejected + (curr.asistencia === false ? 1 : 0),
-        pending:
-          acc.pending +
-          (curr.asistencia === null || curr.asistencia === undefined ? 1 : 0),
-      }),
-      { all: 0, confirmed: 0, rejected: 0, pending: 0 }
-    );
-  }, [guests]);
 
   return {
     searchTerm,
@@ -40,6 +38,5 @@ export function useGuestsFilter(guests: Guest[]) {
     filterStatus,
     setFilterStatus,
     filteredGuests,
-    filterCounts,
   };
 }

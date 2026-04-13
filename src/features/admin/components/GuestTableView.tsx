@@ -11,6 +11,7 @@ import { Guest } from "@/types";
 import { useRouter } from "next/router";
 import { cn } from "@heroui/theme";
 import { GuestActionButtons, GuestLockButton } from "./GuestActionButtons";
+import PartialConfirmationBadge from "./PartialConfirmationBadge";
 
 interface GuestsTableViewProps {
   filteredGuests: Guest[];
@@ -103,6 +104,7 @@ const GuestRow = memo(
               {g.etiqueta}
             </span>
           )}
+          <PartialConfirmationBadge guest={g} />
         </td>
 
         {/* Asistencia */}
