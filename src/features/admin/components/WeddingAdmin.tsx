@@ -199,7 +199,7 @@ export default function WeddingAdmin() {
           <aside className="w-full lg:w-auto">
             <div className="lg:sticky lg:top-24">
               <h3 className="text-[10px] font-bold text-[#A8A29E] uppercase tracking-widest mb-1 ml-1 lg:max-w-[12ch]">
-                Personas {isFilterActive && "(filtrado)"}
+                Invitados {isFilterActive && "(filtrado)"}
               </h3>
               <StatsSidebar stats={stats} />
             </div>
