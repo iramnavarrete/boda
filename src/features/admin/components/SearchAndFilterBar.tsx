@@ -129,7 +129,7 @@ export default function SearchAndFilterBar({
 
     if (tagFilter !== "all") {
       activeCount++;
-      lastActiveLabel = 'Invitados ' + tagFilter;
+      lastActiveLabel = 'Familias ' + tagFilter;
     }
 
     if (activeCount === 0) return "Todos";
@@ -195,7 +195,7 @@ export default function SearchAndFilterBar({
             </div>
             <input
               className="w-full pl-10 pr-10 py-3 bg-white/90 border border-sand rounded-xl outline-none focus:ring-0 focus:ring-gold focus:border-gold/50 transition-all duration-300 text-sm text-charcoal placeholder:text-stone-light shadow-sm"
-              placeholder={`Buscar entre ${filteredGuestCount} invitados...`}
+              placeholder={`Buscar entre ${filteredGuestCount} familia${filteredGuestCount === 1 ? '' : 's'}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -632,13 +632,12 @@ export default function SearchAndFilterBar({
             </div>
           </div>
 
-          {/* Nuevo Invitado */}
           <TextureButton
             icon={<Plus size={18} />}
             onClick={onNewGuest}
             className="px-4 xl:px-6 py-0 h-full w-full md:w-auto rounded-xl transition-all shadow-lg shadow-[#C5A669]/20 hover:shadow-[#C5A669]/30 hover:-translate-y-0.5 font-bold"
           >
-            <span>Nuevo Invitado</span>
+            <span>Nueva Familia</span>
           </TextureButton>
         </div>
       </fieldset>

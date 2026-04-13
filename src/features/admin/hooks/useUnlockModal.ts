@@ -14,19 +14,19 @@ const CLOSED: UnlockModalState = { isOpen: false, guest: null, isBulk: false };
 export function useUnlockModal(
   invitationId: string | undefined,
   selectedGuests: Set<string>,
-  clearSelection: () => void
+  clearSelection: () => void,
 ) {
   const { toast } = useToast();
   const [modal, setModal] = useState<UnlockModalState>(CLOSED);
 
   const openForGuest = useCallback(
     (guest: Guest) => setModal({ isOpen: true, guest, isBulk: false }),
-    []
+    [],
   );
 
   const openForBulk = useCallback(
     () => setModal({ isOpen: true, guest: null, isBulk: true }),
-    []
+    [],
   );
 
   const close = useCallback(() => setModal(CLOSED), []);
@@ -40,16 +40,19 @@ export function useUnlockModal(
             invitationId,
             Array.from(selectedGuests),
             false,
-            newDate ?? undefined
+            newDate ?? undefined,
           );
           clearSelection();
-          toast(`Edición habilitada para ${selectedGuests.size} invitados.`, "success");
+          toast(
+            `Edición habilitada para ${selectedGuests.size} familias.`,
+            "success",
+          );
         } else if (modal.guest) {
           await GuestService.toggleGuestLock(
             invitationId,
             modal.guest,
             false,
-            newDate ?? undefined
+            newDate ?? undefined,
           );
           toast(`Edición habilitada para ${modal.guest.nombre}.`, "success");
         }
@@ -59,7 +62,7 @@ export function useUnlockModal(
         setModal(CLOSED);
       }
     },
-    [invitationId, modal, selectedGuests, clearSelection, toast]
+    [invitationId, modal, selectedGuests, clearSelection, toast],
   );
 
   return { modal, openForGuest, openForBulk, close, execute };

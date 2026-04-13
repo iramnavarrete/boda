@@ -205,7 +205,7 @@ const GuestsTableView: React.FC<GuestsTableViewProps> = ({
         <thead>
           <tr className="bg-[#FDFBF7] border-b border-[#EBE5DA] text-[10px] uppercase tracking-widest text-[#A8A29E] select-none">
             <th className="p-3 w-14 text-center" />
-            <th className="p-3 font-bold text-[#5A5A5A]">Invitado</th>
+            <th className="p-3 font-bold text-[#5A5A5A]">Familia</th>
             <th className="p-3 font-bold text-[#5A5A5A]">Etiqueta</th>
             <th className="p-3 font-bold text-[#5A5A5A]">Asistencia</th>
             <th className="p-3 font-bold text-[#5A5A5A]">Edición</th>

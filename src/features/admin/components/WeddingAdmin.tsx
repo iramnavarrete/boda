@@ -114,7 +114,7 @@ export default function WeddingAdmin() {
         openConfirmModal({
           isOpen: true,
           title: `Bloquear edición a "${guest.nombre}"`,
-          message: `Al hacer esto el invitado NO podrá modificar su mensaje de felicitación ni confirmar cantidad de invitados.`,
+          message: `Al hacer esto la familia NO podrá modificar su mensaje de felicitación ni confirmar cantidad de invitados.`,
           isDanger: false,
           action: async () => {
             if (invitationData) {
@@ -141,7 +141,7 @@ export default function WeddingAdmin() {
         openConfirmModal({
           isOpen: true,
           title: "Bloquear Edición",
-          message: `¿Deseas bloquear la edición para ${selectedGuests.size} invitados? Ya no podrán modificar su mensaje de felicitación ni confirmar cantidad de invitados.`,
+          message: `¿Deseas bloquear la edición para ${selectedGuests.size} familia${selectedGuests.size === 1 ? "" : "s"}? Ya no podrán modificar su mensaje de felicitación ni confirmar cantidad de invitados.`,
           isDanger: false,
           action: async () => {
             if (invitationData) {

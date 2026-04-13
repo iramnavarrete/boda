@@ -31,8 +31,8 @@ export function useGuestActions(invitationId?: string) {
       );
       toast(
         currentGuestId
-          ? "Invitado actualizado correctamente"
-          : "Invitado creado con éxito",
+          ? "Familia actualizada correctamente"
+          : "Familia creada con éxito",
         "success",
       );
       onSuccess();

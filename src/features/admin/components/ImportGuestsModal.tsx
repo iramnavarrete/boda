@@ -173,7 +173,7 @@ const ImportGuestsModal: React.FC<ImportGuestsModalProps> = ({
                       Datos Válidos
                     </h5>
                     <p className="text-xs text-green-700">
-                      Se identificaron {parsedGuests.length} invitados listos
+                      Se identificaron {parsedGuests.length} famlias listas
                       para importar.
                     </p>
                   </div>

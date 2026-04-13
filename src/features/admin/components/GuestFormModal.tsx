@@ -122,7 +122,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
       <div className="px-6 py-4 border-b border-sand flex justify-between items-center bg-white shrink-0 z-10">
         <div>
           <h2 className="text-lg font-serif font-bold text-charcoal">
-            {isEdit ? "Editar Invitado" : "Nuevo Invitado"}
+            {isEdit ? "Editar Familia" : "Nueva Familia"}
           </h2>
           <p className="text-xs text-stone-light mt-0.5">
             {isEdit
@@ -212,7 +212,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
-                Nombre(s) de invitado(s)*
+                Nombre de familia*
               </label>
               <input
                 required
@@ -352,7 +352,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
-                Nota para invitado{" "}
+                Nota para familia{" "}
                 <span className="font-normal text-xs">(Opcional)</span>
               </label>
               <textarea
@@ -413,7 +413,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                     Permitir cambios de asistencia
                   </span>
                   <span className="text-xs text-stone-light hidden sm:block">
-                    Si esta activo, el invitado podrá modificar su respuesta.
+                    Si esta activo, la familia podrá modificar su respuesta.
                   </span>
                 </div>
               </button>
