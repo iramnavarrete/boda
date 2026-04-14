@@ -115,9 +115,10 @@ export default function SearchAndFilterBar({
 
     if (filterStatus !== "all") {
       activeCount++;
-      if (filterStatus === "confirmed") lastActiveLabel = "Confirmados";
-      if (filterStatus === "pending") lastActiveLabel = "Pendientes";
-      if (filterStatus === "rejected") lastActiveLabel = "Rechazados";
+      if (filterStatus === "confirmed") lastActiveLabel = "Familias completas";
+      if (filterStatus === "partial") lastActiveLabel = "Familias parciales";
+      if (filterStatus === "pending") lastActiveLabel = "Familias pendientes";
+      if (filterStatus === "rejected") lastActiveLabel = "Familias rechazadas";
     }
 
     if (whatsappFilter !== "all") {
@@ -129,7 +130,7 @@ export default function SearchAndFilterBar({
 
     if (tagFilter !== "all") {
       activeCount++;
-      lastActiveLabel = 'Invitados ' + tagFilter;
+      lastActiveLabel = 'Familias ' + tagFilter;
     }
 
     if (activeCount === 0) return "Todos";
@@ -154,6 +155,8 @@ export default function SearchAndFilterBar({
       return "text-green-700 bg-green-50 border-green-200 ring-1 ring-green-100";
     if (filterStatus === "pending")
       return "text-gold bg-sand/30 border-sand ring-1 ring-gold/20";
+    if (filterStatus === "partial")
+      return "text-orange-700 bg-orange-50 border-orange-200 ring-1 ring-orange-100";
     if (filterStatus === "rejected")
       return "text-red-700 bg-red-50 border-red-200 ring-1 ring-red-100";
 
@@ -195,7 +198,7 @@ export default function SearchAndFilterBar({
             </div>
             <input
               className="w-full pl-10 pr-10 py-3 bg-white/90 border border-sand rounded-xl outline-none focus:ring-0 focus:ring-gold focus:border-gold/50 transition-all duration-300 text-sm text-charcoal placeholder:text-stone-light shadow-sm"
-              placeholder={`Buscar entre ${filteredGuestCount} invitados...`}
+              placeholder={`Buscar entre ${filteredGuestCount} familia${filteredGuestCount === 1 ? '' : 's'}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -262,7 +265,7 @@ export default function SearchAndFilterBar({
                             : "text-stone-light"
                         }
                       />
-                      Todos
+                      Todas las familias
                     </span>
                     <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
                       {filterCounts?.all || 0}
@@ -277,7 +280,7 @@ export default function SearchAndFilterBar({
                         : "text-stone-custom hover:bg-green-50/50 hover:text-green-700 border border-transparent"
                     }`}
                   >
-                    <span className="flex items-center gap-2.5">
+                    <span className="flex items-center gap-2.5 text-left">
                       <CheckCircle2
                         size={16}
                         className={
@@ -286,10 +289,33 @@ export default function SearchAndFilterBar({
                             : "text-stone-light"
                         }
                       />
-                      Confirmados
+                      Familias completas
                     </span>
                     <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
                       {filterCounts?.confirmed || 0}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => setFilterStatus("partial")}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                      filterStatus === "partial"
+                        ? "bg-green-50 text-orange-800 font-medium border border-green-100"
+                        : "text-stone-custom hover:bg-green-50/50 hover:text-orange-700 border border-transparent"
+                    }`}
+                  >
+                    <span className="flex items-center gap-2.5 text-left">
+                      <CheckCircle2
+                        size={16}
+                        className={
+                          filterStatus === "partial"
+                            ? "text-orange-600"
+                            : "text-stone-light"
+                        }
+                      />
+                      Familias parciales
+                    </span>
+                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
+                      {filterCounts?.partial || 0}
                     </span>
                   </button>
                   <button
@@ -309,7 +335,7 @@ export default function SearchAndFilterBar({
                             : "text-stone-light"
                         }
                       />
-                      Pendientes
+                      Familias pendientes
                     </span>
                     <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
                       {filterCounts?.pending || 0}
@@ -332,7 +358,7 @@ export default function SearchAndFilterBar({
                             : "text-stone-light"
                         }
                       />
-                      Rechazados
+                      Familias rechazadas
                     </span>
                     <span className="text-stone-light text-xs bg-white/90 px-1.5 py-0.5 rounded border border-sand">
                       {filterCounts?.rejected || 0}
@@ -460,7 +486,7 @@ export default function SearchAndFilterBar({
                           tagFilter === "all" ? "text-gold" : "text-stone-light"
                         }
                       />
-                      Todos
+                      Todas
                     </span>
                     <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
                       {tagCounts?.all || 0}
@@ -632,13 +658,12 @@ export default function SearchAndFilterBar({
             </div>
           </div>
 
-          {/* Nuevo Invitado */}
           <TextureButton
             icon={<Plus size={18} />}
             onClick={onNewGuest}
             className="px-4 xl:px-6 py-0 h-full w-full md:w-auto rounded-xl transition-all shadow-lg shadow-[#C5A669]/20 hover:shadow-[#C5A669]/30 hover:-translate-y-0.5 font-bold"
           >
-            <span>Nuevo Invitado</span>
+            <span>Nueva Familia</span>
           </TextureButton>
         </div>
       </fieldset>

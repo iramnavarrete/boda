@@ -39,19 +39,22 @@ export function useGuestDeletion({
         },
       });
     },
-    [invitationId, openConfirmModal, selectedGuests, removeFromSelection]
+    [invitationId, openConfirmModal, selectedGuests, removeFromSelection],
   );
 
   const handleBulkDelete = useCallback(() => {
     if (selectedGuests.size === 0) return;
     openConfirmModal({
       isOpen: true,
-      title: "Eliminar Múltiples Invitados",
-      message: `¿Estás seguro de que deseas eliminar permanentemente a los ${selectedGuests.size} invitados seleccionados? Esta acción no se puede deshacer.`,
+      title: "Eliminar Múltiples Familias",
+      message: `¿Estás seguro de que deseas eliminar permanentemente a las ${selectedGuests.size} familias seleccionadas? Esta acción no se puede deshacer.`,
       isDanger: true,
       action: async () => {
         if (invitationId) {
-          await GuestService.batchDeleteGuests(invitationId, Array.from(selectedGuests));
+          await GuestService.batchDeleteGuests(
+            invitationId,
+            Array.from(selectedGuests),
+          );
         }
         clearSelection();
       },

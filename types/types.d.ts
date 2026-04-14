@@ -63,14 +63,15 @@ export interface DashboardStats {
   count: number;
 }
 
-export type FilterType = "all" | "confirmed" | "pending" | "rejected";
-
 export interface FilterCounts {
   all: number;
   confirmed: number;
+  partial: number;
   rejected: number;
   pending: number;
 }
+
+export type FilterType = keyof FilterCounts;
 
 export interface ConfirmModalState {
   isOpen: boolean;

@@ -4,7 +4,7 @@ export const getGuestData = async ({ id }: { id: string }): Promise<Guest> => {
   const res = await fetch(`/api/guest/${id}`);
   if (!res.ok) {
     const errData = await res.json();
-    throw new Error(errData.message || "Error al obtener datos del invitado.");
+    throw new Error(errData.message || "Error al obtener datos de la familia.");
   }
   return await res.json();
 };
@@ -31,6 +31,6 @@ export const updateGuestData = async ({
   });
   if (!res.ok) {
     const errData = await res.json();
-    throw new Error(errData.message || "Error al obtener datos del invitado.");
+    throw new Error(errData.message || "Error al obtener datos de la familia.");
   }
 };

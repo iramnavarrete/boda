@@ -14,15 +14,18 @@ export function useGuestImport(invitationId: string | undefined) {
       setIsImporting(true);
       try {
         await GuestService.batchImportGuests(invitationId, parsedGuests);
-        toast(`${parsedGuests.length} invitados importados exitosamente.`, "success");
+        toast(
+          `${parsedGuests.length} familia${parsedGuests.length === 1 ? "" : "s"} importadas exitosamente.`,
+          "success",
+        );
         setIsImportModalOpen(false);
       } catch {
-        toast("Ocurrió un error al importar los invitados.", "error");
+        toast("Ocurrió un error al importar las familias.", "error");
       } finally {
         setIsImporting(false);
       }
     },
-    [invitationId, toast]
+    [invitationId, toast],
   );
 
   return {

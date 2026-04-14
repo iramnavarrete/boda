@@ -20,12 +20,6 @@ const UnlockChangesModal = ({
 }: UnlockChangesModalProps) => {
   const [limitDate, setLimitDate] = useState("");
 
-  useEffect(() => {
-    if (isOpen) setLimitDate("");
-  }, [isOpen]);
-
-  if (!isOpen) return null;
-
   return (
     <Modal isOpen={isOpen} onBackdropPress={onClose}>
       <div className="p-8">
@@ -38,7 +32,7 @@ const UnlockChangesModal = ({
         <p className="text-sm text-[#5A5A5A] mb-6 leading-relaxed">
           Para permitir que{" "}
           {isBulk ? (
-            "los invitados seleccionados modifiquen su"
+            "las familias seleccionadas modifiquen su"
           ) : (
             <>
               <b>{guest?.nombre}</b> modifique su

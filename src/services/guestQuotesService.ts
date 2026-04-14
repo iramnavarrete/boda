@@ -318,7 +318,7 @@ export const GuestQuotesService = {
 
       return { result: true, error: null };
     } catch (error) {
-      console.error("Error guardando mensaje del invitado:", error);
+      console.error("Error guardando mensaje de la familia:", error);
       return {
         result: false,
         error: (error as FirestoreError).code || "unknown-error",

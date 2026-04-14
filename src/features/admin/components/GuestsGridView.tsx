@@ -43,10 +43,10 @@ export default function GuestsGridView({
                </div>
              </div>
              <h3 className="text-2xl font-serif font-bold text-charcoal mb-2">
-               No se encontraron invitados
+               No se encontraron familias.
              </h3>
              <p className="text-sm text-stone-400 max-w-sm leading-relaxed">
-               Puedes crear un invitado en el botón &quot;+ Nuevo&quot;
+               Puedes crear una familia en el botón &quot;+ Nueva Familia&quot;
              </p>
            </div>
          )}

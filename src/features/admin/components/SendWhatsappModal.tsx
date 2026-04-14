@@ -107,7 +107,7 @@ export default function SendWhatsappModal({
             <div className="absolute bottom-full -right-1.5 mb-2 w-64 p-4 bg-white border border-[#EBE5DA] shadow-[0_10px_40px_-10px_rgba(44,44,41,0.2)] rounded-2xl text-xs text-[#5A5A5A] opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 pointer-events-none">
               <p className="leading-relaxed mb-2">
                 El día siguiente de la fecha que selecciones, se bloquearán las
-                ediciones del invitado automáticamente.
+                ediciones de la familia automáticamente.
               </p>
               <p className="leading-relaxed">
                 Para habilitarla de nuevo, haz clic en{" "}

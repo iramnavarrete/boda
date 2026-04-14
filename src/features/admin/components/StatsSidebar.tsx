@@ -1,5 +1,5 @@
 import React from "react";
-import { Users, CheckCircle2, Clock, XCircle, TrendingUp } from "lucide-react";
+import { Users, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { DashboardStats } from "@/types";
 
 interface StatsSidebarProps {
@@ -29,7 +29,7 @@ const StatCard = ({
         <p className="text-[10px] font-bold text-stone-light uppercase tracking-widest mb-1 whitespace-nowrap">
           {title}
         </p>
-        <span className="text-2xl font-serif font-bold text-charcoal leading-none">
+        <span className="text-2xl font-nourdMedium font-bold text-charcoal leading-none">
           {value}
         </span>
       </div>
@@ -63,7 +63,7 @@ export default function StatsSidebar({ stats }: StatsSidebarProps) {
             Total
           </p>
           <div className="flex items-baseline gap-2 relative z-10">
-            <p className="text-3xl font-serif font-bold leading-none text-white">
+            <p className="text-3xl font-nourdMedium font-bold leading-none text-white">
               {stats.total}
             </p>
           </div>
