@@ -115,10 +115,10 @@ export default function SearchAndFilterBar({
 
     if (filterStatus !== "all") {
       activeCount++;
-      if (filterStatus === "confirmed") lastActiveLabel = "Confirmados completos";
-      if (filterStatus === "partial") lastActiveLabel = "Confirmados parciales";
-      if (filterStatus === "pending") lastActiveLabel = "Pendientes";
-      if (filterStatus === "rejected") lastActiveLabel = "Rechazados";
+      if (filterStatus === "confirmed") lastActiveLabel = "Familias completas";
+      if (filterStatus === "partial") lastActiveLabel = "Familias parciales";
+      if (filterStatus === "pending") lastActiveLabel = "Familias pendientes";
+      if (filterStatus === "rejected") lastActiveLabel = "Familias rechazadas";
     }
 
     if (whatsappFilter !== "all") {
@@ -265,7 +265,7 @@ export default function SearchAndFilterBar({
                             : "text-stone-light"
                         }
                       />
-                      Todo
+                      Todas las familias
                     </span>
                     <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
                       {filterCounts?.all || 0}
@@ -486,7 +486,7 @@ export default function SearchAndFilterBar({
                           tagFilter === "all" ? "text-gold" : "text-stone-light"
                         }
                       />
-                      Todo
+                      Todas
                     </span>
                     <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
                       {tagCounts?.all || 0}
