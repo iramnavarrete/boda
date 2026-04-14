@@ -198,7 +198,7 @@ export default function SearchAndFilterBar({
             </div>
             <input
               className="w-full pl-10 pr-10 py-3 bg-white/90 border border-sand rounded-xl outline-none focus:ring-0 focus:ring-gold focus:border-gold/50 transition-all duration-300 text-sm text-charcoal placeholder:text-stone-light shadow-sm"
-              placeholder={`Buscar entre ${filteredGuestCount} familia${filteredGuestCount === 1 ? '' : 's'}...`}
+              placeholder={`Buscar entre ${filteredGuestCount} familia${filteredGuestCount === 1 ? "" : "s"}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -326,7 +326,7 @@ export default function SearchAndFilterBar({
                         : "text-stone-custom hover:bg-paper/30 hover:text-gold border border-transparent"
                     }`}
                   >
-                    <span className="flex items-center gap-2.5">
+                    <span className="flex items-center gap-2.5 text-left">
                       <Clock
                         size={16}
                         className={
@@ -349,7 +349,7 @@ export default function SearchAndFilterBar({
                         : "text-stone-custom hover:bg-red-50/50 hover:text-red-700 border border-transparent"
                     }`}
                   >
-                    <span className="flex items-center gap-2.5">
+                    <span className="flex items-center gap-2.5 text-left">
                       <XCircle
                         size={16}
                         className={
