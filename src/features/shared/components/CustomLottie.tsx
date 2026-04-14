@@ -18,6 +18,7 @@ interface CustomLottieProps {
   className?: string;
   lottieClassName?: string;
   startFrame?: number;
+  endFrame?: number; // <-- Nueva prop opcional
   delay?: number;
   loop?: boolean;
   autoPlay?: boolean;
@@ -36,6 +37,7 @@ export default function CustomLottie({
   className = "",
   lottieClassName = "",
   startFrame = 0,
+  endFrame, // <-- Desestructuramos endFrame
   delay = 0,
   loop = false,
   autoPlay = false,
@@ -52,7 +54,7 @@ export default function CustomLottie({
   const divRef = useRef<HTMLDivElement>(null);
   const isInView = useInView(divRef);
 
-  // NUEVO: Estado para saber cuando Lottie realmente terminó de montarse en el DOM
+  // Estado para saber cuando Lottie realmente terminó de montarse en el DOM
   const [isLoaded, setIsLoaded] = useState(false);
 
   // Mapeo de opciones legacy
@@ -77,23 +79,31 @@ export default function CustomLottie({
       // Esperamos a que el player exista Y que Lottie haya notificado que cargó
       if (!player || !isLoaded) return;
 
+      // Respetamos tu lógica original de pausa
       if (isPaused) {
         player.pause();
         return;
       }
 
       if (isInView) {
+        // 1. Ir al frame de inicio si existe
         if (startFrame > 0) {
           player.goToAndStop(startFrame, true);
         }
 
+        // 2. Esperar delay
         if (delay > 0) {
           await new Promise((res) => setTimeout(res, delay));
         }
 
+        // 3. Verificar de nuevo la pausa después del delay
         if (isPaused) return;
 
-        if (startFrame > 0) {
+        // 4. Lógica de reproducción (NUEVO: Soporte para endFrame)
+        if (endFrame !== undefined) {
+          // playSegments usa [inicio, fin]. Si se definió endFrame, manda este comando.
+          player.playSegments([startFrame, endFrame], true);
+        } else if (startFrame > 0) {
           player.goToAndPlay(startFrame, true);
         } else {
           player.play();
@@ -104,7 +114,8 @@ export default function CustomLottie({
     };
 
     animation();
-  }, [isInView, startFrame, delay, activeRef, isPaused, isLoaded]); // <-- Agregamos isLoaded como dependencia
+    // Agregamos endFrame a las dependencias para que reaccione si cambia dinámicamente
+  }, [isInView, startFrame, endFrame, delay, activeRef, isPaused, isLoaded]);
 
   return (
     <div ref={divRef} className={className}>
@@ -114,13 +125,10 @@ export default function CustomLottie({
         lottieRef={activeRef}
         autoplay={finalAutoPlay}
         loop={finalLoop}
-        rendererSettings={finalRendererSettings} // <-- Mapeamos los ajustes de renderizado (preserveAspectRatio, etc.)
+        rendererSettings={finalRendererSettings}
         {...mappedEvents}
         onDOMLoaded={() => {
-          // 1. Avisamos a nuestro useEffect que ya puede ejecutar lógica de play/pause
           setIsLoaded(true);
-
-          // 2. Si el componente padre envió su propia función DOMLoaded (como tu console.log), la ejecutamos
           if (mappedEvents.onDOMLoaded) {
             mappedEvents.onDOMLoaded();
           }
