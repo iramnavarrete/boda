@@ -25,3 +25,27 @@ export const nourdBold = localFont({
   variable: "--font-nourd-bold",
   display: "swap",
 });
+
+export const autography = localFont({
+  src: "../../../../src/fonts/autography.otf",
+  variable: "--font-autography",
+  display: "swap",
+});
+
+export const comprehensionDark = localFont({
+  src: "../../../../src/fonts/comprehension_dark.otf",
+  variable: "--font-comprehension-dark",
+  display: "swap",
+});
+
+export const comprehensionSemiBold = localFont({
+  src: "../../../../src/fonts/comprehension_semibold.otf",
+  variable: "--font-comprehension-semi-bold",
+  display: "swap",
+});
+
+export const aboveBeyondScript = localFont({
+  src: "../../../../src/fonts/above_beyond_script.otf",
+  variable: "--font-above-beyond-script",
+  display: "swap",
+});

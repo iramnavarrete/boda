@@ -16,6 +16,10 @@ const config: Config = {
         nourdLight: ["var(--font-nourd-light)"],
         nourdMedium: ["var(--font-nourd-medium)"],
         nourdBold: ["var(--font-nourd-bold)"],
+        autography: ["var(--font-autography)"],
+        comprehensionDark: ["var(--font-comprehension-dark)"],
+        comprehensionSemiBold: ["var(--font-comprehension-semi-bold)"],
+        aboveBeyondScript: ["var(--font-above-beyond-script)"],
       },
       colors: {
         primary: {
