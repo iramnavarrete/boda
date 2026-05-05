@@ -15,18 +15,13 @@ import Footer from "@/features/front/components/sections/footer";
 
 import EnvelopeSplash from "@/features/front/components/openingAnimations/EnvelopeSplash";
 import DesktopSidebars from "@/features/shared/components/DesktopSidebars";
-import {
-  newIconScript,
-  nourdBold,
-  nourdLight,
-  nourdMedium,
-} from "@/features/shared/fonts";
 import Head from "next/head";
 import { InvitationsService } from "@/services/invitationsService";
 import { GetServerSidePropsContext } from "next";
 import { Invitation } from "@/types";
 import { getEventTypeName } from "@/utils/formatters";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
+import FrontLayout from "@/features/shared/layouts/front";
 
 interface InvitationPageProps {
   invitationData: Invitation & { eventUrl: string };
@@ -72,9 +67,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={coverImage} />
       </Head>
-      <main
-        className={`${newIconScript.variable} ${nourdLight.variable} ${nourdMedium.variable} ${nourdBold.variable}`}
-      >
+      <FrontLayout>
         {/* Componente que maneja la apertura del Lottie inicial */}
         <EnvelopeSplash onOpen={() => setIsEnvelopeOpened(true)} />
 
@@ -90,7 +83,14 @@ export default function Home({ invitationData }: InvitationPageProps) {
               <CountDown />
               <CeremonyToast />
               <Gallery />
-              <GiftsTable showCash transfer={{bank: 'bbva', beneficiary: 'Beneficiario', cardNumber: '0000 0000 0000 0000'}} />
+              <GiftsTable
+                showCash
+                transfer={{
+                  bank: "bbva",
+                  beneficiary: "Beneficiario",
+                  cardNumber: "0000 0000 0000 0000",
+                }}
+              />
               <Assistants />
               <QrPhotos />
               <Footer />
@@ -98,7 +98,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
             </div>
           </div>
         </div>
-      </main>
+      </FrontLayout>
     </>
   );
 }
