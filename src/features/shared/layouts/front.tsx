@@ -11,10 +11,10 @@ import {
 
 export default function FrontLayout({
   children,
-  model,
+  model = 'waves',
 }: {
   children: React.ReactNode;
-  model: "waves" | "siena";
+  model?: "waves" | "siena";
 }) {
   return (
     <main

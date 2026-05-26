@@ -67,7 +67,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
         <meta name="twitter:description" content={description} />
         <meta name="twitter:image" content={coverImage} />
       </Head>
-      <FrontLayout model="waves">
+      <FrontLayout>
         {/* Componente que maneja la apertura del Lottie inicial */}
         <EnvelopeSplash onOpen={() => setIsEnvelopeOpened(true)} />
 
