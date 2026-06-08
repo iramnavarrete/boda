@@ -4,12 +4,14 @@ import { PropsWithChildren, useState } from "react";
 export interface ModalProps {
   isOpen: boolean;
   onBackdropPress?: () => void;
+  maxWidth?: string;
 }
 
 const Modal: React.FC<PropsWithChildren<ModalProps>> = ({
   isOpen,
   onBackdropPress,
   children,
+  maxWidth = "max-w-lg", // Valor por defecto para no romper compatibilidad
 }) => {
   const [shouldRenderChildren, setShouldRenderChildren] = useState(isOpen);
 
@@ -34,7 +36,7 @@ const Modal: React.FC<PropsWithChildren<ModalProps>> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="bg-white rounded-2xl w-full max-w-lg shadow-2xl flex flex-col max-h-[95dvh] overflow-hidden z-[5001]"
+            className={`bg-white rounded-2xl w-full ${maxWidth} shadow-2xl flex flex-col max-h-[95dvh] overflow-hidden z-[5001]`}
           >
             {shouldRenderChildren && children}
           </motion.div>

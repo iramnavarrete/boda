@@ -13,6 +13,8 @@ import {
   Star,
   AppWindow,
   Mail,
+  ShieldCheck,
+  Users,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, usePathname } from "next/navigation";
@@ -24,8 +26,10 @@ import { useRouter } from "next/router";
 import { Invitation } from "@/types";
 import { getEventTypeName } from "@/utils/formatters";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
+import { InvitationsService } from "@/services/invitationsService";
+import { useAuthStore } from "@/stores/authStore";
 
-export type HeaderVariant = "admin" | "landing";
+export type HeaderVariant = "admin" | "landing" | "invitations-panel";
 
 export interface NavItemType {
   label: string;
@@ -35,28 +39,17 @@ export interface NavItemType {
 }
 
 interface HeaderProps {
-  // Configuración Principal
   variant?: HeaderVariant;
-
-  // Estilos (Sobrescriben los defaults del variant)
   className?: string;
-
-  // Contenido
   title?: string;
   subtitle?: string;
-
-  // Navegación Manual (Opcional)
   navItems?: NavItemType[];
-
-  // Callbacks
   onLogout?: () => void;
   onCotizar?: () => void;
-
-  invitationData?: Invitation | null
+  invitationData?: Invitation | null;
 }
 
 // --- CONFIGURACIÓN DE VARIANTES ---
-// Aquí se definen los estilos y textos por defecto para cada modo
 const VARIANT_CONFIG = {
   admin: {
     containerClass: "bg-paper/95",
@@ -88,6 +81,21 @@ const VARIANT_CONFIG = {
     navLinkActive: "text-gold bg-white shadow-sm ring-1 ring-border-button",
     mobileBg: "bg-paper",
   },
+  "invitations-panel": {
+    containerClass: "bg-paper/95",
+    titleClass: "text-primary",
+    subtitleClass: "text-charcoal-400",
+    logoBg: "bg-charcoal-800",
+    logoText: "text-gold-500",
+    logoIcon: <ShieldCheck className="text-current" size={16} />,
+    backButtonIcon: <LogOut size={20} />,
+    backButtonText: "Salir",
+    backButtonHref: "/",
+    backButtonClass: "text-stone-400 hover:text-red-500",
+    navLinkBase: "text-primary hover:text-gold hover:bg-white",
+    navLinkActive: "text-gold bg-white shadow-sm ring-1 ring-border-button",
+    mobileBg: "bg-paper",
+  },
 };
 
 const Header = ({
@@ -96,40 +104,54 @@ const Header = ({
   title,
   subtitle,
   navItems: customNavItems,
-  onCotizar
 }: HeaderProps) => {
   const config = VARIANT_CONFIG[variant];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<string | null>(null); // Solo para landing
+  const [isRootAdmin, setIsRootAdmin] = useState(false); // ESTADO PARA EL ROL
+  
   const router = useRouter();
-
-  // Hooks de Next.js (Solo relevantes para Admin)
   const pathname = usePathname();
   const params = useParams();
   const invitationId = params?.invitationId;
+  const user = useAuthStore((state) => state.user);
+  
+  const [activeSection, setActiveSection] = useState<string | null>(
+    variant === "landing" && (pathname || "") === "/" ? "inicio" : null,
+  );
 
   const invitationData = useInvitationStore((state) => state.invitationData);
-  
-  const formatEventName = () => {
-    if(!invitationData){
-      return ""
-    }
-    if(invitationData?.nombre && invitationData?.tipo){
-      return getEventTypeName(invitationData.tipo) + " " + invitationData.nombre
-    }
-    return ""
-  }
 
+  const formatEventName = () => {
+    if (!invitationData) return "";
+    if (invitationData?.nombre && invitationData?.tipo) {
+      return (
+        getEventTypeName(invitationData.tipo) + " " + invitationData.nombre
+      );
+    }
+    return "";
+  };
+
+  // --- LÓGICA DE ROLES (Async) ---
+  useEffect(() => {
+    // Solo necesitamos verificar si es root para el panel general
+    if (variant === "invitations-panel") {
+      const checkRole = async () => {
+        const isAdmin = await InvitationsService.isAdmin(user);
+        setIsRootAdmin(isAdmin);
+      };
+      checkRole();
+    }
+  }, [variant, user]);
+
+  // --- LÓGICA SCROLL SPY (Solo Landing) ---
   // --- LÓGICA SCROLL SPY (Solo Landing) ---
   useEffect(() => {
     if (variant !== "landing") return;
-    if (pathname === "/") {
-      setActiveSection("inicio");
-    }
 
     const handleScroll = () => {
       const sections = ["inicio", "demo", "paquetes", "dashboard"];
       const scrollPosition = window.scrollY + 100;
+
       for (const section of sections) {
         const element = document.getElementById(section);
         if (
@@ -141,6 +163,11 @@ const Header = ({
         }
       }
     };
+
+    // Ejecutamos la función una vez al montar para que detecte en qué
+    // parte de la página está el usuario si es que recargó el navegador a la mitad
+    handleScroll();
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [variant]);
@@ -168,11 +195,33 @@ const Header = ({
           href: "/#dashboard",
           icon: <AppWindow size={18} />,
           active: activeSection === "dashboard",
-        }
+        },
       ];
     }
 
-    // Default Admin logic
+    if (variant === "invitations-panel") {
+      // SI NO ES ROOT, NO MUESTRA NINGÚN ENLACE CENTRAL (Solo quedará el LogOut)
+      if (!isRootAdmin) return [];
+
+      // SI ES ROOT, MUESTRA EL MENÚ COMPLETO
+      return [
+        {
+          label: "Eventos",
+          href: "/admin",
+          icon: <CalendarHeart size={18} />,
+          active:
+            pathname === "/admin" || pathname?.includes("/admin/invitations"),
+        },
+        {
+          label: "Usuarios y Accesos",
+          href: "/admin/users",
+          icon: <Users size={18} />,
+          active: pathname?.includes("/admin/users"),
+        },
+      ];
+    }
+
+    // Default Admin logic (Event Dashboard)
     const basePath = invitationId
       ? `/admin/invitations/${invitationId}`
       : "/admin";
@@ -198,7 +247,14 @@ const Header = ({
         active: pathname?.includes("/quotes"),
       },
     ];
-  }, [variant, customNavItems, activeSection, invitationId, pathname]);
+  }, [
+    variant,
+    customNavItems,
+    activeSection,
+    invitationId,
+    pathname,
+    isRootAdmin,
+  ]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const handleMobileClose = () => setIsMenuOpen(false);
@@ -244,7 +300,19 @@ const Header = ({
                   {config.logoIcon}
                 </div>
               </>
-            ) : (
+            ) 
+            // : variant === "invitations-panel" ? (
+            //   <div
+            //     className={cn(
+            //       "w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-colors mr-3",
+            //       config.logoBg,
+            //       config.logoText,
+            //     )}
+            //   >
+            //     {config.logoIcon}
+            //   </div>
+            // )
+             : (
               <JnInvitacionesIcon
                 primaryColor="#58624F"
                 secondaryColor="rgb(197 166 105 / var(--tw-text-opacity, 1))"
@@ -261,14 +329,15 @@ const Header = ({
               >
                 {title || (variant === "admin" ? formatEventName() : null)}
               </h1>
-              {subtitle || variant === "admin" ? (
+              {subtitle ||
+              variant === "admin" ? (
                 <p
                   className={cn(
                     "text-[10px] font-bold uppercase tracking-wider mt-0.5",
                     config.subtitleClass,
                   )}
                 >
-                  Panel de Administración
+                  {subtitle || "Panel de Administración"}
                 </p>
               ) : null}
             </div>
@@ -346,7 +415,6 @@ const Header = ({
               )}
             >
               <div className="flex flex-col p-4 space-y-2">
-                {/* Mobile: Links */}
                 {navItems.map((item) => (
                   <MenuItem
                     key={item.href}
@@ -357,10 +425,11 @@ const Header = ({
                   />
                 ))}
 
-                <div className="h-px bg-black/10 my-2" />
+                {navItems.length > 0 && (
+                  <div className="h-px bg-black/10 my-2" />
+                )}
 
-                {/* Mobile: Back Button */}
-                {variant === "admin" && (
+                {(variant === "admin") && (
                   <MenuItem
                     icon={config.backButtonIcon}
                     label={config.backButtonText}
@@ -370,18 +439,15 @@ const Header = ({
                   />
                 )}
 
-                {/* Mobile: Actions */}
                 <div className="pt-2">
                   {variant === "landing" ? (
-                    <>
-                      <Link
+                    <Link
                       onClick={() => toggleMenu()}
-                        href="/#paquetes"
-                        className="flex items-center justify-center gap-3 w-full p-3 rounded-xl text-paper bg-primary hover:bg-charcoal-700 transition-colors font-medium text-sm mt-2 shadow-md"
-                      >
-                        <Gem size={18} className="text-gold" /> Paquetes
-                      </Link>
-                    </>
+                      href="/#paquetes"
+                      className="flex items-center justify-center gap-3 w-full p-3 rounded-xl text-paper bg-primary hover:bg-charcoal-700 transition-colors font-medium text-sm mt-2 shadow-md"
+                    >
+                      <Gem size={18} className="text-gold" /> Paquetes
+                    </Link>
                   ) : (
                     <button
                       onClick={AuthService.logout}
@@ -406,7 +472,14 @@ const Header = ({
       </AnimatePresence>
     </header>
   );
-};
+};;
+
+// --- TIPADO ESTRICTO DE SUBCOMPONENTES ---
+
+interface NavLinkProps extends NavItemType {
+  baseClassName?: string;
+  activeClassName?: string;
+}
 
 const DesktopNavLink = ({
   label,
@@ -415,7 +488,7 @@ const DesktopNavLink = ({
   icon,
   baseClassName,
   activeClassName,
-}: any) => (
+}: NavLinkProps) => (
   <Link
     href={href}
     className={cn(
@@ -438,6 +511,13 @@ const DesktopNavLink = ({
   </Link>
 );
 
+interface MenuItemProps extends NavItemType {
+  onClick?: () => void;
+  className?: string;
+  activeClass?: string;
+  variant?: HeaderVariant;
+}
+
 const MenuItem = ({
   icon,
   label,
@@ -447,7 +527,7 @@ const MenuItem = ({
   onClick,
   activeClass,
   variant,
-}: any) => (
+}: MenuItemProps) => (
   <Link
     href={href}
     onClick={onClick}

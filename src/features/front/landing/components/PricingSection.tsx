@@ -154,10 +154,10 @@ const Pricing: React.FC = () => {
               <p className="text-primary font-medium text-base md:text-lg relative z-10">
                 Aprovecha nuestros precios especiales de lanzamiento.
               </p>
-              <p className="text-sm text-charcoal-400 mt-2 flex items-center justify-center gap-1.5 font-bold relative z-10">
+              {/* <p className="text-sm text-charcoal-400 mt-2 flex items-center justify-center gap-1.5 font-bold relative z-10">
                 <Clock size={14} className="text-gold" /> Válido sólo por el{" "}
                 <span className="text-gold">mes de abril</span>
-              </p>
+              </p> */}
             </div>
           </div>
         )}

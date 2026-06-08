@@ -98,8 +98,8 @@ export interface Invitation {
   imagenPortada?: string;
   recepcion: EventLocation;
   ceremonia: EventLocation;
-  usuariosPermitidos: string[];
   fechaISO?: string;
+  configuracionVisual?: ConfiguracionVisual;
 }
 
 // Tipo auxiliar para las escalas de color completas (50-950)
@@ -200,4 +200,46 @@ export interface ImportedGuest {
   invitados: number;
   telefono: string;
   notaAnfitrion: string;
+}
+
+export interface ConfiguracionVisual {
+  temaGlobal?: string;
+  secciones?: {
+    quote?: {
+      mostrar: boolean;
+    };
+    padresYPadrinos?: {
+      mostrar: boolean;
+    };
+    galeria?: {
+      mostrar: boolean;
+      variante: string;
+    };
+    mesaRegalos?: {
+      mostrar: boolean;
+      showCash: boolean;
+    };
+  };
+  estilosComponentes?: {
+    contador?: { textClassName?: string; btnClassName?: string };
+    calendario?: {
+      bgClassName?: string;
+      textClassName?: string;
+      heartClassName?: string;
+    };
+  };
+  fondos?: {
+    app?: string;
+    contenedorCentral?: string;
+  };
+}
+
+export type RoleType = "admin" | "host" | "guardia";
+
+export interface UserDoc {
+  uid: string;
+  email: string;
+  isRootAdmin: boolean;
+  invitationsMap: Record<string, RoleType>;
+  createdAt?: string;
 }
