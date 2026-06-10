@@ -14,12 +14,10 @@ export function useGuestActions(invitationId?: string) {
   }
 
   const handleSaveGuest = async (
-    e: React.FormEvent,
     currentGuestId: string | null,
     formData: GuestFormData,
     onSuccess: () => void,
   ) => {
-    e.preventDefault();
     try {
       const guestId =
         currentGuestId || (await GuestService.getUniqueGuestId(invitationId));

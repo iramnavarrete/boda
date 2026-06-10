@@ -185,7 +185,6 @@ export default function WeddingAdmin() {
   const onSaveGuest = useCallback(
     (finalData: GuestFormData) => {
       handleSaveGuest(
-        undefined as unknown as React.FormEvent,
         currentGuestId,
         finalData,
         handleCloseModal,

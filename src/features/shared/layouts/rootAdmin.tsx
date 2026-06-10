@@ -15,9 +15,10 @@ export default function RootAdminLayout({
       
       <Header 
         variant="invitations-panel" 
+        className="z-auto"
       />
       
-      <main className="flex-grow flex-1 relative z-10 w-full">
+      <main className="flex-grow flex-1 relative w-full">
         {children}
       </main>
     </div>
