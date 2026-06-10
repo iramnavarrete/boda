@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import {
   CheckCircle2,
   XCircle as XCircleIcon,
@@ -13,109 +13,41 @@ import {
 import Modal from "@/features/shared/components/Modal";
 import { cn } from "@heroui/theme";
 import { GuestFormData } from "@/types";
-
-interface GuestFormModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (e: React.FormEvent) => void;
-  formData: GuestFormData;
-  setFormData: React.Dispatch<React.SetStateAction<GuestFormData>>;
-  isEdit: boolean;
-  onBackdropPress?: () => void;
-}
+import { useGuestFormModal } from "../hooks/useGuestFormModal";
 
 // Opciones predefinidas de etiquetas
 const TAG_OPTIONS = ["Novia", "Novio", "Ambos"];
 
+interface GuestFormModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: GuestFormData) => void; // AHORA DEVUELVE LA DATA COMPLETA
+  initialData: GuestFormData; // AHORA RECIBE INITIAL DATA, NO ESTADO EN VIVO
+  isEdit: boolean;
+  onBackdropPress?: () => void;
+}
+
 const GuestFormModal: React.FC<GuestFormModalProps> = ({
   isOpen,
   onClose,
-  formData,
-  setFormData,
+  initialData,
   onSubmit,
   isEdit,
   onBackdropPress,
 }) => {
-  // --- ESTADOS LOCALES PARA EL WHATSAPP ---
-  const [countryCode, setCountryCode] = useState("52");
-  const [phoneNumber, setPhoneNumber] = useState("");
-
-  // Sincronizar el número de teléfono cuando se abre el modal o cambia la prop externamente
-  useEffect(() => {
-    if (!formData.telefono) {
-      setPhoneNumber("");
-      // Mantenemos el código de país actual por comodidad si está agregando varios
-    } else if (formData.telefono && !phoneNumber) {
-      // Extraemos el código de país si existe en el string guardado
-      let parsedCode = "52";
-      let parsedNum = formData.telefono;
-      const codes = ["52", "1", "34", "57", "54", "56"];
-
-      for (const code of codes) {
-        if (parsedNum.startsWith(code) && parsedNum.length > code.length) {
-          parsedCode = code;
-          parsedNum = parsedNum.substring(code.length);
-          break;
-        }
-      }
-      setCountryCode(parsedCode);
-      setPhoneNumber(parsedNum);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData.telefono]);
-
-  // Handlers para el Input de Teléfono
-  const handleCountryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const code = e.target.value;
-    setCountryCode(code);
-    if (phoneNumber) {
-      setFormData((prev) => ({ ...prev, telefono: code + phoneNumber }));
-    }
-  };
-
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const num = e.target.value.replace(/\D/g, "");
-    setPhoneNumber(num);
-    if (num) {
-      setFormData((prev) => ({ ...prev, telefono: countryCode + num }));
-    } else {
-      // Si borra el número completo, limpiamos el campo en el formData
-      setFormData((prev) => ({ ...prev, telefono: "" }));
-    }
-  };
-
-  const handleNumberChange = (field: keyof GuestFormData, value: string) => {
-    const numValue = value === "" ? 0 : parseInt(value, 10);
-    const finalValue = isNaN(numValue) ? 0 : numValue;
-    const updates: Partial<GuestFormData> = { [field]: finalValue };
-
-    if (field === "confirmados") {
-      updates.asistencia = true;
-      if (finalValue <= 0) {
-        updates.asistencia = false;
-      }
-    }
-
-    setFormData((prev) => ({ ...prev, ...updates }));
-  };
-
-  const setAsistencia = (estado: boolean | null) => {
-    const nuevoEstado = formData.asistencia === estado ? null : estado;
-
-    setFormData({
-      ...formData,
-      asistencia: nuevoEstado,
-      confirmados: nuevoEstado === false ? 0 : formData.confirmados,
-    });
-  };
-
-  const handleTagToggle = (tag: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      // Si ya está seleccionada, la deseleccionamos (null), si no, la asignamos
-      etiqueta: prev.etiqueta === tag ? null : tag,
-    }));
-  };
+  // Inyectamos nuestro hook personalizado
+  const {
+    formData,
+    countryCode,
+    phoneNumber,
+    handleCountryChange,
+    handlePhoneChange,
+    handleNumberChange,
+    handleAsistenciaToggle,
+    handleTagToggle,
+    handleTextChange,
+    handleSubmit,
+  } = useGuestFormModal(isOpen, initialData, onSubmit);
 
   return (
     <Modal isOpen={isOpen} onBackdropPress={onBackdropPress || onClose}>
@@ -136,19 +68,13 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
           className="group bg-transparent hover:bg-red-50 border border-transparent hover:border-red-100 text-stone-400 hover:text-red-500 rounded-xl p-2 transition-all ml-1"
           title="Cancelar selección"
         >
-          <X
-            size={20}
-            className="transform group-hover:rotate-90 transition-transform duration-300"
-            strokeWidth={2.5}
-          />
+          <X size={20} className="transform group-hover:rotate-90 transition-transform duration-300" strokeWidth={2.5} />
         </button>
       </div>
 
-      <form
-        onSubmit={onSubmit}
-        className="flex flex-col flex-1 overflow-hidden min-h-0 bg-sand-light/30"
-      >
+      <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0 bg-sand-light/30">
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          
           {/* Asistencia Toggle */}
           <div className="relative">
             <div className="mb-2 px-1">
@@ -164,7 +90,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
             <div className="flex p-1 bg-stone-200/50 rounded-xl border border-sand">
               <button
                 type="button"
-                onClick={() => setAsistencia(true)}
+                onClick={() => handleAsistenciaToggle(true)}
                 className={cn(
                   "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                   formData.asistencia === true
@@ -172,14 +98,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                     : "text-stone-500 hover:text-stone-700 hover:bg-white/50",
                 )}
               >
-                <CheckCircle2
-                  size={16}
-                  className={
-                    formData.asistencia === true
-                      ? "text-green-600"
-                      : "text-stone-400 opacity-50"
-                  }
-                />
+                <CheckCircle2 size={16} className={formData.asistencia === true ? "text-green-600" : "text-stone-400 opacity-50"} />
                 Sí
               </button>
 
@@ -187,7 +106,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
 
               <button
                 type="button"
-                onClick={() => setAsistencia(false)}
+                onClick={() => handleAsistenciaToggle(false)}
                 className={cn(
                   "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                   formData.asistencia === false
@@ -195,14 +114,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                     : "text-stone-500 hover:text-stone-700 hover:bg-white/50",
                 )}
               >
-                <XCircleIcon
-                  size={16}
-                  className={
-                    formData.asistencia === false
-                      ? "text-red-500"
-                      : "text-stone-400 opacity-50"
-                  }
-                />
+                <XCircleIcon size={16} className={formData.asistencia === false ? "text-red-500" : "text-stone-400 opacity-50"} />
                 No
               </button>
             </div>
@@ -219,9 +131,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                 type="text"
                 className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all placeholder:text-stone-300 shadow-sm"
                 value={formData.nombre || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, nombre: e.target.value })
-                }
+                onChange={(e) => handleTextChange("nombre", e.target.value)}
                 placeholder="Ej. Familia Pérez"
               />
             </div>
@@ -238,23 +148,14 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                     min="1"
                     className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all shadow-sm"
                     value={formData.invitados || ""}
-                    onChange={(e) =>
-                      handleNumberChange("invitados", e.target.value)
-                    }
+                    onChange={(e) => handleNumberChange("invitados", e.target.value)}
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-stone-400 pointer-events-none">
                     pers.
                   </span>
                 </div>
               </div>
-              <div
-                className={cn(
-                  "transition-opacity duration-300",
-                  formData.asistencia === false
-                    ? "opacity-50 grayscale"
-                    : "opacity-100",
-                )}
-              >
+              <div className={cn("transition-opacity duration-300", formData.asistencia === false ? "opacity-50 grayscale" : "opacity-100")}>
                 <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
                   Confirmados {formData.asistencia === true && "*"}
                 </label>
@@ -267,9 +168,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                     disabled={formData.asistencia === false}
                     className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all disabled:bg-sand-light disabled:text-stone-300 shadow-sm"
                     value={formData.confirmados || ""}
-                    onChange={(e) =>
-                      handleNumberChange("confirmados", e.target.value)
-                    }
+                    onChange={(e) => handleNumberChange("confirmados", e.target.value)}
                   />
                   {formData.asistencia === false && (
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
@@ -284,33 +183,28 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
             <div>
               <label className="flex items-center gap-1.5 text-sm font-medium text-charcoal mb-2 ml-1">
                 <Tag size={14} className="text-gold" />
-                Etiqueta{" "}
-                <span className="font-normal text-xs text-stone-400">
-                  (Opcional)
-                </span>
+                Etiqueta <span className="font-normal text-xs text-stone-400">(Opcional)</span>
               </label>
               <div className="flex flex-wrap gap-2">
-                {TAG_OPTIONS.map((tag) => {
-                  const isSelected = formData.etiqueta === tag;
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => handleTagToggle(tag)}
-                      className={cn(
-                        "px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border",
-                        isSelected
-                          ? "bg-gold border-gold text-white shadow-sm shadow-gold/20"
-                          : "bg-white border-sand text-stone-500 hover:border-gold/40 hover:text-charcoal hover:bg-sand-light/50",
-                      )}
-                    >
-                      {tag}
-                    </button>
-                  );
-                })}
+                {TAG_OPTIONS.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => handleTagToggle(tag)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border",
+                      formData.etiqueta === tag
+                        ? "bg-gold border-gold text-white shadow-sm shadow-gold/20"
+                        : "bg-white border-sand text-stone-500 hover:border-gold/40 hover:text-charcoal hover:bg-sand-light/50",
+                    )}
+                  >
+                    {tag}
+                  </button>
+                ))}
               </div>
             </div>
 
+            {/* WHATSAPP */}
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
                 WhatsApp <span className="font-normal text-xs">(Opcional)</span>
@@ -330,11 +224,7 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                     <option value="54">🇦🇷 +54</option>
                     <option value="56">🇨🇱 +56</option>
                   </select>
-
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
-                    <ChevronDown size={14} />
-                  </div>
-
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><ChevronDown size={14} /></div>
                   <div className="w-px h-6 bg-sand ml-1"></div>
                 </div>
 
@@ -352,64 +242,33 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
-                Nota para familia{" "}
-                <span className="font-normal text-xs">(Opcional)</span>
+                Nota para familia <span className="font-normal text-xs">(Opcional)</span>
               </label>
               <textarea
                 style={{ fieldSizing: "content" }}
                 className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all placeholder:text-stone-300 shadow-sm max-h-20 resize-none"
                 value={formData.notaAnfitrion || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    notaAnfitrion: e.target.value,
-                  })
-                }
-                placeholder="Ej. 'Los esperamos con ansias', 'No olviden sus lentes'..."
+                onChange={(e) => handleTextChange("notaAnfitrion", e.target.value)}
+                placeholder="Ej. 'Los esperamos con ansias'..."
               />
             </div>
 
-            {/* SECCIÓN DE PERMISOS DE EDICIÓN Y FECHA LÍMITE */}
-            <div
-              className={cn(
-                "rounded-xl transition-all",
-                formData.cambiosPermitidos
-                  ? "bg-white border border-sand shadow-sm"
-                  : "border border-transparent hover:bg-white/50",
-              )}
-            >
+            {/* SECCIÓN DE PERMISOS */}
+            <div className={cn("rounded-xl transition-all", formData.cambiosPermitidos ? "bg-white border border-sand shadow-sm" : "border border-transparent hover:bg-white/50")}>
               <button
                 type="button"
                 onClick={() => {
                   const newState = !formData.cambiosPermitidos;
-                  setFormData({
-                    ...formData,
-                    cambiosPermitidos: newState,
-                    // Si se desactiva, limpiamos la fecha para evitar un bloqueo automático no deseado
-                    ...(!newState ? { fechaLimiteConfirmacion: null } : {}),
-                  });
+                  handleTextChange("cambiosPermitidos", newState);
+                  if (!newState) handleTextChange("fechaLimiteConfirmacion", null);
                 }}
                 className="flex items-center gap-3 p-3 w-full text-left rounded-xl group"
               >
-                <div
-                  className={cn(
-                    "w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0",
-                    formData.cambiosPermitidos
-                      ? "bg-gold border-gold text-white"
-                      : "bg-white border-stone-300 text-transparent group-hover:border-stone-400",
-                  )}
-                >
+                <div className={cn("w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0", formData.cambiosPermitidos ? "bg-gold border-gold text-white" : "bg-white border-stone-300 text-transparent group-hover:border-stone-400")}>
                   <Check size={14} strokeWidth={3} />
                 </div>
                 <div>
-                  <span
-                    className={cn(
-                      "block text-sm font-medium select-none transition-colors",
-                      formData.cambiosPermitidos
-                        ? "text-gold"
-                        : "text-stone-custom",
-                    )}
-                  >
+                  <span className={cn("block text-sm font-medium select-none transition-colors", formData.cambiosPermitidos ? "text-gold" : "text-stone-custom")}>
                     Permitir cambios de asistencia
                   </span>
                   <span className="text-xs text-stone-light hidden sm:block">
@@ -418,42 +277,23 @@ const GuestFormModal: React.FC<GuestFormModalProps> = ({
                 </div>
               </button>
 
-              {/* INPUT OPCIONAL DE FECHA LÍMITE */}
               {formData.cambiosPermitidos && (
                 <div className="pl-11 pr-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
                   <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
-                    Fecha límite de confirmación{" "}
-                    <span className="font-normal normal-case text-stone-400">
-                      (Opcional)
-                    </span>
+                    Fecha límite de confirmación <span className="font-normal normal-case text-stone-400">(Opcional)</span>
                   </label>
                   <div className="relative flex items-center">
-                    <Calendar
-                      size={14}
-                      className="absolute left-3 text-stone-400 pointer-events-none"
-                    />
+                    <Calendar size={14} className="absolute left-3 text-stone-400 pointer-events-none" />
                     <input
                       type="date"
                       className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-sand bg-[#FDFBF7] text-stone-custom focus:bg-white focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all shadow-sm text-sm"
                       value={formData.fechaLimiteConfirmacion || ""}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          fechaLimiteConfirmacion: e.target.value !== "" ? e.target.value : null,
-                        })
-                      }
+                      onChange={(e) => handleTextChange("fechaLimiteConfirmacion", e.target.value !== "" ? e.target.value : null)}
                     />
-
-                    {/* Botón para limpiar la fecha opcional */}
                     {formData.fechaLimiteConfirmacion && (
                       <button
                         type="button"
-                        onClick={() =>
-                          setFormData({
-                            ...formData,
-                            fechaLimiteConfirmacion: null,
-                          })
-                        }
+                        onClick={() => handleTextChange("fechaLimiteConfirmacion", null)}
                         className="absolute right-3 p-1 rounded-full text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                         title="Quitar fecha límite"
                       >

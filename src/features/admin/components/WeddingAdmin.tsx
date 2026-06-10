@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { Guest, TagFilterType, WhatsappFilterType } from "@/types";
+import { useCallback, useEffect } from "react";
+import { Guest, GuestFormData } from "@/types";
 import GuestFormModal from "@/features/admin/components/GuestFormModal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
 import SearchAndFilterBar from "@/features/admin/components/SearchAndFilterBar";
@@ -14,7 +14,6 @@ import StatsSidebar from "./StatsSidebar";
 // Hooks
 import { useGuestsData } from "@/features/admin/hooks/useGuestData";
 import { useGuestsFilter } from "@/features/admin/hooks/useGuestFillters";
-import { useGuestsSelection } from "@/features/admin/hooks/useGuestSelection";
 import { useGuestForm } from "@/features/admin/hooks/useGuestForm";
 import { useConfirmModal } from "@/features/admin/hooks/useConfirmModal";
 import { useGuestsStats } from "@/features/admin/hooks/useGuestsStats";
@@ -29,6 +28,10 @@ import { useUnlockModal } from "@/features/admin/hooks/useUnlockModal";
 import { useGuestDeletion } from "@/features/admin/hooks/useGuestDeletion";
 import { useGuestImport } from "@/features/admin/hooks/useGuestImport";
 
+// Stores
+import { useGuestFiltersStore } from "@/features/admin/stores/useGuestFiltersStore";
+import { useGuestSelectionStore } from "@/features/admin/stores/useGuestSelectionStore";
+
 export default function WeddingAdmin() {
   const invitationData = useInvitationStore((state) => state.invitationData);
   const { toast } = useToast();
@@ -42,24 +45,29 @@ export default function WeddingAdmin() {
     filteredGuests,
   } = useGuestsFilter(guests);
 
-  const [whatsappFilter, setWhatsappFilter] =
-    useState<WhatsappFilterType>("all");
-  const [tagFilter, setTagFilter] = useState<TagFilterType>("all");
-  const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
+  const whatsappFilter = useGuestFiltersStore((state) => state.whatsappFilter);
+  const setWhatsappFilter = useGuestFiltersStore(
+    (state) => state.setWhatsappFilter,
+  );
+  const tagFilter = useGuestFiltersStore((state) => state.tagFilter);
+  const setTagFilter = useGuestFiltersStore((state) => state.setTagFilter);
+  const viewMode = useGuestFiltersStore((state) => state.viewMode);
+  const setViewMode = useGuestFiltersStore((state) => state.setViewMode);
 
-  const {
-    selectedGuests,
-    handleSelectGuest,
-    handleSelectAll,
-    clearSelection,
-    removeFromSelection,
-  } = useGuestsSelection();
+  const selectedGuests = useGuestSelectionStore((state) => state.selectedGuests);
+  const handleSelectGuest = useGuestSelectionStore(
+    (state) => state.selectGuest,
+  );
+  const handleSelectAll = useGuestSelectionStore((state) => state.selectAll);
+  const clearSelection = useGuestSelectionStore((state) => state.clearSelection);
+  const removeFromSelection = useGuestSelectionStore(
+    (state) => state.removeFromSelection,
+  );
 
   const {
     isModalOpen,
     currentGuestId,
     formData,
-    setFormData,
     handleOpenModal,
     handleCloseModal,
   } = useGuestForm();
@@ -175,9 +183,15 @@ export default function WeddingAdmin() {
   }, [invitationData, handleOpenModal]);
 
   const onSaveGuest = useCallback(
-    (e: React.FormEvent) =>
-      handleSaveGuest(e, currentGuestId, formData, handleCloseModal),
-    [handleSaveGuest, currentGuestId, formData, handleCloseModal],
+    (finalData: GuestFormData) => {
+      handleSaveGuest(
+        undefined as unknown as React.FormEvent,
+        currentGuestId,
+        finalData,
+        handleCloseModal,
+      );
+    },
+    [handleSaveGuest, currentGuestId, handleCloseModal],
   );
 
   // ─── Efectos globales ─────────────────────────────────────────────────────
@@ -271,8 +285,7 @@ export default function WeddingAdmin() {
       <GuestFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        formData={formData}
-        setFormData={setFormData}
+        initialData={formData}
         onSubmit={onSaveGuest}
         isEdit={!!currentGuestId}
         onBackdropPress={handleCloseModal}

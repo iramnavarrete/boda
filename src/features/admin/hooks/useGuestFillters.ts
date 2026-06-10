@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
-import { FilterType, Guest } from "@/types";
+import { useMemo } from "react";
+import { Guest } from "@/types";
 import { isPartialConfirmation } from "@/utils/guest";
+import { useGuestFiltersStore } from "@/features/admin/stores/useGuestFiltersStore";
 
 export function useGuestsFilter(guests: Guest[]) {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState<FilterType>("all");
+  const searchTerm = useGuestFiltersStore((state) => state.searchTerm);
+  const filterStatus = useGuestFiltersStore((state) => state.filterStatus);
 
   const filteredGuests = useMemo(() => {
     if (!guests) return [];
@@ -44,6 +45,9 @@ export function useGuestsFilter(guests: Guest[]) {
       return passSearch && passStatus;
     });
   }, [guests, searchTerm, filterStatus]);
+
+  const setSearchTerm = useGuestFiltersStore((state) => state.setSearchTerm);
+  const setFilterStatus = useGuestFiltersStore((state) => state.setFilterStatus);
 
   return {
     searchTerm,

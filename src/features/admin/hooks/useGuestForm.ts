@@ -1,51 +1,43 @@
-import { useState } from "react";
+import { useGuestFormStore } from "@/features/admin/stores/useGuestFormStore";
 import { Guest, GuestFormData } from "@/types";
 import { GuestService } from "@/services/guestService";
-
-const DEFAULT_GUEST: GuestFormData = {
-  nombre: "",
-  asistencia: null,
-  invitados: 1,
-  telefono: null,
-  confirmados: null,
-  notaInvitado: null,
-  cambiosPermitidos: true,
-  notaAnfitrion: null,
-};
+import { useCallback } from "react";
 
 export function useGuestForm() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentGuestId, setCurrentGuestId] = useState<string | null>(null);
-  const [formData, setFormData] = useState<GuestFormData>({ ...DEFAULT_GUEST });
+  const isModalOpen = useGuestFormStore((state) => state.isOpen);
+  const currentGuestId = useGuestFormStore((state) => state.currentGuestId);
+  const formData = useGuestFormStore((state) => state.formData);
+  const storeOpenForNew = useGuestFormStore((state) => state.openForNew);
+  const storeOpenForEdit = useGuestFormStore((state) => state.openForEdit);
+  const storeClose = useGuestFormStore((state) => state.close);
+  const setFormData = useGuestFormStore((state) => state.setFormData);
 
-  const handleOpenModal = async (
-    invitationId: string,
-    guest: Guest | null = null,
-  ) => {
-    if (guest) {
-      setCurrentGuestId(guest.id);
-      let contactInfo;
-      if (guest.tieneTelefono) {
-        contactInfo = await GuestService.getGuestContactInfo(
-          invitationId,
-          guest.id,
-        );
+  const handleOpenModal = useCallback(
+    async (invitationId: string, guest: Guest | null = null) => {
+      if (guest) {
+        let contactInfo;
+        if (guest.tieneTelefono) {
+          contactInfo = await GuestService.getGuestContactInfo(
+            invitationId,
+            guest.id,
+          );
+        }
+        const guestFormData: GuestFormData = {
+          ...guest,
+          telefono: contactInfo?.telefono || "",
+          cambiosPermitidos: !!guest.cambiosPermitidos,
+        };
+        storeOpenForEdit(guest, guestFormData);
+      } else {
+        storeOpenForNew();
       }
-      setFormData({
-        ...guest,
-        telefono: contactInfo?.telefono || "",
-        cambiosPermitidos: !!guest.cambiosPermitidos,
-      });
-    } else {
-      setCurrentGuestId(null);
-      setFormData({ ...DEFAULT_GUEST });
-    }
-    setIsModalOpen(true);
-  };
+    },
+    [storeOpenForNew, storeOpenForEdit],
+  );
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
+  const handleCloseModal = useCallback(() => {
+    storeClose();
+  }, [storeClose]);
 
   return {
     isModalOpen,
