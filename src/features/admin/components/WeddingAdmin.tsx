@@ -1,15 +1,12 @@
-import { useCallback, useEffect } from "react";
-import { Guest, GuestFormData } from "@/types";
+import { useEffect } from "react";
 import GuestFormModal from "@/features/admin/components/GuestFormModal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
-import SearchAndFilterBar from "@/features/admin/components/SearchAndFilterBar";
-import GuestsGridView from "@/features/admin/components/GuestsGridView";
 import FloatingBulkActionsBar from "@/features/admin/components/FloatingBulkActionsBar";
-import GuestsTableView from "./GuestTableView";
-import ImportGuestsModal from "./ImportGuestsModal";
-import SendWhatsappModal from "./SendWhatsappModal";
-import UnlockChangesModal from "./UnlockChangesModal";
-import StatsSidebar from "./StatsSidebar";
+import ImportGuestsModal from "@/features/admin/components/ImportGuestsModal";
+import SendWhatsappModal from "@/features/admin/components/SendWhatsappModal";
+import UnlockChangesModal from "@/features/admin/components/UnlockChangesModal";
+import StatsSidebar from "@/features/admin/components/StatsSidebar";
+import GuestsMainSection from "@/features/admin/components/guests/views/GuestsMainSection";
 
 // Hooks
 import { useGuestsData } from "@/features/admin/hooks/useGuestData";
@@ -20,13 +17,13 @@ import { useGuestsStats } from "@/features/admin/hooks/useGuestsStats";
 import { useGuestActions } from "@/features/admin/hooks/useGuestActions";
 import { useToast } from "@/features/shared/components/Toast";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
-import { GuestService } from "@/services/guestService";
 import { useExpiredGuestsWatcher } from "@/features/admin/hooks/useExpiredGuestsWatcher";
 import { useGuestFiltersAndCounts } from "@/features/admin/hooks/useGuestFiltersAndCounts";
 import { useWhatsappModal } from "@/features/admin/hooks/useWhatsappModal";
 import { useUnlockModal } from "@/features/admin/hooks/useUnlockModal";
 import { useGuestDeletion } from "@/features/admin/hooks/useGuestDeletion";
 import { useGuestImport } from "@/features/admin/hooks/useGuestImport";
+import { useLockActions, useEditActions } from "@/features/admin/hooks/guests";
 
 // Stores
 import { useGuestFiltersStore } from "@/features/admin/stores/useGuestFiltersStore";
@@ -37,67 +34,49 @@ export default function WeddingAdmin() {
   const { toast } = useToast();
 
   const { guests, isLoadingGuests, error } = useGuestsData(invitationData?.id);
-  const {
-    searchTerm,
-    setSearchTerm,
-    filterStatus,
-    setFilterStatus,
-    filteredGuests,
-  } = useGuestsFilter(guests);
+  const { searchTerm, setSearchTerm, filterStatus, setFilterStatus, filteredGuests } =
+    useGuestsFilter(guests);
 
+  // Filter UI state
   const whatsappFilter = useGuestFiltersStore((state) => state.whatsappFilter);
-  const setWhatsappFilter = useGuestFiltersStore(
-    (state) => state.setWhatsappFilter,
-  );
+  const setWhatsappFilter = useGuestFiltersStore((state) => state.setWhatsappFilter);
   const tagFilter = useGuestFiltersStore((state) => state.tagFilter);
   const setTagFilter = useGuestFiltersStore((state) => state.setTagFilter);
   const viewMode = useGuestFiltersStore((state) => state.viewMode);
   const setViewMode = useGuestFiltersStore((state) => state.setViewMode);
 
+  // Selection state
   const selectedGuests = useGuestSelectionStore((state) => state.selectedGuests);
-  const handleSelectGuest = useGuestSelectionStore(
-    (state) => state.selectGuest,
-  );
+  const handleSelectGuest = useGuestSelectionStore((state) => state.selectGuest);
   const handleSelectAll = useGuestSelectionStore((state) => state.selectAll);
   const clearSelection = useGuestSelectionStore((state) => state.clearSelection);
-  const removeFromSelection = useGuestSelectionStore(
-    (state) => state.removeFromSelection,
-  );
+  const removeFromSelection = useGuestSelectionStore((state) => state.removeFromSelection);
 
-  const {
-    isModalOpen,
-    currentGuestId,
-    formData,
-    handleOpenModal,
-    handleCloseModal,
-  } = useGuestForm();
+  // Form state
+  const { isModalOpen, currentGuestId, formData, handleOpenModal, handleCloseModal } =
+    useGuestForm();
 
-  const {
-    confirmModal,
-    openConfirmModal,
-    closeConfirmModal,
-    handleExecuteConfirmation,
-  } = useConfirmModal();
+  // Confirm modal
+  const { confirmModal, openConfirmModal, closeConfirmModal, handleExecuteConfirmation } =
+    useConfirmModal();
 
-  const { handleSaveGuest, handleExportExcel } = useGuestActions(
-    invitationData?.id,
-  );
+  // Guest actions
+  const { handleSaveGuest, handleExportExcel } = useGuestActions(invitationData?.id);
 
-  // ─── Hooks nuevos ─────────────────────────────────────────────────────────
-
+  // Watchers
   useExpiredGuestsWatcher(guests, invitationData?.id);
 
+  // Filtered data
   const { finalFilteredGuests, filterCounts, whatsappCounts, tagCounts } =
     useGuestFiltersAndCounts(filteredGuests, whatsappFilter, tagFilter);
 
+  // Modals
   const whatsapp = useWhatsappModal(invitationData?.id);
+  const unlock = useUnlockModal(invitationData?.id, selectedGuests, clearSelection);
+  const { isImportModalOpen, isImporting, openImportModal, closeImportModal, handleImport } =
+    useGuestImport(invitationData?.id);
 
-  const unlock = useUnlockModal(
-    invitationData?.id,
-    selectedGuests,
-    clearSelection,
-  );
-
+  // Delete logic
   const { handleDeleteGuest, handleBulkDelete } = useGuestDeletion({
     invitationId: invitationData?.id,
     selectedGuests,
@@ -106,101 +85,30 @@ export default function WeddingAdmin() {
     openConfirmModal,
   });
 
-  const {
-    isImportModalOpen,
-    isImporting,
-    openImportModal,
-    closeImportModal,
-    handleImport,
-  } = useGuestImport(invitationData?.id);
+  // Lock actions
+  const { handleLockToggle, handleBulkUpdateLock } = useLockActions({
+    invitationId: invitationData?.id,
+    selectedGuests,
+    clearSelection,
+    openConfirmModal,
+    unlockModal: unlock,
+  });
 
-  // ─── Lock / Unlock ────────────────────────────────────────────────────────
+  // Edit actions
+  const { handleEdit, handleNewGuest, onSaveGuest } = useEditActions({
+    invitationId: invitationData?.id,
+    currentGuestId,
+    handleOpenModal,
+    handleCloseModal,
+    handleSaveGuest,
+  });
 
-  const handleLockToggle = useCallback(
-    (guest: Guest) => {
-      if (guest.cambiosPermitidos) {
-        openConfirmModal({
-          isOpen: true,
-          title: `Bloquear edición a "${guest.nombre}"`,
-          message: `Al hacer esto la familia NO podrá modificar su mensaje de felicitación ni confirmar cantidad de invitados.`,
-          isDanger: false,
-          action: async () => {
-            if (invitationData) {
-              await GuestService.toggleGuestLock(
-                invitationData.id,
-                guest,
-                true,
-              );
-            }
-          },
-        });
-      } else {
-        unlock.openForGuest(guest);
-      }
-    },
-    [invitationData, openConfirmModal, unlock],
-  );
-
-  const handleBulkUpdateLock = useCallback(
-    (shouldLock: boolean) => {
-      if (selectedGuests.size === 0) return;
-
-      if (shouldLock) {
-        openConfirmModal({
-          isOpen: true,
-          title: "Bloquear Edición",
-          message: `¿Deseas bloquear la edición para ${selectedGuests.size} familia${selectedGuests.size === 1 ? "" : "s"}? Ya no podrán modificar su mensaje de felicitación ni confirmar cantidad de invitados.`,
-          isDanger: false,
-          action: async () => {
-            if (invitationData) {
-              await GuestService.batchUpdateLock(
-                invitationData.id,
-                Array.from(selectedGuests),
-                true,
-              );
-            }
-            clearSelection();
-          },
-        });
-      } else {
-        unlock.openForBulk();
-      }
-    },
-    [selectedGuests, invitationData, openConfirmModal, clearSelection, unlock],
-  );
-
-  // ─── Edición ──────────────────────────────────────────────────────────────
-
-  const handleEdit = useCallback(
-    (guest: Guest) => {
-      if (invitationData) handleOpenModal(invitationData.id, guest);
-    },
-    [invitationData, handleOpenModal],
-  );
-
-  const handleNewGuest = useCallback(() => {
-    if (invitationData) handleOpenModal(invitationData.id);
-  }, [invitationData, handleOpenModal]);
-
-  const onSaveGuest = useCallback(
-    (finalData: GuestFormData) => {
-      handleSaveGuest(
-        currentGuestId,
-        finalData,
-        handleCloseModal,
-      );
-    },
-    [handleSaveGuest, currentGuestId, handleCloseModal],
-  );
-
-  // ─── Efectos globales ─────────────────────────────────────────────────────
-
+  // Error toast
   useEffect(() => {
     if (error) toast(error, "error");
   }, [error, toast]);
 
-  // ─── Render ───────────────────────────────────────────────────────────────
-
+  // Derived state
   const stats = useGuestsStats(finalFilteredGuests);
   const isFiltered = finalFilteredGuests.length !== (guests?.length ?? 0);
   const isFilterActive = isFiltered || searchTerm !== "";
@@ -223,7 +131,9 @@ export default function WeddingAdmin() {
               Familias {isFilterActive && "(filtrado)"}
             </h3>
 
-            <SearchAndFilterBar
+            <GuestsMainSection
+              viewMode={viewMode}
+              setViewMode={setViewMode}
               searchTerm={searchTerm}
               setSearchTerm={setSearchTerm}
               filterStatus={filterStatus}
@@ -235,39 +145,20 @@ export default function WeddingAdmin() {
               tagFilter={tagFilter}
               setTagFilter={setTagFilter}
               tagCounts={tagCounts}
+              selectedGuests={selectedGuests}
+              filteredGuests={finalFilteredGuests}
+              isLoadingGuests={isLoadingGuests}
+              disabled={selectedGuests.size > 0}
               onImportExcel={openImportModal}
               onExportExcel={() => handleExportExcel(guests)}
               onNewGuest={handleNewGuest}
-              disabled={selectedGuests.size > 0}
-              filteredGuestCount={finalFilteredGuests.length}
-              setViewMode={setViewMode}
-              viewMode={viewMode}
+              onSelectGuest={handleSelectGuest}
+              onSendReminder={(g) => whatsapp.open(g, "reminder")}
+              onEdit={handleEdit}
+              onDelete={handleDeleteGuest}
+              onSendWhatsApp={(g) => whatsapp.open(g, "initial")}
+              onLockToggle={handleLockToggle}
             />
-
-            {viewMode === "grid" ? (
-              <GuestsGridView
-                filteredGuests={finalFilteredGuests}
-                selectedGuests={selectedGuests}
-                onSelectGuest={handleSelectGuest}
-                onSendReminder={(g) => whatsapp.open(g, "reminder")}
-                onEdit={handleEdit}
-                onDelete={handleDeleteGuest}
-                onSendWhatsApp={(g) => whatsapp.open(g, "initial")}
-                onLockToggle={handleLockToggle}
-                isLoading={isLoadingGuests}
-              />
-            ) : (
-              <GuestsTableView
-                filteredGuests={finalFilteredGuests}
-                selectedGuests={selectedGuests}
-                onSelectGuest={handleSelectGuest}
-                onSendReminder={(g) => whatsapp.open(g, "reminder")}
-                onEdit={handleEdit}
-                onDelete={handleDeleteGuest}
-                onSendWhatsApp={(g) => whatsapp.open(g, "initial")}
-                onLockToggle={handleLockToggle}
-              />
-            )}
           </main>
         </div>
       </section>
