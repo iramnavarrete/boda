@@ -1,23 +1,23 @@
 import React from "react";
-import { Guest } from "@/types";
-import SearchAndFilterBar from "../SearchAndFilterBar";
-import GuestsGridView from "./GuestsGridView";
-import GuestsTableView from "./GuestsTableView";
+import { FilterCounts, Guest, TagCounts, TagFilterType, WhatsappCounts, WhatsappFilterType } from "@/types";
+import SearchAndFilterBar from "../../SearchAndFilterBar";
+import GuestsGridView from "../../GuestsGridView";
+import GuestsTableView from "../../GuestTableView";
 
 interface GuestsMainSectionProps {
   viewMode: "grid" | "table";
   setViewMode: (mode: "grid" | "table") => void;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  filterStatus: string;
-  setFilterStatus: (status: string) => void;
-  filterCounts: Record<string, number>;
-  whatsappFilter: string;
-  setWhatsappFilter: (filter: string) => void;
-  whatsappCounts: Record<string, number>;
-  tagFilter: string;
-  setTagFilter: (filter: string) => void;
-  tagCounts: Record<string, number>;
+  filterStatus: keyof FilterCounts;
+  setFilterStatus: (status: keyof FilterCounts) => void;
+  filterCounts: FilterCounts;
+  whatsappFilter: WhatsappFilterType;
+  setWhatsappFilter: (filter: WhatsappFilterType) => void;
+  whatsappCounts: WhatsappCounts;
+  tagFilter: TagFilterType;
+  setTagFilter: (filter: TagFilterType) => void;
+  tagCounts: TagCounts;
   selectedGuests: Set<string>;
   filteredGuests: Guest[];
   isLoadingGuests: boolean;

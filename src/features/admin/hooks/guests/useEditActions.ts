@@ -8,9 +8,9 @@ interface UseEditActionsProps {
   handleCloseModal: () => void;
   handleSaveGuest: (
     currentGuestId: string | null,
-    finalData: GuestFormData,
-    handleCloseModal: () => void,
-  ) => void;
+    formData: GuestFormData,
+    onSuccess: () => void,
+  ) => Promise<void>;
 }
 
 export function useEditActions({
