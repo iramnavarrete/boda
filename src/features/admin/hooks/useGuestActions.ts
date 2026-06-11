@@ -7,9 +7,9 @@ export function useGuestActions(invitationId?: string) {
   const { toast } = useToast();
   if (!invitationId) {
     return {
-      handleSaveGuest: () => {},
-      sendWhatsApp: () => {},
-      handleExportExcel: () => {},
+      handleSaveGuest: async () => {},
+      sendWhatsApp: async () => {},
+      handleExportExcel: async () => {},
     };
   }
 
