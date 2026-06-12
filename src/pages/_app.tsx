@@ -1,7 +1,6 @@
 import { AuthInitializer } from "@/features/admin/components/AuthInitializer";
 import ProtectedPage from "@/features/admin/components/ProtectedPage";
 import { ToastProvider } from "@/features/shared/components/Toast";
-// @ts-expect-error: CSS module declarations not found
 import "../styles/globals.css";
 import type { AppProps } from "next/app";
 import { useRouter } from "next/router";
