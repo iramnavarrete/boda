@@ -580,7 +580,7 @@ export default function SearchAndFilterBar({
         </div>
 
         {/* GRUPO DERECHO: Acciones */}
-        <div className="flex gap-2 sm:gap-3 shrink-0 relative h-[46px]">
+        <div className="flex gap-2 flex-row-reverse md:flex-row sm:gap-3 shrink-0 relative h-[46px]">
           {/* Toggle Vista (Solo Desktop) */}
           {viewMode && setViewMode && (
             <div className="hidden md:flex items-center bg-white/90 border border-[#EBE5DA] rounded-xl p-1 shadow-sm h-full">
@@ -612,7 +612,7 @@ export default function SearchAndFilterBar({
           )}
 
           {/* Menú de Más Opciones (Importar/Exportar) */}
-          <div className="relative h-full hidden md:block" ref={optionsRef}>
+          <div className="relative h-full" ref={optionsRef}>
             <button
               onClick={() => setIsOptionsOpen(!isOptionsOpen)}
               className={cn(
