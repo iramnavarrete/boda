@@ -395,7 +395,6 @@ const ActivityItem = ({ activity }: { activity: GuestActivity }) => {
     bgColor: "bg-stone-100",
     iconColor: "text-stone-500",
   };
-  console.log({activity});
 
   if (activity.action === "confirm") {
     config = {
