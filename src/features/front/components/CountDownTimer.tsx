@@ -63,14 +63,6 @@ const CountdownTimer: FC<Props> = ({ textClassName = "", addToCalendarBtnClassNa
         }}
         viewport={{ once: true, amount: "some" }}
       >
-        <p
-          className={cn(
-            "relative flex flex-row font-newIconScript text-primary text-3xl items-center justify-center mb-2 drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]",
-            textClassName,
-          )}
-        >
-          Falta poco:
-        </p>
         <div className="flex flex-row justify-center items-center gap-1">
           <Square bottomText="DÍAS" text={days} textClassName={textClassName} />
           <div className="h-[50px] flex flex-col items-center">

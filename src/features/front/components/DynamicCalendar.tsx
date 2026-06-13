@@ -1,5 +1,5 @@
-
-const HandDrawnHeart = ({ className }: {className?: string}) => (
+import { cn } from "@heroui/theme";
+const HandDrawnHeart = ({ className }: { className?: string }) => (
   <svg
     className={className || ""}
     viewBox="0 0 100 100"
@@ -9,7 +9,7 @@ const HandDrawnHeart = ({ className }: {className?: string}) => (
     <path
       d="M50.4,83.6 C28.3,66.5 12.9,49.8 14.6,30.2 C15.5,19.2 24.3,12.7 34.6,13.8 C42.1,14.6 47.9,23.5 50.4,28.8 C52.7,23.1 58.7,14.7 66.8,13.4 C77.5,13.0 85.1,21.6 84.8,32.7 C84.3,51.8 67.2,69.5 50.4,83.6 Z"
       stroke="currentColor"
-      strokeWidth="3.5"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     />
@@ -17,7 +17,6 @@ const HandDrawnHeart = ({ className }: {className?: string}) => (
 );
 
 const DynamicCalendar = ({ targetDate }: { targetDate: Date }) => {
-
   const year = targetDate.getFullYear();
   const month = targetDate.getMonth();
   const targetDay = targetDate.getDate();
@@ -58,20 +57,25 @@ const DynamicCalendar = ({ targetDate }: { targetDate: Date }) => {
   const weekDays = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"];
 
   return (
-    <div className="bg-[#606954] text-[#e8e6d9] p-8 md:p-12 rounded-xl max-w-sm w-full mx-auto shadow-lg flex flex-col items-center">
-      {/* Cabecera del Mes y Año */}
-      <h2 className="font-cursive text-5xl md:text-6xl mb-8 tracking-wider text-center">
-        {currentMonthName} {year}
-      </h2>
+    <div className="bg-[#5C6154] text-[#FDFBF7] px-8 py-10 md:px-10 md:py-12 rounded-[2rem] max-w-[410px] w-11/12 mx-auto shadow-2xl flex flex-col items-center border border-white/10 relative">
+      {/* Cabecera del Mes y Año (Diseño Editorial) */}
+      <div className="flex flex-col items-center mb-8">
+        <h2 className="font-newIconScript text-5xl md:text-6xl drop-shadow-sm text-center leading-none">
+          {currentMonthName}
+        </h2>
+        <span className="font-nourdMedium text-[10px] md:text-xs tracking-[0.4em] uppercase opacity-70 mt-3 text-center">
+          {year}
+        </span>
+      </div>
 
       {/* Contenedor de la cuadrícula del calendario */}
-      <div className="w-full">
+      <div className="w-full px-2">
         {/* Encabezado de los días de la semana */}
-        <div className="grid grid-cols-7 gap-2 mb-4 text-center">
+        <div className="grid grid-cols-7 gap-2 mb-5 text-center">
           {weekDays.map((day, index) => (
             <div
               key={`weekday-${index}`}
-              className="font-medium text-sm md:text-base opacity-90"
+              className="font-nourdMedium text-[9px] md:text-[10px] tracking-widest uppercase opacity-50"
             >
               {day}
             </div>
@@ -79,20 +83,29 @@ const DynamicCalendar = ({ targetDate }: { targetDate: Date }) => {
         </div>
 
         {/* Cuadrícula de los números */}
-        <div className="grid grid-cols-7 gap-y-4 gap-x-2 text-center text-sm md:text-base font-light">
+        <div className="grid grid-cols-7 gap-y-5 gap-x-2 text-center text-sm md:text-base font-nourdLight">
           {calendarDays.map((day, index) => {
             const isTargetDay = day === targetDay;
             return (
               <div
                 key={`day-${index}`}
-                className="relative flex justify-center items-center h-8"
+                className="relative flex justify-center items-center h-8 md:h-9"
               >
                 {day ? (
                   <>
-                    <span className="z-10">{day}</span>
+                    <span
+                      className={cn(
+                        "z-10",
+                        isTargetDay
+                          ? "font-nourdMedium text-[#FDFBF7]"
+                          : "opacity-90",
+                      )}
+                    >
+                      {day}
+                    </span>
                     {/* Dibujar el corazón si es el día del evento */}
                     {isTargetDay && (
-                      <HandDrawnHeart className="absolute w-14 h-14 md:w-16 md:h-16 text-[#e8e6d9] opacity-80 z-0 transform -translate-y-0.5 -rotate-6" />
+                      <HandDrawnHeart className="absolute w-12 h-12 md:w-14 md:h-14 text-[#C5A669] opacity-80 z-0 transform -translate-y-[2px]" />
                     )}
                   </>
                 ) : (

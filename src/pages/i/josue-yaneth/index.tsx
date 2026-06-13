@@ -1,13 +1,9 @@
 import { useRef, useState } from "react";
-import "photoswipe/dist/photoswipe.css";
 
 import Cover from "@/features/front/components/sections/cover";
 import Quote from "@/features/front/components/sections/quote";
-import ParentsGodFathers from "@/features/front/components/sections/parents";
 import CountDown from "@/features/front/components/sections/countdown";
-import CeremonyToast from "@/features/front/components/sections/ceremony-toast";
 import Gallery from "@/features/front/components/sections/gallery";
-import Assistants from "@/features/front/components/sections/Assistants";
 import GiftsTable from "@/features/front/components/sections/gifts-table";
 import QrPhotos from "@/features/front/components/sections/qr-photos";
 import { AudioController } from "@/features/front/components/sections/music";
@@ -22,6 +18,9 @@ import { Invitation } from "@/types";
 import { getEventTypeName } from "@/utils/formatters";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import FrontLayout from "@/features/shared/layouts/front";
+import CeremonyToast from "@/features/front/components/siena/ceremony-toast";
+import Assistants from "@/features/front/components/siena/Assistants";
+import ParentsGodFathers from "@/features/front/components/siena/parents";
 
 interface InvitationPageProps {
   invitationData: Invitation & { eventUrl: string };
