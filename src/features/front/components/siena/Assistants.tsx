@@ -71,7 +71,7 @@ const TicketCard: FC<StateCardProps> = ({
       setIsDownloading(true);
       toast("Generando tu pase en alta calidad...", "info");
 
-      // Le damos un respiro al navegador de 150ms para que alcance a 
+      // Le damos un respiro al navegador de 150ms para que alcance a
       // renderizar el "toast" y el estado de carga en el botón ANTES de bloquear la pantalla.
       await new Promise((resolve) => setTimeout(resolve, 150));
 
@@ -98,11 +98,11 @@ const TicketCard: FC<StateCardProps> = ({
   };
 
   const dateObj = new Date(invitationData?.fechaISO || Date.now());
-  const formattedDate = new Intl.DateTimeFormat('es-MX', { 
-    weekday: 'long', 
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric' 
+  const formattedDate = new Intl.DateTimeFormat("es-MX", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   }).format(dateObj);
 
   return (
@@ -112,11 +112,12 @@ const TicketCard: FC<StateCardProps> = ({
       className="w-full max-w-[400px] mx-auto flex flex-col items-center gap-6"
     >
       {/* TICKET FÍSICO PREMIUM */}
-      <div ref={ticketRef} className="w-full bg-[#FDFBF7] rounded-xl shadow-2xl relative overflow-hidden border border-[#EBE5DA]">
-        
+      <div
+        ref={ticketRef}
+        className="w-full bg-[#FDFBF7] rounded-xl shadow-2xl relative overflow-hidden border border-[#EBE5DA]"
+      >
         {/* FLOR SUPERIOR */}
-        <div className="w-full flex justify-center mt-6">
-        </div>
+        <div className="w-full flex justify-center mt-6"></div>
 
         {/* Ornamentos Superiores y Título */}
         <div className="pt-4 pb-5 px-8 flex flex-col items-center">
@@ -124,11 +125,16 @@ const TicketCard: FC<StateCardProps> = ({
             ✦ Pase de Acceso ✦
           </p>
 
-          <p className={cn("font-serif text-3xl text-charcoal text-center leading-tight mb-2", textClassName)}>
+          <p
+            className={cn(
+              "font-serif text-3xl text-charcoal text-center leading-tight mb-2",
+              textClassName,
+            )}
+          >
             {invitationData?.nombre || "Nuestra Boda"}
           </p>
           <p className="text-[9px] text-stone-400 uppercase tracking-[0.2em] text-center">
-            {formattedDate.replace(/,/g, ' •')}
+            {formattedDate.replace(/,/g, " •")}
           </p>
         </div>
 
@@ -148,12 +154,13 @@ const TicketCard: FC<StateCardProps> = ({
             {guestData.nombre}
           </p>
           <p className="text-[10px] font-bold text-stone-500 uppercase tracking-[0.15em] flex items-center justify-center gap-2">
-            {confirmados} Pase{confirmados > 1 ? 's' : ''} Confirmado{confirmados > 1 ? 's' : ''}
+            {confirmados} Pase{confirmados > 1 ? "s" : ""} Confirmado
+            {confirmados > 1 ? "s" : ""}
           </p>
 
           {/* Contenedor del QR */}
           <div className="mx-auto w-48 h-48 bg-white rounded-xl shadow-sm border border-stone-200 flex items-center justify-center mt-8 mb-4 p-4 relative transition-transform hover:scale-[1.02] duration-300">
-             <QrCode size={160} className="text-[#2C2C29]" strokeWidth={1} />
+            <QrCode size={160} className="text-[#2C2C29]" strokeWidth={1} />
           </div>
 
           <p className="text-[9px] text-stone-400 uppercase tracking-[0.25em] text-center mb-8">
@@ -167,12 +174,13 @@ const TicketCard: FC<StateCardProps> = ({
 
           {/* Footer del Ticket */}
           <div className="w-full border-t border-dashed border-stone-300/60 pt-4 flex flex-col items-center">
-             <p className="text-[9px] text-stone-400 uppercase tracking-[0.2em] text-center mb-1">
-               {invitationData?.recepcion?.nombreSalon || "Recepción"} • {dateObj.getFullYear()}
-             </p>
-             <p className="text-[8px] text-stone-400 uppercase tracking-[0.2em] text-center opacity-70">
-               Generado por JN Invitaciones
-             </p>
+            <p className="text-[9px] text-stone-400 uppercase tracking-[0.2em] text-center mb-1">
+              {invitationData?.recepcion?.nombreSalon || "Recepción"} •{" "}
+              {dateObj.getFullYear()}
+            </p>
+            <p className="text-[8px] text-stone-400 uppercase tracking-[0.2em] text-center opacity-70">
+              Generado por JN Invitaciones
+            </p>
           </div>
         </div>
 
@@ -182,12 +190,22 @@ const TicketCard: FC<StateCardProps> = ({
 
       {/* BOTONES WALLET */}
       <div className="w-full space-y-3 pt-2">
-        <button 
+        <button
           onClick={handleDownloadImage}
           disabled={isDownloading}
           className="w-full bg-[#1A1A1A] text-white rounded-2xl py-4 flex items-center justify-center gap-3 hover:bg-black transition-all shadow-md active:scale-95 border border-[#1A1A1A] disabled:opacity-50"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
@@ -209,8 +227,13 @@ const DeclineCard: FC<StateCardProps> = ({ guestData, textClassName }) => {
       className="w-full max-w-[400px] mx-auto bg-white rounded-xl shadow-xl relative overflow-hidden border border-stone-200 p-10 flex flex-col items-center text-center"
     >
       <div className="absolute top-0 left-0 right-0 h-1.5 bg-stone-300 opacity-60" />
-      
-      <p className={cn("text-[10px] font-bold text-stone-400 uppercase tracking-[0.25em] mb-4", textClassName)}>
+
+      <p
+        className={cn(
+          "text-[10px] font-bold text-stone-400 uppercase tracking-[0.25em] mb-4",
+          textClassName,
+        )}
+      >
         Lamentamos tu ausencia
       </p>
       <p className="font-serif text-[32px] text-charcoal leading-tight mb-6">
@@ -218,7 +241,8 @@ const DeclineCard: FC<StateCardProps> = ({ guestData, textClassName }) => {
       </p>
       <div className="w-16 h-px bg-stone-300 mb-6" />
       <p className="text-stone-500 text-sm leading-relaxed mb-8 italic">
-        &quot;Tal vez no puedan acompañarnos físicamente, pero los llevaremos en el alma de nuestra fiesta y en nuestros corazones.&quot;
+        &quot;Tal vez no puedan acompañarnos físicamente, pero los llevaremos en
+        el alma de nuestra fiesta y en nuestros corazones.&quot;
       </p>
       <p className="font-newIconScript text-2xl text-stone-500 drop-shadow-sm mt-2">
         ¡Nos vemos pronto!
@@ -269,33 +293,41 @@ const Assistants: FC<Props> = ({
     return guestData.fechaLimiteConfirmacion < dateFormatted;
   };
 
-  const isFormLocked = guestData.cambiosPermitidos === false || isExpiredLocal();
+  const isFormLocked =
+    guestData.cambiosPermitidos === false || isExpiredLocal();
 
   const handleGetGuestData = useCallback(
     (id: string) => {
       if (!isDefaultId(id) && invitationData) {
-        GuestService.getGuest(invitationData.id, id).then(({ guest, error }) => {
-          if (error || !guest) {
-            setGuestData(defaultGuest);
-            return;
-          }
-          GuestQuotesService.getGuestQuote(invitationData.id, id).then(({ result, error }) => {
-            const guestDataCopy = { ...guest };
-            if (!error && result !== null) {
-              guestDataCopy.notaInvitado = result.mensaje;
+        GuestService.getGuest(invitationData.id, id).then(
+          ({ guest, error }) => {
+            if (error || !guest) {
+              setGuestData(defaultGuest);
+              return;
             }
-            setGuestData(guestDataCopy);
-            formikRef.current?.setValues({ ...guestDataCopy, telefono: null });
+            GuestQuotesService.getGuestQuote(invitationData.id, id).then(
+              ({ result, error }) => {
+                const guestDataCopy = { ...guest };
+                if (!error && result !== null) {
+                  guestDataCopy.notaInvitado = result.mensaje;
+                }
+                setGuestData(guestDataCopy);
+                formikRef.current?.setValues({
+                  ...guestDataCopy,
+                  telefono: null,
+                });
 
-            if (guestDataCopy.asistencia !== null) {
-              setIsFormSubmitted(true);
-              setIsAssistant(guestDataCopy.asistencia === true);
-            }
-          });
-        });
+                if (guestDataCopy.asistencia !== null) {
+                  setIsFormSubmitted(true);
+                  setIsAssistant(guestDataCopy.asistencia === true);
+                }
+              },
+            );
+          },
+        );
       }
     },
-    [invitationData]
+    [invitationData],
   );
 
   useEffect(() => {
@@ -306,7 +338,12 @@ const Assistants: FC<Props> = ({
 
   if (!guestData) {
     return (
-      <div className={cn("w-full h-24 bg-accent flex justify-center", containerClassName)}>
+      <div
+        className={cn(
+          "w-full h-24 bg-accent flex justify-center",
+          containerClassName,
+        )}
+      >
         <p className={cn("text-primary font-newIconScript", textClassName)}>
           Cargando información...
         </p>
@@ -317,17 +354,27 @@ const Assistants: FC<Props> = ({
   return (
     <div>
       <hr className="w-full border-sand/50" />
-      <div className={cn("bg-accent flex flex-col items-center justify-center py-20", containerClassName)}>
-        
+      <div
+        className={cn(
+          "bg-accent flex flex-col items-center justify-center py-20",
+          containerClassName,
+        )}
+      >
         <AnimatedEntrance>
           <div className="flex flex-col items-center justify-center gap-4 pb-8">
             <Separator className="mx-10" color={svgsColor} />
-            <p className={cn("pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-primary px-5 text-center", textClassName)}>
+            <p
+              className={cn(
+                "pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-primary px-5 text-center",
+                textClassName,
+              )}
+            >
               Confirmación de asistencia
             </p>
             {!isFormLocked && !isFormSubmitted && (
               <p className="font-nourdLight text-sm text-center px-10 max-w-sm text-stone-600">
-                Tu lugar te espera. Por favor, confirma tu asistencia a continuación.
+                Tu lugar te espera. Por favor, confirma tu asistencia a
+                continuación.
               </p>
             )}
           </div>
@@ -335,58 +382,56 @@ const Assistants: FC<Props> = ({
 
         <AnimatedEntrance classname="w-full">
           <div className="flex flex-col items-center justify-center px-5 w-full">
-            
             {/* LÓGICA DE VISTAS PRINCIPALES */}
             {isFormLocked ? (
               guestData.asistencia === true ? (
-                <TicketCard guestData={guestData} invitationData={invitationData} textClassName={textClassName} />
+                <TicketCard
+                  guestData={guestData}
+                  invitationData={invitationData}
+                  textClassName={textClassName}
+                />
               ) : guestData.asistencia === false ? (
-                <DeclineCard guestData={guestData} textClassName={textClassName} />
+                <DeclineCard
+                  guestData={guestData}
+                  textClassName={textClassName}
+                />
               ) : (
-                <ClosedCard guestData={guestData} textClassName={textClassName} />
+                <ClosedCard
+                  guestData={guestData}
+                  textClassName={textClassName}
+                />
               )
             ) : !isFormSubmitted ? (
-              
               // ============================================================================
               // FORMULARIO DE CONFIRMACIÓN ELEGANTE (REDESIGN)
               // ============================================================================
               <div className="w-full max-w-[400px] relative z-0">
-                {/* SELLO DE CARTA */}
-                <div className="flex justify-center -mb-10 relative z-10">
-                  <AnimatePresence>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="w-24 h-24"
-                    >
-                      <Image
-                        alt="Sello de carta"
-                        className="w-full h-full object-contain drop-shadow-md"
-                        width={100}
-                        height={100}
-                        sizes="100vw"
-                        src={sealImage || `/img/sello.png`}
-                      />
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-
                 {/* TARJETA BLANCA DEL FORMULARIO */}
-                <div className="rounded-xl bg-white shadow-xl px-6 py-12 pt-16 relative z-0 border border-stone-200">
+                <div className="rounded-xl bg-white shadow-xl px-6 py-12 pt-9 relative z-0 border border-stone-200">
                   <AnimatePresence>
+                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mb-4 text-center">
+                      Invitación para:
+                    </p>
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className={cn("flex flex-col items-center text-primary", textClassName)}
+                      className={cn(
+                        "flex flex-col items-center text-primary",
+                        textClassName,
+                      )}
                       key="assistance-form"
                     >
                       {/* TÍTULO PRINCIPAL (Nombre elegante) */}
-                      <p className={cn("text-3xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.05)] font-newIconScript text-charcoal text-center mb-4", textClassName)}>
+                      <p
+                        className={cn(
+                          "text-3xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.05)] font-newIconScript text-charcoal text-center mb-4",
+                          textClassName,
+                        )}
+                      >
                         {guestData.nombre}
                       </p>
-                      
+
                       {/* Divisor floral/elegante */}
                       <div className="flex items-center justify-center gap-4 mb-6 opacity-60">
                         <div className="w-12 h-px bg-stone-400" />
@@ -400,26 +445,43 @@ const Assistants: FC<Props> = ({
 
                       <Formik
                         innerRef={formikRef}
-                        validationSchema={assistanceSchema(Number(guestData.invitados))}
+                        validationSchema={assistanceSchema(
+                          Number(guestData.invitados),
+                        )}
                         initialValues={{ ...guestData, telefono: null }}
                         onSubmit={(data: GuestFormData) => {
                           setIsDisabled(true);
                           if (!isDefaultId(data.id) && invitationData) {
-                            GuestService.saveGuest(invitationData.id, data.id!, data, false, true)
+                            GuestService.saveGuest(
+                              invitationData.id,
+                              data.id!,
+                              data,
+                              false,
+                              true,
+                            )
                               .then(() => {
                                 setIsFormSubmitted(true);
                                 setIsAssistant(data.asistencia === true);
                                 if (data.notaInvitado) {
-                                  GuestQuotesService.saveGuestQuote(invitationData.id, data.id!, {
-                                    autor: data.nombre,
-                                    mensaje: data.notaInvitado || "",
-                                  });
+                                  GuestQuotesService.saveGuestQuote(
+                                    invitationData.id,
+                                    data.id!,
+                                    {
+                                      autor: data.nombre,
+                                      mensaje: data.notaInvitado || "",
+                                    },
+                                  );
                                 }
                                 ActivityService.logActivity(invitationData.id, {
-                                  action: data.asistencia === true ? "confirm" : "decline",
+                                  action:
+                                    data.asistencia === true
+                                      ? "confirm"
+                                      : "decline",
                                   guestId: data.id!,
                                   confirmedGuests:
-                                    data.asistencia === true && data.confirmados && data.confirmados > 0
+                                    data.asistencia === true &&
+                                    data.confirmados &&
+                                    data.confirmados > 0
                                       ? data.confirmados
                                       : null,
                                 });
@@ -446,32 +508,42 @@ const Assistants: FC<Props> = ({
                         }}
                       >
                         {({ values, handleSubmit, setFieldValue }) => {
-                          const hasSelectedOption = values.asistencia !== null && values.asistencia !== undefined;
+                          const hasSelectedOption =
+                            values.asistencia !== null &&
+                            values.asistencia !== undefined;
                           const isAttending = values.asistencia === true;
+                          const confirmados = values.confirmados || 0;
 
                           return (
-                            <form onSubmit={handleSubmit} className="w-full flex flex-col items-center">
-                              
+                            <form
+                              onSubmit={handleSubmit}
+                              className="w-full flex flex-col items-center"
+                            >
                               <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mb-4 text-center mt-2">
                                 ¿Confirmas tu asistencia?
                               </p>
 
                               {/* BOTONES SEGMENTADOS ELEGANTES */}
-                              <div className="flex flex-col sm:flex-row gap-4 w-full mb-8">
+                              <div className="flex flex-row gap-2 w-full mb-8">
                                 <button
                                   type="button"
                                   onClick={() => {
                                     setFieldValue("asistencia", true);
-                                    if (!values.confirmados) setFieldValue("confirmados", Number(guestData.invitados));
+                                    if (!values.confirmados)
+                                      setFieldValue(
+                                        "confirmados",
+                                        Number(guestData.invitados),
+                                      );
                                   }}
                                   className={cn(
-                                    "flex-1 flex items-center justify-center gap-3 py-3.5 rounded-full transition-all duration-300 font-medium text-sm border",
+                                    "flex-1 flex items-center justify-center gap-1 py-3.5 rounded-full transition-all duration-300 font-medium text-sm border",
                                     values.asistencia === true
                                       ? "bg-[#2C2C29] border-[#2C2C29] text-white shadow-md"
-                                      : "bg-transparent border-stone-300 text-stone-500 hover:border-stone-400 hover:text-stone-600"
+                                      : "bg-transparent border-stone-300 text-stone-500 hover:border-stone-400 hover:text-stone-600",
                                   )}
                                 >
-                                  <span className="text-lg">🥂</span> Sí, ahí estaré
+                                  <span className="text-md">🥂</span> Sí, ahí
+                                  estaré
                                 </button>
 
                                 <button
@@ -481,13 +553,16 @@ const Assistants: FC<Props> = ({
                                     setFieldValue("confirmados", 0);
                                   }}
                                   className={cn(
-                                    "flex-1 flex items-center justify-center gap-3 py-3.5 rounded-full transition-all duration-300 font-medium text-sm border",
+                                    "flex-1 flex items-center justify-center gap-1 py-3.5 rounded-full transition-all duration-300 font-medium text-sm border",
                                     values.asistencia === false
-                                      ? "bg-stone-100 border-stone-300 text-stone-600 shadow-inner"
-                                      : "bg-transparent border-stone-300 text-stone-500 hover:border-stone-300 hover:text-stone-600"
+                                      ? "bg-[#2C2C29] border-[#2C2C29] text-white shadow-md"
+                                      : "bg-transparent border-stone-300 text-stone-500 hover:border-stone-300 hover:text-stone-600",
                                   )}
                                 >
-                                  <span className="text-lg opacity-80 grayscale">🤍</span> No podré ir
+                                  <span className="text-md opacity-80 grayscale">
+                                    🤍
+                                  </span>{" "}
+                                  No podré ir
                                 </button>
                               </div>
 
@@ -497,99 +572,139 @@ const Assistants: FC<Props> = ({
                                     initial={{ opacity: 0, height: 0 }}
                                     animate={{ opacity: 1, height: "auto" }}
                                     exit={{ opacity: 0, height: 0 }}
-                                    transition={{ duration: 0.4, ease: "easeInOut" }}
-                                    className="w-full flex flex-col items-center"
+                                    transition={{
+                                      duration: 0.4,
+                                      ease: "easeInOut",
+                                    }}
+                                    className="w-full overflow-hidden"
                                   >
-                                    <AnimatePresence initial={false}>
-                                      {isAttending && (
-                                        <motion.div
-                                          key="confirmados-stepper"
-                                          initial={{ opacity: 0, height: 0 }}
-                                          animate={{ opacity: 1, height: "auto" }}
-                                          exit={{ opacity: 0, height: 0 }}
-                                          transition={{ duration: 0.3 }}
-                                          className="w-full flex flex-col items-center mb-10 overflow-hidden"
-                                        >
-                                          <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mb-6 text-center mt-2">
-                                            Número de pases
-                                          </p>
-                                          
-                                          {/* STEPPER NUMÉRICO PREMIUM */}
-                                          <div className="flex items-center justify-center gap-8 md:gap-12">
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                if (values.confirmados > 1) {
-                                                  setFieldValue("confirmados", Number(values.confirmados) - 1);
-                                                }
-                                              }}
-                                              disabled={values.confirmados <= 1}
-                                              className="w-12 h-12 flex items-center justify-center rounded-full border border-stone-400 text-stone-500 disabled:opacity-20 disabled:border-stone-300 disabled:text-stone-300 transition-all active:scale-95 hover:bg-stone-100 hover:text-charcoal hover:border-charcoal"
-                                            >
-                                              <Minus size={18} strokeWidth={2} />
-                                            </button>
-                                            
-                                            <div className="flex flex-col items-center justify-center min-w-[4rem]">
-                                              <span className="font-serif text-5xl text-charcoal font-bold leading-none">
-                                                {values.confirmados}
-                                              </span>
-                                              <span className="text-[9px] text-stone-400 font-bold uppercase tracking-[0.2em] mt-2">
-                                                Pase(s)
-                                              </span>
+                                    <div className="w-full flex flex-col items-center">
+                                      <AnimatePresence initial={false}>
+                                        {isAttending && (
+                                          <motion.div
+                                            key="confirmados-stepper"
+                                            initial={{ opacity: 0, height: 0 }}
+                                            animate={{
+                                              opacity: 1,
+                                              height: "auto",
+                                            }}
+                                            exit={{ opacity: 0, height: 0 }}
+                                            transition={{ duration: 0.3 }}
+                                            className="w-full overflow-hidden"
+                                          >
+                                            <div className="w-full flex flex-col items-center mb-10">
+                                              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mb-6 text-center mt-2">
+                                                Número de pases
+                                              </p>
+
+                                              {/* STEPPER NUMÉRICO PREMIUM */}
+                                              <div className="flex items-center justify-center gap-8 md:gap-12">
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    if (confirmados > 1) {
+                                                      setFieldValue(
+                                                        "confirmados",
+                                                        confirmados - 1,
+                                                      );
+                                                    }
+                                                  }}
+                                                  disabled={confirmados <= 1}
+                                                  className="w-12 h-12 flex items-center justify-center rounded-full border border-stone-400 text-stone-500 disabled:opacity-20 disabled:border-stone-300 disabled:text-stone-300 transition-all active:scale-95 hover:bg-stone-100 hover:text-charcoal hover:border-charcoal"
+                                                >
+                                                  <Minus
+                                                    size={18}
+                                                    strokeWidth={2}
+                                                  />
+                                                </button>
+
+                                                <div className="flex flex-col items-center justify-center min-w-[4rem]">
+                                                  <span className="font-serif text-5xl text-charcoal font-bold leading-none">
+                                                    {confirmados}
+                                                  </span>
+                                                  <span className="text-[9px] text-stone-400 font-bold uppercase tracking-[0.2em] mt-2">
+                                                    Pase(s)
+                                                  </span>
+                                                </div>
+
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    if (
+                                                      confirmados <
+                                                      Number(
+                                                        guestData.invitados,
+                                                      )
+                                                    ) {
+                                                      setFieldValue(
+                                                        "confirmados",
+                                                        confirmados + 1,
+                                                      );
+                                                    }
+                                                  }}
+                                                  disabled={
+                                                    confirmados >=
+                                                    Number(guestData.invitados)
+                                                  }
+                                                  className="w-12 h-12 flex items-center justify-center rounded-full border border-stone-400 text-stone-500 disabled:opacity-20 disabled:border-stone-300 disabled:text-stone-300 transition-all active:scale-95 hover:bg-stone-100 hover:text-charcoal hover:border-charcoal"
+                                                >
+                                                  <Plus
+                                                    size={18}
+                                                    strokeWidth={2}
+                                                  />
+                                                </button>
+                                              </div>
+
+                                              {guestData.invitados > 1 && (
+                                                <p className="text-[10px] text-stone-400 mt-5 font-medium italic">
+                                                  Límite asignado:{" "}
+                                                  {guestData.invitados} pases
+                                                </p>
+                                              )}
                                             </div>
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
 
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                if (values.confirmados < Number(guestData.invitados)) {
-                                                  setFieldValue("confirmados", Number(values.confirmados) + 1);
-                                                }
-                                              }}
-                                              disabled={values.confirmados >= Number(guestData.invitados)}
-                                              className="w-12 h-12 flex items-center justify-center rounded-full border border-stone-400 text-stone-500 disabled:opacity-20 disabled:border-stone-300 disabled:text-stone-300 transition-all active:scale-95 hover:bg-stone-100 hover:text-charcoal hover:border-charcoal"
-                                            >
-                                              <Plus size={18} strokeWidth={2} />
-                                            </button>
-                                          </div>
-                                          
-                                          {guestData.invitados > 1 && (
-                                            <p className="text-[10px] text-stone-400 mt-5 font-medium italic">
-                                              Límite asignado: {guestData.invitados} pases
-                                            </p>
-                                          )}
-                                        </motion.div>
-                                      )}
-                                    </AnimatePresence>
+                                      {/* INPUT TEXTO MINIMALISTA */}
+                                      <div className="w-full mb-10 mt-2 text-left">
+                                        <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-[0.15em] mb-3">
+                                          {values.asistencia === true
+                                            ? "Envía una felicitación"
+                                            : "Mensaje para los novios"}{" "}
+                                          <span className="font-normal italic tracking-normal opacity-80">
+                                            (opcional)
+                                          </span>
+                                        </label>
+                                        <textarea
+                                          name="notaInvitado"
+                                          value={values.notaInvitado || ""}
+                                          onChange={(e) =>
+                                            setFieldValue(
+                                              "notaInvitado",
+                                              e.target.value,
+                                            )
+                                          }
+                                          className="w-full bg-transparent border-b border-sand py-2 text-sm text-[#2C2C29] placeholder:text-stone-300 focus:border-stone-500 outline-none resize-none transition-colors"
+                                          rows={1}
+                                          style={{ fieldSizing: "content" }}
+                                          placeholder="Escribe aquí tu mensaje..."
+                                        />
+                                      </div>
 
-                                    {/* INPUT TEXTO MINIMALISTA */}
-                                    <div className="w-full mb-10 mt-2 text-left">
-                                      <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-[0.15em] mb-3">
-                                        {values.asistencia === true ? "Restricciones alimenticias / Felicitación" : "Mensaje para los novios"}{" "}
-                                        <span className="font-normal italic tracking-normal opacity-80">(opcional)</span>
-                                      </label>
-                                      <textarea
-                                        name="notaInvitado"
-                                        value={values.notaInvitado || ''}
-                                        onChange={(e) => setFieldValue("notaInvitado", e.target.value)}
-                                        className="w-full bg-transparent border-b border-sand py-2 text-sm text-[#2C2C29] placeholder:text-stone-300 focus:border-stone-500 outline-none resize-none transition-colors"
-                                        rows={1}
-                                        style={{ fieldSizing: "content" }}
-                                        placeholder="Escribe aquí tu mensaje..."
-                                      />
+                                      {/* BOTÓN SUBMIT ELEGANTE */}
+                                      <button
+                                        type="submit"
+                                        disabled={isDisabled}
+                                        className={cn(
+                                          "w-full bg-[#2C2C29] text-white py-4 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-[#1a1a18] transition-all flex items-center justify-center gap-3 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed",
+                                          sendFormBtnClassName,
+                                        )}
+                                      >
+                                        Confirmar Asistencia{" "}
+                                        <ArrowRight size={16} />
+                                      </button>
                                     </div>
-
-                                    {/* BOTÓN SUBMIT ELEGANTE */}
-                                    <button
-                                      type="submit"
-                                      disabled={isDisabled}
-                                      className={cn(
-                                        "w-full bg-[#2C2C29] text-white py-4 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-[#1a1a18] transition-all flex items-center justify-center gap-3 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed",
-                                        sendFormBtnClassName
-                                      )}
-                                    >
-                                      Confirmar Asistencia <ArrowRight size={16} />
-                                    </button>
-
                                   </motion.div>
                                 )}
                               </AnimatePresence>
@@ -601,35 +716,41 @@ const Assistants: FC<Props> = ({
                   </AnimatePresence>
                 </div>
               </div>
+            ) : // RESULTADOS DESPUÉS DE HACER CLICK EN ENVIAR (Y form no está bloqueado)
+            guestData.asistencia === true ? (
+              <TicketCard
+                guestData={guestData}
+                invitationData={invitationData}
+                textClassName={textClassName}
+              />
             ) : (
-              // RESULTADOS DESPUÉS DE HACER CLICK EN ENVIAR (Y form no está bloqueado)
-              guestData.asistencia === true ? (
-                <TicketCard guestData={guestData} invitationData={invitationData} textClassName={textClassName} />
-              ) : (
-                <DeclineCard guestData={guestData} textClassName={textClassName} />
-              )
+              <DeclineCard
+                guestData={guestData}
+                textClassName={textClassName}
+              />
             )}
 
             {/* BOTÓN FLOTANTE "MODIFICAR MI RESPUESTA" (Fuera de las tarjetas) */}
-            {!isFormLocked && isFormSubmitted && guestData.asistencia !== null && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="mt-8"
-              >
-                <button
-                  onClick={() => {
-                    setIsFormSubmitted(false);
-                    setIsDisabled(false);
-                  }}
-                  className="text-stone-500 hover:text-charcoal font-medium text-xs uppercase tracking-widest border-b border-stone-300 hover:border-charcoal hover:text-charcoal transition-all pb-0.5"
+            {!isFormLocked &&
+              isFormSubmitted &&
+              guestData.asistencia !== null && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="mt-8"
                 >
-                  Modificar mi respuesta
-                </button>
-              </motion.div>
-            )}
-
+                  <button
+                    onClick={() => {
+                      setIsFormSubmitted(false);
+                      setIsDisabled(false);
+                    }}
+                    className="text-stone-500 font-medium text-xs uppercase tracking-widest border-b border-stone-300 hover:border-charcoal hover:text-charcoal transition-all pb-0.5"
+                  >
+                    Modificar mi respuesta
+                  </button>
+                </motion.div>
+              )}
           </div>
         </AnimatedEntrance>
       </div>
