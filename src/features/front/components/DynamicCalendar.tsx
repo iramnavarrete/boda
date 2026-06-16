@@ -57,13 +57,13 @@ const DynamicCalendar = ({ targetDate }: { targetDate: Date }) => {
   const weekDays = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"];
 
   return (
-    <div className="bg-[#5C6154] text-[#FDFBF7] px-8 py-10 md:px-10 md:py-12 rounded-[2rem] max-w-[410px] w-11/12 mx-auto shadow-2xl flex flex-col items-center border border-white/10 relative">
+    <div className="bg-[#5C6154] text-[#FDFBF7] px-8 py-6 md:px-10 md:py-12 rounded-[2rem] max-w-[410px] w-11/12 mx-auto shadow-2xl flex flex-col items-center border border-white/10 relative">
       {/* Cabecera del Mes y Año (Diseño Editorial) */}
-      <div className="flex flex-col items-center mb-8">
-        <h2 className="font-newIconScript text-5xl md:text-6xl drop-shadow-sm text-center leading-none">
+      <div className="flex justify-around w-full mb-4">
+        <h2 className="font-newIconScript text-3xl drop-shadow-sm text-center leading-none">
           {currentMonthName}
         </h2>
-        <span className="font-nourdMedium text-[10px] md:text-xs tracking-[0.4em] uppercase opacity-70 mt-3 text-center">
+        <span className="font-nourdMedium tracking-[0.3em] uppercase opacity-70 mt-1 text-center">
           {year}
         </span>
       </div>
@@ -71,7 +71,7 @@ const DynamicCalendar = ({ targetDate }: { targetDate: Date }) => {
       {/* Contenedor de la cuadrícula del calendario */}
       <div className="w-full px-2">
         {/* Encabezado de los días de la semana */}
-        <div className="grid grid-cols-7 gap-2 mb-5 text-center">
+        <div className="grid grid-cols-7 gap-2 mb-2 text-center">
           {weekDays.map((day, index) => (
             <div
               key={`weekday-${index}`}
@@ -105,7 +105,7 @@ const DynamicCalendar = ({ targetDate }: { targetDate: Date }) => {
                     </span>
                     {/* Dibujar el corazón si es el día del evento */}
                     {isTargetDay && (
-                      <HandDrawnHeart className="absolute w-12 h-12 md:w-14 md:h-14 text-[#C5A669] opacity-80 z-0 transform -translate-y-[2px]" />
+                      <HandDrawnHeart className="absolute w-12 h-12 md:w-14 md:h-14 text-[#C5A669] opacity-80 z-0" />
                     )}
                   </>
                 ) : (

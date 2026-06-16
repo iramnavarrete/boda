@@ -150,7 +150,12 @@ const TicketCard: FC<StateCardProps> = ({
           <p className="text-[9px] font-bold text-stone-400 uppercase tracking-[0.25em] mb-3">
             Invitado
           </p>
-          <p className="font-serif text-3xl text-[#2C2C29] text-center italic mb-4">
+          <p
+            className={cn(
+              "text-3xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.05)] font-newIconScript text-charcoal text-center mb-4",
+              textClassName,
+            )}
+          >
             {guestData.nombre}
           </p>
           <p className="text-[10px] font-bold text-stone-500 uppercase tracking-[0.15em] flex items-center justify-center gap-2">
@@ -163,8 +168,8 @@ const TicketCard: FC<StateCardProps> = ({
             <QrCode size={160} className="text-[#2C2C29]" strokeWidth={1} />
           </div>
 
-          <p className="text-[9px] text-stone-400 uppercase tracking-[0.25em] text-center mb-8">
-            Escanea en la entrada
+          <p className="text-[9px] text-stone-400 uppercase tracking-[0.25em] text-center mb-8 max-w-[40ch]">
+            Escanea en la entrada del evento para agilizar tu acceso.
           </p>
 
           {/* FLOR INFERIOR */}
@@ -226,8 +231,6 @@ const DeclineCard: FC<StateCardProps> = ({ guestData, textClassName }) => {
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-[400px] mx-auto bg-white rounded-xl shadow-xl relative overflow-hidden border border-stone-200 p-10 flex flex-col items-center text-center"
     >
-      <div className="absolute top-0 left-0 right-0 h-1.5 bg-stone-300 opacity-60" />
-
       <p
         className={cn(
           "text-[10px] font-bold text-stone-400 uppercase tracking-[0.25em] mb-4",
@@ -236,7 +239,12 @@ const DeclineCard: FC<StateCardProps> = ({ guestData, textClassName }) => {
       >
         Lamentamos tu ausencia
       </p>
-      <p className="font-serif text-[32px] text-charcoal leading-tight mb-6">
+      <p
+        className={cn(
+          "text-3xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.05)] font-newIconScript text-charcoal text-center mb-4",
+          textClassName,
+        )}
+      >
         {guestData.nombre}
       </p>
       <div className="w-16 h-px bg-stone-300 mb-6" />
