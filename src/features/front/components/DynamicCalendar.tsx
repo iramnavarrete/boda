@@ -3,7 +3,7 @@ const HandDrawnHeart = ({ className }: { className?: string }) => (
   <svg
     className={className || ""}
     viewBox="0 0 100 100"
-    fill="none"
+    fill="currentColor"
     xmlns="http://www.w3.org/2000/svg"
   >
     <path
@@ -83,7 +83,7 @@ const DynamicCalendar = ({ targetDate }: { targetDate: Date }) => {
         </div>
 
         {/* Cuadrícula de los números */}
-        <div className="grid grid-cols-7 gap-y-5 gap-x-2 text-center text-sm md:text-base font-nourdLight">
+        <div className="grid grid-cols-7 gap-y-3 gap-x-2 text-center text-sm md:text-base font-nourdLight">
           {calendarDays.map((day, index) => {
             const isTargetDay = day === targetDay;
             return (

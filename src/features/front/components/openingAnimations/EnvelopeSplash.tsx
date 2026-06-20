@@ -71,7 +71,7 @@ export default function EnvelopeSplash({
   return (
     <div
       className={cn(
-        "fixed w-full h-full max-h-[100dvh] overflow-hidden z-50",
+        "fixed w-full h-full max-h-[100svh] overflow-hidden z-50",
         className,
       )}
     >
@@ -97,7 +97,7 @@ export default function EnvelopeSplash({
           autoplay: false,
           rendererSettings: {
             preserveAspectRatio: "xMidYMid slice",
-            className: "cursor-default z-[51] !w-full !h-screen !max-h-[100dvh]",
+            className: "cursor-default z-[51] !w-full !h-screen !max-h-[100svh]",
           },
         }}
         isClickToPauseDisabled

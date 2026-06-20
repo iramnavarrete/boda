@@ -27,7 +27,6 @@ export default function ParentsGodFathers({
   const invitationData = useInvitationStore((state) => state.invitationData);
 
   // Extraer la fecha real del evento de forma segura
-  // Extraer la fecha real del evento de forma segura
   const getEventDate = useCallback(() => {
     if (!invitationData?.fecha) return new Date();
     // Si es un Timestamp de Firebase, usamos toDate()
@@ -46,21 +45,27 @@ export default function ParentsGodFathers({
   return (
     <article
       className={cn(
-        "bg-accent border-t-1 border-primary flex flex-col items-center justify-center relative pt-20",
+        // Quitamos items-center y justify-center para permitir el flujo normal en bloque
+        "bg-accent border-t-1 border-primary flex flex-col relative",
         containerClassName,
       )}
     >
-      <FlowersBackground1
-        className="w-full h-[65%] absolute top-0"
-        color={svgsColor}
-      />
-      <FlowersBackground1
-        className="w-full h-[65%] absolute top-[70%] rotate-180"
-        color={svgsColor}
-      />
+      {/* FONDO AISLADO (Mantiene overflow-hidden para no derramar las flores) */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <FlowersBackground1
+          className="w-full h-[65%] absolute top-0"
+          color={svgsColor}
+        />
+        <FlowersBackground1
+          className="w-full h-[65%] absolute top-[70%] rotate-180"
+          color={svgsColor}
+        />
+      </div>
+
+      {/* CONTENEDOR PRINCIPAL DEL TEXTO Y MÓDULOS */}
       <div
         className={cn(
-          "mx-4 text-center text-sm text-cool-gray z-10 w-full max-w-4xl",
+          "mx-auto text-center text-sm text-cool-gray z-10 w-full max-w-4xl relative pt-20 px-4",
           textClassName,
         )}
       >
@@ -77,8 +82,10 @@ export default function ParentsGodFathers({
             <ElegantText delay={0.2} text="Nuestros Padres" duration={0.2} />
           </h2>
 
-          <div className="flex items-center justify-center gap-3 mb-10 opacity-80">
-            <div className="w-12 h-px bg-primary/30" />
+          <div className="flex items-center justify-center gap-3 mb-8 opacity-60">
+            <div className="w-8 h-px bg-primary/30" />
+            <span className="text-primary/50 text-xs">✦</span>
+            <div className="w-8 h-px bg-primary/30" />
           </div>
 
           <div className="flex flex-col gap-10 w-full max-w-lg mx-auto">
@@ -93,7 +100,6 @@ export default function ParentsGodFathers({
                   text={invitationData?.padresNovia?.mama || "Mamá de la novia"}
                   duration={0.2}
                 />
-                <br />
                 <ElegantText
                   delay={0.6}
                   text={invitationData?.padresNovia?.papa || "Papá de la novia"}
@@ -113,7 +119,6 @@ export default function ParentsGodFathers({
                   text={invitationData?.padresNovio?.mama || "Mamá del novio"}
                   duration={0.2}
                 />
-                <br />
                 <ElegantText
                   delay={1.0}
                   text={invitationData?.padresNovio?.papa || "Papá del novio"}
@@ -168,7 +173,7 @@ export default function ParentsGodFathers({
         </div> */}
 
         {/* MENSAJE FINAL INVITACIÓN */}
-        <div className="font-nourdLight text-lg text-primary/90 max-w-sm mx-auto mb-14 px-4">
+        <div className="font-nourdLight text-lg text-primary/90 max-w-sm mx-auto px-4">
           <ElegantText
             delay={2.0}
             text="Nos complace invitarte a celebrar con nosotros este día tan especial"
@@ -176,18 +181,33 @@ export default function ParentsGodFathers({
           />
         </div>
 
-        <Separator
+        {/* <Separator
           className="w-full max-w-xs mx-auto mb-14"
           color={svgsColor}
-        />
+        /> */}
 
+        <div className="flex items-center justify-center gap-3 my-12 opacity-60">
+          <div className="w-8 h-px bg-primary/30" />
+          <span className="text-primary/50 text-xs">✦</span>
+          <div className="w-8 h-px bg-primary/30" />
+        </div>
         {/* CALENDARIO Y CUENTA REGRESIVA */}
-        <AnimatedEntrance classname="flex flex-col items-center justify-center w-full">
+        <AnimatedEntrance classname="flex flex-col items-center justify-center w-full ">
+          <p className="text-[9px] md:text-[10px] font-nourdMedium text-primary/70 uppercase tracking-[0.3em] mb-4 text-center">
+            <ElegantText
+              delay={0}
+              text="— Cada vez más cerca del —"
+              duration={0.2}
+            />
+          </p>
+          <h2 className="text-4xl md:text-5xl text-primary mb-8 text-center font-newIconScript drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]">
+            <ElegantText delay={0.2} text="Gran día" duration={0.2} />
+          </h2>
           <DynamicCalendar targetDate={eventDate} />
 
           <div className="mt-16 w-full">
-            <p className="font-newIconScript text-4xl text-primary mb-4 drop-shadow-sm">
-              Falta poco
+            <p className="font-newIconScript text-3xl text-primary mb- drop-shadow-sm">
+              Cuenta regresiva
             </p>
             <CountdownTimer
               textClassName={textClassName}
@@ -196,11 +216,14 @@ export default function ParentsGodFathers({
           </div>
         </AnimatedEntrance>
 
-        {/* Espaciado extra al final antes de las ondas */}
-        <div className="h-20" />
+        {/* Espaciador antes de la onda */}
+        <div className="h-10" />
+      </div>
 
+      {/* ONDA EN EL FLUJO NORMAL DEL DOCUMENTO */}
+      <div className="w-full relative z-20 mt-auto -mb-[45px] pointer-events-none">
         <BeigeWaves
-          className="w-full absolute h-12 left-0 bottom-[-40px]"
+          className="w-full h-[47px] block"
           color={bottomWavesColor}
         />
       </div>

@@ -50,7 +50,7 @@ const CountdownTimer: FC<Props> = ({ textClassName = "", addToCalendarBtnClassNa
   );
 
   return (
-    <div className="relative w-full mt-10 mb-3">
+    <div className="relative w-full mt-10 mb-1 flex flex-col items-center gap-8">
       <motion.div
         whileTap={{ scale: 1.2 }}
         className="text-white"

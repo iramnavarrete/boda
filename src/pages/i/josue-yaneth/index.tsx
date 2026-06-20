@@ -1,10 +1,10 @@
 import { useRef, useState } from "react";
 
-import Cover from "@/features/front/components/sections/cover";
+import Cover from "@/features/front/components/siena/cover";
 import Quote from "@/features/front/components/sections/quote";
-import CountDown from "@/features/front/components/sections/countdown";
-import Gallery from "@/features/front/components/sections/gallery";
-import GiftsTable from "@/features/front/components/sections/gifts-table";
+import CountDown from "@/features/front/components/siena/countdown";
+import Gallery from "@/features/front/components/siena/gallery";
+import GiftsTable from "@/features/front/components/siena/gifts-table";
 import QrPhotos from "@/features/front/components/sections/qr-photos";
 import { AudioController } from "@/features/front/components/sections/music";
 import Footer from "@/features/front/components/sections/footer";
@@ -84,6 +84,13 @@ export default function Home({ invitationData }: InvitationPageProps) {
               <Gallery />
               <GiftsTable
                 showCash
+                stores={[
+                  {
+                    type: "amazon",
+                    link: "https://www.amazon.com.mx/hz/wishlist/ls/3Z8K9QG2X7V1?ref_=wl_share&fbclid=IwAR0n5sNqjHkLhYtqLhHjvYJmXqjvYl5b8u4c8Zt9D6w5e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e",
+                    label: "Ver lista",
+                  },
+                ]}
                 transfer={{
                   bank: "bbva",
                   beneficiary: "Beneficiario",

@@ -292,6 +292,7 @@ const Assistants: FC<Props> = ({
 
   const invitationData = useInvitationStore((state) => state.invitationData);
   const formikRef = useRef<FormikProps<GuestFormData>>(null);
+  const formContainerRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const id = searchParams?.get("guest");
 
@@ -413,7 +414,10 @@ const Assistants: FC<Props> = ({
               // ============================================================================
               // FORMULARIO DE CONFIRMACIÓN ELEGANTE (REDESIGN)
               // ============================================================================
-              <div className="w-full max-w-[400px] relative z-0">
+              <div
+                className="w-full max-w-[400px] relative z-0"
+                ref={formContainerRef}
+              >
                 {/* TARJETA BLANCA DEL FORMULARIO */}
                 <div className="rounded-xl bg-white shadow-xl px-6 py-12 pt-9 relative z-0 border border-stone-200">
                   <AnimatePresence>
@@ -752,6 +756,13 @@ const Assistants: FC<Props> = ({
                     onClick={() => {
                       setIsFormSubmitted(false);
                       setIsDisabled(false);
+                      // Hacemos scroll suave a la referencia del contenedor una vez que cambia el estado
+                      setTimeout(() => {
+                        formContainerRef.current?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                      }, 100);
                     }}
                     className="text-stone-500 font-medium text-xs uppercase tracking-widest border-b border-stone-300 hover:border-charcoal hover:text-charcoal transition-all pb-0.5"
                   >
