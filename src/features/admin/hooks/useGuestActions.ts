@@ -8,7 +8,6 @@ export function useGuestActions(invitationId?: string) {
   if (!invitationId) {
     return {
       handleSaveGuest: async () => {},
-      sendWhatsApp: async () => {},
       handleExportExcel: async () => {},
     };
   }
@@ -40,44 +39,6 @@ export function useGuestActions(invitationId?: string) {
     }
   };
 
-  const sendWhatsApp = async (guest: Guest) => {
-    if (!invitationId) return;
-
-    toast("Abriendo WhatsApp...", "info");
-
-    try {
-      const contactInfo = await GuestService.getGuestContactInfo(
-        invitationId,
-        guest.id,
-      );
-
-      const telefono = contactInfo?.telefono;
-
-      if (!telefono) {
-        toast("Celular no válido", "error");
-        return;
-      }
-
-      const link = `https://jninvitaciones.com/i/${invitationId}?guest=${guest.id}s`;
-
-      // Generamos los emojis de forma segura en memoria
-      const sparkle = String.fromCodePoint(0x2728);
-      const letter = String.fromCodePoint(0x1f48c);
-
-      const msg = `¡Hola ${guest.nombre}!\n${sparkle} Les enviamos el enlace de su invitación digital. ${sparkle}\n\n${letter} La confirmación será únicamente para la recepción, cada invitado cuenta con un lugar asignado. Reservamos ${guest.invitados} lugares en su nombre\n\n${link}`;
-
-      const phoneFormatted = telefono.replace(/\+/g, "").replace(/\s/g, "");
-
-      window.open(
-        `https://api.whatsapp.com/send?phone=${phoneFormatted}&text=${encodeURIComponent(msg)}&lang=es`,
-        "_blank",
-      );
-    } catch (error) {
-      console.error("Error al obtener información de contacto:", error);
-      toast("Error al intentar abrir WhatsApp", "error");
-    }
-  };
-
   const handleExportExcel = async (guests: Guest[]) => {
     try {
       await exportGuestsToExcel(guests);
@@ -89,7 +50,6 @@ export function useGuestActions(invitationId?: string) {
 
   return {
     handleSaveGuest,
-    sendWhatsApp,
     handleExportExcel,
   };
 }
