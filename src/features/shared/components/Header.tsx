@@ -15,6 +15,7 @@ import {
   Mail,
   ShieldCheck,
   Users,
+  ScanLine,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, usePathname } from "next/navigation";
@@ -144,7 +145,6 @@ const Header = ({
   }, [variant, user]);
 
   // --- LÓGICA SCROLL SPY (Solo Landing) ---
-  // --- LÓGICA SCROLL SPY (Solo Landing) ---
   useEffect(() => {
     if (variant !== "landing") return;
 
@@ -246,6 +246,12 @@ const Header = ({
         icon: <Mail size={18} />,
         active: pathname?.includes("/quotes"),
       },
+      {
+        label: "Check-in",
+        href: `${basePath}/checkin`,
+        icon: <ScanLine size={18} />,
+        active: pathname?.includes("/checkin"),
+      },
     ];
   }, [
     variant,
@@ -259,7 +265,6 @@ const Header = ({
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const handleMobileClose = () => setIsMenuOpen(false);
 
-  // --- RENDER ---
   return (
     <header
       className={cn(
@@ -300,19 +305,7 @@ const Header = ({
                   {config.logoIcon}
                 </div>
               </>
-            ) 
-            // : variant === "invitations-panel" ? (
-            //   <div
-            //     className={cn(
-            //       "w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-colors mr-3",
-            //       config.logoBg,
-            //       config.logoText,
-            //     )}
-            //   >
-            //     {config.logoIcon}
-            //   </div>
-            // )
-             : (
+            ) : (
               <JnInvitacionesIcon
                 primaryColor="#58624F"
                 secondaryColor="rgb(197 166 105 / var(--tw-text-opacity, 1))"
@@ -329,8 +322,7 @@ const Header = ({
               >
                 {title || (variant === "admin" ? formatEventName() : null)}
               </h1>
-              {subtitle ||
-              variant === "admin" ? (
+              {subtitle || variant === "admin" ? (
                 <p
                   className={cn(
                     "text-[10px] font-bold uppercase tracking-wider mt-0.5",
@@ -429,7 +421,7 @@ const Header = ({
                   <div className="h-px bg-black/10 my-2" />
                 )}
 
-                {(variant === "admin") && (
+                {variant === "admin" && (
                   <MenuItem
                     icon={config.backButtonIcon}
                     label={config.backButtonText}
@@ -472,10 +464,9 @@ const Header = ({
       </AnimatePresence>
     </header>
   );
-};;
+};
 
 // --- TIPADO ESTRICTO DE SUBCOMPONENTES ---
-
 interface NavLinkProps extends NavItemType {
   baseClassName?: string;
   activeClassName?: string;

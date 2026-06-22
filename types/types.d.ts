@@ -38,6 +38,9 @@ export type Guest = {
   fechaLimiteConfirmacion?: string | null;
   recordatorioEnviado?: boolean;
   fechaRecordatorioEnviado?: Timestamp | FieldValue | null;
+  asistio?: boolean;
+  pasesUsados?: number;
+  horaLlegada?: Timestamp | FieldValue | null;
 };
 
 export type GuestContactInfo = {

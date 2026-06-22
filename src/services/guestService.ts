@@ -259,6 +259,21 @@ export const GuestService = {
     } as Partial<Guest>);
   },
 
+  checkInGuest: async (
+    invitationId: string,
+    guestId: string,
+    pasesUsados: number,
+  ) => {
+    const payload: Partial<Guest> = {
+      asistio: true,
+      pasesUsados: pasesUsados,
+      horaLlegada: serverTimestamp(),
+      ultimaModificacion: serverTimestamp(),
+    };
+
+    await updateDoc(paths.guest(invitationId, guestId), payload);
+  },
+
   // ── Operaciones en lote ─────────────────────────────────────────────────────
 
   batchUpdateLock: async (
