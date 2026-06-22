@@ -45,7 +45,7 @@ export default function CheckInConfirmModal({
       type="button"
       onClick={() => onConfirm(pasesUsados)}
       disabled={isSubmitting || !isEventDay}
-      className="w-full px-4 py-3.5 rounded-xl text-white font-bold shadow-lg transition-all disabled:opacity-50 text-sm bg-[#2C2C29] hover:bg-[#1a1a18] shadow-[#2C2C29]/20"
+      className="w-full h-full px-2 sm:px-4 py-3.5 rounded-xl text-white font-bold shadow-lg transition-all disabled:opacity-50 text-xs sm:text-sm bg-[#2C2C29] hover:bg-[#1a1a18] shadow-[#2C2C29]/20 flex items-center justify-center text-center leading-tight"
     >
       {isSubmitting ? "Registrando..." : "Autorizar Ingreso"}
     </button>
@@ -73,7 +73,7 @@ export default function CheckInConfirmModal({
             type="button"
             onClick={() => setPasesUsados((p) => Math.max(1, p - 1))}
             disabled={pasesUsados <= 1}
-            className="w-14 h-14 flex items-center justify-center rounded-full border border-stone-400 text-stone-500 disabled:opacity-20 transition-all active:scale-95 hover:bg-stone-100"
+            className="w-14 h-14 flex items-center justify-center rounded-full border border-stone-400 text-stone-500 disabled:opacity-20 transition-all active:scale-95 hover:bg-stone-100 shrink-0"
           >
             <Minus size={22} strokeWidth={2} />
           </button>
@@ -91,37 +91,38 @@ export default function CheckInConfirmModal({
             type="button"
             onClick={() => setPasesUsados((p) => Math.min(maxAllowed, p + 1))}
             disabled={pasesUsados >= maxAllowed}
-            className="w-14 h-14 flex items-center justify-center rounded-full border border-stone-400 text-stone-500 disabled:opacity-20 transition-all active:scale-95 hover:bg-stone-100"
+            className="w-14 h-14 flex items-center justify-center rounded-full border border-stone-400 text-stone-500 disabled:opacity-20 transition-all active:scale-95 hover:bg-stone-100 shrink-0"
           >
             <Plus size={22} strokeWidth={2} />
           </button>
         </div>
 
         <div className="flex items-center gap-2 bg-orange-50 text-orange-800 px-4 py-2.5 rounded-xl text-xs font-medium mb-8 border border-orange-200 w-full justify-center">
-          <AlertCircle size={16} />
+          <AlertCircle size={16} className="shrink-0" />
           Límite total confirmado: {maxAllowed} pases.
         </div>
 
-        <div className="flex gap-3 w-full">
+        <div className="grid grid-cols-2 gap-3 w-full">
           <button
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex-1 px-4 py-3.5 rounded-xl border border-[#EBE5DA] bg-[#FDFBF7] text-[#2C2C29] font-bold hover:bg-white transition-colors shadow-sm text-sm"
+            className="w-full h-full px-2 sm:px-4 py-3.5 rounded-xl border border-[#EBE5DA] bg-[#FDFBF7] text-[#2C2C29] font-bold hover:bg-white transition-colors shadow-sm text-xs sm:text-sm flex items-center justify-center text-center leading-tight"
           >
             Cancelar
           </button>
 
-          {/* Usamos la variable directamente */}
           {!isEventDay ? (
             <Tooltip
               text="El botón de ingreso se habilitará automáticamente el día del evento."
               position="top"
-              className="flex-1"
+              className="w-full h-full block"
             >
               {confirmButtonElement}
             </Tooltip>
           ) : (
-            <div className="flex-1">{confirmButtonElement}</div>
+            <div className="w-full h-full">
+              {confirmButtonElement}
+            </div>
           )}
         </div>
       </div>

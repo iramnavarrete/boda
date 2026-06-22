@@ -277,7 +277,7 @@ export default function CheckInPage() {
                 <Scanner
                   onScan={(text) => handleScan(text[0].rawValue)}
                   onError={(error) => console.log(error?.message)}
-                  scanDelay={2000}
+                  scanDelay={4000}
                   allowMultiple={true}
                   constraints={
                     selectedDeviceId
