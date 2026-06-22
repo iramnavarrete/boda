@@ -223,25 +223,6 @@ const DressCode: React.FC<DressCodeProps> = ({
             </span>
           </div>
         </div>
-
-        {/* Píldoras de Restricciones Extra */}
-        {arrayRestrictions && arrayRestrictions.length > 0 && (
-          <div className="flex flex-col gap-3 px-4 w-full max-w-sm">
-            {arrayRestrictions.map((restriction, idx) => (
-              <div
-                key={`restriction-${idx}`}
-                className="flex items-center justify-center gap-3 px-6 py-4 bg-primary/10 rounded-2xl"
-              >
-                <span className="text-accent/50">
-                  <Info size={16} strokeWidth={1.5} />
-                </span>
-                <span className="text-accent font-nourdLight text-sm text-center">
-                  {restriction}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
       </AnimatedEntrance>
     </div>
   );

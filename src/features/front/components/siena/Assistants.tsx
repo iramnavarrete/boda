@@ -3,11 +3,10 @@ import { Formik, FormikProps } from "formik";
 import { FC, useCallback, useRef, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Separator from "@/icons/separator";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import AnimatedEntrance from "../AnimatedEntrance";
 import { Guest, GuestFormData, Invitation } from "@/types";
-import { QrCode, Plus, Minus, XCircle, ArrowRight } from "lucide-react";
+import { QrCode, Plus, Minus, ArrowRight } from "lucide-react";
 import { GuestService } from "@/services/guestService";
 import { useInvitationStore } from "../../stores/invitationStore";
 import { GuestQuotesService } from "@/services/guestQuotesService";
@@ -16,6 +15,7 @@ import { useToast } from "@/features/shared/components/Toast";
 import { cn } from "@heroui/theme";
 import html2canvas from "html2canvas";
 import FlowersCoverDown from "@/icons/flowers-cover-down";
+import { ReactQRCode } from "@lglab/react-qr-code";
 
 const defaultGuest: Guest = {
   asistencia: null,
@@ -164,8 +164,26 @@ const TicketCard: FC<StateCardProps> = ({
           </p>
 
           {/* Contenedor del QR */}
-          <div className="mx-auto w-48 h-48 bg-white rounded-xl shadow-sm border border-stone-200 flex items-center justify-center mt-8 mb-4 p-4 relative transition-transform hover:scale-[1.02] duration-300">
-            <QrCode size={160} className="text-[#2C2C29]" strokeWidth={1} />
+          <div className="mx-auto w-36 h-36 bg-white rounded-xl shadow-sm border border-stone-200 flex items-center justify-center mt-8 mb-4 relative transition-transform hover:scale-[1.02] duration-300">
+            {isDefaultId(guestData.id) ? (
+              // Mostramos el ícono de Lucide si es el usuario genérico
+              <QrCode size={160} className="text-[#2C2C29]" strokeWidth={1} />
+            ) : (
+              // Generamos el QR real usando el ID del invitado
+              <div className="w-full h-full flex items-center justify-center">
+                <ReactQRCode
+                  value={guestData.id!}
+                  size={256}
+                  // style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                  dataModulesSettings={{
+                    style: "rounded",
+                  }}
+                  finderPatternInnerSettings={{ style: "rounded" }}
+                  finderPatternOuterSettings={{ style: "rounded" }}
+                  svgProps={{fill: "#2C2C29" }}
+                />
+              </div>
+            )}
           </div>
 
           <p className="text-[9px] text-stone-400 uppercase tracking-[0.25em] text-center mb-8 max-w-[40ch]">

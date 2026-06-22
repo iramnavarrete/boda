@@ -175,7 +175,7 @@ export default function ParentsGodFathers({
         {/* MENSAJE FINAL INVITACIÓN */}
         <div className="font-nourdLight text-lg text-primary/90 max-w-sm mx-auto px-4">
           <ElegantText
-            delay={2.0}
+            delay={1.0}
             text="Nos complace invitarte a celebrar con nosotros este día tan especial"
             duration={0.2}
           />

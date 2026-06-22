@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import "photoswipe/dist/photoswipe.css"; // Estilos base de PhotoSwipe
 
 import Cover from "@/features/front/components/siena/cover";
 import Quote from "@/features/front/components/sections/quote";

@@ -209,7 +209,7 @@ const GiftsTable: FC<Props> = ({
 
                       <div className="text-accent/90 text-center font-nourdLight text-sm">
                         <span className="block text-[9px] uppercase tracking-[0.25em] text-accent/50 mb-1 font-nourdMedium">
-                          Número de tarjeta / CLABE
+                          Número de tarjeta
                         </span>
                         {transfer.cardNumber}
                       </div>

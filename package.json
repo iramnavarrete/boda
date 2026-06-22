@@ -14,6 +14,7 @@
     "@heroui/navbar": "^2.2.27",
     "@heroui/system": "^2.4.25",
     "@heroui/theme": "^2.4.25",
+    "@lglab/react-qr-code": "^1.7.0",
     "@tabler/icons-react": "^3.35.0",
     "axios": "^1.7.3",
     "embla-carousel-autoplay": "^8.6.0",
