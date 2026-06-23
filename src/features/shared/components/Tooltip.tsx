@@ -1,4 +1,6 @@
-import { ReactNode } from "react";
+"use client";
+
+import { ReactNode, useState, useEffect, useRef } from "react";
 import { cn } from "@heroui/theme";
 
 interface TooltipProps {
@@ -7,6 +9,7 @@ interface TooltipProps {
   className?: string;
   position?: "top" | "bottom";
   align?: "center" | "left" | "right";
+  interactive?: boolean; // Permite clics dentro del tooltip
 }
 
 export default function Tooltip({
@@ -15,57 +18,97 @@ export default function Tooltip({
   className,
   position = "bottom",
   align = "right",
+  interactive = false,
 }: TooltipProps) {
-  // Manejo dinámico de la caja del tooltip según la alineación
+  const tooltipRef = useRef<HTMLDivElement>(null);
+
+  // Estado para forzar la ocultación del Tooltip (anular el hover temporalmente)
+  const [forceHide, setForceHide] = useState(false);
+
+  useEffect(() => {
+    const handleInteractionOutside = (event: Event) => {
+      // Si hacen scroll en la pantalla (móvil o PC), forzamos ocultar
+      if (event.type === "scroll" || event.type === "touchmove") {
+        setForceHide(true);
+        return;
+      }
+
+      // Si tocan la pantalla o hacen clic, revisamos que sea FUERA del tooltip
+      if (event.type === "touchstart" || event.type === "mousedown") {
+        if (
+          tooltipRef.current &&
+          !tooltipRef.current.contains(event.target as Node)
+        ) {
+          setForceHide(true);
+        }
+      }
+    };
+
+    document.addEventListener("touchstart", handleInteractionOutside, {
+      passive: true,
+    });
+
+    return () => {
+      document.removeEventListener("touchmove", handleInteractionOutside);
+    };
+  }, []);
+
   const alignmentClasses = {
     center: "left-1/2 -translate-x-1/2",
-    left: "left-0",
-    right: "right-0",
+    left: "left-0 -translate-x-3",
+    right: "right-0 translate-x-3",
   };
 
-  // Manejo dinámico de la flecha/triángulo según la alineación
   const arrowAlignmentClasses = {
     center: "left-1/2 -translate-x-1/2",
-    left: "left-6",
-    right: "right-6",
+    left: "left-4",
+    right: "right-4",
   };
 
   return (
     <div
+      ref={tooltipRef}
       className={cn(
-        "relative group/tooltip flex items-center justify-center shrink-0",
+        "relative group/tooltip flex items-center justify-center shrink-0 cursor-help",
         className,
       )}
+      // 🔥 Cuando volvemos a hacer hover o a tocar el elemento, quitamos el bloqueo
+      onMouseEnter={() => setForceHide(false)}
+      onTouchStart={() => setForceHide(false)}
     >
       {children}
+
+      {/* PUENTE INVISIBLE Y CAJA DEL TOOLTIP */}
       <div
         className={cn(
-          "absolute w-max max-w-[220px] sm:max-w-[260px] p-4 bg-white border border-[#EBE5DA] shadow-[0_10px_40px_-10px_rgba(44,44,41,0.2)] rounded-2xl text-xs text-[#5A5A5A] opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 pointer-events-none text-center",
-          position === "bottom" ? "top-full mt-2" : "bottom-full mb-2",
-          alignmentClasses[align]
+          "absolute z-50 transition-all duration-200",
+          // 1. Comportamiento original por CSS (Hover)
+          "opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible",
+          // 2. Anulación por JS (¡Fuerza el ocultamiento si se activó el estado!)
+          forceHide && "!opacity-0 !invisible !pointer-events-none",
+          position === "bottom" ? "top-full pt-[8px]" : "bottom-full pb-[8px]",
+          alignmentClasses[align],
+          !interactive && "pointer-events-none",
         )}
       >
-        <p className="leading-relaxed">{text}</p>
+        <div className="relative w-max max-w-[220px] sm:max-w-[260px] p-2.5 px-3 bg-white border border-[#EBE5DA] shadow-[0_10px_40px_-10px_rgba(44,44,41,0.2)] rounded-xl text-xs text-[#5A5A5A] text-center">
+          {typeof text === "string" ? (
+            <p className="leading-relaxed relative z-10">{text}</p>
+          ) : (
+            <div className="relative z-10">{text}</div>
+          )}
 
-        {/* Triángulo del tooltip */}
-        <div
-          className={cn(
-            "absolute border-[6px] border-transparent",
-            position === "bottom"
-              ? "bottom-full border-b-white"
-              : "top-full border-t-white",
-            arrowAlignmentClasses[align]
-          )}
-        />
-        <div
-          className={cn(
-            "absolute border-[7px] border-transparent -z-10",
-            position === "bottom"
-              ? "bottom-full border-b-[#EBE5DA] mb-[1px]"
-              : "top-full border-t-[#EBE5DA] mt-[1px]",
-            arrowAlignmentClasses[align]
-          )}
-        />
+          {/* Flecha rotada */}
+          <div
+            className={cn(
+              "absolute w-[12px] h-[12px] bg-white border-[#EBE5DA] rotate-45 pointer-events-none",
+              position === "bottom"
+                ? "-top-[6.5px] border-l border-t rounded-tl-[2px]"
+                : "-bottom-[6.5px] border-r border-b rounded-br-[2px]",
+              arrowAlignmentClasses[align],
+            )}
+          />
+        </div>
       </div>
     </div>
   );
