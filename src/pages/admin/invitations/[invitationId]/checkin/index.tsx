@@ -279,6 +279,7 @@ export default function CheckInPage() {
                   onError={(error) => console.log(error?.message)}
                   scanDelay={4000}
                   allowMultiple={true}
+                  formats={["qr_code"]}
                   constraints={
                     selectedDeviceId
                       ? { deviceId: selectedDeviceId }
