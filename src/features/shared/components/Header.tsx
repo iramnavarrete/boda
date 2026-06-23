@@ -27,8 +27,7 @@ import { useRouter } from "next/router";
 import { Invitation } from "@/types";
 import { getEventTypeName } from "@/utils/formatters";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
-import { InvitationsService } from "@/services/invitationsService";
-import { useAuthStore } from "@/stores/authStore";
+import { useEventPermissions } from "@/features/admin/hooks/useEventPermissions";
 
 export type HeaderVariant = "admin" | "landing" | "invitations-panel";
 
@@ -108,19 +107,21 @@ const Header = ({
 }: HeaderProps) => {
   const config = VARIANT_CONFIG[variant];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isRootAdmin, setIsRootAdmin] = useState(false); // ESTADO PARA EL ROL
-  
+
   const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
-  const invitationId = params?.invitationId;
-  const user = useAuthStore((state) => state.user);
-  
+  const invitationId = params?.invitationId as string | undefined;
+
   const [activeSection, setActiveSection] = useState<string | null>(
     variant === "landing" && (pathname || "") === "/" ? "inicio" : null,
   );
 
   const invitationData = useInvitationStore((state) => state.invitationData);
+
+  const { isAdminOrHost, isAdmin, isGuardia } = useEventPermissions(
+    invitationData?.id,
+  );
 
   const formatEventName = () => {
     if (!invitationData) return "";
@@ -131,18 +132,6 @@ const Header = ({
     }
     return "";
   };
-
-  // --- LÓGICA DE ROLES (Async) ---
-  useEffect(() => {
-    // Solo necesitamos verificar si es root para el panel general
-    if (variant === "invitations-panel") {
-      const checkRole = async () => {
-        const isAdmin = await InvitationsService.isAdmin(user);
-        setIsRootAdmin(isAdmin);
-      };
-      checkRole();
-    }
-  }, [variant, user]);
 
   // --- LÓGICA SCROLL SPY (Solo Landing) ---
   useEffect(() => {
@@ -164,8 +153,6 @@ const Header = ({
       }
     };
 
-    // Ejecutamos la función una vez al montar para que detecte en qué
-    // parte de la página está el usuario si es que recargó el navegador a la mitad
     handleScroll();
 
     window.addEventListener("scroll", handleScroll);
@@ -200,10 +187,7 @@ const Header = ({
     }
 
     if (variant === "invitations-panel") {
-      // SI NO ES ROOT, NO MUESTRA NINGÚN ENLACE CENTRAL (Solo quedará el LogOut)
-      if (!isRootAdmin) return [];
-
-      // SI ES ROOT, MUESTRA EL MENÚ COMPLETO
+      if (!isAdmin) return [];
       return [
         {
           label: "Eventos",
@@ -221,45 +205,60 @@ const Header = ({
       ];
     }
 
-    // Default Admin logic (Event Dashboard)
+    // Lógica para Admin Dashboard
     const basePath = invitationId
       ? `/admin/invitations/${invitationId}`
       : "/admin";
     if (!invitationId) return [];
 
-    return [
-      {
+    const items: NavItemType[] = [];
+
+    if (isAdminOrHost) {
+      items.push({
         label: "Inicio",
         href: `${basePath}/dashboard`,
         icon: <Home size={18} />,
         active: pathname?.includes("/dashboard"),
-      },
-      {
+      });
+    }
+
+    if (isAdminOrHost || isGuardia) {
+      items.push({
         label: "Invitados",
         href: basePath,
         icon: <UserIcon size={18} />,
         active: pathname === basePath,
-      },
-      {
+      });
+    }
+
+    if (isAdminOrHost) {
+      items.push({
         label: "Mensajes",
         href: `${basePath}/quotes`,
         icon: <Mail size={18} />,
         active: pathname?.includes("/quotes"),
-      },
-      {
+      });
+    }
+
+    if (isAdminOrHost || isGuardia) {
+      items.push({
         label: "Check-in",
         href: `${basePath}/checkin`,
         icon: <ScanLine size={18} />,
         active: pathname?.includes("/checkin"),
-      },
-    ];
+      });
+    }
+
+    return items;
   }, [
     variant,
     customNavItems,
     activeSection,
     invitationId,
     pathname,
-    isRootAdmin,
+    isAdmin,
+    isGuardia,
+    isAdminOrHost,
   ]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
@@ -466,7 +465,6 @@ const Header = ({
   );
 };
 
-// --- TIPADO ESTRICTO DE SUBCOMPONENTES ---
 interface NavLinkProps extends NavItemType {
   baseClassName?: string;
   activeClassName?: string;

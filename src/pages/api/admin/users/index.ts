@@ -7,7 +7,6 @@ import { FirebaseError } from "firebase-admin";
 // TIPOS ESTRICTOS
 // ============================================================================
 
-// Tipamos exactamente qué esperamos que reciba y devuelva el handler interno
 type AuthenticatedHandler = (
   req: NextApiRequest,
   res: NextApiResponse,
@@ -32,11 +31,9 @@ const withRootAdmin = (handler: AuthenticatedHandler) => {
 
       // Verificamos el Custom Claim
       if (!decodedToken.isRootAdmin) {
-        return res
-          .status(403)
-          .json({
-            error: "Acción no permitida. Se requieren permisos de Root Admin.",
-          });
+        return res.status(403).json({
+          error: "Acción no permitida. Se requieren permisos de Root Admin.",
+        });
       }
 
       // Si todo está bien, ejecutamos el endpoint real
@@ -69,17 +66,16 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         return res.status(400).json({ error: "Faltan campos obligatorios" });
       }
 
-      // 1. Crear usuario en Auth
+      // Crear usuario en Auth
       const userRecord = await adminAuth.createUser({ email, password });
 
-      // 2. Custom Claims
-      if (isRootAdmin) {
-        await adminAuth.setCustomUserClaims(userRecord.uid, {
-          isRootAdmin: true,
-        });
-      }
+      // Inyectar Custom Claims (Roles Híbridos e isRootAdmin)
+      await adminAuth.setCustomUserClaims(userRecord.uid, {
+        isRootAdmin: isRootAdmin || false,
+        roles: invitationsMap || {}, // Guardamos el mapa de bodas/roles aquí
+      });
 
-      // 3. Documento Firestore
+      // Documento Firestore
       const newUserDoc: UserDoc = {
         uid: userRecord.uid,
         email: userRecord.email!,
@@ -122,7 +118,7 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         return res.status(400).json({ error: "Falta el UID del usuario" });
       }
 
-      // 1. Actualizar Auth
+      // Actualizar credenciales en Auth (si aplican)
       const updateAuthData: { email?: string; password?: string } = {};
       if (email) updateAuthData.email = email;
       if (password) updateAuthData.password = password;
@@ -131,13 +127,26 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
         await adminAuth.updateUser(uid, updateAuthData);
       }
 
-      // 2. Actualizar Custom Claims
-      if (isRootAdmin !== undefined) {
-        await adminAuth.setCustomUserClaims(uid, { isRootAdmin: isRootAdmin });
-      }
+      // Actualizar Custom Claims
+      // Primero leemos los claims actuales para no perder data si es un update parcial
+      const userRecord = await adminAuth.getUser(uid);
+      const currentClaims = userRecord.customClaims || {};
 
-      // 3. Actualizar Firestore
-      const updateDocData: Partial<UserDoc> = { isRootAdmin, invitationsMap };
+      const newClaims = {
+        ...currentClaims,
+        isRootAdmin:
+          isRootAdmin !== undefined ? isRootAdmin : currentClaims.isRootAdmin,
+        roles:
+          invitationsMap !== undefined ? invitationsMap : currentClaims.roles,
+      };
+
+      await adminAuth.setCustomUserClaims(uid, newClaims);
+
+      // Actualizar Firestore
+      const updateDocData: Partial<UserDoc> = {};
+      if (isRootAdmin !== undefined) updateDocData.isRootAdmin = isRootAdmin;
+      if (invitationsMap !== undefined)
+        updateDocData.invitationsMap = invitationsMap;
       if (email) updateDocData.email = email;
 
       await adminDb.collection("users").doc(uid).update(updateDocData);
@@ -154,14 +163,12 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
   // ------------------------------------------------------------------------
   if (req.method === "DELETE") {
     try {
-      // El UID viaja por Query Params (ej. /api/admin/users?uid=123)
       const { uid } = req.query;
 
       if (!uid || typeof uid !== "string") {
         return res.status(400).json({ error: "Falta el UID del usuario" });
       }
 
-      // Borramos de Authentication y de Firestore
       await adminAuth.deleteUser(uid);
       await adminDb.collection("users").doc(uid).delete();
 
@@ -172,14 +179,8 @@ async function handler(req: NextApiRequest, res: NextApiResponse) {
     }
   }
 
-  // ------------------------------------------------------------------------
-  // MÉTODO NO PERMITIDO
-  // ------------------------------------------------------------------------
   res.setHeader("Allow", ["POST", "PUT", "DELETE"]);
   return res.status(405).end(`Method ${req.method} Not Allowed`);
 }
 
-// ============================================================================
-// EXPORTACIÓN PROTEGIDA (Inyectamos el Middleware)
-// ============================================================================
 export default withRootAdmin(handler);

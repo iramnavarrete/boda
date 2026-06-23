@@ -12,7 +12,6 @@ import {
   Edit2,
 } from "lucide-react";
 import { InvitationsService } from "@/services/invitationsService";
-import { useAuthUser } from "@/features/shared/contexts/AuthUserContext";
 import Loader from "@/features/front/components/Loader";
 import Image from "next/image";
 import { useCountdown } from "@/features/front/hooks/useCountDown";
@@ -21,26 +20,30 @@ import { formatTimeStamp } from "@/utils/formatters";
 import { Invitation } from "@/types";
 import CreateInvitationModal from "./CreateInvitationModal";
 
+import { useAuthStore } from "@/stores/authStore";
+import { useEventPermissions } from "../hooks/useEventPermissions";
+
 const InvitationCard = ({
   invitation,
-  isAdmin,
-  onEdit
+  onEdit,
 }: {
   invitation: Invitation;
-  isAdmin: boolean;
   onEdit: (inv: Invitation) => void;
 }) => {
   const [days, hours] = useCountdown(invitation.fecha.toDate());
+  const { isAdminOrHost, canEditEventDetails } = useEventPermissions(
+    invitation.id,
+  );
 
   return (
     <Link
-      href={`/admin/invitations/${invitation.id}/dashboard`}
+      href={`/admin/invitations/${invitation.id}${isAdminOrHost ? "/dashboard" : ""}`}
       className="group relative flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-[#EBE5DA] transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(197,166,105,0.2)] hover:-translate-y-1 hover:border-[#C5A669]"
     >
-      {isAdmin && (
+      {canEditEventDetails && (
         <button
           onClick={(e) => {
-            e.preventDefault(); // Evita que se abra el enlace al Dashboard
+            e.preventDefault();
             onEdit(invitation);
           }}
           className="absolute top-3 left-3 z-30 w-8 h-8 bg-white/80 backdrop-blur-md rounded-full flex items-center justify-center text-[#2C2C29] hover:text-[#C5A669] hover:bg-white transition-all shadow-sm border border-white/40"
@@ -48,7 +51,7 @@ const InvitationCard = ({
           <Edit2 size={14} />
         </button>
       )}
-      
+
       {/* SECCIÓN IMAGEN */}
       <div className="relative h-48 w-full overflow-hidden bg-stone-100">
         <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent z-10 opacity-60 group-hover:opacity-40 transition-opacity duration-500" />
@@ -84,12 +87,16 @@ const InvitationCard = ({
           <div className="flex items-center gap-2.5 text-sm text-[#5A5A5A]">
             <Calendar size={15} className="text-[#C5A669]" />
             <span>
-              {formatTimeStamp(invitation.fecha).replaceAll("/", "").toLocaleLowerCase()}
+              {formatTimeStamp(invitation.fecha)
+                .replaceAll("/", "")
+                .toLocaleLowerCase()}
             </span>
           </div>
           <div className="flex items-center gap-2.5 text-sm text-[#5A5A5A]">
             <MapPin size={15} className="text-[#C5A669]" />
-            <span className="truncate">{invitation.recepcion?.nombreSalon || 'Sin ubicación'}</span>
+            <span className="truncate">
+              {invitation.recepcion?.nombreSalon || "Sin ubicación"}
+            </span>
           </div>
         </div>
 
@@ -132,24 +139,28 @@ const EmptyInvitationsState = () => (
       <p className="font-bold mb-1 flex items-center gap-2 justify-center">
         <AlertCircle size={16} /> ¿Crees que es un error?
       </p>
-      <span className="text-[#5A5A5A] mt-1">Contacta a soporte para verificar tus permisos.</span>
+      <span className="text-[#5A5A5A] mt-1">
+        Contacta a soporte para verificar tus permisos.
+      </span>
     </div>
   </div>
 );
 
 export default function InvitationsListPage() {
-  const user = useAuthUser();
+  const user = useAuthStore((state) => state.user);
+  const isRootUser = !!user?.isRootAdmin;
+
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Estados para Modal y Permisos
+  // Estados para Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isRootUser, setIsRootUser] = useState(false);
   const [editingInvitation, setEditingInvitation] = useState<Invitation | null>(
     null,
   );
 
   const fetchInvitations = useCallback(async () => {
+    if (!user) return; // Protección por si no hay sesión cargada
     setIsLoading(true);
     try {
       const invites = await InvitationsService.getUserInvitations(user);
@@ -160,17 +171,9 @@ export default function InvitationsListPage() {
   }, [user]);
 
   useEffect(() => {
-    const checkRootStatus = async () => {
-      try {
-        const isAdmin = await InvitationsService.isAdmin(user);
-        setIsRootUser(isAdmin);
-      } catch (error) {
-        console.error("Error verificando permisos de admin:", error);
-      }
-    };
-
-    checkRootStatus();
-    fetchInvitations();
+    if (user) {
+      fetchInvitations();
+    }
   }, [user, fetchInvitations]);
 
   if (isLoading) {
@@ -211,7 +214,6 @@ export default function InvitationsListPage() {
               <InvitationCard
                 key={inv.id}
                 invitation={inv}
-                isAdmin={isRootUser}
                 onEdit={(inv) => {
                   setEditingInvitation(inv);
                   setIsModalOpen(true);
