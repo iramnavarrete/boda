@@ -13,30 +13,15 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Invitation } from "@/types";
-import { User } from "firebase/auth";
+import { UserProfile } from "@/stores/authStore"; // 🔥 Importamos UserProfile en lugar del User de Firebase
 
 export const InvitationsService = {
-  isAdmin: async (user: User | null): Promise<boolean> => {
+  getUserInvitations: async (user: UserProfile) => {
     try {
-      if (!user) return false;
+      const isRoot = !!user.isRootAdmin;
 
-      const idTokenResult = await user.getIdTokenResult();
-
-      // Leemos el Custom Claim directamente
-      return !!idTokenResult.claims.isRootAdmin;
-    } catch (error) {
-      console.error("Error al verificar rol de administrador:", error);
-      return false;
-    }
-  },
-
-  getUserInvitations: async (user: User) => {
-    try {
-      // Verificamos si es root leyendo el token local
-      const isRoot = await InvitationsService.isAdmin(user);
-
+      // Si es Root, descargamos todas las invitaciones sin filtros
       if (isRoot) {
-        // Si es Root, descargamos todas las invitaciones
         const q = query(collection(db, "invitations"));
         const snapshot = await getDocs(q);
 
@@ -45,31 +30,47 @@ export const InvitationsService = {
         );
       }
 
-      // Si NO es root, buscamos su mapa de accesos en la nueva colección "users"
-      const userDocRef = doc(db, "users", user.uid);
-      const userDocSnap = await getDoc(userDocRef);
+      let allowedInvitationIds: string[] = [];
+      const claimsRoles = user.roles;
 
-      if (!userDocSnap.exists()) return [];
+      if (claimsRoles && Object.keys(claimsRoles).length > 0) {
+        // ÉXITO: Leemos desde la memoria (Costo: 0 lecturas extra)
+        allowedInvitationIds = Object.keys(claimsRoles);
+      } else {
+        // PLAN B: Si no hay roles en la memoria, buscamos en la base de datos (Costo: 1 lectura)
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
 
-      const invitationsMap = userDocSnap.data().invitationsMap || {};
-      const allowedInvitationIds = Object.keys(invitationsMap);
+        if (userDocSnap.exists()) {
+          const invitationsMap = userDocSnap.data().invitationsMap || {};
+          allowedInvitationIds = Object.keys(invitationsMap);
+        }
+      }
 
-      // Si no tiene invitaciones asignadas, retornamos vacío inmediatamente
+      // Si definitivamente no tiene eventos asignados, no hacemos más consultas
       if (allowedInvitationIds.length === 0) return [];
 
-      // NOTA: Firestore permite un máximo de 30 elementos en la cláusula "in".
-      // Si a un guardia le asignas más de 30 eventos a la vez, tendrías que dividir
-      // 'allowedInvitationIds' en chunks (lotes) de 30 y hacer múltiples queries.
-      const q = query(
-        collection(db, "invitations"),
-        where(documentId(), "in", allowedInvitationIds),
-      );
+      // 3. Consultamos las invitaciones a las que tiene acceso
+      // Dividimos en bloques de 30 para evitar el límite de Firestore
+      const chunks = [];
+      for (let i = 0; i < allowedInvitationIds.length; i += 30) {
+        chunks.push(allowedInvitationIds.slice(i, i + 30));
+      }
 
-      const snapshot = await getDocs(q);
+      const fetchPromises = chunks.map(async (chunk) => {
+        const q = query(
+          collection(db, "invitations"),
+          where(documentId(), "in", chunk),
+        );
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() }) as Invitation,
+        );
+      });
 
-      return snapshot.docs.map(
-        (doc) => ({ id: doc.id, ...doc.data() }) as Invitation,
-      );
+      // Ejecutamos las consultas en paralelo y unimos los resultados
+      const results = await Promise.all(fetchPromises);
+      return results.flat();
     } catch (error) {
       console.error("Error obteniendo invitaciones:", error);
       return [];
@@ -78,14 +79,12 @@ export const InvitationsService = {
 
   createInvitation: async (payload: Partial<Invitation>) => {
     try {
-      // Extraemos el id para usarlo como ruta, y guardamos el resto de los datos
       const { id, ...dataToSave } = payload;
 
       if (!id) {
         throw new Error("El ID de la invitación es obligatorio");
       }
 
-      // Usamos doc() con el ID personalizado y setDoc para crearlo
       const docRef = doc(db, "invitations", id);
       await setDoc(docRef, dataToSave);
 

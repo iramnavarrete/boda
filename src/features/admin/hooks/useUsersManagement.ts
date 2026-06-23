@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { UserDoc } from "@/types";
-import { auth, db } from "@/lib/firebase/config"; // Ajustado a tu ruta real
+import { auth, db } from "@/lib/firebase/config";
 import { collection, getDocs } from "firebase/firestore";
 import { useToast } from "@/features/shared/components/Toast";
 
@@ -47,7 +47,6 @@ export const useUsersManagement = () => {
       if (!currentUser) throw new Error("No hay usuario autenticado");
       const token = await currentUser.getIdToken();
 
-      // Ajustado para Pages Router: /api/admin/users
       const response = await fetch(`/api/admin/users?uid=${uid}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -94,17 +93,24 @@ export const useUsersManagement = () => {
         );
       }
 
+      // Extraemos la info final. Si se acaba de crear, el response trae el UID nuevo
+      let finalUserData = userData;
+      if (!isEditing) {
+        finalUserData = await response.json();
+      }
+
+      // Actualizar Estado Local de React (UI)
       if (isEditing) {
         setUsers((prev) =>
-          prev.map((u) => (u.uid === userData.uid ? userData : u)),
+          prev.map((u) => (u.uid === finalUserData.uid ? finalUserData : u)),
         );
-        toast("Usuario actualizado correctamente.", "success");
+        toast("Usuario actualizado y roles sincronizados.", "success");
       } else {
-        const savedUserDoc = await response.json();
-        setUsers((prev) => [...prev, savedUserDoc]);
-        toast("Usuario creado exitosamente.", "success");
+        setUsers((prev) => [...prev, finalUserData]);
+        toast("Usuario creado y roles asignados exitosamente.", "success");
       }
-      return true; // Retorna true si fue exitoso para cerrar el modal
+
+      return true; // Retorna true para cerrar el modal
     } catch (error: unknown) {
       console.error(error);
       toast(
