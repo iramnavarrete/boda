@@ -6,12 +6,14 @@ import {
   Lock,
   Trash2,
   Unlock,
+  Info,
 } from "lucide-react";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
-import { MouseEvent, useCallback } from "react";
+import { MouseEvent, useCallback, useState } from "react";
 import { Guest } from "@/types";
 import { cn } from "@heroui/theme";
-import { Timestamp } from "firebase/firestore";
+import { FieldValue, Timestamp } from "firebase/firestore";
+import Tooltip from "@/features/shared/components/Tooltip";
 
 interface GuestActionButtonsProps {
   guest: Guest;
@@ -19,7 +21,7 @@ interface GuestActionButtonsProps {
   onSendWhatsApp: (guest: Guest) => void;
   onSendReminder: (guest: Guest) => void;
   onDelete: (guest: Guest) => void;
-  onPreview?: (guest: Guest) => void; // opcional por si cada vista quiere manejarlo distinto
+  onPreview?: (guest: Guest) => void;
 }
 
 function stopAndRun(e: MouseEvent, fn: () => void) {
@@ -53,6 +55,8 @@ export const GuestLockButton = ({
   </button>
 );
 
+// TODO Actualizar este componente para hacer uso del hook de useTimeAgo en lugar de formatear el string aquí
+
 export const GuestActionButtons = ({
   guest: g,
   invitationId,
@@ -60,116 +64,215 @@ export const GuestActionButtons = ({
   onSendReminder,
   onDelete,
 }: GuestActionButtonsProps) => {
-  const stringFechaWhatsapp = useCallback(() => {
-    if (!g.fechaWhatsappEnviado) {
-      return "";
-    }
-    return (
-      " el " +
-      new Date(
-        (g.fechaWhatsappEnviado as Timestamp).seconds * 1000,
-      ).toLocaleDateString("es-MX", {
-        day: "numeric",
-        month: "long",
-      })
-    );
-  }, [g.fechaWhatsappEnviado]);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const stringFechaRecordatorio = useCallback(() => {
-    if (!g.fechaRecordatorioEnviado) {
-      return "";
-    }
-    return (
-      " el " +
-      new Date(
-        (g.fechaRecordatorioEnviado as Timestamp).seconds * 1000,
-      ).toLocaleDateString("es-MX", {
-        day: "numeric",
-        month: "long",
-      })
-    );
-  }, [g.fechaRecordatorioEnviado]);
+  const whatsappButton = () => (
+    <button
+      type="button"
+      onClick={(e) => {
+        stopAndRun(e, () => {
+          if (g.whatsappEnviado) {
+            setIsMenuOpen(!isMenuOpen);
+          } else {
+            onSendWhatsApp(g);
+          }
+        });
+      }}
+      className={cn(
+        "p-2 rounded-xl transition-all border relative z-40",
+        (isMenuOpen || g.whatsappEnviado) &&
+          "md:group-hover:bg-green-100 md:group-hover:text-green-700 md:group-hover:border-green-600",
+        isMenuOpen
+          ? "bg-green-100 text-green-700 border-green-600"
+          : "text-green-600 hover:bg-green-100 hover:text-green-700 border-sand hover:border-green-600",
+      )}
+    >
+      <IconBrandWhatsapp className="w-4 h-4" />
+      <div
+        className="absolute bottom-[6px] right-[3px] bg-white rounded-full p-[1px] shadow-sm cursor-help pointer-events-none"
+      >
+        {g.whatsappEnviado === true ? (
+          <CheckCircle2
+            size={11}
+            className="text-green-500 bg-green-50 rounded-full"
+          />
+        ) : (
+          <Clock size={11} className="text-sand-400 bg-green-50 rounded-full" />
+        )}
+      </div>
+    </button>
+  );
+
+  const stringFechaEnviado = useCallback(
+    (fecha?: Timestamp | FieldValue | null | undefined) => {
+      if (!fecha || !("seconds" in fecha)) return "";
+      const timestamp = fecha as Timestamp;
+      return (
+        " el " +
+        new Date(timestamp.seconds * 1000).toLocaleDateString("es-MX", {
+          day: "numeric",
+          month: "long",
+        })
+      );
+    },
+    [],
+  );
+
   return (
     <div className="flex items-center gap-1 justify-end">
       {g.tieneTelefono && (
-        <>
-          {g.whatsappEnviado === true && (
-            <button
-              type="button"
-              title="Enviar Recordatorio"
-              onClick={(e) => stopAndRun(e, () => onSendReminder(g))}
-              className="p-2 rounded-xl text-orange-500 hover:bg-orange-50 hover:text-orange-600 transition-colors border border-sand hover:border-orange-300 shadow-sm relative"
-            >
-              <Bell size={16} />
-              {g.recordatorioEnviado === true && (
-                <div
-                  title={`Recordatorio enviado${stringFechaRecordatorio()}`}
-                  className="absolute bottom-[6px] right-[3px] bg-white rounded-full p-[1px] shadow-sm cursor-help"
-                >
-                  <CheckCircle2
-                    size={11}
-                    className="text-green-500 bg-green-50 rounded-full"
-                  />
-                </div>
-              )}
-            </button>
+        <div
+          className="relative flex items-center justify-center group"
+          onMouseLeave={() => setIsMenuOpen(false)}
+        >
+          {/* OVERLAY INVISIBLE */}
+          {isMenuOpen && (
+            <div
+              className="fixed inset-0 z-40"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMenuOpen(false);
+              }}
+            />
           )}
 
-          <button
-            type="button"
-            title="Enviar Whatsapp"
-            onClick={(e) => stopAndRun(e, () => onSendWhatsApp(g))}
-            className="p-2 rounded-xl text-green-600 hover:bg-green-100 hover:text-green-700 transition-colors border border-sand hover:border-green-600 relative"
-          >
-            <IconBrandWhatsapp className="w-4 h-4" />
+          {/* MENÚ DESPLEGABLE */}
+          {g.whatsappEnviado && (
             <div
-              title={
-                g.whatsappEnviado
-                  ? `WhatsApp enviado${stringFechaWhatsapp()}`
-                  : "WhatsApp pendiente de enviar"
-              }
-              className="absolute bottom-[6px] right-[3px] bg-white rounded-full p-[1px] shadow-sm cursor-help"
-            >
-              {g.whatsappEnviado === true ? (
-                <CheckCircle2
-                  size={11}
-                  className="text-green-500 bg-green-50 rounded-full"
-                />
-              ) : (
-                <Clock
-                  size={11}
-                  className="text-sand-400 bg-green-50 rounded-full"
-                />
+              className={cn(
+                "absolute bottom-full -right-4 pb-2 z-50 w-max min-w-[230px] transition-all duration-200 origin-bottom-right",
+                isMenuOpen
+                  ? "opacity-100 visible pointer-events-auto scale-100"
+                  : "opacity-0 invisible pointer-events-none scale-95 md:group-hover:opacity-100 md:group-hover:visible md:group-hover:pointer-events-auto md:group-hover:scale-100",
               )}
+            >
+              <div className="bg-white border border-[#EBE5DA] shadow-[0_10px_40px_-10px_rgba(44,44,41,0.2)] rounded-xl p-1.5 flex flex-col gap-1">
+                {/* Opción 1: Reenviar WhatsApp */}
+                <button
+                  type="button"
+                  onClick={(e) =>
+                    stopAndRun(e, () => {
+                      onSendWhatsApp(g);
+                      setIsMenuOpen(false);
+                    })
+                  }
+                  className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-green-700 hover:bg-green-50 transition-colors text-left text-xs font-medium w-full"
+                >
+                  <IconBrandWhatsapp size={16} className="shrink-0" />
+                  <span className="leading-tight flex-1">
+                    Volver a enviar WhatsApp
+                  </span>
+
+                  {/* 🔥 Icono Info envuelto en Tooltip */}
+                  <div
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
+                    className="ml-auto flex items-center justify-center"
+                  >
+                    <Tooltip
+                      text={`Enviado${stringFechaEnviado(g.fechaWhatsappEnviado)}`}
+                      position="top"
+                      align="right"
+                    >
+                      <div className="p-1 cursor-help rounded-md hover:bg-green-100 transition-colors">
+                        <Info
+                          size={15}
+                          className="text-stone-400 hover:text-stone-600 transition-colors"
+                        />
+                      </div>
+                    </Tooltip>
+                  </div>
+                </button>
+
+                <div className="h-px bg-[#EBE5DA]/50 mx-1 my-0.5" />
+
+                {/* Opción 2: Recordatorio */}
+                <button
+                  type="button"
+                  onClick={(e) =>
+                    stopAndRun(e, () => {
+                      onSendReminder(g);
+                      setIsMenuOpen(false);
+                    })
+                  }
+                  className="flex items-center gap-2 px-2.5 py-2 rounded-lg text-orange-600 hover:bg-orange-50 transition-colors text-left text-xs font-medium w-full"
+                >
+                  <Bell size={16} className="shrink-0" />
+                  <span className="leading-tight flex-1">
+                    {g.recordatorioEnviado === true
+                      ? "Volver a enviar recordatorio"
+                      : "Enviar recordatorio"}
+                  </span>
+
+                  {/* 🔥 Icono Info envuelto en Tooltip */}
+                  {g.recordatorioEnviado === true && (
+                    <div
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                      }}
+                      className="ml-auto flex items-center justify-center"
+                    >
+                      <Tooltip
+                        text={`Enviado${stringFechaEnviado(g.fechaRecordatorioEnviado)}`}
+                        position="top"
+                        align="right"
+                      >
+                        <div className="p-1 cursor-help rounded-md hover:bg-orange-100 transition-colors">
+                          <Info
+                            size={15}
+                            className="text-stone-400 hover:text-stone-600 transition-colors"
+                          />
+                        </div>
+                      </Tooltip>
+                    </div>
+                  )}
+                </button>
+              </div>
             </div>
-          </button>
-        </>
+          )}
+
+          {/* BOTÓN PRINCIPAL DE WHATSAPP */}
+          {!g.whatsappEnviado ? (
+            <Tooltip text="Enviar WhatsApp" position="top" align="center">
+              <>{whatsappButton()}</>
+            </Tooltip>
+          ) : (
+            <>{whatsappButton()}</>
+          )}
+        </div>
       )}
 
-      <button
-        type="button"
-        title="Vista previa"
-        onClick={(e) =>
-          stopAndRun(e, () =>
-            window.open(
-              `/i/${invitationId}?guest=${g.id}&preview=1&token=AQWOLdldspWRKDOSAKkwqppals`,
-              "_blank",
-            ),
-          )
-        }
-        className="p-2 rounded-xl text-stone-custom hover:bg-sand-100 hover:text-charcoal hover:border-gold/30 transition-all border border-sand shadow-sm"
-      >
-        <Eye size={16} />
-      </button>
+      {/* VISTA PREVIA */}
+      <Tooltip text="Vista previa" position="top" align="center">
+        <button
+          type="button"
+          onClick={(e) =>
+            stopAndRun(e, () =>
+              window.open(
+                `/i/${invitationId}?guest=${g.id}&preview=1&token=AQWOLdldspWRKDOSAKkwqppals`,
+                "_blank",
+              ),
+            )
+          }
+          className="p-2 rounded-xl text-stone-custom hover:bg-sand-100 hover:text-charcoal hover:border-gold/30 transition-all border border-sand shadow-sm"
+        >
+          <Eye size={16} />
+        </button>
+      </Tooltip>
 
-      <button
-        type="button"
-        title="Eliminar"
-        onClick={(e) => stopAndRun(e, () => onDelete(g))}
-        className="p-2 rounded-xl text-danger-600 border border-sand hover:bg-red-50 hover:text-danger-700 hover:border-red-100 transition-all"
-      >
-        <Trash2 size={16} />
-      </button>
+      <Tooltip text="Eliminar" position="top" align="center">
+        <button
+          type="button"
+          title="Eliminar"
+          onClick={(e) => stopAndRun(e, () => onDelete(g))}
+          className="p-2 rounded-xl text-danger-600 border border-sand hover:bg-red-50 hover:text-danger-700 hover:border-red-100 transition-all"
+        >
+          <Trash2 size={16} />
+        </button>
+      </Tooltip>
     </div>
   );
 };
