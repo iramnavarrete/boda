@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { useSeatingStore } from "../../stores/useSeatingStore";
 import { X } from "lucide-react";

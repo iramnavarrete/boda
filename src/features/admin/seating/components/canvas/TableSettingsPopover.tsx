@@ -37,7 +37,6 @@ export function TableSettingsPopover({
     updateElementSeats(element.id, newValue);
   };
 
-  // Generamos la lista de todos los asientos de la mesa (asignados y vacíos)
   const allSeats = Array.from({ length: element.seats }, (_, i) => {
     const guestId = element.assignedSeats[i];
     if (!guestId) return { seatNumber: i + 1, isAssigned: false };
@@ -61,7 +60,7 @@ export function TableSettingsPopover({
 
   return (
     <div
-      className="settings-popover absolute z-50"
+      className="settings-popover absolute z-[100]"
       style={{
         bottom: "calc(100% + 14px)",
         left: "50%",
@@ -76,8 +75,8 @@ export function TableSettingsPopover({
         className="absolute left-1/2 -translate-x-1/2 w-3 h-3 bg-[#FDFBF7] border-r border-b border-[#EBE5DA] rotate-45"
         style={{ bottom: -5 }}
       />
-      <div className="bg-[#FDFBF7] rounded-2xl border border-[#EBE5DA] overflow-hidden">
-        <div className="px-4 pt-4 pb-3 border-b border-[#EBE5DA] bg-[#FDFBF7]">
+      <div className="bg-[#FDFBF7] rounded-2xl border border-[#EBE5DA] flex flex-col">
+        <div className="px-4 pt-4 pb-3 border-b border-[#EBE5DA] bg-[#FDFBF7] rounded-t-2xl">
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <label className="block text-[9px] text-[#A8A29E] uppercase font-bold tracking-widest mb-1.5">
@@ -89,17 +88,19 @@ export function TableSettingsPopover({
                 className="w-full text-sm font-semibold text-[#2C2C29] bg-white border border-[#EBE5DA] rounded-lg px-3 py-2 focus:border-[#C5A669] focus:outline-none"
               />
             </div>
-            <Tooltip text="Eliminar elemento">
-              <button
-                onClick={() => {
-                  removeElement(element.id);
-                  onClose();
-                }}
-                className="mt-5 p-2 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-lg transition-colors border border-transparent hover:border-red-200 shrink-0"
-              >
-                <Trash2 size={16} />
-              </button>
-            </Tooltip>
+            <div className="mt-5 shrink-0">
+              <Tooltip text="Eliminar elemento" position="top" align="center">
+                <button
+                  onClick={() => {
+                    removeElement(element.id);
+                    onClose();
+                  }}
+                  className="p-2 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-lg transition-colors border border-transparent hover:border-red-200"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </Tooltip>
+            </div>
           </div>
         </div>
 
@@ -205,7 +206,11 @@ export function TableSettingsPopover({
                     </span>
                   </div>
                   {seat.isAssigned && seat.guestId && (
-                    <Tooltip text="Quitar de la mesa">
+                    <Tooltip
+                      text="Quitar de la mesa"
+                      position="top"
+                      align="right"
+                    >
                       <button
                         onClick={() =>
                           removeGuestFromTable(element.id, seat.guestId!)

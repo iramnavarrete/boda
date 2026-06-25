@@ -265,6 +265,8 @@ export default function TableElement({ element }: { element: SeatingElement }) {
           }
           colorBg={guestInfo?.familyColorBg}
           colorBorder={guestInfo?.familyColorBorder}
+          tableId={element.id}
+          guestId={assignedGuestId}
         />,
       );
     }
