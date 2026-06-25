@@ -36,21 +36,31 @@ export interface Guest {
 export interface Family {
   id: string;
   name: string;
+  colorBg: string;
+  colorBorder: string;
   guests: Guest[];
 }
 
-interface SeatingStore {
+export interface SeatingStore {
   elements: SeatingElement[];
   families: Family[];
   zoom: number;
   canvasOffset: { x: number; y: number };
   selectedElementId: string | null;
+  toastMsg: string | null;
   addElement: (
     element: Omit<SeatingElement, "assignedSeats" | "alias">,
     alias: string,
   ) => void;
   removeElement: (id: string) => void;
   updateElementPosition: (id: string, x: number, y: number) => void;
+  updateElementGeometry: (
+    id: string,
+    width: number,
+    height: number,
+    x: number,
+    y: number,
+  ) => void;
   updateElementSeats: (id: string, seats: number) => void;
   updateElementAlias: (id: string, alias: string) => void;
   assignGuestToTable: (tableId: string, guestId: string) => void;
@@ -61,15 +71,29 @@ interface SeatingStore {
   setZoom: (zoom: number) => void;
   setCanvasOffset: (offset: { x: number; y: number }) => void;
   setSelectedElementId: (id: string | null) => void;
+  showToast: (msg: string) => void;
 }
 
-const MOCK_FAMILIES: Family[] = [
+const generateFamilyColors = (
+  families: Omit<Family, "colorBg" | "colorBorder">[],
+): Family[] => {
+  return families.map((fam, i) => {
+    const hue = Math.floor((i * (360 / families.length)) % 360);
+    return {
+      ...fam,
+      colorBg: `hsl(${hue}, 80%, 85%)`,
+      colorBorder: `hsl(${hue}, 70%, 65%)`,
+    };
+  });
+};
+
+const MOCK_FAMILIES = generateFamilyColors([
   {
     id: "fam_1",
     name: "Familia Pérez",
     guests: [
-      { id: "g_1", name: "" },
-      { id: "g_2", name: "" },
+      { id: "g_1", name: "Juan" },
+      { id: "g_2", name: "María" },
       { id: "g_3", name: "" },
       { id: "g_4", name: "" },
     ],
@@ -100,7 +124,9 @@ const MOCK_FAMILIES: Family[] = [
       { id: "g_12", name: "" },
     ],
   },
-];
+]);
+
+let toastTimeout: ReturnType<typeof setTimeout>;
 
 export const useSeatingStore = create<SeatingStore>((set) => ({
   elements: [],
@@ -108,63 +134,67 @@ export const useSeatingStore = create<SeatingStore>((set) => ({
   zoom: 1,
   canvasOffset: { x: 0, y: 0 },
   selectedElementId: null,
+  toastMsg: null,
+
+  showToast: (msg) => {
+    set({ toastMsg: msg });
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => set({ toastMsg: null }), 3500);
+  },
 
   addElement: (element, alias) =>
     set((state) => ({
       elements: [...state.elements, { ...element, alias, assignedSeats: [] }],
       selectedElementId: element.id,
     })),
-
   removeElement: (id) =>
     set((state) => ({
       elements: state.elements.filter((el) => el.id !== id),
       selectedElementId:
         state.selectedElementId === id ? null : state.selectedElementId,
     })),
-
   updateElementPosition: (id, x, y) =>
     set((state) => ({
       elements: state.elements.map((el) =>
         el.id === id ? { ...el, x, y } : el,
       ),
     })),
-
+  updateElementGeometry: (id, width, height, x, y) =>
+    set((state) => ({
+      elements: state.elements.map((el) =>
+        el.id === id ? { ...el, width, height, x, y } : el,
+      ),
+    })),
   updateElementSeats: (id, seats) =>
     set((state) => ({
       elements: state.elements.map((el) =>
         el.id === id ? { ...el, seats } : el,
       ),
     })),
-
   updateElementAlias: (id, alias) =>
     set((state) => ({
       elements: state.elements.map((el) =>
         el.id === id ? { ...el, alias } : el,
       ),
     })),
-
   assignGuestToTable: (tableId, guestId) =>
     set((state) => ({
       elements: state.elements.map((el) => {
         const filteredSeats = el.assignedSeats.filter((s) => s !== guestId);
-        if (el.id === tableId && filteredSeats.length < el.seats) {
+        if (el.id === tableId && filteredSeats.length < el.seats)
           return { ...el, assignedSeats: [...filteredSeats, guestId] };
-        }
         return { ...el, assignedSeats: filteredSeats };
       }),
     })),
-
   assignFamilyToTable: (tableId, familyId) =>
     set((state) => {
       const family = state.families.find((f) => f.id === familyId);
       if (!family) return state;
       const guestIds = family.guests.map((g) => g.id);
-
       let nextState = state.elements.map((el) => ({
         ...el,
         assignedSeats: el.assignedSeats.filter((s) => !guestIds.includes(s)),
       }));
-
       nextState = nextState.map((el) => {
         if (el.id === tableId) {
           const available = el.seats - el.assignedSeats.length;
@@ -173,10 +203,8 @@ export const useSeatingStore = create<SeatingStore>((set) => ({
         }
         return el;
       });
-
       return { elements: nextState };
     }),
-
   removeGuestFromTable: (tableId, guestId) =>
     set((state) => ({
       elements: state.elements.map((el) =>
@@ -188,7 +216,6 @@ export const useSeatingStore = create<SeatingStore>((set) => ({
           : el,
       ),
     })),
-
   removeFamilyFromTable: (familyId) =>
     set((state) => {
       const family = state.families.find((f) => f.id === familyId);
@@ -201,7 +228,6 @@ export const useSeatingStore = create<SeatingStore>((set) => ({
         })),
       };
     }),
-
   updateGuestName: (familyId, guestId, name) =>
     set((state) => ({
       families: state.families.map((f) =>
@@ -215,7 +241,6 @@ export const useSeatingStore = create<SeatingStore>((set) => ({
           : f,
       ),
     })),
-
   setZoom: (zoom) => set({ zoom }),
   setCanvasOffset: (canvasOffset) => set({ canvasOffset }),
   setSelectedElementId: (id) => set({ selectedElementId: id }),

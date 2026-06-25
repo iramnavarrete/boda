@@ -1,6 +1,10 @@
-import React, { ForwardRefExoticComponent, ReactNode, RefAttributes, useState } from "react";
-import { useDraggable } from "@dnd-kit/core";
-import { useSeatingStore, ElementType } from "./stores/useSeatingStore";
+import React, {
+  ForwardRefExoticComponent,
+  RefAttributes,
+  useState,
+} from "react";
+import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { useSeatingStore, ElementType } from "../../stores/useSeatingStore";
 import {
   Circle,
   Square,
@@ -21,17 +25,18 @@ import {
   LucideProps,
 } from "lucide-react";
 
-const ELEMENTS: {
-  category: string;
-  items: {
-    type: ElementType;
-    label: string;
-    seats: number;
-    width: number;
-    height: number;
-    icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>;
-  }[];
-}[] = [
+export interface PaletteItemType {
+  type: ElementType;
+  label: string;
+  seats: number;
+  width: number;
+  height: number;
+  icon: ForwardRefExoticComponent<
+    Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
+  >;
+}
+
+const ELEMENTS: { category: string; items: PaletteItemType[] }[] = [
   {
     category: "Mesas",
     items: [
@@ -156,11 +161,7 @@ const ELEMENTS: {
   },
 ];
 
-function DraggablePaletteItem({
-  item,
-}: {
-  item: (typeof ELEMENTS)[0]["items"][0];
-}) {
+function DraggablePaletteItem({ item }: { item: PaletteItemType }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `palette-${item.type}`,
     data: {
@@ -178,33 +179,31 @@ function DraggablePaletteItem({
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className={`flex items-center gap-3 p-3 bg-white border border-[#EBE5DA] rounded-xl transition-all group w-full text-left cursor-grab active:cursor-grabbing
-        ${isDragging ? "opacity-40 scale-95" : "hover:border-[#C5A669] hover:shadow-sm"}
-      `}
+      className={`flex items-center gap-2 p-2 bg-white border border-[#EBE5DA] rounded-lg transition-all group w-full text-left cursor-grab active:cursor-grabbing ${isDragging ? "opacity-40 scale-95" : "hover:border-[#C5A669] hover:shadow-sm"}`}
       style={{ touchAction: "none" }}
     >
-      <div className="p-2 bg-[#F9F7F2] rounded-lg group-hover:bg-[#f3efdf] transition-colors shrink-0">
+      <div className="p-1.5 bg-[#F9F7F2] rounded-md group-hover:bg-[#f3efdf] transition-colors shrink-0">
         <item.icon
-          className="w-5 h-5 text-[#5A5A5A] group-hover:text-[#C5A669]"
+          className="w-4 h-4 text-[#5A5A5A] group-hover:text-[#C5A669]"
           strokeWidth={1.5}
         />
       </div>
       <div className="flex flex-col flex-1 min-w-0">
-        <span className="text-sm font-medium text-[#2C2C29]">{item.label}</span>
+        <span className="text-xs font-medium text-[#2C2C29]">{item.label}</span>
         {item.seats > 0 ? (
-          <span className="text-[10px] uppercase font-bold tracking-wider text-[#A8A29E]">
+          <span className="text-[9px] uppercase font-bold tracking-wider text-[#A8A29E]">
             {item.seats} personas
           </span>
         ) : (
-          <span className="text-[10px] uppercase font-bold tracking-wider text-[#C5A669]">
+          <span className="text-[9px] uppercase font-bold tracking-wider text-[#C5A669]">
             Arrastra al plano
           </span>
         )}
       </div>
-      <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity pr-1">
         <svg
-          width="12"
-          height="16"
+          width="10"
+          height="14"
           viewBox="0 0 12 16"
           fill="none"
           className="text-[#A8A29E]"
@@ -226,6 +225,11 @@ export default function ElementsPalette({ onClose }: { onClose?: () => void }) {
     Record<string, boolean>
   >({});
 
+  const { setNodeRef } = useDroppable({
+    id: "palette-area",
+    data: { type: "sidebar" },
+  });
+
   const toggleCategory = (category: string) => {
     setCollapsedCategories((prev) => ({
       ...prev,
@@ -235,50 +239,49 @@ export default function ElementsPalette({ onClose }: { onClose?: () => void }) {
 
   return (
     <div
+      ref={setNodeRef}
       className="flex flex-col h-full w-full bg-white"
-      style={{ minWidth: "16rem" }}
+      style={{ minWidth: "15rem" }}
     >
-      <div className="p-4 border-b border-[#EBE5DA] flex justify-between items-center bg-[#FDFBF7]">
+      <div className="p-3 border-b border-[#EBE5DA] flex justify-between items-center bg-[#FDFBF7]">
         <div className="flex flex-col">
-          <h2 className="font-serif text-lg text-[#2C2C29]">Elementos</h2>
-          <span className="text-[10px] uppercase font-bold tracking-wider text-[#A8A29E]">
-            Arrastra al plano
-          </span>
+          <h2 className="font-serif text-[15px] font-semibold text-[#2C2C29]">
+            Elementos
+          </h2>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="p-1 bg-white rounded-md border border-[#EBE5DA]"
+            className="p-1 bg-white rounded-md border border-[#EBE5DA] hover:bg-[#F9F7F2]"
           >
-            <X size={16} className="text-[#A8A29E]" />
+            <X size={14} className="text-[#A8A29E]" />
           </button>
         )}
       </div>
 
-      <div className="p-4 space-y-6 overflow-y-auto w-full">
+      <div className="p-3 space-y-4 overflow-y-auto w-full">
         {ELEMENTS.map((group) => {
           const isCollapsed = collapsedCategories[group.category];
           return (
             <div key={group.category} className="flex flex-col">
               <button
                 onClick={() => toggleCategory(group.category)}
-                className="text-[10px] font-bold uppercase tracking-widest text-[#A8A29E] mb-3 flex items-center justify-between w-full hover:text-[#C5A669] transition-colors focus:outline-none"
+                className="text-[9px] font-bold uppercase tracking-widest text-[#A8A29E] mb-2 flex items-center justify-between w-full hover:text-[#C5A669] transition-colors focus:outline-none"
               >
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1">
                   {isCollapsed ? (
-                    <ChevronRight size={14} />
+                    <ChevronRight size={12} />
                   ) : (
-                    <ChevronDown size={14} />
+                    <ChevronDown size={12} />
                   )}
                   {group.category}
                 </span>
-                <span className="bg-[#EBE5DA] text-[#5A5A5A] px-2 py-0.5 rounded-full text-[9px] font-semibold">
+                <span className="bg-[#EBE5DA] text-[#5A5A5A] px-1.5 py-[1px] rounded-full text-[8px] font-semibold">
                   {group.items.length}
                 </span>
               </button>
-
               {!isCollapsed && (
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-1.5">
                   {group.items.map((item) => (
                     <DraggablePaletteItem key={item.type} item={item} />
                   ))}

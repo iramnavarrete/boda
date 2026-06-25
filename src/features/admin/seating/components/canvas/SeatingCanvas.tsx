@@ -1,21 +1,27 @@
-import React, { useRef, useEffect, useCallback } from 'react';
-import { useSeatingStore } from './stores/useSeatingStore';
-import TableElement from './TableElement';
-import { ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
-import { useDroppable } from '@dnd-kit/core';
+import React, { useRef, useEffect, useCallback } from "react";
+import { useSeatingStore } from "../../stores/useSeatingStore";
+import TableElement from "./TableElement";
+import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { useDroppable } from "@dnd-kit/core";
 
 export default function SeatingCanvas() {
-  const { elements, zoom, setZoom, setSelectedElementId, canvasOffset, setCanvasOffset } = useSeatingStore();
+  const {
+    elements,
+    zoom,
+    setZoom,
+    setSelectedElementId,
+    canvasOffset,
+    setCanvasOffset,
+  } = useSeatingStore();
   const containerRef = useRef<HTMLDivElement>(null);
   const isPanning = useRef(false);
   const lastPointer = useRef({ x: 0, y: 0 });
 
   const { setNodeRef: setDroppableCanvasRef } = useDroppable({
-    id: 'canvas',
-    data: { type: 'canvas' }
+    id: "canvas",
+    data: { type: "canvas" },
   });
 
-  // Mutate cursor directly on the DOM — never read isPanning.current during render
   const setCursor = useCallback((cursor: string) => {
     if (containerRef.current) containerRef.current.style.cursor = cursor;
   }, []);
@@ -34,7 +40,6 @@ export default function SeatingCanvas() {
     setCanvasOffset({ x: 0, y: 0 });
   };
 
-  // Ctrl / Cmd + Mouse Wheel Zoom centered on cursor
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -60,44 +65,56 @@ export default function SeatingCanvas() {
       });
     };
 
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    return () => container.removeEventListener('wheel', handleWheel);
+    container.addEventListener("wheel", handleWheel, { passive: false });
+    return () => container.removeEventListener("wheel", handleWheel);
   }, []);
 
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    if (e.button !== 0) return;
-    const target = e.target as HTMLElement;
-    const isBackground =
-      !target.closest('.table-element-card') &&
-      !target.closest('.settings-popover') &&
-      !target.closest('.zoom-controls');
-    if (!isBackground) return;
+  const handlePointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (e.button !== 0) return;
+      const target = e.target as HTMLElement;
+      const isBackground =
+        !target.closest(".table-element-card") &&
+        !target.closest(".settings-popover") &&
+        !target.closest(".zoom-controls");
 
-    isPanning.current = true;
-    lastPointer.current = { x: e.clientX, y: e.clientY };
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    setCursor('grabbing');
-    e.preventDefault();
-  }, [setCursor]);
+      if (!isBackground) return;
 
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isPanning.current) return;
-    e.preventDefault();
+      isPanning.current = true;
+      lastPointer.current = { x: e.clientX, y: e.clientY };
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      setCursor("grabbing");
+      e.preventDefault();
+    },
+    [setCursor],
+  );
 
-    const dx = e.clientX - lastPointer.current.x;
-    const dy = e.clientY - lastPointer.current.y;
-    lastPointer.current = { x: e.clientX, y: e.clientY };
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!isPanning.current) return;
+      e.preventDefault();
 
-    const off = useSeatingStore.getState().canvasOffset ?? { x: 0, y: 0 };
-    useSeatingStore.getState().setCanvasOffset({ x: off.x + dx, y: off.y + dy });
-  }, []);
+      const dx = e.clientX - lastPointer.current.x;
+      const dy = e.clientY - lastPointer.current.y;
+      lastPointer.current = { x: e.clientX, y: e.clientY };
 
-  const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    if (!isPanning.current) return;
-    isPanning.current = false;
-    (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-    setCursor('grab');
-  }, [setCursor]);
+      const off = useSeatingStore.getState().canvasOffset ?? { x: 0, y: 0 };
+      useSeatingStore
+        .getState()
+        .setCanvasOffset({ x: off.x + dx, y: off.y + dy });
+    },
+    [],
+  );
+
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!isPanning.current) return;
+      isPanning.current = false;
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+      setCursor("grab");
+    },
+    [setCursor],
+  );
 
   const gridSize = 20 * zoom;
   const offX = canvasOffset?.x ?? 0;
@@ -108,7 +125,7 @@ export default function SeatingCanvas() {
   return (
     <div
       ref={containerRef}
-      className="relative flex-1 overflow-hidden bg-[#F9F7F2] select-none cursor-grab"
+      className="relative flex-1 h-full w-full overflow-hidden bg-[#F9F7F2] select-none cursor-grab"
       style={{
         backgroundImage: `linear-gradient(#EBE5DA 1px, transparent 1px), linear-gradient(90deg, #EBE5DA 1px, transparent 1px)`,
         backgroundSize: `${gridSize}px ${gridSize}px`,
@@ -120,33 +137,43 @@ export default function SeatingCanvas() {
       onPointerUp={handlePointerUp}
       onPointerLeave={handlePointerUp}
     >
-      {/* Zoom controls */}
       <div className="zoom-controls absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-white/90 backdrop-blur-sm p-1 rounded-full shadow-sm border border-[#EBE5DA] z-20">
-        <button onClick={handleZoomOut} className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] transition-colors">
+        <button
+          onClick={handleZoomOut}
+          className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] transition-colors"
+        >
           <ZoomOut size={16} />
         </button>
         <span className="text-xs font-semibold w-12 text-center text-[#2C2C29]">
           {Math.round(zoom * 100)}%
         </span>
-        <button onClick={handleZoomIn} className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] transition-colors">
+        <button
+          onClick={handleZoomIn}
+          className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] transition-colors"
+        >
           <ZoomIn size={16} />
         </button>
         <div className="w-px h-4 bg-[#EBE5DA] mx-0.5" />
-        <button onClick={handleZoomReset} className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] transition-colors" title="Restablecer vista">
+        <button
+          onClick={handleZoomReset}
+          className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] transition-colors"
+          title="Restablecer vista"
+        >
           <Maximize2 size={14} />
         </button>
       </div>
 
-      {/* Hint */}
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] text-[#A8A29E] font-medium tracking-wide pointer-events-none select-none z-10">
         Arrastra para navegar · Ctrl+scroll para zoom
       </div>
 
-      {/* Canvas world */}
       <div
         ref={setDroppableCanvasRef}
         className="absolute top-0 left-0 origin-top-left w-[5000px] h-[5000px] canvas-droppable-area"
-        style={{ transform: `translate(${offX}px, ${offY}px) scale(${zoom})`, willChange: 'transform' }}
+        style={{
+          transform: `translate(${offX}px, ${offY}px) scale(${zoom})`,
+          willChange: "transform",
+        }}
       >
         {elements.map((el) => (
           <TableElement key={el.id} element={el} />

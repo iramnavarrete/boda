@@ -1,0 +1,227 @@
+import React from "react";
+import { SeatingElement, useSeatingStore } from "../../stores/useSeatingStore";
+import { Trash2, Users, RotateCcw } from "lucide-react";
+import Tooltip from "@/features/shared/components/Tooltip";
+
+export function TableSettingsPopover({
+  element,
+  isTable,
+  onClose,
+}: {
+  element: SeatingElement;
+  isTable: boolean;
+  onClose: () => void;
+}) {
+  const {
+    updateElementSeats,
+    updateElementAlias,
+    removeElement,
+    removeGuestFromTable,
+    families,
+    showToast,
+  } = useSeatingStore();
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = parseInt(e.target.value);
+    const minSeats = element.assignedSeats.length;
+
+    if (newValue < minSeats) {
+      if (element.seats !== minSeats) {
+        updateElementSeats(element.id, minSeats);
+        showToast(
+          `No puedes reducir más el tamaño. Esta mesa ya tiene ${minSeats} asientos asignados.`,
+        );
+      }
+      return;
+    }
+    updateElementSeats(element.id, newValue);
+  };
+
+  // Generamos la lista de todos los asientos de la mesa (asignados y vacíos)
+  const allSeats = Array.from({ length: element.seats }, (_, i) => {
+    const guestId = element.assignedSeats[i];
+    if (!guestId) return { seatNumber: i + 1, isAssigned: false };
+
+    let guestInfo = null;
+    for (const f of families) {
+      const g = f.guests.find((gu) => gu.id === guestId);
+      if (g) {
+        guestInfo = {
+          ...g,
+          familyName: f.name,
+          colorBg: f.colorBg,
+          colorBorder: f.colorBorder,
+          index: f.guests.findIndex((gu) => gu.id === guestId),
+        };
+        break;
+      }
+    }
+    return { seatNumber: i + 1, isAssigned: true, guestId, guest: guestInfo };
+  });
+
+  return (
+    <div
+      className="settings-popover absolute z-50"
+      style={{
+        bottom: "calc(100% + 14px)",
+        left: "50%",
+        transform: "translateX(-50%)",
+        width: "280px",
+        filter: "drop-shadow(0 8px 32px rgba(0,0,0,0.18))",
+      }}
+      onPointerDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div
+        className="absolute left-1/2 -translate-x-1/2 w-3 h-3 bg-[#FDFBF7] border-r border-b border-[#EBE5DA] rotate-45"
+        style={{ bottom: -5 }}
+      />
+      <div className="bg-[#FDFBF7] rounded-2xl border border-[#EBE5DA] overflow-hidden">
+        <div className="px-4 pt-4 pb-3 border-b border-[#EBE5DA] bg-[#FDFBF7]">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <label className="block text-[9px] text-[#A8A29E] uppercase font-bold tracking-widest mb-1.5">
+                Nombre / Alias
+              </label>
+              <input
+                value={element.alias}
+                onChange={(e) => updateElementAlias(element.id, e.target.value)}
+                className="w-full text-sm font-semibold text-[#2C2C29] bg-white border border-[#EBE5DA] rounded-lg px-3 py-2 focus:border-[#C5A669] focus:outline-none"
+              />
+            </div>
+            <Tooltip text="Eliminar elemento">
+              <button
+                onClick={() => {
+                  removeElement(element.id);
+                  onClose();
+                }}
+                className="mt-5 p-2 hover:bg-red-50 text-red-400 hover:text-red-600 rounded-lg transition-colors border border-transparent hover:border-red-200 shrink-0"
+              >
+                <Trash2 size={16} />
+              </button>
+            </Tooltip>
+          </div>
+        </div>
+
+        {isTable && (
+          <div className="px-4 py-3 border-b border-[#EBE5DA]">
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-[9px] text-[#A8A29E] uppercase font-bold tracking-widest flex items-center gap-1.5">
+                <Users size={11} />
+                Asientos
+              </label>
+              <span className="text-sm font-bold text-[#2C2C29] bg-[#F9F7F2] border border-[#EBE5DA] px-2.5 py-0.5 rounded-lg min-w-[36px] text-center">
+                {element.seats}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] text-[#A8A29E] font-bold w-3">
+                1
+              </span>
+              <input
+                type="range"
+                min="1"
+                max="30"
+                step="1"
+                value={element.seats}
+                onChange={handleSliderChange}
+                className="flex-1 accent-[#C5A669] h-1.5 rounded-lg appearance-none cursor-pointer"
+                style={{
+                  background: `linear-gradient(to right, #C5A669 0%, #C5A669 ${
+                    ((element.seats - 1) / 29) * 100
+                  }%, #EBE5DA ${
+                    ((element.seats - 1) / 29) * 100
+                  }%, #EBE5DA 100%)`,
+                }}
+              />
+              <span className="text-[10px] text-[#A8A29E] font-bold w-5">
+                30
+              </span>
+            </div>
+            <div className="mt-3 flex items-center gap-2">
+              <div className="flex-1 h-1.5 bg-[#EBE5DA] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#C5A669] rounded-full transition-all"
+                  style={{
+                    width: `${Math.min(
+                      (element.assignedSeats.length / element.seats) * 100,
+                      100,
+                    )}%`,
+                  }}
+                />
+              </div>
+              <span className="text-[10px] font-bold text-[#5A5A5A] shrink-0">
+                {element.assignedSeats.length}/{element.seats} ocupados
+              </span>
+            </div>
+          </div>
+        )}
+
+        {isTable && (
+          <div className="relative px-4 py-3 my-1.5 max-h-[160px] overflow-y-auto">
+            <label className="block text-[9px] text-[#A8A29E] uppercase font-bold tracking-widest mb-2">
+              Listado de asientos
+            </label>
+            <div className="space-y-1.5">
+              {allSeats.map((seat) => (
+                <div
+                  key={seat.seatNumber}
+                  className="flex items-center justify-between gap-2 py-1 px-2 rounded-lg bg-[#F9F7F2] group/seat"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div
+                      className="w-5 h-5 rounded-full border shadow-sm flex items-center justify-center shrink-0 transition-colors"
+                      style={{
+                        backgroundColor:
+                          seat.isAssigned && seat.guest
+                            ? seat.guest.colorBg
+                            : "#EBECEF",
+                        borderColor:
+                          seat.isAssigned && seat.guest
+                            ? seat.guest.colorBorder
+                            : "#A8AEBA",
+                      }}
+                    >
+                      <span
+                        className="text-[9px] font-bold"
+                        style={{
+                          color: seat.isAssigned ? "#2C2C29" : "#A8A29E",
+                        }}
+                      >
+                        {seat.seatNumber}
+                      </span>
+                    </div>
+                    <span
+                      className={`text-xs font-medium truncate ${
+                        seat.isAssigned
+                          ? "text-[#2C2C29]"
+                          : "text-[#A8A29E] italic"
+                      }`}
+                    >
+                      {seat.isAssigned && seat.guest
+                        ? seat.guest.name ||
+                          `${seat.guest.familyName} #${seat.guest.index + 1}`
+                        : "Disponible"}
+                    </span>
+                  </div>
+                  {seat.isAssigned && seat.guestId && (
+                    <Tooltip text="Quitar de la mesa">
+                      <button
+                        onClick={() =>
+                          removeGuestFromTable(element.id, seat.guestId!)
+                        }
+                        className="p-1 opacity-0 group-hover/seat:opacity-100 transition-opacity hover:bg-red-50 text-red-400 rounded"
+                      >
+                        <RotateCcw size={10} />
+                      </button>
+                    </Tooltip>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
