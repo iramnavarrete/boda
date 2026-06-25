@@ -132,6 +132,15 @@ export default function SeatingManager() {
       const table = elements.find((e) => e.id === tableId);
       if (!table) return;
 
+      if (table.seats === 0) {
+        if (activeType === "guest" || activeType === "family") {
+          showToast(
+            "No puedes asignar invitados a elementos que no sean mesas.",
+          );
+        }
+        return;
+      }
+
       const availableSeats = table.seats - table.assignedSeats.length;
 
       if (activeType === "guest") {
