@@ -12,7 +12,7 @@ export default function AdminDashboard() {
   }
   return (
     <AdminLayout mainClassName="overflow-hidden" invitationId={invitationId}>
-      <SeatingManager />
+      <SeatingManager invitationId={invitationId} />
     </AdminLayout>
   );
 }
