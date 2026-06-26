@@ -1,10 +1,12 @@
+"use client";
+
 import React, {
   ForwardRefExoticComponent,
   RefAttributes,
   useState,
 } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { ElementType } from "../../stores/useSeatingStore";
+import { useSeatingStore, ElementType } from "../../stores/useSeatingStore";
 import {
   Circle,
   Square,
@@ -23,10 +25,12 @@ import {
   ChevronDown,
   ChevronRight,
   LucideProps,
+  LayoutGrid,
+  Sparkles,
 } from "lucide-react";
 
 export interface PaletteItemType {
-  type: ElementType;
+  type: ElementType | "custom_layout";
   label: string;
   seats: number;
   width: number;
@@ -161,11 +165,13 @@ const ELEMENTS: { category: string; items: PaletteItemType[] }[] = [
   },
 ];
 
-function DraggablePaletteItem({ item }: { item: PaletteItemType }) {
+export function DraggablePaletteItem({ item }: { item: PaletteItemType }) {
+  const isLayout = item.type === "custom_layout";
+
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: `palette-${item.type}`,
+    id: isLayout ? `palette-layout-builder` : `palette-${item.type}`,
     data: {
-      type: "palette_element",
+      type: isLayout ? "palette_layout" : "palette_element",
       elementType: item.type,
       width: item.width,
       height: item.height,
@@ -179,18 +185,28 @@ function DraggablePaletteItem({ item }: { item: PaletteItemType }) {
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className={`flex items-center gap-2 p-2 bg-white border border-[#EBE5DA] rounded-lg transition-all group w-full text-left cursor-grab active:cursor-grabbing ${isDragging ? "opacity-40 scale-95" : "hover:border-[#C5A669] hover:shadow-sm"}`}
+      className={`flex items-center gap-2 p-2 bg-white border border-[#EBE5DA] rounded-lg transition-all group w-full text-left cursor-grab active:cursor-grabbing ${isDragging ? "opacity-40 scale-95" : "hover:border-[#C5A669] hover:shadow-sm"} ${isLayout ? "bg-[#FDFBF7] border-dashed border-[#C5A669]/60 hover:bg-[#F9F7F2]" : ""}`}
       style={{ touchAction: "none" }}
     >
-      <div className="p-1.5 bg-[#F9F7F2] rounded-md group-hover:bg-[#f3efdf] transition-colors shrink-0">
+      <div
+        className={`p-1.5 rounded-md transition-colors shrink-0 ${isLayout ? "bg-amber-50 group-hover:bg-amber-100" : "bg-[#F9F7F2] group-hover:bg-[#f3efdf]"}`}
+      >
         <item.icon
-          className="w-4 h-4 text-[#5A5A5A] group-hover:text-[#C5A669]"
+          className={`w-4 h-4 ${isLayout ? "text-[#C5A669]" : "text-[#5A5A5A] group-hover:text-[#C5A669]"}`}
           strokeWidth={1.5}
         />
       </div>
       <div className="flex flex-col flex-1 min-w-0">
-        <span className="text-xs font-medium text-[#2C2C29]">{item.label}</span>
-        {item.seats > 0 ? (
+        <span
+          className={`text-xs font-medium ${isLayout ? "text-[#C5A669] font-semibold" : "text-[#2C2C29]"}`}
+        >
+          {item.label}
+        </span>
+        {isLayout ? (
+          <span className="text-[9px] uppercase font-bold tracking-wider text-amber-600">
+            Generador Inteligente
+          </span>
+        ) : item.seats > 0 ? (
           <span className="text-[9px] uppercase font-bold tracking-wider text-[#A8A29E]">
             {item.seats} personas
           </span>
@@ -259,7 +275,30 @@ export default function ElementsPalette({ onClose }: { onClose?: () => void }) {
         )}
       </div>
 
-      <div className="p-3 space-y-4 overflow-y-auto w-full">
+      <div className="p-3 space-y-4 overflow-y-auto w-full flex-1">
+        {/* 🔥 PUESTO AL PRINCIPIO: Sección del Generador Inteligente */}
+        <div className="flex flex-col">
+          <div className="text-[9px] font-bold uppercase tracking-widest text-[#A8A29E] mb-3 flex items-center gap-1.5">
+            <LayoutGrid size={12} />
+            Plantillas Dinámicas
+          </div>
+          <div className="space-y-2">
+            <DraggablePaletteItem
+              item={{
+                type: "custom_layout",
+                label: "Diseñador de Salón",
+                seats: 0,
+                width: 0,
+                height: 0,
+                icon: Sparkles,
+              }}
+            />
+          </div>
+        </div>
+
+        <hr className="border-[#EBE5DA] my-2" />
+
+        {/* Listado tradicional de elementos individuales */}
         {ELEMENTS.map((group) => {
           const isCollapsed = collapsedCategories[group.category];
           return (

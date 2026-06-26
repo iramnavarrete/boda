@@ -1,7 +1,144 @@
-import React from "react";
-import { SeatingElement, useSeatingStore } from "../../stores/useSeatingStore";
-import { Trash2, Users, RotateCcw } from "lucide-react";
+import React, { useState } from "react";
+import { SeatingElement, useSeatingStore, GuestStatus } from "../../stores/useSeatingStore";
+import { useSeatingModalContext } from "../SeatingModalContext"; 
+import { Trash2, Users, RotateCcw, Edit2, X } from "lucide-react";
 import Tooltip from "@/features/shared/components/Tooltip";
+
+interface SeatGuestInfo {
+  id: string;
+  name: string;
+  status: GuestStatus;
+  familyId: string;
+  familyName: string;
+  aliases: string[];
+  colorBg: string;
+  colorBorder: string;
+  index: number;
+}
+
+interface SeatItemData {
+  seatNumber: number;
+  isAssigned: boolean;
+  guestId?: string;
+  guest?: SeatGuestInfo | null;
+}
+
+const SeatListItem = ({
+  seat,
+  elementId,
+}: {
+  seat: SeatItemData;
+  elementId: string;
+}) => {
+  const { removeGuestFromTable, updateGuestName } = useSeatingStore();
+  const { triggerSeatRemoval } = useSeatingModalContext(); 
+  const [isEditing, setIsEditing] = useState(false);
+  const [nameValue, setNameValue] = useState(seat.guest?.name || "");
+
+  const handleSaveLocalEdit = () => {
+    if (!seat.guest || !seat.guestId) return;
+    updateGuestName(seat.guest.familyId, seat.guestId, nameValue);
+    setIsEditing(false);
+  };
+
+  return (
+    <div className="flex items-center justify-between gap-2 py-1 px-2 rounded-lg bg-[#F9F7F2] group/seat">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <div
+          className="relative w-5 h-5 rounded-full border shadow-sm flex items-center justify-center shrink-0 transition-colors"
+          style={{
+            backgroundColor: seat.isAssigned && seat.guest ? seat.guest.colorBg : "#EBECEF",
+            borderColor: seat.isAssigned && seat.guest ? seat.guest.colorBorder : "#A8AEBA",
+          }}
+        >
+          <span className="text-[9px] font-bold" style={{ color: seat.isAssigned ? "#2C2C29" : "#A8A29E" }}>
+            {seat.seatNumber}
+          </span>
+          {seat.isAssigned && seat.guest && (
+            <div
+              className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-white shadow-xs ${
+                seat.guest.status === "confirmed" ? "bg-green-500" : seat.guest.status === "declined" ? "bg-red-500" : "bg-amber-500"
+              }`}
+            />
+          )}
+        </div>
+
+        {isEditing ? (
+          <input
+            autoFocus
+            className="flex-1 text-[11px] border-b border-[#C5A669] bg-transparent outline-none focus:border-b-2 font-medium text-[#2C2C29]"
+            value={nameValue}
+            onChange={(e) => setNameValue(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSaveLocalEdit()}
+          />
+        ) : (
+          <span
+            className={`text-xs font-medium truncate ${
+              seat.isAssigned ? "text-[#2C2C29]" : "text-[#A8A29E] italic"
+            } ${seat.guest?.status === "declined" ? "line-through" : ""}`}
+          >
+            {seat.isAssigned && seat.guest
+              ? seat.guest.name || `${seat.guest.familyName} #${seat.guest.index + 1}`
+              : "Disponible"}
+          </span>
+        )}
+      </div>
+
+      {seat.isAssigned && seat.guestId && seat.guest && (
+        <div className="flex items-center gap-1 opacity-0 group-hover/seat:opacity-100 transition-opacity">
+          {isEditing ? (
+            <>
+              <button
+                onClick={handleSaveLocalEdit}
+                className="text-[9px] uppercase font-bold bg-[#C5A669] text-white px-1 py-0.5 rounded"
+              >
+                Ok
+              </button>
+              <button
+                onClick={() => setIsEditing(false)}
+                className="text-[#A8A29E] hover:text-red-500 p-0.5"
+              >
+                <X size={12} />
+              </button>
+            </>
+          ) : (
+            <>
+              <Tooltip text="Asignar nombre local" position="left">
+                <button
+                  onClick={() => {
+                    setIsEditing(true);
+                    setNameValue(seat.guest!.name || "");
+                  }}
+                  className="p-1 hover:bg-white rounded text-[#C5A669]"
+                >
+                  <Edit2 size={10} />
+                </button>
+              </Tooltip>
+              
+              <Tooltip text="Quitar de la mesa" position="left">
+                <button
+                  onClick={() => removeGuestFromTable(elementId, seat.guestId!)}
+                  className="p-1 hover:bg-red-50 text-red-400 rounded"
+                >
+                  <RotateCcw size={10} />
+                </button>
+              </Tooltip>
+
+              <Tooltip text="Eliminar asiento de la lista" position="left">
+                <button
+                  onClick={() => triggerSeatRemoval(seat.guest!.familyId, seat.guestId!)} 
+                  className="p-1 hover:bg-red-50 text-red-500 rounded ml-0.5"
+                >
+                  <Trash2 size={10} />
+                </button>
+              </Tooltip>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export function TableSettingsPopover({
   element,
@@ -12,14 +149,8 @@ export function TableSettingsPopover({
   isTable: boolean;
   onClose: () => void;
 }) {
-  const {
-    updateElementSeats,
-    updateElementAlias,
-    removeElement,
-    removeGuestFromTable,
-    families,
-    showToast,
-  } = useSeatingStore();
+  const { updateElementSeats, updateElementAlias, removeElement, families, showToast } =
+    useSeatingStore();
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseInt(e.target.value);
@@ -28,26 +159,26 @@ export function TableSettingsPopover({
     if (newValue < minSeats) {
       if (element.seats !== minSeats) {
         updateElementSeats(element.id, minSeats);
-        showToast(
-          `No puedes reducir más el tamaño. Esta mesa ya tiene ${minSeats} asientos asignados.`,
-        );
+        showToast(`No puedes reducir más el tamaño. Esta mesa ya tiene ${minSeats} asientos asignados.`);
       }
       return;
     }
     updateElementSeats(element.id, newValue);
   };
 
-  const allSeats = Array.from({ length: element.seats }, (_, i) => {
+  const allSeats: SeatItemData[] = Array.from({ length: element.seats }, (_, i) => {
     const guestId = element.assignedSeats[i];
     if (!guestId) return { seatNumber: i + 1, isAssigned: false };
 
-    let guestInfo = null;
+    let guestInfo: SeatGuestInfo | null = null;
     for (const f of families) {
       const g = f.guests.find((gu) => gu.id === guestId);
       if (g) {
         guestInfo = {
           ...g,
+          familyId: f.id,
           familyName: f.name,
+          aliases: f.aliases,
           colorBg: f.colorBg,
           colorBorder: f.colorBorder,
           index: f.guests.findIndex((gu) => gu.id === guestId),
@@ -116,38 +247,27 @@ export function TableSettingsPopover({
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] text-[#A8A29E] font-bold w-3">
-                1
-              </span>
+              <span className="text-[10px] text-[#A8A29E] font-bold w-3">1</span>
               <input
                 type="range"
                 min="1"
-                max="30"
+                max="15"
                 step="1"
                 value={element.seats}
                 onChange={handleSliderChange}
                 className="flex-1 accent-[#C5A669] h-1.5 rounded-lg appearance-none cursor-pointer"
                 style={{
-                  background: `linear-gradient(to right, #C5A669 0%, #C5A669 ${
-                    ((element.seats - 1) / 29) * 100
-                  }%, #EBE5DA ${
-                    ((element.seats - 1) / 29) * 100
-                  }%, #EBE5DA 100%)`,
+                  background: `linear-gradient(to right, #C5A669 0%, #C5A669 ${((element.seats - 1) / 14) * 100}%, #EBE5DA ${((element.seats - 1) / 14) * 100}%, #EBE5DA 100%)`,
                 }}
               />
-              <span className="text-[10px] text-[#A8A29E] font-bold w-5">
-                30
-              </span>
+              <span className="text-[10px] text-[#A8A29E] font-bold w-5">15</span>
             </div>
             <div className="mt-3 flex items-center gap-2">
               <div className="flex-1 h-1.5 bg-[#EBE5DA] rounded-full overflow-hidden">
                 <div
                   className="h-full bg-[#C5A669] rounded-full transition-all"
                   style={{
-                    width: `${Math.min(
-                      (element.assignedSeats.length / element.seats) * 100,
-                      100,
-                    )}%`,
+                    width: `${Math.min((element.assignedSeats.length / element.seats) * 100, 100)}%`,
                   }}
                 />
               </div>
@@ -159,69 +279,17 @@ export function TableSettingsPopover({
         )}
 
         {isTable && (
-          <div className="relative px-4 py-3 my-1.5 max-h-[160px] overflow-y-auto">
+          <div className="relative px-4 py-3 my-1.5 max-h-[160px] overflow-y-auto overflow-x-hidden">
             <label className="block text-[9px] text-[#A8A29E] uppercase font-bold tracking-widest mb-2">
               Listado de asientos
             </label>
             <div className="space-y-1.5">
               {allSeats.map((seat) => (
-                <div
+                <SeatListItem
                   key={seat.seatNumber}
-                  className="flex items-center justify-between gap-2 py-1 px-2 rounded-lg bg-[#F9F7F2] group/seat"
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div
-                      className="w-5 h-5 rounded-full border shadow-sm flex items-center justify-center shrink-0 transition-colors"
-                      style={{
-                        backgroundColor:
-                          seat.isAssigned && seat.guest
-                            ? seat.guest.colorBg
-                            : "#EBECEF",
-                        borderColor:
-                          seat.isAssigned && seat.guest
-                            ? seat.guest.colorBorder
-                            : "#A8AEBA",
-                      }}
-                    >
-                      <span
-                        className="text-[9px] font-bold"
-                        style={{
-                          color: seat.isAssigned ? "#2C2C29" : "#A8A29E",
-                        }}
-                      >
-                        {seat.seatNumber}
-                      </span>
-                    </div>
-                    <span
-                      className={`text-xs font-medium truncate ${
-                        seat.isAssigned
-                          ? "text-[#2C2C29]"
-                          : "text-[#A8A29E] italic"
-                      }`}
-                    >
-                      {seat.isAssigned && seat.guest
-                        ? seat.guest.name ||
-                          `${seat.guest.familyName} #${seat.guest.index + 1}`
-                        : "Disponible"}
-                    </span>
-                  </div>
-                  {seat.isAssigned && seat.guestId && (
-                    <Tooltip
-                      text="Quitar de la mesa"
-                      position="top"
-                      align="right"
-                    >
-                      <button
-                        onClick={() =>
-                          removeGuestFromTable(element.id, seat.guestId!)
-                        }
-                        className="p-1 opacity-0 group-hover/seat:opacity-100 transition-opacity hover:bg-red-50 text-red-400 rounded"
-                      >
-                        <RotateCcw size={10} />
-                      </button>
-                    </Tooltip>
-                  )}
-                </div>
+                  seat={seat}
+                  elementId={element.id}
+                />
               ))}
             </div>
           </div>

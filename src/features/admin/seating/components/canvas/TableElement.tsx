@@ -29,12 +29,16 @@ export default function TableElement({ element }: { element: SeatingElement }) {
   const {
     zoom,
     selectedElementId,
+    selectedElementIds,
     setSelectedElementId,
     families,
     updateElementGeometry,
   } = useSeatingStore();
 
-  const isSelected = selectedElementId === element.id;
+  const isSingleSelected = selectedElementId === element.id;
+  const isSelectedInBulk = selectedElementIds?.includes(element.id) ?? false;
+  const isSelected = isSingleSelected || isSelectedInBulk;
+
   const isTable = element.seats !== undefined && element.seats > 0;
   const isArea = !isTable;
 
@@ -126,7 +130,7 @@ export default function TableElement({ element }: { element: SeatingElement }) {
   };
 
   const renderResizeHandles = () => {
-    if (!isSelected || !isArea) return null;
+    if (!isSingleSelected || !isArea) return null; // Solo mostramos tiradores en selección única
 
     const handles = [
       {
@@ -263,6 +267,7 @@ export default function TableElement({ element }: { element: SeatingElement }) {
                 `${guestInfo.familyName} #${guestInfo.index + 1}`
               : undefined
           }
+          status={guestInfo?.status}
           colorBg={guestInfo?.familyColorBg}
           colorBorder={guestInfo?.familyColorBorder}
           tableId={element.id}
@@ -349,10 +354,10 @@ export default function TableElement({ element }: { element: SeatingElement }) {
       }}
       onClick={(e) => {
         e.stopPropagation();
-        setSelectedElementId(isSelected ? null : element.id);
+        setSelectedElementId(isSingleSelected ? null : element.id);
       }}
     >
-      {isSelected && (
+      {isSingleSelected && (
         <TableSettingsPopover
           element={element}
           isTable={isTable}
@@ -363,7 +368,7 @@ export default function TableElement({ element }: { element: SeatingElement }) {
       {renderResizeHandles()}
 
       <div
-        className="absolute inset-0 pointer-events-none"
+        className={`absolute inset-0 pointer-events-none ${isHalfMoon ? 'top-8' : ''}`}
         style={{ overflow: "visible" }}
       >
         {renderSeats()}

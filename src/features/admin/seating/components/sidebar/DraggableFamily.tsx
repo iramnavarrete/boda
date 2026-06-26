@@ -4,15 +4,19 @@ import { useSeatingStore, Family } from "../../stores/useSeatingStore";
 import {
   GripVertical,
   Users,
-  RotateCcw,
   ChevronDown,
   ChevronRight,
+  UserPlus,
+  Trash2,
+  RotateCcw,
 } from "lucide-react";
 import { DraggableGuest } from "./DraggableGuest";
 import Tooltip from "@/features/shared/components/Tooltip";
+import { useSeatingModalContext } from "../SeatingModalContext";
 
-export function DraggableFamily({ family }: { family: Family }) {
+export function DraggableFamily({ family, isFirstElement }: { family: Family, isFirstElement: boolean }) {
   const { elements, removeFamilyFromTable } = useSeatingStore();
+  const { triggerFamilyRemoval, triggerAddSeat } = useSeatingModalContext();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const assignedCount = useMemo(
@@ -31,12 +35,12 @@ export function DraggableFamily({ family }: { family: Family }) {
   });
 
   return (
-    <div className="mb-3 bg-[#FDFBF7] rounded-lg border border-[#EBE5DA] overflow-hidden flex flex-col min-h-0 select-none">
+    <div className="mb-3 bg-[#FDFBF7] rounded-lg border border-[#EBE5DA] overflow- flex flex-col min-h-0 select-none">
       <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        className={`p-2 bg-white border-b border-[#EBE5DA] flex items-center gap-1.5 transition-colors group shrink-0 ${allAssigned ? "opacity-80 cursor-default" : "hover:bg-[#F9F7F2] cursor-grab active:cursor-grabbing"}`}
+        className={`rounded-lg p-2 bg-white border-b border-[#EBE5DA] flex items-center gap-1.5 transition-colors group/fam shrink-0 ${allAssigned ? "opacity-80 cursor-default" : "hover:bg-[#F9F7F2] cursor-grab active:cursor-grabbing"}`}
         style={{ opacity: isDragging ? 0.3 : 1 }}
       >
         <div
@@ -49,25 +53,46 @@ export function DraggableFamily({ family }: { family: Family }) {
           style={{ backgroundColor: family.colorBg }}
         />
         <div className="flex-1 flex flex-col min-w-0">
-          <span className="font-serif text-[13px] font-semibold text-[#2C2C29] truncate">
+          <span className="font-serif text-[13px] font-semibold text-[#2C2C29]">
             {family.name}
           </span>
         </div>
+
         <div className="flex items-center gap-1.5 shrink-0">
           {assignedCount > 0 && (
-            <Tooltip text="Desasignar familia">
+            <Tooltip
+              text="Desasignar familia"
+              position={isFirstElement ? "bottom" : "top"}
+              align="right"
+            >
               <button
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation();
                   removeFamilyFromTable(family.id);
                 }}
-                className="p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-50 text-red-400 hover:text-red-600 rounded"
+                className="p-1 opacity-0 group-hover/fam:opacity-100 transition-opacity hover:bg-red-50 text-red-400 hover:text-red-600 rounded"
               >
                 <RotateCcw size={12} />
               </button>
             </Tooltip>
           )}
+          <Tooltip
+            text="Eliminar familia completa"
+            position={isFirstElement ? "bottom" : "top"}
+            align="right"
+          >
+            <button
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerFamilyRemoval(family.id);
+              }}
+              className="p-1 opacity-0 group-hover/fam:opacity-100 transition-opacity hover:bg-red-50 text-red-400 hover:text-red-600 rounded"
+            >
+              <Trash2 size={12} />
+            </button>
+          </Tooltip>
           <div className="flex items-center gap-1 px-1.5 py-0.5 bg-[#F9F7F2] rounded border border-[#EBE5DA]">
             <Users
               size={10}
@@ -93,6 +118,7 @@ export function DraggableFamily({ family }: { family: Family }) {
           </button>
         </div>
       </div>
+
       {isExpanded && (
         <div
           className={`p-1.5 space-y-1 ${isDragging ? "hidden" : "block"} bg-white`}
@@ -116,6 +142,15 @@ export function DraggableFamily({ family }: { family: Family }) {
               />
             );
           })}
+
+          {/* 🔥 Botón interactivo para añadir un asiento rápido al grupo */}
+          <button
+            onClick={() => triggerAddSeat(family.id)}
+            className="w-full flex items-center justify-center gap-1.5 py-1.5 mt-1 border border-dashed border-[#EBE5DA] text-[#A8A29E] hover:text-[#C5A669] hover:border-[#C5A669] hover:bg-[#FDFBF7] rounded-md text-[10px] font-bold uppercase tracking-wider transition-all"
+          >
+            <UserPlus size={11} />
+            Agregar Asiento
+          </button>
         </div>
       )}
     </div>

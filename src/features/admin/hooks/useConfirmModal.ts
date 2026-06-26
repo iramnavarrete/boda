@@ -8,6 +8,7 @@ const initialState: ConfirmModalState = {
   message: "",
   isDanger: false,
   isLoading: false,
+  showConfirmToast: true,
   action: null,
 };
 
@@ -30,12 +31,16 @@ export function useConfirmModal() {
     setConfirmModal((prev) => ({ ...prev, isLoading: true }));
     try {
       await confirmModal.action();
-      toast("Acción completada exitosamente", "success");
+      if (confirmModal.showConfirmToast) {
+        toast("Acción completada exitosamente", "success");
+      }
       setConfirmModal((prev) => ({ ...prev, isOpen: false, isLoading: false }));
     } catch (error) {
       console.error(error);
       setConfirmModal((prev) => ({ ...prev, isLoading: false }));
-      toast("No se pudo completar la acción", "error");
+      if (confirmModal.showConfirmToast) {
+        toast("No se pudo completar la acción", "error");
+      }
     }
   };
 

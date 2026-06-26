@@ -22,9 +22,7 @@ import {
 import { db } from "@/lib/firebase/config";
 import { generateGuestID } from "@/utils/generators";
 
-// ─── Paths ────────────────────────────────────────────────────────────────────
-// Centraliza todas las referencias a Firestore.
-// Si cambia la estructura de la DB, solo se toca aquí.
+// ─── Paths firestore ────────────────────────────────────────────────────────────────────
 
 const paths = {
   guest: (invId: string, guestId: string): DocumentReference =>
@@ -362,6 +360,35 @@ export const GuestService = {
       });
 
       await batch.commit();
+    }
+  },
+
+  reduceGuestCount: async (invitationId: string, guestId: string) => {
+    const guestRef = paths.guest(invitationId, guestId);
+
+    try {
+      const docSnap = await getDoc(guestRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const currentTotal = Number(data.invitados) || 1;
+        const currentConfirmed = Number(data.confirmados) || 0;
+        const newTotal = Math.max(1, currentTotal - 1);
+
+        const payload: Partial<Guest> = {
+          invitados: newTotal,
+          ultimaModificacion: serverTimestamp(),
+        };
+
+        // Si el nuevo total es menor a los confirmados, hay que ajustar los confirmados también
+        if (newTotal < currentConfirmed) {
+          payload.confirmados = newTotal;
+        }
+
+        await updateDoc(guestRef, payload);
+      }
+    } catch (e) {
+      console.error("Error reduciendo total de invitados", e);
+      throw e;
     }
   },
 };

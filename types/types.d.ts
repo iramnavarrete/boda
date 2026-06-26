@@ -82,6 +82,7 @@ export interface ConfirmModalState {
   message: string;
   isDanger: boolean;
   isLoading: boolean;
+  showConfirmToast?: boolean;
   action: (() => Promise<void>) | null;
 }
 

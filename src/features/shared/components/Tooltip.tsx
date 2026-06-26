@@ -7,9 +7,9 @@ interface TooltipProps {
   children: ReactNode;
   text: string | ReactNode;
   className?: string;
-  position?: "top" | "bottom";
+  position?: "top" | "bottom" | "left" | "right";
   align?: "center" | "left" | "right";
-  interactive?: boolean; // Permite clics dentro del tooltip
+  interactive?: boolean;
 }
 
 export default function Tooltip({
@@ -17,23 +17,19 @@ export default function Tooltip({
   text,
   className,
   position = "bottom",
-  align = "right",
+  align = "center",
   interactive = false,
 }: TooltipProps) {
   const tooltipRef = useRef<HTMLDivElement>(null);
-
-  // Estado para forzar la ocultación del Tooltip (anular el hover temporalmente)
   const [forceHide, setForceHide] = useState(false);
 
   useEffect(() => {
     const handleInteractionOutside = (event: Event) => {
-      // Si hacen scroll en la pantalla (móvil o PC), forzamos ocultar
       if (event.type === "scroll" || event.type === "touchmove") {
         setForceHide(true);
         return;
       }
 
-      // Si tocan la pantalla o hacen clic, revisamos que sea FUERA del tooltip
       if (event.type === "touchstart" || event.type === "mousedown") {
         if (
           tooltipRef.current &&
@@ -47,22 +43,47 @@ export default function Tooltip({
     document.addEventListener("touchstart", handleInteractionOutside, {
       passive: true,
     });
-
     return () => {
       document.removeEventListener("touchmove", handleInteractionOutside);
     };
   }, []);
 
-  const alignmentClasses = {
-    center: "left-1/2 -translate-x-1/2",
-    left: "left-0 -translate-x-3",
-    right: "right-0 translate-x-3",
+  const positionClasses = {
+    top: "bottom-full pb-[8px]",
+    bottom: "top-full pt-[8px]",
+    left: "right-full pr-[8px]",
+    right: "left-full pl-[8px]",
   };
 
-  const arrowAlignmentClasses = {
-    center: "left-1/2 -translate-x-1/2",
-    left: "left-4",
-    right: "right-4",
+  const getAlignmentClasses = () => {
+    if (position === "top" || position === "bottom") {
+      return {
+        center: "left-1/2 -translate-x-1/2",
+        left: "left-0 -translate-x-3",
+        right: "right-0 translate-x-3",
+      }[align];
+    }
+    // Para left y right, centramos verticalmente por defecto
+    return "top-1/2 -translate-y-1/2";
+  };
+
+  const getArrowClasses = () => {
+    const horizontalAlign = {
+      center: "left-1/2 -translate-x-1/2",
+      left: "left-4",
+      right: "right-4",
+    }[align];
+
+    switch (position) {
+      case "top":
+        return `-bottom-[6.5px] border-r border-b rounded-br-[2px] ${horizontalAlign}`;
+      case "bottom":
+        return `-top-[6.5px] border-l border-t rounded-tl-[2px] ${horizontalAlign}`;
+      case "left":
+        return "-right-[6.5px] top-1/2 -translate-y-1/2 border-t border-r rounded-tr-[2px]";
+      case "right":
+        return "-left-[6.5px] top-1/2 -translate-y-1/2 border-b border-l rounded-bl-[2px]";
+    }
   };
 
   return (
@@ -72,22 +93,18 @@ export default function Tooltip({
         "relative group/tooltip flex items-center justify-center shrink-0 cursor-help",
         className,
       )}
-      // 🔥 Cuando volvemos a hacer hover o a tocar el elemento, quitamos el bloqueo
       onMouseEnter={() => setForceHide(false)}
       onTouchStart={() => setForceHide(false)}
     >
       {children}
 
-      {/* PUENTE INVISIBLE Y CAJA DEL TOOLTIP */}
       <div
         className={cn(
           "absolute z-50 transition-all duration-200",
-          // 1. Comportamiento original por CSS (Hover)
           "opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible",
-          // 2. Anulación por JS (¡Fuerza el ocultamiento si se activó el estado!)
           forceHide && "!opacity-0 !invisible !pointer-events-none",
-          position === "bottom" ? "top-full pt-[8px]" : "bottom-full pb-[8px]",
-          alignmentClasses[align],
+          positionClasses[position],
+          getAlignmentClasses(),
           !interactive && "pointer-events-none",
         )}
       >
@@ -98,14 +115,11 @@ export default function Tooltip({
             <div className="relative z-10">{text}</div>
           )}
 
-          {/* Flecha rotada */}
+          {/* Flecha dinámica */}
           <div
             className={cn(
               "absolute w-[12px] h-[12px] bg-white border-[#EBE5DA] rotate-45 pointer-events-none",
-              position === "bottom"
-                ? "-top-[6.5px] border-l border-t rounded-tl-[2px]"
-                : "-bottom-[6.5px] border-r border-b rounded-br-[2px]",
-              arrowAlignmentClasses[align],
+              getArrowClasses(),
             )}
           />
         </div>

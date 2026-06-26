@@ -1,146 +1,231 @@
-import React, { useRef, useEffect, useCallback } from "react";
+"use client";
+
+import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useSeatingStore } from "../../stores/useSeatingStore";
 import TableElement from "./TableElement";
-import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { ZoomIn, ZoomOut, Maximize2, Trash2 } from "lucide-react";
 import { useDroppable } from "@dnd-kit/core";
+import { ConfirmModalState } from "@/types";
+interface SeatingCanvasProps {
+  openConfirmModal: (config: Omit<ConfirmModalState, "isLoading">) => void;
+}
 
-export default function SeatingCanvas() {
+export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) {
   const {
     elements,
     zoom,
     setZoom,
+    selectedElementIds,
+    setSelectedElementIds,
     setSelectedElementId,
-    canvasOffset,
-    setCanvasOffset,
+    removeMultipleElements,
+    showToast,
+    isInitialized,
   } = useSeatingStore();
+
   const containerRef = useRef<HTMLDivElement>(null);
-  const isPanning = useRef(false);
-  const lastPointer = useRef({ x: 0, y: 0 });
+  const canvasAreaRef = useRef<HTMLDivElement>(null);
+
+  const [isSelecting, setIsSelecting] = useState(false);
+  const [selectionStart, setSelectionStart] = useState({ x: 0, y: 0 });
+  const [selectionBox, setSelectionBox] = useState({
+    left: 0,
+    top: 0,
+    width: 0,
+    height: 0,
+  });
 
   const { setNodeRef: setDroppableCanvasRef } = useDroppable({
     id: "canvas",
     data: { type: "canvas" },
   });
 
-  const setCursor = useCallback((cursor: string) => {
-    if (containerRef.current) containerRef.current.style.cursor = cursor;
-  }, []);
+  // Centra dinámicamente todo el plano basándose en el bounding box de las mesas
+  const fitToScreen = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
 
-  const handleZoomIn = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setZoom(Math.min(zoom + 0.1, 3));
-  };
-  const handleZoomOut = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setZoom(Math.max(zoom - 0.1, 0.2));
-  };
-  const handleZoomReset = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setZoom(1);
-    setCanvasOffset({ x: 0, y: 0 });
-  };
+    if (elements.length === 0) {
+      setZoom(1);
+      container.scrollLeft = 2000 - container.clientWidth / 2;
+      container.scrollTop = 2000 - container.clientHeight / 2;
+      return;
+    }
 
+    let minX = Infinity, maxX = -Infinity;
+    let minY = Infinity, maxY = -Infinity;
+
+    elements.forEach((el) => {
+      if (el.x < minX) minX = el.x;
+      if (el.x + el.width > maxX) maxX = el.x + el.width;
+      if (el.y < minY) minY = el.y;
+      if (el.y + el.height > maxY) maxY = el.y + el.height;
+    });
+
+    const contentWidth = maxX - minX;
+    const contentHeight = maxY - minY;
+    const padding = 60;
+
+    const availableWidth = container.clientWidth - padding * 2;
+    const availableHeight = container.clientHeight - padding * 2;
+
+    let newZoom = Math.min(availableWidth / contentWidth, availableHeight / contentHeight);
+    newZoom = Math.min(Math.max(newZoom, 0.4), 1.8);
+    setZoom(newZoom);
+
+    setTimeout(() => {
+      const contentCenterX = minX + contentWidth / 2;
+      const contentCenterY = minY + contentHeight / 2;
+
+      container.scrollLeft = contentCenterX * newZoom - container.clientWidth / 2;
+      container.scrollTop = contentCenterY * newZoom - container.clientHeight / 2;
+    }, 10);
+  }, [elements, setZoom]);
+
+  // Zoom matemático de precisión apuntando exactamente hacia el puntero del mouse
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
     const handleWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey) return;
-      e.preventDefault();
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
 
-      const rect = container.getBoundingClientRect();
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
+        const currentZoom = useSeatingStore.getState().zoom;
+        const factor = e.deltaY < 0 ? 1.1 : 0.9;
+        const newZoom = Math.min(Math.max(currentZoom * factor, 0.3), 2);
 
-      const factor = e.deltaY < 0 ? 1.06 : 0.94;
-      const currentZoom = useSeatingStore.getState().zoom;
-      const newZoom = Math.min(Math.max(currentZoom * factor, 0.2), 3);
-      const ratio = newZoom / currentZoom;
+        if (newZoom === currentZoom) return;
 
-      const off = useSeatingStore.getState().canvasOffset ?? { x: 0, y: 0 };
-      useSeatingStore.getState().setZoom(newZoom);
-      useSeatingStore.getState().setCanvasOffset({
-        x: mouseX - ratio * (mouseX - off.x),
-        y: mouseY - ratio * (mouseY - off.y),
-      });
+        const rect = container.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const canvasMouseX = (container.scrollLeft + mouseX) / currentZoom;
+        const canvasMouseY = (container.scrollTop + mouseY) / currentZoom;
+
+        setZoom(newZoom);
+
+        container.scrollLeft = canvasMouseX * newZoom - mouseX;
+        container.scrollTop = canvasMouseY * newZoom - mouseY;
+      }
     };
 
     container.addEventListener("wheel", handleWheel, { passive: false });
     return () => container.removeEventListener("wheel", handleWheel);
-  }, []);
+  }, [setZoom]);
 
-  const handlePointerDown = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      if (e.button !== 0) return;
-      const target = e.target as HTMLElement;
-      const isBackground =
-        !target.closest(".table-element-card") &&
-        !target.closest(".settings-popover") &&
-        !target.closest(".zoom-controls");
+  // Centrado inicial de resguardo
+  useEffect(() => {
+    if (isInitialized && elements.length > 0) {
+      fitToScreen();
+    } else if (containerRef.current) {
+      const container = containerRef.current;
+      container.scrollLeft = 2000 - container.clientWidth / 2;
+      container.scrollTop = 2000 - container.clientHeight / 2;
+    }
+  }, [isInitialized]);
 
-      if (!isBackground) return;
+  // INICIO DEL ARRASTRE DE SELECCIÓN
+  const handlePointerDown = (e: React.PointerEvent) => {
+    const target = e.target as HTMLElement;
 
-      isPanning.current = true;
-      lastPointer.current = { x: e.clientX, y: e.clientY };
-      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-      setCursor("grabbing");
-      e.preventDefault();
-    },
-    [setCursor],
-  );
+    const isBackground =
+      !target.closest(".table-element-card") &&
+      !target.closest(".settings-popover") &&
+      !target.closest(".zoom-controls") &&
+      !target.closest(".multi-delete-popover");
 
-  const handlePointerMove = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!isPanning.current) return;
-      e.preventDefault();
+    if (!isBackground || e.button !== 0) return;
 
-      const dx = e.clientX - lastPointer.current.x;
-      const dy = e.clientY - lastPointer.current.y;
-      lastPointer.current = { x: e.clientX, y: e.clientY };
+    const rect = canvasAreaRef.current?.getBoundingClientRect();
+    if (!rect) return;
 
-      const off = useSeatingStore.getState().canvasOffset ?? { x: 0, y: 0 };
-      useSeatingStore
-        .getState()
-        .setCanvasOffset({ x: off.x + dx, y: off.y + dy });
-    },
-    [],
-  );
+    const startX = (e.clientX - rect.left) / zoom;
+    const startY = (e.clientY - rect.top) / zoom;
 
-  const handlePointerUp = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!isPanning.current) return;
-      isPanning.current = false;
-      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-      setCursor("grab");
-    },
-    [setCursor],
-  );
+    setIsSelecting(true);
+    setSelectionStart({ x: startX, y: startY });
+    setSelectionBox({ left: startX, top: startY, width: 0, height: 0 });
+    setSelectedElementIds([]);
+    setSelectedElementId(null);
+  };
+
+  // DIBUJANDO EL CUADRO
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isSelecting) return;
+
+    const rect = canvasAreaRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const currentX = (e.clientX - rect.left) / zoom;
+    const currentY = (e.clientY - rect.top) / zoom;
+
+    const left = Math.min(selectionStart.x, currentX);
+    const top = Math.min(selectionStart.y, currentY);
+    const width = Math.abs(selectionStart.x - currentX);
+    const height = Math.abs(selectionStart.y - currentY);
+
+    setSelectionBox({ left, top, width, height });
+
+    const intersectedIds: string[] = [];
+    elements.forEach((el) => {
+      const elRight = el.x + el.width;
+      const elBottom = el.y + el.height;
+      const boxRight = left + width;
+      const boxBottom = top + height;
+
+      const overlaps = !(
+        el.x > boxRight ||
+        elRight < left ||
+        el.y > boxBottom ||
+        elBottom < top
+      );
+
+      if (overlaps) {
+        intersectedIds.push(el.id);
+      }
+    });
+
+    setSelectedElementIds(intersectedIds);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest(".multi-delete-popover")) {
+      setIsSelecting(false);
+      return;
+    }
+    setIsSelecting(false);
+  };
+
+  // 🔥 Ejecución del Popover múltiple inyectando la acción nativa en el prop recibido
+  const handleBulkDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    openConfirmModal({
+      showConfirmToast: false,
+      isOpen: true,
+      title: `Eliminar ${selectedElementIds.length} elementos`,
+      message: `Estás por eliminar de forma permanente ${selectedElementIds.length} elementos seleccionados del plano.\n\n¿Deseas confirmar la acción?`,
+      isDanger: true,
+      action: async () => {
+        removeMultipleElements(selectedElementIds);
+        showToast("Elementos eliminados correctamente.");
+      },
+    });
+  };
 
   const gridSize = 20 * zoom;
-  const offX = canvasOffset?.x ?? 0;
-  const offY = canvasOffset?.y ?? 0;
-  const gridOffsetX = ((offX % gridSize) + gridSize) % gridSize;
-  const gridOffsetY = ((offY % gridSize) + gridSize) % gridSize;
 
   return (
-    <div
-      ref={containerRef}
-      className="relative flex-1 h-full w-full overflow-hidden bg-[#F9F7F2] select-none cursor-grab"
-      style={{
-        backgroundImage: `linear-gradient(#EBE5DA 1px, transparent 1px), linear-gradient(90deg, #EBE5DA 1px, transparent 1px)`,
-        backgroundSize: `${gridSize}px ${gridSize}px`,
-        backgroundPosition: `${gridOffsetX}px ${gridOffsetY}px`,
-      }}
-      onClick={() => setSelectedElementId(null)}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerLeave={handlePointerUp}
-    >
-      <div className="zoom-controls absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-white/90 backdrop-blur-sm p-1 rounded-full shadow-sm border border-[#EBE5DA] z-20">
+    <>
+      {/* CONTROLES DE ZOOM EN LA ESQUINA INFERIOR DERECHA */}
+      <div className="zoom-controls absolute bottom-6 right-6 flex items-center gap-1 bg-white/95 backdrop-blur-sm p-1 rounded-full shadow-md border border-[#EBE5DA] z-40">
         <button
-          onClick={handleZoomOut}
-          className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] transition-colors"
+          onClick={() => setZoom(Math.max(zoom - 0.1, 0.3))}
+          className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] cursor-pointer"
         >
           <ZoomOut size={16} />
         </button>
@@ -148,37 +233,90 @@ export default function SeatingCanvas() {
           {Math.round(zoom * 100)}%
         </span>
         <button
-          onClick={handleZoomIn}
-          className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] transition-colors"
+          onClick={() => setZoom(Math.min(zoom + 0.1, 2))}
+          className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] cursor-pointer"
         >
           <ZoomIn size={16} />
         </button>
         <div className="w-px h-4 bg-[#EBE5DA] mx-0.5" />
         <button
-          onClick={handleZoomReset}
-          className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] transition-colors"
-          title="Restablecer vista"
+          onClick={(e) => {
+            e.stopPropagation();
+            fitToScreen();
+          }}
+          className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] transition-colors cursor-pointer"
+          title="Ver plano completo centrado"
         >
           <Maximize2 size={14} />
         </button>
       </div>
 
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-[10px] text-[#A8A29E] font-medium tracking-wide pointer-events-none select-none z-10">
-        Arrastra para navegar · Ctrl+scroll para zoom
-      </div>
-
       <div
-        ref={setDroppableCanvasRef}
-        className="absolute top-0 left-0 origin-top-left w-[5000px] h-[5000px] canvas-droppable-area"
-        style={{
-          transform: `translate(${offX}px, ${offY}px) scale(${zoom})`,
-          willChange: "transform",
-        }}
+        ref={containerRef}
+        className="relative flex-1 h-full w-full overflow-auto bg-[#F9F7F2] scrollbar-thin scrollbar-thumb-[#EBE5DA]"
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
       >
-        {elements.map((el) => (
-          <TableElement key={el.id} element={el} />
-        ))}
+        {/* POPOVER DE ELIMINACIÓN MASIVA */}
+        {selectedElementIds.length > 1 && (
+          <div
+            className="multi-delete-popover fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#FDFBF7] border border-[#EBE5DA] shadow-xl rounded-2xl p-3 flex items-center gap-4 animate-in slide-in-from-top-3 duration-200"
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-[#2C2C29]">
+                Selección múltiple
+              </span>
+              <span className="text-[10px] text-[#A8A29E]">
+                {selectedElementIds.length} elementos seleccionados
+              </span>
+            </div>
+            <div className="w-px h-6 bg-[#EBE5DA]" />
+            <button
+              onClick={handleBulkDelete}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-semibold text-xs rounded-xl transition-all cursor-pointer"
+            >
+              <Trash2 size={13} />
+              Eliminar Selección
+            </button>
+          </div>
+        )}
+
+        {/* LIENZO INTERNO DE TRABAJO (4000px por 4000px) */}
+        <div
+          ref={canvasAreaRef}
+          className="relative origin-top-left canvas-droppable-area"
+          style={{
+            width: "4000px",
+            height: "4000px",
+            backgroundImage: `linear-gradient(#EBE5DA 1px, transparent 1px), linear-gradient(90deg, #EBE5DA 1px, transparent 1px)`,
+            backgroundSize: `${gridSize}px ${gridSize}px`,
+            transform: `scale(${zoom})`,
+          }}
+        >
+          <div ref={setDroppableCanvasRef} className="absolute inset-0">
+            {elements.map((el) => (
+              <TableElement key={el.id} element={el} />
+            ))}
+
+            {/* CUADRO VISUAL DE LA SELECCIÓN */}
+            {isSelecting && (
+              <div
+                className="absolute border border-[#C5A669] bg-[#C5A669]/10 rounded pointer-events-none z-50"
+                style={{
+                  left: selectionBox.left,
+                  top: selectionBox.top,
+                  width: selectionBox.width,
+                  height: selectionBox.height,
+                }}
+              />
+            )}
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
