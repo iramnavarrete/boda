@@ -198,3 +198,19 @@ html {
 .animate-float-3 {
   animation: gentleFloat 5s ease-in-out 2.1s infinite;
 }
+
+/* Efecto de resaltado ultrarrápido por DOM nativo */
+.seat-wrapper[data-highlighted="true"] {
+  z-index: 50 !important;
+}
+
+.seat-wrapper[data-highlighted="true"] > div > .seat-inner {
+  background-color: #C5A669 !important;
+  border-color: #A8AEBA !important;
+  transform: scale(1.15) !important;
+  box-shadow: 0 0 0 4px rgba(197, 166, 105, 0.4) !important;
+}
+
+.seat-wrapper[data-highlighted="true"] > .seat-inner > span {
+  color: white !important;
+}

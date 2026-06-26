@@ -2,6 +2,7 @@ import { GuestService } from "@/services/guestService";
 import { GuestFormData } from "@/types";
 import { create } from "zustand";
 import { SeatingService } from "../services/seatingService";
+import { removeHighlightSeats } from "../utils/highlightHelper";
 
 export type ElementType =
   | "round_table"
@@ -252,7 +253,7 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
       return { elements: nextState, hasUnsavedChanges: true };
     }),
 
-  removeGuestFromTable: (tableId, guestId) =>
+  removeGuestFromTable: (tableId, guestId) => {
     set((state) => ({
       elements: state.elements.map((el) =>
         el.id === tableId
@@ -266,9 +267,10 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
           : el,
       ),
       hasUnsavedChanges: true,
-    })),
-
-  removeFamilyFromTable: (familyId) =>
+    }));
+    removeHighlightSeats("guest", guestId);
+  },
+  removeFamilyFromTable: (familyId) => {
     set((state) => {
       const family = state.families.find((f) => f.id === familyId);
       if (!family) return state;
@@ -282,8 +284,9 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
         })),
         hasUnsavedChanges: true,
       };
-    }),
-
+    });
+    removeHighlightSeats("family", familyId);
+  },
   updateGuestName: (familyId, guestId, name) =>
     set((state) => ({
       hasUnsavedChanges: true,

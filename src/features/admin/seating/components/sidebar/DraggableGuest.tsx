@@ -13,6 +13,10 @@ import {
   Trash2,
 } from "lucide-react";
 import Tooltip from "@/features/shared/components/Tooltip";
+import {
+  highlightSeats,
+  removeHighlightSeats,
+} from "../../utils/highlightHelper";
 
 export function DraggableGuest({
   guest,
@@ -71,6 +75,8 @@ export function DraggableGuest({
     <div
       className={`select-none relative flex flex-col gap-1.5 p-1.5 rounded-md border text-xs transition-colors group/guest ${isAssigned ? "bg-transparent border-transparent opacity-70 cursor-default" : guest.status === "declined" ? "bg-red-50/50 border-red-100 opacity-60" : "bg-white border border-[#EBE5DA] cursor-grab hover:border-[#C5A669]"}`}
       style={{ opacity: isDragging ? 0.3 : 1 }}
+      onMouseEnter={() => highlightSeats("guest", guest.id)}
+      onMouseLeave={() => removeHighlightSeats("guest", guest.id)}
     >
       <div className="flex items-center justify-between w-full">
         <div
@@ -81,11 +87,7 @@ export function DraggableGuest({
         >
           <GripVertical
             size={12}
-            className={
-              isAssigned || isEditing
-                ? "opacity-0"
-                : "text-[#EBE5DA]"
-            }
+            className={isAssigned || isEditing ? "opacity-0" : "text-[#EBE5DA]"}
           />
 
           <div className="flex items-center gap-1.5 min-w-0">
@@ -152,8 +154,11 @@ export function DraggableGuest({
                   </button>
                 </Tooltip>
               )}
-              {/* 🔥 LIBERADO: Removimos la condición "guest.status === 'declined'". Ahora la papelera está disponible siempre */}
-              <Tooltip position="top" align="right" text="Eliminar asiento de la lista">
+              <Tooltip
+                position="top"
+                align="right"
+                text="Eliminar asiento de la lista"
+              >
                 <button
                   onClick={(e) => {
                     e.stopPropagation();

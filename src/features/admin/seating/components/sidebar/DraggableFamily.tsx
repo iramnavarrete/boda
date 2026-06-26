@@ -13,8 +13,18 @@ import {
 import { DraggableGuest } from "./DraggableGuest";
 import Tooltip from "@/features/shared/components/Tooltip";
 import { useSeatingModalContext } from "../SeatingModalContext";
+import {
+  highlightSeats,
+  removeHighlightSeats,
+} from "../../utils/highlightHelper";
 
-export function DraggableFamily({ family, isFirstElement }: { family: Family, isFirstElement: boolean }) {
+export function DraggableFamily({
+  family,
+  isFirstElement,
+}: {
+  family: Family;
+  isFirstElement: boolean;
+}) {
   const { elements, removeFamilyFromTable } = useSeatingStore();
   const { triggerFamilyRemoval, triggerAddSeat } = useSeatingModalContext();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -42,6 +52,8 @@ export function DraggableFamily({ family, isFirstElement }: { family: Family, is
         {...listeners}
         className={`rounded-lg p-2 bg-white border-b border-[#EBE5DA] flex items-center gap-1.5 transition-colors group/fam shrink-0 ${allAssigned ? "opacity-80 cursor-default" : "hover:bg-[#F9F7F2] cursor-grab active:cursor-grabbing"}`}
         style={{ opacity: isDragging ? 0.3 : 1 }}
+        onMouseEnter={() => highlightSeats("family", family.id)}
+        onMouseLeave={() => removeHighlightSeats("family", family.id)}
       >
         <div
           className={`flex items-center ${allAssigned ? "opacity-0" : "text-[#A8A29E]"}`}
