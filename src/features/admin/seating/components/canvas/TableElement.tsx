@@ -130,7 +130,7 @@ export default function TableElement({ element }: { element: SeatingElement }) {
   };
 
   const renderResizeHandles = () => {
-    if (!isSingleSelected || !isArea) return null; // Solo mostramos tiradores en selección única
+    if (!isSingleSelected || !isArea) return null;
 
     const handles = [
       {
@@ -169,6 +169,7 @@ export default function TableElement({ element }: { element: SeatingElement }) {
   };
 
   const getGuestInfo = (id: string) => {
+    if (!id || id === "") return null;
     for (const f of families) {
       const g = f.guests.find((guest) => guest.id === id);
       if (g) {
@@ -183,6 +184,10 @@ export default function TableElement({ element }: { element: SeatingElement }) {
     }
     return null;
   };
+
+  const validAssignedCount = isTable
+    ? element.assignedSeats.filter((id) => !!getGuestInfo(id)).length
+    : 0;
 
   const renderSeats = () => {
     if (!isTable) return null;
@@ -251,7 +256,9 @@ export default function TableElement({ element }: { element: SeatingElement }) {
 
       const assignedGuestId = element.assignedSeats[i];
       const guestInfo = assignedGuestId ? getGuestInfo(assignedGuestId) : null;
-      const isAssigned = !!assignedGuestId;
+
+      // Si `guestInfo` es null, el asiento se dibuja libre automáticamente
+      const isAssigned = !!guestInfo;
 
       seats.push(
         <TableSeat
@@ -271,7 +278,7 @@ export default function TableElement({ element }: { element: SeatingElement }) {
           colorBg={guestInfo?.familyColorBg}
           colorBorder={guestInfo?.familyColorBorder}
           tableId={element.id}
-          guestId={assignedGuestId}
+          guestId={isAssigned ? assignedGuestId : undefined}
         />,
       );
     }
@@ -368,7 +375,7 @@ export default function TableElement({ element }: { element: SeatingElement }) {
       {renderResizeHandles()}
 
       <div
-        className={`absolute inset-0 pointer-events-none ${isHalfMoon ? 'top-8' : ''}`}
+        className={`absolute inset-0 pointer-events-none ${isHalfMoon ? "top-8" : ""}`}
         style={{ overflow: "visible" }}
       >
         {renderSeats()}
@@ -398,7 +405,8 @@ export default function TableElement({ element }: { element: SeatingElement }) {
                   className="block text-[11px] font-bold tracking-widest uppercase mt-0.5"
                   style={{ color: areaStyle.border, opacity: 0.8 }}
                 >
-                  {element.assignedSeats.length}/{element.seats}
+                  {/* Renderizamos conteo real libre de fantasmas */}
+                  {validAssignedCount}/{element.seats}
                 </span>
               )}
             </div>
@@ -460,7 +468,7 @@ export default function TableElement({ element }: { element: SeatingElement }) {
             </span>
             {isTable && (
               <span className="block text-[11px] font-bold tracking-widest uppercase text-[#3b82f6] mt-0.5 opacity-80">
-                {element.assignedSeats.length}/{element.seats}
+                {validAssignedCount}/{element.seats}
               </span>
             )}
           </div>

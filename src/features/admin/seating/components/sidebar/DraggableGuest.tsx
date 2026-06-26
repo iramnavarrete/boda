@@ -45,7 +45,7 @@ export function DraggableGuest({
         index: family.guests.findIndex((g) => g.id === guest.id),
       },
     },
-    disabled: isAssigned || guest.status === "declined",
+    disabled: isAssigned,
   });
 
   const guestIndex = family.guests.findIndex((g) => g.id === guest.id);
@@ -82,7 +82,7 @@ export function DraggableGuest({
           <GripVertical
             size={12}
             className={
-              isAssigned || isEditing || guest.status === "declined"
+              isAssigned || isEditing
                 ? "opacity-0"
                 : "text-[#EBE5DA]"
             }

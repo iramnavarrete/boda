@@ -1,7 +1,7 @@
 import Tooltip from "@/features/shared/components/Tooltip";
 import { useSeatingStore, GuestStatus } from "../../stores/useSeatingStore";
 import { RotateCcw, Trash2 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useSeatingModalContext } from "../SeatingModalContext";
 
 interface TableSeatProps {
   x: number;
@@ -30,14 +30,8 @@ export function TableSeat({
   tableId,
   guestId,
 }: TableSeatProps) {
-  const { removeGuestFromTable, executeRemoveSeat, families } =
-    useSeatingStore();
-  const params = useParams();
-  const invitationId = (params?.id ||
-    params?.invitationId ||
-    (typeof window !== "undefined"
-      ? window.location.pathname.split("/").filter(Boolean)[1]
-      : "")) as string;
+  const { removeGuestFromTable, families } = useSeatingStore();
+  const { triggerSeatRemoval } = useSeatingModalContext();
 
   const getStatusBadge = () => {
     if (!isAssigned) return null;
@@ -75,7 +69,6 @@ export function TableSeat({
     </div>
   );
 
-  // 🔥 Agregamos hover:z-50 para que el asiento inspeccionado siempre esté al frente
   const wrapperClasses = `absolute transform -translate-x-1/2 -translate-y-1/2 z-20 hover:z-50 flex items-center justify-center ${!isDragging ? "pointer-events-auto" : "pointer-events-none"}`;
   const wrapperStyle = { left: x, top: y, opacity: isDragging ? 0.3 : 1 };
 
@@ -111,19 +104,19 @@ export function TableSeat({
         >
           <RotateCcw size={12} />
         </button>
-        {status === "declined" && (
+        {guestId && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               const family = families.find((f) =>
                 f.guests.some((g) => g.id === guestId),
               );
-              if (invitationId && family && guestId) {
-                executeRemoveSeat(invitationId, family.id, guestId);
+              if (family && guestId) {
+                triggerSeatRemoval(family.id, guestId);
               }
             }}
             className="p-1 hover:bg-red-50 text-red-500 hover:text-red-700 rounded transition-colors shrink-0 ml-0.5"
-            title="Eliminar y liberar"
+            title="Eliminar asiento"
           >
             <Trash2 size={12} />
           </button>

@@ -41,10 +41,19 @@ import { useConfirmModal } from "@/features/admin/hooks/useConfirmModal";
 import ElementsPalette from "./ElementsPalette";
 import LayoutSetupModal from "../canvas/LayoutSetupModal";
 
+// 🔥 CORRECCIÓN: Separamos palette_element y palette_layout para que Extract funcione sin dar "never"
 export type DragItemData =
   | {
       type: "palette_element";
       elementType: ElementType;
+      width: number;
+      height: number;
+      seats: number;
+      label: string;
+    }
+  | {
+      type: "palette_layout";
+      elementType: "custom_layout";
       width: number;
       height: number;
       seats: number;
@@ -143,7 +152,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     const family = families.find((f) => f.id === familyId);
     if (!family) return;
 
-    // A. Si es el ÚLTIMO asiento, advertimos que se borrará la familia completa, pero avisamos que se puede recrear
     if (family.guests.length === 1) {
       openConfirmModal({
         isOpen: true,
@@ -159,7 +167,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       return;
     }
 
-    // B. Si quedan más asientos, corre la lógica habitual con el nuevo aviso agregado al final
     let title = "Eliminar asiento declinado";
     let message = `¿Deseas eliminar este asiento declinado de forma permanente y liberar el lugar en el plano?\n\n💡 Nota: No te preocupes, si este invitado cambia de opinión, podrás agregar nuevos asientos a "${family.name}" más adelante usando el botón de "+" en el listado de invitados.`;
     const isDanger = true;
@@ -274,7 +281,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     setActiveDragItem(null);
     const { active, over } = event;
 
-    // 🔥 1. INTERCEPCIÓN DEL CREADOR DE LAYOUTS INTELIGENTES
     if (active.data.current?.type === "palette_layout") {
       if (over?.id === "palette-area" || over?.id === "guests-area") {
         showToast("Arrastra la plantilla hacia el área del plano.");
@@ -291,12 +297,10 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
         dropY = (active.rect.current.translated.top - rect.top) / zoom;
       }
 
-      // Activamos el estado para abrir el modal interactivo de configuración
       setLayoutSetup({ isOpen: true, dropX, dropY });
       return;
     }
 
-    // 2. ELEMENTOS INDIVIDUALES DE LA PALETA (Mesas, barras, etc.)
     if (active.data.current?.type === "palette_element") {
       if (over?.id === "palette-area" || over?.id === "guests-area") {
         showToast("Arrastra el elemento hacia el área del plano.");
@@ -336,7 +340,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       return;
     }
 
-    // 3. MOVIMIENTO DE ELEMENTOS YA CREADOS DENTRO DEL CANVAS
     if (active.data.current?.type === "element") {
       if (over?.id === "palette-area" || over?.id === "guests-area") {
         showToast("No puedes mover el elemento fuera del plano.");
@@ -360,7 +363,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       return;
     }
 
-    // 4. ASIGNACIÓN DE INVITADOS O FAMILIAS AL SOLTAR SOBRE UNA MESA
     if (over?.data.current?.type === "table") {
       const tableId = String(over.id).replace("table-", "");
       const activeType = active.data.current?.type;
@@ -375,9 +377,10 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
         return;
       }
 
-      const availableSeats = table.seats - table.assignedSeats.length;
-
       if (activeType === "guest") {
+        const availableSeats =
+          table.seats - table.assignedSeats.filter(Boolean).length;
+
         if (availableSeats <= 0) {
           showToast("No se pudo asignar. La mesa ya está llena.");
           return;
@@ -390,18 +393,22 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
           .families.find((f) => f.id === familyId);
 
         if (family) {
-          if (availableSeats <= 0) {
+          const guestIds = family.guests.map((g) => g.id);
+
+          const occupiedByOthers = table.assignedSeats.filter(
+            (id) => !!id && !guestIds.includes(id),
+          ).length;
+
+          const actualAvailableSeats = table.seats - occupiedByOthers;
+
+          if (actualAvailableSeats <= 0) {
             showToast("No se pudo asignar a la familia. La mesa está llena.");
             return;
           }
 
-          const unassignedGuestsCount = family.guests.filter(
-            (g) => !elements.some((el) => el.assignedSeats.includes(g.id)),
-          ).length;
-
-          if (unassignedGuestsCount > availableSeats) {
+          if (family.guests.length > actualAvailableSeats) {
             showToast(
-              `Solo se asignaron ${availableSeats} lugares porque la mesa se llenó.`,
+              `Solo se asignaron ${actualAvailableSeats} lugares porque la mesa se llenó.`,
             );
           }
 
@@ -550,6 +557,24 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
                     ).label
                   }
                 </span>
+                {(
+                  activeDragItem.data as Extract<
+                    DragItemData,
+                    { type: "palette_element" }
+                  >
+                ).seats > 0 && (
+                  <span className="text-[10px] font-bold text-[#C5A669] uppercase tracking-wider">
+                    {
+                      (
+                        activeDragItem.data as Extract<
+                          DragItemData,
+                          { type: "palette_element" }
+                        >
+                      ).seats
+                    }{" "}
+                    lugares
+                  </span>
+                )}
               </div>
             ) : activeDragItem?.type === "guest" &&
               "guest" in (activeDragItem.data || {}) ? (
@@ -597,10 +622,13 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
           </DragOverlay>
         </DndContext>
         {toastMsg && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-[#2C2C29] text-white px-4 py-2.5 rounded-xl shadow-xl z-[100] flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300">
-          <AlertCircle size={16} className="text-[#C5A669]" />
-          <span className="text-sm font-medium tracking-wide">{toastMsg}</span>
-        </div>)}
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-[#2C2C29] text-white px-4 py-2.5 rounded-xl shadow-xl z-[100] flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <AlertCircle size={16} className="text-[#C5A669]" />
+            <span className="text-sm font-medium tracking-wide">
+              {toastMsg}
+            </span>
+          </div>
+        )}
       </div>
 
       <ConfirmationModal

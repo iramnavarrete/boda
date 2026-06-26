@@ -175,7 +175,7 @@ export const GuestService = {
         cambiosPermitidos: data.cambiosPermitidos ?? true,
         tieneTelefono,
         ultimaModificacion: timestamp,
-        asistencia: data.asistencia || null,
+        asistencia: data.asistencia,
         confirmados: Number(data.confirmados) || 0,
         etiqueta: data.etiqueta || null,
         fechaLimiteConfirmacion: data.fechaLimiteConfirmacion || null,

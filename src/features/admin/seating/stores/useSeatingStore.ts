@@ -1,6 +1,7 @@
 import { GuestService } from "@/services/guestService";
 import { GuestFormData } from "@/types";
 import { create } from "zustand";
+import { SeatingService } from "../services/seatingService";
 
 export type ElementType =
   | "round_table"
@@ -102,7 +103,7 @@ export interface SeatingStore {
   setSelectedElementId: (id: string | null) => void;
   showToast: (msg: string) => void;
   addLayoutElements: (newElements: SeatingElement[]) => void;
-  selectedElementIds: string[]; // Para selección múltiple
+  selectedElementIds: string[];
   setSelectedElementIds: (ids: string[]) => void;
   removeMultipleElements: (ids: string[]) => void;
 }
@@ -202,10 +203,18 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
   assignGuestToTable: (tableId, guestId) =>
     set((state) => ({
       elements: state.elements.map((el) => {
-        const filteredSeats = el.assignedSeats.filter((s) => s !== guestId);
-        if (el.id === tableId && filteredSeats.length < el.seats)
-          return { ...el, assignedSeats: [...filteredSeats, guestId] };
-        return { ...el, assignedSeats: filteredSeats };
+        // Limpia el invitado de donde estuviera antes (deja un hueco "")
+        const newSeats = el.assignedSeats.map((s) => (s === guestId ? "" : s));
+
+        if (el.id === tableId) {
+          const emptyIndex = newSeats.findIndex((s) => !s || s === "");
+          if (emptyIndex !== -1 && emptyIndex < el.seats) {
+            newSeats[emptyIndex] = guestId;
+          } else if (newSeats.length < el.seats) {
+            newSeats.push(guestId);
+          }
+        }
+        return { ...el, assignedSeats: newSeats };
       }),
       hasUnsavedChanges: true,
     })),
@@ -215,15 +224,28 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
       const family = state.families.find((f) => f.id === familyId);
       if (!family) return state;
       const guestIds = family.guests.map((g) => g.id);
+
       let nextState = state.elements.map((el) => ({
         ...el,
-        assignedSeats: el.assignedSeats.filter((s) => !guestIds.includes(s)),
+        assignedSeats: el.assignedSeats.map((s) =>
+          guestIds.includes(s) ? "" : s,
+        ),
       }));
+
       nextState = nextState.map((el) => {
         if (el.id === tableId) {
-          const available = el.seats - el.assignedSeats.length;
-          const toAdd = guestIds.slice(0, available);
-          return { ...el, assignedSeats: [...el.assignedSeats, ...toAdd] };
+          const newSeats = [...el.assignedSeats];
+          const guestsToAssign = [...guestIds];
+
+          for (let i = 0; i < el.seats; i++) {
+            if (
+              (!newSeats[i] || newSeats[i] === "") &&
+              guestsToAssign.length > 0
+            ) {
+              newSeats[i] = guestsToAssign.shift() as string;
+            }
+          }
+          return { ...el, assignedSeats: newSeats };
         }
         return el;
       });
@@ -236,7 +258,10 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
         el.id === tableId
           ? {
               ...el,
-              assignedSeats: el.assignedSeats.filter((s) => s !== guestId),
+              // Deja un hueco "" para no alterar el orden de los demás
+              assignedSeats: el.assignedSeats.map((s) =>
+                s === guestId ? "" : s,
+              ),
             }
           : el,
       ),
@@ -251,7 +276,9 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
       return {
         elements: state.elements.map((el) => ({
           ...el,
-          assignedSeats: el.assignedSeats.filter((s) => !guestIds.includes(s)),
+          assignedSeats: el.assignedSeats.map((s) =>
+            guestIds.includes(s) ? "" : s,
+          ),
         })),
         hasUnsavedChanges: true,
       };
@@ -297,20 +324,56 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     guestId: string,
   ) => {
     const state = get();
-    await GuestService.reduceGuestCount(invitationId, familyId);
+    const family = state.families.find((f) => f.id === familyId);
+    if (!family) return;
 
-    const currentTable = state.elements.find((el) =>
-      el.assignedSeats.includes(guestId),
-    );
-    if (currentTable) {
-      state.removeGuestFromTable(currentTable.id, guestId);
+    const deletedIndex = family.guests.findIndex((g) => g.id === guestId);
+    if (deletedIndex === -1) return;
+
+    // Eliminamos el Alias EXACTO de la lista
+    const newAliases = [...(family.aliases || [])];
+    newAliases.splice(deletedIndex, 1);
+
+    // Re-mapeamos los IDs de las sillas para los invitados de esta familia
+    const newElements = state.elements.map((el) => {
+      const updatedSeats = el.assignedSeats.map((seatId) => {
+        if (seatId === guestId) return ""; // El que borraste queda como silla libre
+
+        // Si el ID es de la misma familia y estaba posicionado DESPUÉS del que borramos,
+        // recorremos su ID "- 1" para que cuadre con Firebase.
+        if (seatId && seatId.startsWith(`${familyId}_seat_`)) {
+          const seatIndex = parseInt(seatId.split("_seat_")[1]);
+          if (seatIndex > deletedIndex) {
+            return `${familyId}_seat_${seatIndex - 1}`;
+          }
+        }
+        return seatId;
+      });
+      return { ...el, assignedSeats: updatedSeats };
+    });
+
+    try {
+      // Mandamos las 3 peticiones al servidor para matar al fantasma por completo
+      await GuestService.reduceGuestCount(invitationId, familyId);
+      await SeatingService.updateSeatAlias(invitationId, familyId, newAliases);
+      await SeatingService.savePlan(invitationId, newElements);
+    } catch (error) {
+      console.error(error);
+      get().showToast(
+        "Error al sincronizar asiento eliminado con la base de datos.",
+      );
     }
 
     set((currentState) => ({
       hasUnsavedChanges: true,
+      elements: newElements,
       families: currentState.families.map((f) =>
         f.id === familyId
-          ? { ...f, guests: f.guests.filter((g) => g.id !== guestId) }
+          ? {
+              ...f,
+              guests: f.guests.filter((g) => g.id !== guestId),
+              aliases: newAliases,
+            }
           : f,
       ),
     }));
