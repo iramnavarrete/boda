@@ -1,7 +1,6 @@
-import React from "react";
 import Tooltip from "@/features/shared/components/Tooltip";
 import { useSeatingStore, GuestStatus } from "../../stores/useSeatingStore";
-import { RotateCcw, Check, X as XIcon, Clock, Trash2 } from "lucide-react";
+import { RotateCcw, Trash2 } from "lucide-react";
 import { useParams } from "next/navigation";
 
 interface TableSeatProps {
@@ -45,21 +44,15 @@ export function TableSeat({
     switch (status) {
       case "confirmed":
         return (
-          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm">
-            <Check size={8} className="text-white" strokeWidth={4} />
-          </div>
+          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm" />
         );
       case "declined":
         return (
-          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm">
-            <XIcon size={8} className="text-white" strokeWidth={4} />
-          </div>
+          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm" />
         );
       default: // pending
         return (
-          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm">
-            <Clock size={8} className="text-white" strokeWidth={4} />
-          </div>
+          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm" />
         );
     }
   };
