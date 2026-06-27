@@ -85,7 +85,7 @@ export default function Cover({
   const [index, setIndex] = useState(0);
 
   const searchParams = useSearchParams();
-  const id = searchParams?.get("guest");
+  const id = searchParams?.get("family");
   const preview = searchParams?.get("preview");
   const token = searchParams?.get("token");
 
@@ -101,7 +101,7 @@ export default function Cover({
     if (!isSealVisible && id && !preview && !token && invitationData) {
       ActivityService.logActivity(invitationData.id, {
         action: "view",
-        guestId: id,
+        familyId: id,
       });
     }
   }, [id, preview, token, isSealVisible, invitationData]);

@@ -1,12 +1,12 @@
 import { useState } from "react";
 import Modal from "@/features/shared/components/Modal";
 import { UserCheck, Minus, Plus, AlertCircle } from "lucide-react";
-import { Guest } from "@/types";
+import { Family } from "@/types";
 import Tooltip from "@/features/shared/components/Tooltip";
 
 interface CheckInConfirmModalProps {
   isOpen: boolean;
-  guest: Guest | null;
+  family: Family | null;
   isSubmitting: boolean;
   isEventDay: boolean;
   onClose: () => void;
@@ -15,30 +15,30 @@ interface CheckInConfirmModalProps {
 
 export default function CheckInConfirmModal({
   isOpen,
-  guest,
+  family,
   isSubmitting,
   isEventDay,
   onClose,
   onConfirm,
 }: CheckInConfirmModalProps) {
   const [pasesUsados, setPasesUsados] = useState<number>(1);
-  const [prevGuestId, setPrevGuestId] = useState<string | undefined | null>(
+  const [prevFamilyId, setPrevFamilyId] = useState<string | undefined | null>(
     null,
   );
 
   // Evitamos el cascading render
-  if (guest?.id !== prevGuestId) {
-    setPrevGuestId(guest?.id);
-    if (guest) {
-      setPasesUsados(guest.confirmados || 1);
+  if (family?.id !== prevFamilyId) {
+    setPrevFamilyId(family?.id);
+    if (family) {
+      setPasesUsados(family.confirmados || 1);
     } else {
       setPasesUsados(1);
     }
   }
 
-  if (!guest) return null;
+  if (!family) return null;
 
-  const maxAllowed = guest.confirmados || 0;
+  const maxAllowed = family.confirmados || 0;
 
   const confirmButtonElement = (
     <button
@@ -63,7 +63,7 @@ export default function CheckInConfirmModal({
         </h3>
 
         <p className="text-sm text-[#5A5A5A] mb-8 leading-relaxed text-center">
-          Familia <b className="text-[#2C2C29] text-base">{guest.nombre}</b>.{" "}
+          Familia <b className="text-[#2C2C29] text-base">{family.nombre}</b>.{" "}
           <br />
           ¿Cuántas personas están ingresando?
         </p>

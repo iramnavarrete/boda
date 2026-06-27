@@ -37,9 +37,9 @@ interface SearchAndFilterBarProps {
   setFilterStatus: (status: FilterType) => void;
   filterCounts: FilterCounts;
   onExportExcel: () => void;
-  onNewGuest: () => void;
+  onNewFamily: () => void;
   disabled: boolean;
-  filteredGuestCount: number;
+  filteredFamiliesCount: number;
 }
 
 interface SearchAndFilterBarProps {
@@ -58,9 +58,9 @@ interface SearchAndFilterBarProps {
   setViewMode?: (mode: "grid" | "table") => void;
   onExportExcel: () => void;
   onImportExcel: () => void; // NUEVA PROP
-  onNewGuest: () => void;
+  onNewFamily: () => void;
   disabled: boolean;
-  filteredGuestCount: number;
+  filteredFamiliesCount: number;
 }
 
 export default function SearchAndFilterBar({
@@ -79,9 +79,9 @@ export default function SearchAndFilterBar({
   setViewMode,
   onExportExcel,
   onImportExcel,
-  onNewGuest,
+  onNewFamily,
   disabled,
-  filteredGuestCount,
+  filteredFamiliesCount,
 }: SearchAndFilterBarProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
@@ -198,7 +198,7 @@ export default function SearchAndFilterBar({
             </div>
             <input
               className="w-full pl-10 pr-10 py-3 bg-white/90 border border-sand rounded-xl outline-none focus:ring-0 focus:ring-gold focus:border-gold/50 transition-all duration-300 text-sm text-charcoal placeholder:text-stone-light shadow-sm"
-              placeholder={`Buscar entre ${filteredGuestCount} familia${filteredGuestCount === 1 ? "" : "s"}...`}
+              placeholder={`Buscar entre ${filteredFamiliesCount} familia${filteredFamiliesCount === 1 ? "" : "s"}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -660,7 +660,7 @@ export default function SearchAndFilterBar({
 
           <TextureButton
             icon={<Plus size={18} />}
-            onClick={onNewGuest}
+            onClick={onNewFamily}
             className="px-4 xl:px-6 py-0 h-full w-full md:w-auto rounded-xl transition-all shadow-lg shadow-[#C5A669]/20 hover:shadow-[#C5A669]/30 hover:-translate-y-0.5 font-bold"
           >
             <span>Nueva Familia</span>

@@ -8,8 +8,8 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { GuestActivity } from "@/types";
-import { GuestService } from "./guestService";
+import { FamilyActivity } from "@/types";
+import { FamiliesService } from "./familiesService";
 
 // --- SERVICIO ---
 export const ActivityService = {
@@ -19,11 +19,14 @@ export const ActivityService = {
    */
   logActivity: async (
     invitationId: string,
-    payload: Omit<GuestActivity, "id" | "timestamp" | "guestName">,
+    payload: Omit<FamilyActivity, "id" | "timestamp" | "familyName">,
   ) => {
-    if (!invitationId || !payload.guestId) return;
+    if (!invitationId || !payload.familyId) return;
 
-    const guest = await GuestService.getGuest(invitationId, payload.guestId);
+    const family = await FamiliesService.getFamily(
+      invitationId,
+      payload.familyId,
+    );
 
     try {
       const activityRef = collection(
@@ -34,7 +37,7 @@ export const ActivityService = {
       );
       await addDoc(activityRef, {
         ...payload,
-        guestName: guest.guest?.nombre,
+        familyName: family.family?.nombre,
         timestamp: serverTimestamp(),
       });
     } catch (error) {
@@ -49,7 +52,7 @@ export const ActivityService = {
   subscribeToRecentActivity: (
     invitationId: string,
     limitCount: number = 30,
-    callback: (activities: GuestActivity[]) => void,
+    callback: (activities: FamilyActivity[]) => void,
   ) => {
     const q = query(
       collection(db, "invitations", invitationId, "activity"),
@@ -63,7 +66,7 @@ export const ActivityService = {
         const activities = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        })) as GuestActivity[];
+        })) as FamilyActivity[];
 
         callback(activities);
       },

@@ -26,7 +26,7 @@ export const useEventPermissions = (explicitInvitationId?: string) => {
     isGuardia,
     isAdminOrHost,
     canEditEventDetails: isAdmin,
-    canDeleteGuests: isAdminOrHost,
+    canDeleteFamilies: isAdminOrHost,
     canSendWhatsapp: isAdminOrHost,
   };
 };

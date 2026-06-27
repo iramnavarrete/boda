@@ -26,14 +26,14 @@ import {
 } from "lucide-react";
 import {
   ElementType,
-  Family,
+  FamilyElement,
   useSeatingStore,
 } from "../../stores/useSeatingStore";
 import { SeatingService } from "../../services/seatingService";
 import GuestAssignmentSidebar from "../sidebar/GuestAssignmentSidebar";
 import { useEventPermissions } from "@/features/admin/hooks/useEventPermissions";
 import SeatingCanvas from "../canvas/SeatingCanvas";
-import { GuestService } from "@/services/guestService";
+import { FamiliesService } from "@/services/familiesService";
 import { SeatingModalContext } from "../SeatingModalContext";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
 import { useConfirmModal } from "@/features/admin/hooks/useConfirmModal";
@@ -60,7 +60,7 @@ export type DragItemData =
     }
   | { type: "element" }
   | { type: "guest"; guest: GuestSeat & { familyName?: string; index?: number } }
-  | { type: "family"; family: Family }
+  | { type: "family"; family: FamilyElement }
   | Record<string, unknown>;
 
 interface SeatingManagerProps {
@@ -123,7 +123,7 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     async function initRealtime() {
       const dbElements = await SeatingService.getPlan(invitationId);
 
-      unsubscribe = GuestService.subscribeToGuests(
+      unsubscribe = FamiliesService.subscribeToFamilies(
         invitationId,
         (realGuests) => {
           const formattedFamilies =

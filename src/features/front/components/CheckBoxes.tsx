@@ -1,11 +1,11 @@
 import { Checkbox, CheckboxGroup } from "@heroui/checkbox";
 import { useFormikContext } from "formik";
 import { useEffect, useState } from "react";
-import { GuestFormData } from "@/types";
+import { FamilyFormData } from "@/types";
 
 export default function CheckBoxes() {
   const [selected, setSelected] = useState<string[]>([]);
-  const { setFieldValue, touched, errors, values: {asistencia} } = useFormikContext<GuestFormData>();
+  const { setFieldValue, touched, errors, values: {asistencia} } = useFormikContext<FamilyFormData>();
 
   useEffect(() => {
     if (asistencia !== null) {

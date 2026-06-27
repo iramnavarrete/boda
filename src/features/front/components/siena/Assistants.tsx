@@ -5,11 +5,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import Separator from "@/icons/separator";
 import { useSearchParams } from "next/navigation";
 import AnimatedEntrance from "../AnimatedEntrance";
-import { Guest, GuestFormData, Invitation } from "@/types";
+import { Family, FamilyFormData, Invitation } from "@/types";
 import { QrCode, Plus, Minus, ArrowRight } from "lucide-react";
-import { GuestService } from "@/services/guestService";
+import { FamiliesService } from "@/services/familiesService";
 import { useInvitationStore } from "../../stores/invitationStore";
-import { GuestQuotesService } from "@/services/guestQuotesService";
+import { FamilyQuotesService } from "@/services/familyQuotesService";
 import { ActivityService } from "@/services/activityService";
 import { useToast } from "@/features/shared/components/Toast";
 import { cn } from "@heroui/theme";
@@ -17,7 +17,7 @@ import html2canvas from "html2canvas";
 import FlowersCoverDown from "@/icons/flowers-cover-down";
 import { ReactQRCode } from "@lglab/react-qr-code";
 
-const defaultGuest: Guest = {
+const defaultFamily: Family = {
   asistencia: null,
   confirmados: 1,
   id: "_",
@@ -47,7 +47,7 @@ type Props = {
 };
 
 interface StateCardProps {
-  guestData: Guest;
+  familyData: Family;
   invitationData?: Invitation | null;
   textClassName?: string;
   svgsColor?: string;
@@ -56,14 +56,14 @@ interface StateCardProps {
 // ============================================================================
 // COMPONENTES DE ESTADO (EXTRAÍDOS PARA EVITAR ERRORES DE RENDERIZADO)
 const TicketCard: FC<StateCardProps> = ({
-  guestData,
+  familyData,
   invitationData,
   textClassName,
 }) => {
   const { toast } = useToast();
   const ticketRef = useRef<HTMLDivElement>(null);
   const [isDownloading, setIsDownloading] = useState(false);
-  const confirmados = guestData.confirmados || 0;
+  const confirmados = familyData.confirmados || 0;
 
   const handleDownloadImage = async () => {
     if (ticketRef.current === null) return;
@@ -84,7 +84,7 @@ const TicketCard: FC<StateCardProps> = ({
       const dataUrl = canvas.toDataURL("image/png");
 
       const link = document.createElement("a");
-      link.download = `Pase-${guestData.nombre.replace(/\s+/g, "-")}.png`;
+      link.download = `Pase-${familyData.nombre.replace(/\s+/g, "-")}.png`;
       link.href = dataUrl;
       link.click();
 
@@ -156,7 +156,7 @@ const TicketCard: FC<StateCardProps> = ({
               textClassName,
             )}
           >
-            {guestData.nombre}
+            {familyData.nombre}
           </p>
           <p className="text-[10px] font-bold text-stone-500 uppercase tracking-[0.15em] flex items-center justify-center gap-2">
             {confirmados} Pase{confirmados > 1 ? "s" : ""} Confirmado
@@ -165,14 +165,14 @@ const TicketCard: FC<StateCardProps> = ({
 
           {/* Contenedor del QR */}
           <div className="mx-auto w-36 h-36 bg-white rounded-xl shadow-sm border border-stone-200 flex items-center justify-center mt-8 mb-4 relative transition-transform hover:scale-[1.02] duration-300">
-            {isDefaultId(guestData.id) ? (
+            {isDefaultId(familyData.id) ? (
               // Mostramos el ícono de Lucide si es el usuario genérico
               <QrCode size={160} className="text-[#2C2C29]" strokeWidth={1} />
             ) : (
               // Generamos el QR real usando el ID del invitado
               <div className="w-full h-full flex items-center justify-center">
                 <ReactQRCode
-                  value={guestData.id!}
+                  value={familyData.id!}
                   size={256}
                   // style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                   dataModulesSettings={{
@@ -242,7 +242,7 @@ const TicketCard: FC<StateCardProps> = ({
   );
 };
 
-const DeclineCard: FC<StateCardProps> = ({ guestData, textClassName }) => {
+const DeclineCard: FC<StateCardProps> = ({ familyData, textClassName }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -263,7 +263,7 @@ const DeclineCard: FC<StateCardProps> = ({ guestData, textClassName }) => {
           textClassName,
         )}
       >
-        {guestData.nombre}
+        {familyData.nombre}
       </p>
       <div className="w-16 h-px bg-stone-300 mb-6" />
       <p className="text-stone-500 text-sm leading-relaxed mb-8 italic">
@@ -306,47 +306,47 @@ const Assistants: FC<Props> = ({
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isAssistant, setIsAssistant] = useState(false);
-  const [guestData, setGuestData] = useState<Guest>(defaultGuest);
+  const [familyData, setFamilyData] = useState<Family>(defaultFamily);
 
   const invitationData = useInvitationStore((state) => state.invitationData);
-  const formikRef = useRef<FormikProps<GuestFormData>>(null);
+  const formikRef = useRef<FormikProps<FamilyFormData>>(null);
   const formContainerRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
-  const id = searchParams?.get("guest");
+  const id = searchParams?.get("family");
 
   const isExpiredLocal = () => {
-    if (!guestData?.fechaLimiteConfirmacion) return false;
+    if (!familyData?.fechaLimiteConfirmacion) return false;
     const dateFormatted = new Date().toLocaleDateString("en-CA");
-    return guestData.fechaLimiteConfirmacion < dateFormatted;
+    return familyData.fechaLimiteConfirmacion < dateFormatted;
   };
 
   const isFormLocked =
-    guestData.cambiosPermitidos === false || isExpiredLocal();
+    familyData.cambiosPermitidos === false || isExpiredLocal();
 
-  const handleGetGuestData = useCallback(
+  const handleGetFamilyData = useCallback(
     (id: string) => {
       if (!isDefaultId(id) && invitationData) {
-        GuestService.getGuest(invitationData.id, id).then(
-          ({ guest, error }) => {
-            if (error || !guest) {
-              setGuestData(defaultGuest);
+        FamiliesService.getFamily(invitationData.id, id).then(
+          ({ family, error }) => {
+            if (error || !family) {
+              setFamilyData(defaultFamily);
               return;
             }
-            GuestQuotesService.getGuestQuote(invitationData.id, id).then(
+            FamilyQuotesService.getFamilyQuote(invitationData.id, id).then(
               ({ result, error }) => {
-                const guestDataCopy = { ...guest };
+                const familyDataCopy = { ...family };
                 if (!error && result !== null) {
-                  guestDataCopy.notaInvitado = result.mensaje;
+                  familyDataCopy.notaInvitado = result.mensaje;
                 }
-                setGuestData(guestDataCopy);
+                setFamilyData(familyDataCopy);
                 formikRef.current?.setValues({
-                  ...guestDataCopy,
+                  ...familyDataCopy,
                   telefono: null,
                 });
 
-                if (guestDataCopy.asistencia !== null) {
+                if (familyDataCopy.asistencia !== null) {
                   setIsFormSubmitted(true);
-                  setIsAssistant(guestDataCopy.asistencia === true);
+                  setIsAssistant(familyDataCopy.asistencia === true);
                 }
               },
             );
@@ -359,11 +359,11 @@ const Assistants: FC<Props> = ({
 
   useEffect(() => {
     if (id) {
-      handleGetGuestData(id);
+      handleGetFamilyData(id);
     }
-  }, [id, handleGetGuestData]);
+  }, [id, handleGetFamilyData]);
 
-  if (!guestData) {
+  if (!familyData) {
     return (
       <div
         className={cn(
@@ -411,20 +411,20 @@ const Assistants: FC<Props> = ({
           <div className="flex flex-col items-center justify-center px-5 w-full">
             {/* LÓGICA DE VISTAS PRINCIPALES */}
             {isFormLocked ? (
-              guestData.asistencia === true ? (
+              familyData.asistencia === true ? (
                 <TicketCard
-                  guestData={guestData}
+                  familyData={familyData}
                   invitationData={invitationData}
                   textClassName={textClassName}
                 />
-              ) : guestData.asistencia === false ? (
+              ) : familyData.asistencia === false ? (
                 <DeclineCard
-                  guestData={guestData}
+                  familyData={familyData}
                   textClassName={textClassName}
                 />
               ) : (
                 <ClosedCard
-                  guestData={guestData}
+                  familyData={familyData}
                   textClassName={textClassName}
                 />
               )
@@ -459,7 +459,7 @@ const Assistants: FC<Props> = ({
                           textClassName,
                         )}
                       >
-                        {guestData.nombre}
+                        {familyData.nombre}
                       </p>
 
                       {/* Divisor floral/elegante */}
@@ -467,22 +467,22 @@ const Assistants: FC<Props> = ({
                         <div className="w-12 h-px bg-stone-400" />
                       </div>
 
-                      {guestData.notaAnfitrion && (
+                      {familyData.notaAnfitrion && (
                         <p className="px-4 text-center text-sm italic text-stone-500 mb-8 font-serif leading-relaxed">
-                          &quot;{guestData.notaAnfitrion}&quot;
+                          &quot;{familyData.notaAnfitrion}&quot;
                         </p>
                       )}
 
                       <Formik
                         innerRef={formikRef}
                         validationSchema={assistanceSchema(
-                          Number(guestData.invitados),
+                          Number(familyData.invitados),
                         )}
-                        initialValues={{ ...guestData, telefono: null }}
-                        onSubmit={(data: GuestFormData) => {
+                        initialValues={{ ...familyData, telefono: null }}
+                        onSubmit={(data: FamilyFormData) => {
                           setIsDisabled(true);
                           if (!isDefaultId(data.id) && invitationData) {
-                            GuestService.saveGuest(
+                            FamiliesService.saveFamily(
                               invitationData.id,
                               data.id!,
                               data,
@@ -493,7 +493,7 @@ const Assistants: FC<Props> = ({
                                 setIsFormSubmitted(true);
                                 setIsAssistant(data.asistencia === true);
                                 if (data.notaInvitado) {
-                                  GuestQuotesService.saveGuestQuote(
+                                  FamilyQuotesService.saveFamilyQuote(
                                     invitationData.id,
                                     data.id!,
                                     {
@@ -507,7 +507,7 @@ const Assistants: FC<Props> = ({
                                     data.asistencia === true
                                       ? "confirm"
                                       : "decline",
-                                  guestId: data.id!,
+                                  familyId: data.id!,
                                   confirmedGuests:
                                     data.asistencia === true &&
                                     data.confirmados &&
@@ -515,7 +515,7 @@ const Assistants: FC<Props> = ({
                                       ? data.confirmados
                                       : null,
                                 });
-                                setGuestData({
+                                setFamilyData({
                                   ...data,
                                   id: data.id!,
                                   tieneTelefono: false,
@@ -527,8 +527,8 @@ const Assistants: FC<Props> = ({
                           } else {
                             setIsFormSubmitted(true);
                             setIsAssistant(data.asistencia === true);
-                            setGuestData({
-                              ...defaultGuest,
+                            setFamilyData({
+                              ...defaultFamily,
                               asistencia: data.asistencia,
                               confirmados: data.confirmados,
                               notaInvitado: data.notaInvitado,
@@ -562,7 +562,7 @@ const Assistants: FC<Props> = ({
                                     if (!values.confirmados)
                                       setFieldValue(
                                         "confirmados",
-                                        Number(guestData.invitados),
+                                        Number(familyData.invitados),
                                       );
                                   }}
                                   className={cn(
@@ -663,7 +663,7 @@ const Assistants: FC<Props> = ({
                                                     if (
                                                       confirmados <
                                                       Number(
-                                                        guestData.invitados,
+                                                        familyData.invitados,
                                                       )
                                                     ) {
                                                       setFieldValue(
@@ -674,7 +674,7 @@ const Assistants: FC<Props> = ({
                                                   }}
                                                   disabled={
                                                     confirmados >=
-                                                    Number(guestData.invitados)
+                                                    Number(familyData.invitados)
                                                   }
                                                   className="w-12 h-12 flex items-center justify-center rounded-full border border-stone-400 text-stone-500 disabled:opacity-20 disabled:border-stone-300 disabled:text-stone-300 transition-all active:scale-95 hover:bg-stone-100 hover:text-charcoal hover:border-charcoal"
                                                 >
@@ -685,10 +685,10 @@ const Assistants: FC<Props> = ({
                                                 </button>
                                               </div>
 
-                                              {guestData.invitados > 1 && (
+                                              {familyData.invitados > 1 && (
                                                 <p className="text-[10px] text-stone-400 mt-5 font-medium italic">
                                                   Límite asignado:{" "}
-                                                  {guestData.invitados} pases
+                                                  {familyData.invitados} pases
                                                 </p>
                                               )}
                                             </div>
@@ -747,15 +747,15 @@ const Assistants: FC<Props> = ({
                 </div>
               </div>
             ) : // RESULTADOS DESPUÉS DE HACER CLICK EN ENVIAR (Y form no está bloqueado)
-            guestData.asistencia === true ? (
+            familyData.asistencia === true ? (
               <TicketCard
-                guestData={guestData}
+                familyData={familyData}
                 invitationData={invitationData}
                 textClassName={textClassName}
               />
             ) : (
               <DeclineCard
-                guestData={guestData}
+                familyData={familyData}
                 textClassName={textClassName}
               />
             )}
@@ -763,7 +763,7 @@ const Assistants: FC<Props> = ({
             {/* BOTÓN FLOTANTE "MODIFICAR MI RESPUESTA" (Fuera de las tarjetas) */}
             {!isFormLocked &&
               isFormSubmitted &&
-              guestData.asistencia !== null && (
+              familyData.asistencia !== null && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}

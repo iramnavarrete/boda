@@ -10,17 +10,17 @@ import { useSearchParams } from "next/navigation";
 import AnimatedEntrance from "../AnimatedEntrance";
 import Input from "../Input";
 import ButtonSubmit from "../ButtonSubmit";
-import { Guest, GuestFormData } from "@/types";
+import { Family, FamilyFormData } from "@/types";
 import { CheckCircle2, XCircle } from "lucide-react";
 import CustomLottie from "@/features/shared/components/CustomLottie";
-import { GuestService } from "@/services/guestService";
+import { FamiliesService } from "@/services/familiesService";
 import { useInvitationStore } from "../../stores/invitationStore";
-import { GuestQuotesService } from "@/services/guestQuotesService";
+import { FamilyQuotesService } from "@/services/familyQuotesService";
 import { ActivityService } from "@/services/activityService";
 import { cn } from "@heroui/theme";
 import { colorizeLottie } from "@/utils/lottie";
 
-const defaultGuest: Guest = {
+const defaultFamily: Family = {
   asistencia: null, // Inicializado como null para que no muestre los campos
   confirmados: 1,
   id: "_",
@@ -62,46 +62,46 @@ const Assistants: FC<Props> = ({
   const [isDisabled, setIsDisabled] = useState(false);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [isAssistant, setIsAssistant] = useState(false);
-  const [guestData, setGuestData] = useState<Guest>(defaultGuest);
+  const [familyData, setFamilyData] = useState<Family>(defaultFamily);
 
   const invitationData = useInvitationStore((state) => state.invitationData);
 
-  const formikRef = useRef<FormikProps<GuestFormData>>(null);
+  const formikRef = useRef<FormikProps<FamilyFormData>>(null);
 
   const searchParams = useSearchParams();
-  const id = searchParams?.get("guest");
+  const id = searchParams?.get("family");
 
   const isExpiredLocal = () => {
-    if (!guestData?.fechaLimiteConfirmacion) return false;
+    if (!familyData?.fechaLimiteConfirmacion) return false;
     const dateFormatted = new Date().toLocaleDateString("en-CA");
-    return guestData.fechaLimiteConfirmacion < dateFormatted;
+    return familyData.fechaLimiteConfirmacion < dateFormatted;
   };
 
-  const isFormLocked = guestData.cambiosPermitidos === false || isExpiredLocal();
+  const isFormLocked = familyData.cambiosPermitidos === false || isExpiredLocal();
 
-  const handleGetGuestData = useCallback(
+  const handleGetFamilyData = useCallback(
     (id: string) => {
       if (!isDefaultId(id) && invitationData) {
-        GuestService.getGuest(invitationData.id, id).then(
-          ({ guest, error }) => {
-            if (error || !guest) {
-              setGuestData(defaultGuest);
+        FamiliesService.getFamily(invitationData.id, id).then(
+          ({ family, error }) => {
+            if (error || !family) {
+              setFamilyData(defaultFamily);
               return;
             }
-            GuestQuotesService.getGuestQuote(invitationData.id, id).then(
+            FamilyQuotesService.getFamilyQuote(invitationData.id, id).then(
               ({ result, error }) => {
-                const guestData = { ...guest };
+                const familyData = { ...family };
                 if (!error && result !== null) {
-                  guestData.notaInvitado = result.mensaje;
+                  familyData.notaInvitado = result.mensaje;
                 }
-                setGuestData(guestData);
-                formikRef.current?.setValues({ ...guestData, telefono: null });
+                setFamilyData(familyData);
+                formikRef.current?.setValues({ ...familyData, telefono: null });
 
-                if (guestData.asistencia !== null) {
+                if (familyData.asistencia !== null) {
                   setIsFormSubmitted(true);
-                  if (guestData.asistencia === true) {
+                  if (familyData.asistencia === true) {
                     setIsAssistant(true);
-                  } else if (guestData.asistencia === false) {
+                  } else if (familyData.asistencia === false) {
                     setIsAssistant(false);
                   }
                 }
@@ -116,11 +116,11 @@ const Assistants: FC<Props> = ({
 
   useEffect(() => {
     if (id) {
-      handleGetGuestData(id);
+      handleGetFamilyData(id);
     }
-  }, [id, handleGetGuestData]);
+  }, [id, handleGetFamilyData]);
 
-  if (!guestData) {
+  if (!familyData) {
     return (
       <div
         className={cn(
@@ -167,7 +167,7 @@ const Assistants: FC<Props> = ({
             <div className="mx-5 w-11/12 relative">
               <div className="flex justify-center h-12">
                 <AnimatePresence>
-                  {!isFormSubmitted && guestData && (
+                  {!isFormSubmitted && familyData && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
@@ -188,7 +188,7 @@ const Assistants: FC<Props> = ({
               </div>
               <div className="rounded-3xl bg-white shadow-xl px-4 py-8">
                 <div
-                  className={`pt-12 ${isFormSubmitted || (guestData.cambiosPermitidos === false && guestData.asistencia !== true) ? "block" : "hidden"}`}
+                  className={`pt-12 ${isFormSubmitted || (familyData.cambiosPermitidos === false && familyData.asistencia !== true) ? "block" : "hidden"}`}
                 >
                   <CustomLottie
                     className={cn("w-1/2 m-auto pb-4")}
@@ -219,11 +219,11 @@ const Assistants: FC<Props> = ({
                     <p>
                       El registro de asistencia está cerrado. <br />
                       <br />
-                      {guestData.asistencia === true ? (
+                      {familyData.asistencia === true ? (
                         <>
                           Tu asistencia quedó confirmada por{" "}
                           <span className="font-semibold">
-                            {guestData.confirmados} personas
+                            {familyData.confirmados} personas
                           </span>
                           . <br />
                           Estos lugares estarán reservados especialmente para
@@ -261,18 +261,18 @@ const Assistants: FC<Props> = ({
                                 textClassName,
                               )}
                             >
-                              {guestData.nombre}
+                              {familyData.nombre}
                             </p>
                             <p className="text-sm">
-                              Pase para {guestData.invitados}{" "}
+                              Pase para {familyData.invitados}{" "}
                               {/* VALIDACIÓN ORIGINAL INTACTA */}
-                              {guestData.invitados === 1
+                              {familyData.invitados === 1
                                 ? "persona"
                                 : "personas"}
                             </p>
-                            {guestData.notaAnfitrion && (
+                            {familyData.notaAnfitrion && (
                               <p className="pt-2 px-2 text-center text-sm">
-                                {guestData.notaAnfitrion}
+                                {familyData.notaAnfitrion}
                               </p>
                             )}
                             <p className="py-4 text-lg font-nourdMedium">
@@ -284,13 +284,13 @@ const Assistants: FC<Props> = ({
                             <Formik
                               innerRef={formikRef}
                               validationSchema={assistanceSchema(
-                                Number(guestData.invitados),
+                                Number(familyData.invitados),
                               )}
-                              onSubmit={(data: GuestFormData) => {
+                              onSubmit={(data: FamilyFormData) => {
                                 setIsDisabled(true);
                                 // Si tenemos un id válido hacemos una petición al api para actualizar
                                 if (!isDefaultId(data.id) && invitationData) {
-                                  GuestService.saveGuest(
+                                  FamiliesService.saveFamily(
                                     invitationData.id,
                                     data.id!,
                                     data,
@@ -301,7 +301,7 @@ const Assistants: FC<Props> = ({
                                       setIsFormSubmitted(true);
                                       setIsAssistant(data.asistencia === true);
                                       if (data.notaInvitado) {
-                                        GuestQuotesService.saveGuestQuote(
+                                        FamilyQuotesService.saveFamilyQuote(
                                           invitationData.id,
                                           data.id!,
                                           {
@@ -317,7 +317,7 @@ const Assistants: FC<Props> = ({
                                             data.asistencia === true
                                               ? "confirm"
                                               : "decline",
-                                          guestId: data.id!,
+                                          familyId: data.id!,
                                           confirmedGuests:
                                             data.asistencia === true &&
                                             data.confirmados &&
@@ -326,7 +326,7 @@ const Assistants: FC<Props> = ({
                                               : null,
                                         },
                                       );
-                                      setGuestData({
+                                      setFamilyData({
                                         ...data,
                                         id: data.id!,
                                         tieneTelefono: false,
@@ -340,8 +340,8 @@ const Assistants: FC<Props> = ({
                                 } else {
                                   setIsFormSubmitted(true);
                                   setIsAssistant(data.asistencia === true);
-                                  setGuestData({
-                                    ...defaultGuest,
+                                  setFamilyData({
+                                    ...defaultFamily,
                                     asistencia: data.asistencia,
                                     confirmados: data.confirmados,
                                     notaInvitado: data.notaInvitado,
@@ -350,7 +350,7 @@ const Assistants: FC<Props> = ({
                                 }
                               }}
                               initialValues={{
-                                ...guestData,
+                                ...familyData,
                                 telefono: null,
                               }}
                             >
@@ -375,7 +375,7 @@ const Assistants: FC<Props> = ({
                                           if (!values.confirmados)
                                             setFieldValue(
                                               "confirmados",
-                                              Number(guestData.invitados),
+                                              Number(familyData.invitados),
                                             );
                                         }}
                                         className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl transition-all duration-300 font-medium border ${
@@ -506,7 +506,7 @@ const Assistants: FC<Props> = ({
                             {isAssistant ? (
                               <p>
                                 Muchas gracias por tu confirmación <span></span>{" "}
-                                <strong>{guestData?.nombre}</strong>
+                                <strong>{familyData?.nombre}</strong>
                                 <br />
                                 <br />
                                 ¡Te esperamos el gran día!
@@ -514,7 +514,7 @@ const Assistants: FC<Props> = ({
                             ) : (
                               <p>
                                 Lamentamos que no puedas acompañarnos{" "}
-                                <strong>{guestData?.nombre}</strong>
+                                <strong>{familyData?.nombre}</strong>
                                 <br />
                                 <br />
                                 ¡Nos vemos en otra ocasión!

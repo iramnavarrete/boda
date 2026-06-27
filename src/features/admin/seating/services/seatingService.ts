@@ -1,9 +1,9 @@
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { SeatingElement, Family } from "../stores/useSeatingStore";
-import { Guest as DbGuest, Guest, GuestSeat, GuestStatus } from "@/types";
+import { SeatingElement, FamilyElement } from "../stores/useSeatingStore";
+import { Family, GuestSeat, GuestStatus } from "@/types";
 
-interface ExtendedDbGuest extends DbGuest {
+interface ExtendedDbFamily extends Family {
   aliasAsientos?: string[];
 }
 
@@ -47,7 +47,7 @@ export const SeatingService = {
     try {
       const sanitizedAliases = aliases.map((alias) => alias || "");
 
-      const ref = doc(db, "invitations", invitationId, "guests", guestDbId);
+      const ref = doc(db, "invitations", invitationId, "families", guestDbId);
       await updateDoc(ref, { aliasAsientos: sanitizedAliases });
     } catch (error) {
       console.error("Error al actualizar el alias del asiento:", error);
@@ -55,8 +55,8 @@ export const SeatingService = {
     }
   },
 
-  formatGuestsToFamilies: (rawGuests: ExtendedDbGuest[]): Family[] => {
-    return rawGuests.map((rawGuest: ExtendedDbGuest, i: number) => {
+  formatGuestsToFamilies: (rawGuests: ExtendedDbFamily[]): FamilyElement[] => {
+    return rawGuests.map((rawGuest: ExtendedDbFamily, i: number) => {
       const hue = Math.floor((i * (360 / rawGuests.length)) % 360);
 
       const familyName = rawGuest.nombre || `Grupo ${i + 1}`;

@@ -1,22 +1,22 @@
 import { useCallback, useState } from "react";
-import { Guest } from "@/types";
-import { GuestService } from "@/services/guestService";
+import { Family } from "@/types";
+import { FamiliesService } from "@/services/familiesService";
 import { useToast } from "@/features/shared/components/Toast";
 
 interface WhatsappModalState {
   isOpen: boolean;
   type: "initial" | "reminder";
-  guest: Guest | null;
+  family: Family | null;
 }
 
 const CLOSED: WhatsappModalState = {
   isOpen: false,
   type: "initial",
-  guest: null,
+  family: null,
 };
 
 function buildInitialMessage(
-  guest: Guest,
+  family: Family,
   invitationId: string,
   dateStr: string | null,
 ): string {
@@ -26,20 +26,20 @@ function buildInitialMessage(
       ).toLocaleDateString("es-MX", { day: "numeric", month: "long" })}.`
     : "";
 
-  const link = `https://jninvitaciones.com/i/${invitationId}?guest=${guest.id}`;
+  const link = `https://jninvitaciones.com/i/${invitationId}?family=${family.id}`;
   const sparkle = String.fromCodePoint(0x2728);
   const letter = String.fromCodePoint(0x1f48c);
 
   return (
-    `¡Hola ${guest.nombre}!\n` +
+    `¡Hola ${family.nombre}!\n` +
     `${sparkle} Les enviamos el enlace de su invitación digital. ${sparkle}\n` +
     `Nos encantaría que nos acompañen en este día tan importante.\n` +
     `${letter} La confirmación será únicamente para la recepción, cada invitado cuenta con un lugar asignado. ` +
-    `Reservamos ${guest.invitados} lugares en su nombre${dateSentence}\n${link}`
+    `Reservamos ${family.invitados} lugares en su nombre${dateSentence}\n${link}`
   );
 }
 
-function buildReminderMessage(guest: Guest, dateStr: string | null): string {
+function buildReminderMessage(family: Family, dateStr: string | null): string {
   const dateSentence = dateStr
     ? ` La confirmación (o cualquier cambio) podrás realizarla hasta el día ${new Date(
         `${dateStr}T00:00:00`,
@@ -53,7 +53,7 @@ function buildReminderMessage(guest: Guest, dateStr: string | null): string {
   const tada = String.fromCodePoint(0x1f389);
 
   return (
-    `${sparkle} Queridos ${guest.nombre} ${sparkle}\n` +
+    `${sparkle} Queridos ${family.nombre} ${sparkle}\n` +
     `Queremos recordarte que aún no hemos recibido tu confirmación de asistencia para nuestro evento.` +
     `${dateSentence} Tu respuesta es muy importante para nosotros ${heart}\n` +
     `¡Esperamos contar contigo en este día tan especial! ${tada}\n\n${instaLink}`
@@ -65,20 +65,20 @@ export function useWhatsappModal(invitationId: string | undefined) {
   const [modal, setModal] = useState<WhatsappModalState>(CLOSED);
 
   const open = useCallback(
-    (guest: Guest, type: "initial" | "reminder") =>
-      setModal({ isOpen: true, type, guest }),
+    (family: Family, type: "initial" | "reminder") =>
+      setModal({ isOpen: true, type, family: family }),
     [],
   );
 
   const close = useCallback(() => setModal(CLOSED), []);
 
   const sendMessage = useCallback(
-    async (guest: Guest, message: string, onSuccess: () => void) => {
+    async (family: Family, message: string, onSuccess: () => void) => {
       if (!invitationId) return;
       try {
-        const contactInfo = await GuestService.getGuestContactInfo(
+        const contactInfo = await FamiliesService.getFamilyContactInfo(
           invitationId,
-          guest.id,
+          family.id,
         );
         const telefono = contactInfo?.telefono;
 
@@ -102,27 +102,27 @@ export function useWhatsappModal(invitationId: string | undefined) {
 
   const handleSubmit = useCallback(
     async (dateStr: string | null, autoBlock: boolean) => {
-      const { guest, type } = modal;
-      if (!guest || !invitationId) return;
+      const { family, type } = modal;
+      if (!family || !invitationId) return;
 
       const shouldSaveDate = autoBlock && !!dateStr;
 
       if (type === "initial") {
-        const msg = buildInitialMessage(guest, invitationId, dateStr);
-        await sendMessage(guest, msg, () => {
-          GuestService.markWhatsAppSent(
+        const msg = buildInitialMessage(family, invitationId, dateStr);
+        await sendMessage(family, msg, () => {
+          FamiliesService.markWhatsAppSent(
             invitationId,
-            guest,
+            family,
             shouldSaveDate ? dateStr! : undefined,
           );
           close();
         });
       } else {
-        const msg = buildReminderMessage(guest, dateStr);
-        await sendMessage(guest, msg, () => {
-          GuestService.markReminderAsSent(
+        const msg = buildReminderMessage(family, dateStr);
+        await sendMessage(family, msg, () => {
+          FamiliesService.markReminderAsSent(
             invitationId,
-            guest,
+            family,
             shouldSaveDate ? dateStr! : undefined,
           );
           close();

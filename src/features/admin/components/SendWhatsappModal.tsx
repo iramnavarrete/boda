@@ -1,4 +1,4 @@
-import { X, BellRing, Info, Unlock, Check } from "lucide-react";
+import { BellRing, Info, Unlock, Check } from "lucide-react";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useState } from "react";
 import Modal from "@/features/shared/components/Modal";
@@ -6,7 +6,7 @@ import Modal from "@/features/shared/components/Modal";
 interface SendWhatsappModalProps {
   isOpen: boolean;
   type: "initial" | "reminder";
-  guestName: string;
+  familyName: string;
   onClose: () => void;
   onConfirm: (dateStr: string | null, autoBlock: boolean) => void;
 }
@@ -14,7 +14,7 @@ interface SendWhatsappModalProps {
 export default function SendWhatsappModal({
   isOpen,
   type,
-  guestName,
+  familyName,
   onClose,
   onConfirm,
 }: SendWhatsappModalProps) {
@@ -60,7 +60,7 @@ export default function SendWhatsappModal({
         {/* Descripción */}
         <p className="text-sm text-[#5A5A5A] mb-4 leading-relaxed">
           Se enviará un {isInitial ? "mensaje" : "recordatorio"} a{" "}
-          <b className="text-[#2C2C29]">{guestName}</b>. Selecciona la fecha
+          <b className="text-[#2C2C29]">{familyName}</b>. Selecciona la fecha
           límite de respuesta:
         </p>
 

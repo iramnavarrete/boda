@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { useSeatingStore, Family } from "../../stores/useSeatingStore";
+import { useSeatingStore, FamilyElement } from "../../stores/useSeatingStore";
 import {
   GripVertical,
   Users,
@@ -22,7 +22,7 @@ export function DraggableFamily({
   family,
   isFirstElement,
 }: {
-  family: Family;
+  family: FamilyElement;
   isFirstElement: boolean;
 }) {
   const { elements, removeFamilyFromTable } = useSeatingStore();

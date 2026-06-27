@@ -1,4 +1,4 @@
-export const generateGuestID = (): string => {
+export const generateFamilyId = (): string => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz123456789";
 
   // Genera un número aleatorio entre 5 y 8

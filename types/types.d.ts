@@ -6,7 +6,7 @@ declare module "react" {
   }
 }
 
-export type GuestFormData = {
+export type FamilyFormData = {
   id?: string; // Opcional al registrar
   nombre: string;
   invitados: number;
@@ -20,7 +20,7 @@ export type GuestFormData = {
   fechaLimiteConfirmacion?: string | null;
 };
 
-export type Guest = {
+export type Family = {
   id: string;
   nombre: string;
   invitados: number;
@@ -44,11 +44,11 @@ export type Guest = {
   asientos?: GuestSeat[] | null;
 };
 
-export type GuestContactInfo = {
+export type FamilyContactInfo = {
   telefono: string | null;
 };
 
-export type GuestFormDataKeys = keyof GuestFormData;
+export type FamilyFormDataKeys = keyof FamilyFormData;
 
 export type GuestStatus = "confirmed" | "pending" | "declined";
 
@@ -151,7 +151,7 @@ export type ThemeColors = {
   };
 };
 
-interface GuestQuote {
+interface FamilyQuote {
   id: string;
   autor: string;
   parentesco: string;
@@ -181,10 +181,10 @@ export type FirestoreResult<T> = Promise<{
 
 export type ActivityActionType = "view" | "confirm" | "decline";
 
-export interface GuestActivity {
+export interface FamilyActivity {
   id?: string;
-  guestId: string;
-  guestName: string;
+  familyId: string;
+  familyName: string;
   action: ActivityActionType;
   confirmedGuests?: number | null;
   timestamp: Timestamp;
@@ -208,7 +208,7 @@ export interface TagCounts {
   Novio: number;
   Ambos: number;
 }
-export interface ImportedGuest {
+export interface ImportedFamily {
   nombre: string;
   invitados: number;
   telefono: string;

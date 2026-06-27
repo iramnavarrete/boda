@@ -1,17 +1,23 @@
-import { useGuestSelectionStore } from "@/features/admin/stores/useGuestSelectionStore";
+import { useFamiliesSelectionStore } from "@/features/admin/stores/useFamiliesSelectionStore";
 
-export function useGuestsSelection() {
-  const selectedGuests = useGuestSelectionStore((state) => state.selectedGuests);
-  const handleSelectGuest = useGuestSelectionStore((state) => state.selectGuest);
-  const handleSelectAll = useGuestSelectionStore((state) => state.selectAll);
-  const clearSelection = useGuestSelectionStore((state) => state.clearSelection);
-  const removeFromSelection = useGuestSelectionStore(
+export function useFamiliesSelection() {
+  const selectedFamilies = useFamiliesSelectionStore(
+    (state) => state.selectedFamilies,
+  );
+  const handleSelectFamily = useFamiliesSelectionStore(
+    (state) => state.selectFamily,
+  );
+  const handleSelectAll = useFamiliesSelectionStore((state) => state.selectAll);
+  const clearSelection = useFamiliesSelectionStore(
+    (state) => state.clearSelection,
+  );
+  const removeFromSelection = useFamiliesSelectionStore(
     (state) => state.removeFromSelection,
   );
 
   return {
-    selectedGuests,
-    handleSelectGuest,
+    selectedFamilies,
+    handleSelectFamily,
     handleSelectAll,
     clearSelection,
     removeFromSelection,

@@ -1,5 +1,5 @@
-import { GuestService } from "@/services/guestService";
-import { GuestFormData, GuestSeat } from "@/types";
+import { FamiliesService } from "@/services/familiesService";
+import { FamilyFormData, GuestSeat } from "@/types";
 import { create } from "zustand";
 import { SeatingService } from "../services/seatingService";
 import { removeHighlightSeats } from "../utils/highlightHelper";
@@ -32,7 +32,7 @@ export interface SeatingElement {
   assignedSeats: string[];
 }
 
-export interface Family {
+export interface FamilyElement {
   id: string;
   name: string;
   deadline: string | null;
@@ -45,7 +45,7 @@ export interface Family {
 
 export interface SeatingStore {
   elements: SeatingElement[];
-  families: Family[];
+  families: FamilyElement[];
   zoom: number;
   canvasOffset: { x: number; y: number };
   selectedElementId: string | null;
@@ -53,7 +53,10 @@ export interface SeatingStore {
   isInitialized: boolean;
   hasUnsavedChanges: boolean;
 
-  initialize: (dbElements: SeatingElement[], dbFamilies: Family[]) => void;
+  initialize: (
+    dbElements: SeatingElement[],
+    dbFamilies: FamilyElement[],
+  ) => void;
   markSaved: () => void;
   addElement: (
     element: Omit<SeatingElement, "assignedSeats" | "alias">,
@@ -102,8 +105,8 @@ export interface SeatingStore {
 }
 
 export const generateFamilyColors = (
-  families: Omit<Family, "colorBg" | "colorBorder">[],
-): Family[] => {
+  families: Omit<FamilyElement, "colorBg" | "colorBorder">[],
+): FamilyElement[] => {
   return families.map((fam, i) => {
     const hue = Math.floor((i * (360 / families.length)) % 360);
     return {
@@ -322,7 +325,7 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     }));
 
     try {
-      await GuestService.removeGuestSeatAndReduceCount(
+      await FamiliesService.removeFamilySeatAndReduceCount(
         invitationId,
         familyId,
         updatedGuests,
@@ -344,7 +347,7 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
 
   executeDeleteFamily: async (invitationId: string, familyId: string) => {
     const state = get();
-    await GuestService.deleteGuest(invitationId, familyId);
+    await FamiliesService.deleteFamily(invitationId, familyId);
 
     const family = state.families.find((f) => f.id === familyId);
     if (family) {
@@ -368,14 +371,14 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     const newGuestId = crypto.randomUUID();
     const newCount = family.guests.length + 1;
 
-    await GuestService.saveGuest(
+    await FamiliesService.saveFamily(
       invitationId,
       familyId,
       {
         nombre: family.name,
         invitados: newCount,
         cambiosPermitidos: true,
-      } as GuestFormData,
+      } as FamilyFormData,
       false,
     );
 

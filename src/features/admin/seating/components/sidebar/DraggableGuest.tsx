@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { useSeatingStore, Family } from "../../stores/useSeatingStore";
+import { useSeatingStore, FamilyElement } from "../../stores/useSeatingStore";
 import { useSeatingModalContext } from "../SeatingModalContext";
 import {
   X,
@@ -28,7 +28,7 @@ export function DraggableGuest({
   seatNumber,
 }: {
   guest: GuestSeat;
-  family: Family;
+  family: FamilyElement;
   isAssigned: boolean;
   tableId?: string;
   tableAlias?: string;

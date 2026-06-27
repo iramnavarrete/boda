@@ -1,85 +1,85 @@
 import { useEffect } from "react";
-import GuestFormModal from "@/features/admin/components/GuestFormModal";
+import FamilyFormModal from "@/features/admin/components/FamilyFormModal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
 import FloatingBulkActionsBar from "@/features/admin/components/FloatingBulkActionsBar";
-import ImportGuestsModal from "@/features/admin/components/ImportGuestsModal";
+import ImportFamiliesModal from "@/features/admin/components/ImportFamiliesModal";
 import SendWhatsappModal from "@/features/admin/components/SendWhatsappModal";
 import UnlockChangesModal from "@/features/admin/components/UnlockChangesModal";
 import StatsSidebar from "@/features/admin/components/StatsSidebar";
-import GuestsMainSection from "@/features/admin/components/guests/views/GuestsMainSection";
+import FamiliesMainSection from "@/features/admin/components/families/views/FamiliesMainSection";
 
 // Hooks
-import { useGuestsData } from "@/features/admin/hooks/useGuestData";
-import { useGuestsFilter } from "@/features/admin/hooks/useGuestFillters";
-import { useGuestForm } from "@/features/admin/hooks/useGuestForm";
+import { useFamiliesData } from "@/features/admin/hooks/useFamilyData";
+import { useFamiliesFiltes } from "@/features/admin/hooks/useFamiliesFillters";
+import { useFamilyForm } from "@/features/admin/hooks/useFamilyForm";
 import { useConfirmModal } from "@/features/admin/hooks/useConfirmModal";
-import { useGuestsStats } from "@/features/admin/hooks/useGuestsStats";
-import { useGuestActions } from "@/features/admin/hooks/useGuestActions";
+import { useFamiliesStats } from "@/features/admin/hooks/useFamiliesStats";
+import { useFamilyActions } from "@/features/admin/hooks/useFamilyActions";
 import { useToast } from "@/features/shared/components/Toast";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
-import { useExpiredGuestsWatcher } from "@/features/admin/hooks/useExpiredGuestsWatcher";
-import { useGuestFiltersAndCounts } from "@/features/admin/hooks/useGuestFiltersAndCounts";
+import { useExpiredFamiliesWatcher } from "@/features/admin/hooks/useExpiredFamiliesWatcher";
+import { useFamiliesFiltersAndCounts } from "@/features/admin/hooks/useFamiliesFiltersAndCounts";
 import { useWhatsappModal } from "@/features/admin/hooks/useWhatsappModal";
 import { useUnlockModal } from "@/features/admin/hooks/useUnlockModal";
-import { useGuestDeletion } from "@/features/admin/hooks/useGuestDeletion";
-import { useGuestImport } from "@/features/admin/hooks/useGuestImport";
-import { useLockActions, useEditActions } from "@/features/admin/hooks/guests";
+import { useFamilyDeletion } from "@/features/admin/hooks/useFamilyDeletion";
+import { useFamiliesImport } from "@/features/admin/hooks/useFamiliesImport";
+import { useLockActions, useEditActions } from "@/features/admin/hooks/family";
 
 // Stores
-import { useGuestFiltersStore } from "@/features/admin/stores/useGuestFiltersStore";
-import { useGuestSelectionStore } from "@/features/admin/stores/useGuestSelectionStore";
+import { useFamiliesFiltersStore } from "@/features/admin/stores/useFamiliesFiltersStore";
+import { useFamiliesSelectionStore } from "@/features/admin/stores/useFamiliesSelectionStore";
 
 export default function WeddingAdmin() {
   const invitationData = useInvitationStore((state) => state.invitationData);
   const { toast } = useToast();
 
-  const { guests, isLoadingGuests, error } = useGuestsData(invitationData?.id);
-  const { searchTerm, setSearchTerm, filterStatus, setFilterStatus, filteredGuests } =
-    useGuestsFilter(guests);
+  const { families, isLoadingFamilies, error } = useFamiliesData(invitationData?.id);
+  const { searchTerm, setSearchTerm, filterStatus, setFilterStatus, filteredFamilies } =
+    useFamiliesFiltes(families);
 
   // Filter UI state
-  const whatsappFilter = useGuestFiltersStore((state) => state.whatsappFilter);
-  const setWhatsappFilter = useGuestFiltersStore((state) => state.setWhatsappFilter);
-  const tagFilter = useGuestFiltersStore((state) => state.tagFilter);
-  const setTagFilter = useGuestFiltersStore((state) => state.setTagFilter);
-  const viewMode = useGuestFiltersStore((state) => state.viewMode);
-  const setViewMode = useGuestFiltersStore((state) => state.setViewMode);
+  const whatsappFilter = useFamiliesFiltersStore((state) => state.whatsappFilter);
+  const setWhatsappFilter = useFamiliesFiltersStore((state) => state.setWhatsappFilter);
+  const tagFilter = useFamiliesFiltersStore((state) => state.tagFilter);
+  const setTagFilter = useFamiliesFiltersStore((state) => state.setTagFilter);
+  const viewMode = useFamiliesFiltersStore((state) => state.viewMode);
+  const setViewMode = useFamiliesFiltersStore((state) => state.setViewMode);
 
   // Selection state
-  const selectedGuests = useGuestSelectionStore((state) => state.selectedGuests);
-  const handleSelectGuest = useGuestSelectionStore((state) => state.selectGuest);
-  const handleSelectAll = useGuestSelectionStore((state) => state.selectAll);
-  const clearSelection = useGuestSelectionStore((state) => state.clearSelection);
-  const removeFromSelection = useGuestSelectionStore((state) => state.removeFromSelection);
+  const selectedFamilies = useFamiliesSelectionStore((state) => state.selectedFamilies);
+  const handleSelectFamily = useFamiliesSelectionStore((state) => state.selectFamily);
+  const handleSelectAll = useFamiliesSelectionStore((state) => state.selectAll);
+  const clearSelection = useFamiliesSelectionStore((state) => state.clearSelection);
+  const removeFromSelection = useFamiliesSelectionStore((state) => state.removeFromSelection);
 
   // Form state
-  const { isModalOpen, currentGuestId, formData, handleOpenModal, handleCloseModal } =
-    useGuestForm();
+  const { isModalOpen, currentFamilyId: currentFamilyId, formData, handleOpenModal, handleCloseModal } =
+    useFamilyForm();
 
   // Confirm modal
   const { confirmModal, openConfirmModal, closeConfirmModal, handleExecuteConfirmation } =
     useConfirmModal();
 
-  // Guest actions
-  const { handleSaveGuest, handleExportExcel } = useGuestActions(invitationData?.id);
+  // Family actions
+  const { handleSaveFamily, handleExportExcel } = useFamilyActions(invitationData?.id);
 
   // Watchers
-  useExpiredGuestsWatcher(guests, invitationData?.id);
+  useExpiredFamiliesWatcher(families, invitationData?.id);
 
   // Filtered data
-  const { finalFilteredGuests, filterCounts, whatsappCounts, tagCounts } =
-    useGuestFiltersAndCounts(filteredGuests, whatsappFilter, tagFilter);
+  const { finalFilteredFamilies, filterCounts, whatsappCounts, tagCounts } =
+    useFamiliesFiltersAndCounts(filteredFamilies, whatsappFilter, tagFilter);
 
   // Modals
   const whatsapp = useWhatsappModal(invitationData?.id);
-  const unlock = useUnlockModal(invitationData?.id, selectedGuests, clearSelection);
+  const unlock = useUnlockModal(invitationData?.id, selectedFamilies, clearSelection);
   const { isImportModalOpen, isImporting, openImportModal, closeImportModal, handleImport } =
-    useGuestImport(invitationData?.id);
+    useFamiliesImport(invitationData?.id);
 
   // Delete logic
-  const { handleDeleteGuest, handleBulkDelete } = useGuestDeletion({
+  const { handleDeleteFamily, handleBulkDelete } = useFamilyDeletion({
     invitationId: invitationData?.id,
-    selectedGuests,
+    selectedFamilies: selectedFamilies,
     clearSelection,
     removeFromSelection,
     openConfirmModal,
@@ -88,19 +88,19 @@ export default function WeddingAdmin() {
   // Lock actions
   const { handleLockToggle, handleBulkUpdateLock } = useLockActions({
     invitationId: invitationData?.id,
-    selectedGuests,
+    selectedFamilies: selectedFamilies,
     clearSelection,
     openConfirmModal,
     unlockModal: unlock,
   });
 
   // Edit actions
-  const { handleEdit, handleNewGuest, onSaveGuest } = useEditActions({
+  const { handleEdit, handleNewFamily, onSaveFamily } = useEditActions({
     invitationId: invitationData?.id,
-    currentGuestId,
+    currentFamilyId: currentFamilyId,
     handleOpenModal,
     handleCloseModal,
-    handleSaveGuest,
+    handleSaveFamily,
   });
 
   // Error toast
@@ -109,8 +109,8 @@ export default function WeddingAdmin() {
   }, [error, toast]);
 
   // Derived state
-  const stats = useGuestsStats(finalFilteredGuests);
-  const isFiltered = finalFilteredGuests.length !== (guests?.length ?? 0);
+  const stats = useFamiliesStats(finalFilteredFamilies);
+  const isFiltered = finalFilteredFamilies.length !== (families?.length ?? 0);
   const isFilterActive = isFiltered || searchTerm !== "";
 
   return (
@@ -131,7 +131,7 @@ export default function WeddingAdmin() {
               Familias {isFilterActive && "(filtrado)"}
             </h3>
 
-            <GuestsMainSection
+            <FamiliesMainSection
               viewMode={viewMode}
               setViewMode={setViewMode}
               searchTerm={searchTerm}
@@ -145,17 +145,17 @@ export default function WeddingAdmin() {
               tagFilter={tagFilter}
               setTagFilter={setTagFilter}
               tagCounts={tagCounts}
-              selectedGuests={selectedGuests}
-              filteredGuests={finalFilteredGuests}
-              isLoadingGuests={isLoadingGuests}
-              disabled={selectedGuests.size > 0}
+              selectedFamilies={selectedFamilies}
+              filteredFamilies={finalFilteredFamilies}
+              isLoadingFamilies={isLoadingFamilies}
+              disabled={selectedFamilies.size > 0}
               onImportExcel={openImportModal}
-              onExportExcel={() => handleExportExcel(guests)}
-              onNewGuest={handleNewGuest}
-              onSelectGuest={handleSelectGuest}
+              onExportExcel={() => handleExportExcel(families)}
+              onNewFamily={handleNewFamily}
+              onSelectFamily={handleSelectFamily}
               onSendReminder={(g) => whatsapp.open(g, "reminder")}
               onEdit={handleEdit}
-              onDelete={handleDeleteGuest}
+              onDelete={handleDeleteFamily}
               onSendWhatsApp={(g) => whatsapp.open(g, "initial")}
               onLockToggle={handleLockToggle}
             />
@@ -164,34 +164,34 @@ export default function WeddingAdmin() {
       </section>
 
       <FloatingBulkActionsBar
-        count={selectedGuests.size}
-        isSelectedAll={selectedGuests.size === finalFilteredGuests.length}
+        count={selectedFamilies.size}
+        isSelectedAll={selectedFamilies.size === finalFilteredFamilies.length}
         onUpdateLock={handleBulkUpdateLock}
         onDelete={handleBulkDelete}
         onCancel={clearSelection}
-        onSelectAll={() => handleSelectAll(finalFilteredGuests)}
+        onSelectAll={() => handleSelectAll(finalFilteredFamilies)}
       />
 
-      <GuestFormModal
+      <FamilyFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         initialData={formData}
-        onSubmit={onSaveGuest}
-        isEdit={!!currentGuestId}
+        onSubmit={onSaveFamily}
+        isEdit={!!currentFamilyId}
         onBackdropPress={handleCloseModal}
       />
 
       <SendWhatsappModal
         isOpen={whatsapp.modal.isOpen}
         type={whatsapp.modal.type}
-        guestName={whatsapp.modal.guest?.nombre ?? ""}
+        familyName={whatsapp.modal.family?.nombre ?? ""}
         onClose={whatsapp.close}
         onConfirm={whatsapp.handleSubmit}
       />
 
       <UnlockChangesModal
         isOpen={unlock.modal.isOpen}
-        guest={unlock.modal.guest}
+        family={unlock.modal.family}
         isBulk={unlock.modal.isBulk}
         onClose={unlock.close}
         onConfirm={unlock.execute}
@@ -209,7 +209,7 @@ export default function WeddingAdmin() {
         onBackdropPress={closeConfirmModal}
       />
 
-      <ImportGuestsModal
+      <ImportFamiliesModal
         isOpen={isImportModalOpen}
         onClose={closeImportModal}
         onImport={handleImport}

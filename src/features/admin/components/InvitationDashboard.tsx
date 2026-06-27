@@ -32,20 +32,20 @@ import Link from "next/link";
 import theme from "@/utils/theme";
 import { useAuthUser } from "@/features/shared/contexts/AuthUserContext";
 import { useToast } from "@/features/shared/components/Toast";
-import { useGuestsData } from "../hooks/useGuestData";
-import { useGuestsStats } from "../hooks/useGuestsStats";
+import { useFamiliesData } from "../hooks/useFamilyData";
+import { useFamiliesStats } from "../hooks/useFamiliesStats";
 import Loader from "@/features/front/components/Loader";
 import TextureButton from "@/features/shared/components/TextureButton";
 import { useRouter } from "next/router";
 import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
-import { GuestQuotesService } from "@/services/guestQuotesService";
-import { DashboardStats, GuestActivity, GuestQuote } from "@/types";
+import { FamilyQuotesService } from "@/services/familyQuotesService";
+import { DashboardStats, FamilyActivity, FamilyQuote } from "@/types";
 import { formatTimeStamp } from "@/utils/formatters";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import { ActivityService } from "@/services/activityService";
 
 export const MessagesCarousel: FC = () => {
-  const [messages, setMessages] = useState<GuestQuote[]>([]);
+  const [messages, setMessages] = useState<FamilyQuote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -55,9 +55,9 @@ export const MessagesCarousel: FC = () => {
   useEffect(() => {
     let unsubscribe = () => {};
     if (invitationData) {
-      unsubscribe = GuestQuotesService.subscribeToGuestMessages(
+      unsubscribe = FamilyQuotesService.subscribeToQuoteMessages(
         invitationData.id,
-        (allMessages: GuestQuote[]) => {
+        (allMessages: FamilyQuote[]) => {
           // Extraemos solo los primeros 5 mensajes del arreglo ordenado
           const top5Messages = allMessages.slice(0, 5);
           setMessages(top5Messages);
@@ -210,7 +210,7 @@ export const MessagesCarousel: FC = () => {
   );
 };
 
-const GuestStatsPieChart = ({ stats }: { stats: DashboardStats }) => {
+const FamiliesStatsPieChart = ({ stats }: { stats: DashboardStats }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // AQUÍ usamos los colores importados directamente, sin usar resolveConfig
@@ -385,7 +385,7 @@ const GuestStatsPieChart = ({ stats }: { stats: DashboardStats }) => {
   );
 };
 
-const ActivityItem = ({ activity }: { activity: GuestActivity }) => {
+const ActivityItem = ({ activity }: { activity: FamilyActivity }) => {
   const timeAgo = useTimeAgo(activity.timestamp);
 
   // Configuramos colores y textos dependiendo del tipo de acción
@@ -422,7 +422,7 @@ const ActivityItem = ({ activity }: { activity: GuestActivity }) => {
       <div className="flex-1 pt-0.5">
         <p className="text-sm text-stone-600 leading-snug">
           <strong className="text-charcoal-800 font-bold">
-            {activity.guestName}
+            {activity.familyName}
           </strong>{" "}
           {config.text}
         </p>
@@ -437,9 +437,9 @@ const ActivityItem = ({ activity }: { activity: GuestActivity }) => {
 function RecentActivity({
   setLastActivity,
 }: {
-  setLastActivity: Dispatch<SetStateAction<GuestActivity | null>>;
+  setLastActivity: Dispatch<SetStateAction<FamilyActivity | null>>;
 }) {
-  const [activities, setActivities] = useState<GuestActivity[]>([]);
+  const [activities, setActivities] = useState<FamilyActivity[]>([]);
 
   const invitationData = useInvitationStore((state) => state.invitationData);
 
@@ -496,8 +496,7 @@ function RecentActivity({
 }
 
 export default function InvitationDashboard() {
-  const user = useAuthUser();
-  const [lastActivity, setLastActivity] = useState<GuestActivity | null>(null);
+  const [lastActivity, setLastActivity] = useState<FamilyActivity | null>(null);
   const { toast } = useToast();
 
   const timeAgo = useTimeAgo(lastActivity?.timestamp);
@@ -506,9 +505,9 @@ export default function InvitationDashboard() {
 
   const invitationData = useInvitationStore((state) => state.invitationData);
 
-  const { guests, isLoadingGuests, error } = useGuestsData(invitationData?.id);
+  const { families, isLoadingFamilies: isLoadingFamilies, error } = useFamiliesData(invitationData?.id);
 
-  const stats = useGuestsStats(guests);
+  const stats = useFamiliesStats(families);
 
   useEffect(() => {
     if (error) {
@@ -520,7 +519,7 @@ export default function InvitationDashboard() {
     }
   }, [error, router]);
 
-  if (isLoadingGuests) return <Loader fullscreen />;
+  if (isLoadingFamilies) return <Loader fullscreen />;
 
   if (error === "permission-denied") return null;
 
@@ -551,7 +550,7 @@ export default function InvitationDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
         <MessagesCarousel />
-        <GuestStatsPieChart stats={stats} />
+        <FamiliesStatsPieChart stats={stats} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

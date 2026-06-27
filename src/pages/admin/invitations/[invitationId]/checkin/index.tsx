@@ -13,8 +13,8 @@ import {
   Edit,
   Power, // 🔥 Importamos el ícono de encendido/apagado
 } from "lucide-react";
-import { GuestService } from "@/services/guestService";
-import { Guest } from "@/types";
+import { FamiliesService } from "@/services/familiesService";
+import { Family } from "@/types";
 import { useToast } from "@/features/shared/components/Toast";
 import Modal from "@/features/shared/components/Modal";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
@@ -39,7 +39,7 @@ export default function CheckInPage() {
   const invitationId = router.query.invitationId as string;
 
   const [modalState, setModalState] = useState<ModalState>("none");
-  const [scannedGuest, setScannedGuest] = useState<Guest | null>(null);
+  const [scannedFamily, setScannedFamily] = useState<Family | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Estados de la cámara y permisos
@@ -125,25 +125,25 @@ export default function CheckInPage() {
     isProcessingRef.current = true;
     setModalState("loading");
 
-    const { guest, error } = await GuestService.getGuest(
+    const { family, error } = await FamiliesService.getFamily(
       invitationData.id,
       text,
     );
 
-    if (error || !guest) {
+    if (error || !family) {
       setModalState("not_found");
       return;
     }
 
-    setScannedGuest(guest);
+    setScannedFamily(family);
 
     if (
-      guest.asistencia === false ||
-      !guest.confirmados ||
-      guest.confirmados <= 0
+      family.asistencia === false ||
+      !family.confirmados ||
+      family.confirmados <= 0
     ) {
       setModalState("not_allowed");
-    } else if (guest.asistio) {
+    } else if (family.asistio) {
       setModalState("already_entered");
     } else {
       setModalState("confirm");
@@ -160,18 +160,18 @@ export default function CheckInPage() {
   const isEventDay = checkIsEventDay();
 
   const handleConfirm = async (pasesAConfirmar: number) => {
-    if (!scannedGuest || !invitationData?.id) return;
+    if (!scannedFamily || !invitationData?.id) return;
     setIsSubmitting(true);
 
     try {
-      await GuestService.checkInGuest(
+      await FamiliesService.checkInFamily(
         invitationData.id,
-        scannedGuest.id,
+        scannedFamily.id,
         pasesAConfirmar,
       );
       toast("¡Acceso registrado con éxito!", "success");
 
-      setScannedGuest(null);
+      setScannedFamily(null);
       setModalState("none");
 
       setTimeout(() => {
@@ -185,7 +185,7 @@ export default function CheckInPage() {
   };
 
   const handleCloseModal = () => {
-    setScannedGuest(null);
+    setScannedFamily(null);
     setModalState("none");
 
     setTimeout(() => {
@@ -321,7 +321,7 @@ export default function CheckInPage() {
 
         <CheckInConfirmModal
           isOpen={modalState === "confirm"}
-          guest={scannedGuest}
+          family={scannedFamily}
           isSubmitting={isSubmitting}
           isEventDay={isEventDay}
           onClose={handleCloseModal}
@@ -333,7 +333,7 @@ export default function CheckInPage() {
           isOpen={modalState === "already_entered"}
           onBackdropPress={handleCloseModal}
         >
-          {scannedGuest && (
+          {scannedFamily && (
             <div className="p-8 flex flex-col items-center animate-in fade-in zoom-in duration-300">
               <div className="w-16 h-16 rounded-full flex items-center justify-center bg-stone-100 text-stone-400 mb-6">
                 <Info size={32} />
@@ -345,7 +345,7 @@ export default function CheckInPage() {
 
               <p className="text-sm text-[#5A5A5A] leading-relaxed text-center mb-6">
                 El código QR de la familia{" "}
-                <b className="text-[#2C2C29]">{scannedGuest.nombre}</b> ya fue
+                <b className="text-[#2C2C29]">{scannedFamily.nombre}</b> ya fue
                 escaneado anteriormente.
               </p>
 
@@ -355,8 +355,8 @@ export default function CheckInPage() {
                 </span>
                 <div className="flex items-center gap-2 text-primary font-bold">
                   <CheckCircle2 size={16} className="text-gold" />
-                  {scannedGuest.pasesUsados || scannedGuest.confirmados} de{" "}
-                  {scannedGuest.confirmados} pases
+                  {scannedFamily.pasesUsados || scannedFamily.confirmados} de{" "}
+                  {scannedFamily.confirmados} pases
                 </div>
               </div>
 
@@ -384,7 +384,7 @@ export default function CheckInPage() {
           isOpen={modalState === "not_allowed"}
           onBackdropPress={handleCloseModal}
         >
-          {scannedGuest && (
+          {scannedFamily && (
             <div className="p-8 flex flex-col items-center animate-in fade-in zoom-in duration-300">
               <div className="w-16 h-16 rounded-full flex items-center justify-center bg-red-50 text-red-500 mb-6">
                 <Ban size={32} />
@@ -396,7 +396,7 @@ export default function CheckInPage() {
 
               <p className="text-sm text-[#5A5A5A] leading-relaxed text-center mb-8">
                 La familia{" "}
-                <b className="text-[#2C2C29]">{scannedGuest.nombre}</b> declinó
+                <b className="text-[#2C2C29]">{scannedFamily.nombre}</b> declinó
                 la invitación o cuenta con 0 pases confirmados para el evento.
               </p>
 

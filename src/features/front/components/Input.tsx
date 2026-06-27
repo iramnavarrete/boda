@@ -1,16 +1,16 @@
 import { useFormikContext } from "formik";
-import { GuestFormData, GuestFormDataKeys } from "@/types";
+import { FamilyFormData, FamilyFormDataKeys } from "@/types";
 
 type Props = {
   inputType?: "text" | "number" | "textarea";
   title: string;
-  name: GuestFormDataKeys;
+  name: FamilyFormDataKeys;
   placeholder?: string;
 };
 
 function Input({ title, name, inputType, placeholder = '' }: Props) {
   const { handleChange, values, errors, touched } =
-    useFormikContext<GuestFormData>();
+    useFormikContext<FamilyFormData>();
   return (
     <div className="w-full flex flex-col items-start gap-1">
       <p className="font-nourdLight px-1">{title}</p>
