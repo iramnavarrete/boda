@@ -2,6 +2,8 @@ import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { SeatingElement, FamilyElement } from "../stores/useSeatingStore";
 import { Family, GuestSeat, GuestStatus } from "@/types";
+import { familyPaths } from "@/services/familiesService";
+import { invitationsCollectionName } from "@/services/invitationsService";
 
 interface ExtendedDbFamily extends Family {
   aliasAsientos?: string[];
@@ -11,7 +13,13 @@ export const SeatingService = {
   getPlan: async (invitationId: string): Promise<SeatingElement[]> => {
     if (!invitationId) return [];
     try {
-      const ref = doc(db, "invitations", invitationId, "modules", "seating");
+      const ref = doc(
+        db,
+        invitationsCollectionName,
+        invitationId,
+        "modules",
+        "seating",
+      );
       const snap = await getDoc(ref);
       if (snap.exists()) {
         return snap.data().elements as SeatingElement[];
@@ -26,7 +34,13 @@ export const SeatingService = {
   savePlan: async (invitationId: string, elements: SeatingElement[]) => {
     if (!invitationId) return;
     try {
-      const ref = doc(db, "invitations", invitationId, "modules", "seating");
+      const ref = doc(
+        db,
+        invitationsCollectionName,
+        invitationId,
+        "modules",
+        "seating",
+      );
       await setDoc(
         ref,
         { elements, updatedAt: new Date().toISOString() },
@@ -40,14 +54,14 @@ export const SeatingService = {
 
   updateSeatAlias: async (
     invitationId: string,
-    guestDbId: string,
+    familyId: string,
     aliases: string[],
   ) => {
-    if (!invitationId || !guestDbId) return;
+    if (!invitationId || !familyId) return;
     try {
       const sanitizedAliases = aliases.map((alias) => alias || "");
 
-      const ref = doc(db, "invitations", invitationId, "families", guestDbId);
+      const ref = familyPaths.family(invitationId, familyId);
       await updateDoc(ref, { aliasAsientos: sanitizedAliases });
     } catch (error) {
       console.error("Error al actualizar el alias del asiento:", error);

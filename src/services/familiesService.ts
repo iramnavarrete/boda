@@ -23,9 +23,9 @@ import {
 } from "@/types";
 import { db } from "@/lib/firebase/config";
 import { generateFamilyId } from "@/utils/generators";
+import { invitationsCollectionName } from "./invitationsService";
 
-const invitationsCollectionName = "invitations";
-const familiesCollectionName = "families";
+export const familiesCollectionName = "families";
 
 // ─── Paths firestore ────────────────────────────────────────────────────────────────────
 

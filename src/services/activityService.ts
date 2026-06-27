@@ -10,6 +10,7 @@ import {
 import { db } from "@/lib/firebase/config";
 import { FamilyActivity } from "@/types";
 import { FamiliesService } from "./familiesService";
+import { invitationsCollectionName } from "./invitationsService";
 
 // --- SERVICIO ---
 export const ActivityService = {
@@ -31,7 +32,7 @@ export const ActivityService = {
     try {
       const activityRef = collection(
         db,
-        "invitations",
+        invitationsCollectionName,
         invitationId,
         "activity",
       );
@@ -55,7 +56,7 @@ export const ActivityService = {
     callback: (activities: FamilyActivity[]) => void,
   ) => {
     const q = query(
-      collection(db, "invitations", invitationId, "activity"),
+      collection(db, invitationsCollectionName, invitationId, "activity"),
       orderBy("timestamp", "desc"),
       limit(limitCount),
     );

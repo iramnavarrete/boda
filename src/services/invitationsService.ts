@@ -10,10 +10,21 @@ import {
   FirestoreError,
   FirestoreErrorCode,
   documentId,
+  CollectionReference,
+  DocumentReference,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Invitation } from "@/types";
-import { UserProfile } from "@/stores/authStore"; // 🔥 Importamos UserProfile en lugar del User de Firebase
+import { UserProfile } from "@/stores/authStore";
+
+export const invitationsCollectionName = "invitations";
+
+export const invitationPaths = {
+  invitation: (invId: string): DocumentReference =>
+    doc(db, invitationsCollectionName, invId),
+  invitationsCollection: (): CollectionReference =>
+    collection(db, invitationsCollectionName),
+};
 
 export const InvitationsService = {
   getUserInvitations: async (user: UserProfile) => {
@@ -22,7 +33,7 @@ export const InvitationsService = {
 
       // Si es Root, descargamos todas las invitaciones sin filtros
       if (isRoot) {
-        const q = query(collection(db, "invitations"));
+        const q = query(invitationPaths.invitationsCollection());
         const snapshot = await getDocs(q);
 
         return snapshot.docs.map(
@@ -59,7 +70,7 @@ export const InvitationsService = {
 
       const fetchPromises = chunks.map(async (chunk) => {
         const q = query(
-          collection(db, "invitations"),
+          invitationPaths.invitationsCollection(),
           where(documentId(), "in", chunk),
         );
         const snapshot = await getDocs(q);
@@ -85,7 +96,7 @@ export const InvitationsService = {
         throw new Error("El ID de la invitación es obligatorio");
       }
 
-      const docRef = doc(db, "invitations", id);
+      const docRef = invitationPaths.invitation(id);
       await setDoc(docRef, dataToSave);
 
       return id;
@@ -97,7 +108,7 @@ export const InvitationsService = {
 
   updateInvitation: async (id: string, payload: Partial<Invitation>) => {
     try {
-      const docRef = doc(db, "invitations", id);
+      const docRef = invitationPaths.invitation(id);
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id: _, ...dataToUpdate } = payload;
@@ -116,7 +127,7 @@ export const InvitationsService = {
     error: FirestoreErrorCode | null;
   }> => {
     try {
-      const privateRef = doc(db, "invitations", invitationId);
+      const privateRef = invitationPaths.invitation(invitationId);
       const snapshot = await getDoc(privateRef);
 
       if (snapshot.exists()) {

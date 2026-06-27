@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase/config"; // Asegúrate de que esta ruta apunte a tu config de cliente
+import { invitationsCollectionName } from "@/services/invitationsService";
 
 interface InvitationOption {
   id: string;
@@ -83,7 +84,7 @@ function UserFormModal({
   const fetchInvitations = async () => {
     setIsLoadingInvitations(true);
     try {
-      const querySnapshot = await getDocs(collection(db, "invitations"));
+      const querySnapshot = await getDocs(collection(db, invitationsCollectionName));
       const invs: InvitationOption[] = [];
       querySnapshot.forEach((doc) => {
         const data = doc.data();

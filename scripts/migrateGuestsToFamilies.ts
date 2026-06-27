@@ -1,3 +1,5 @@
+import { familiesCollectionName } from "@/services/familiesService";
+import { invitationsCollectionName } from "@/services/invitationsService";
 import { initializeApp, cert, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
@@ -14,7 +16,9 @@ if (!getApps().length) {
 const adminDb = getFirestore();
 
 async function migrate() {
-  const invitationsSnap = await adminDb.collection("invitations").get();
+  const invitationsSnap = await adminDb
+    .collection(invitationsCollectionName)
+    .get();
   let totalFamilies = 0;
 
   for (const invDoc of invitationsSnap.docs) {
@@ -23,7 +27,9 @@ async function migrate() {
 
     for (const familyDoc of guestsSnap.docs) {
       const batch = adminDb.batch();
-      const newFamilyRef = invDoc.ref.collection("families").doc(familyDoc.id);
+      const newFamilyRef = invDoc.ref
+        .collection(familiesCollectionName)
+        .doc(familyDoc.id);
 
       // // 1. guests/{familyId} → families/{familyId}
       // batch.set(newFamilyRef, familyDoc.data(), { merge: true });
