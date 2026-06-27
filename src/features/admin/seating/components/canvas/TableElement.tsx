@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
-import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { useDraggable, useDroppable, useDndContext } from "@dnd-kit/core"; 
 import { SeatingElement, useSeatingStore } from "../../stores/useSeatingStore";
+import { useZoomStore } from "../../stores/useZoomStore";
 import {
   Music,
   MonitorUp,
@@ -27,13 +28,14 @@ const AREA_ICONS: Record<string, React.ElementType> = {
 
 export default function TableElement({ element }: { element: SeatingElement }) {
   const {
-    zoom,
     selectedElementId,
     selectedElementIds,
     setSelectedElementId,
     families,
     updateElementGeometry,
   } = useSeatingStore();
+
+  const { zoom } = useZoomStore();
 
   const isSingleSelected = selectedElementId === element.id;
   const isSelectedInBulk = selectedElementIds?.includes(element.id) ?? false;
@@ -58,9 +60,40 @@ export default function TableElement({ element }: { element: SeatingElement }) {
     data: { type: "element" },
   });
 
+  const { active: globalActive } = useDndContext();
+
   const setNodeRef = (node: HTMLElement | null) => {
     setDroppableRef(node);
     setDraggableRef(node);
+  };
+
+  /**
+   * Calcula la posición visual durante el arrastre.
+   * Si es el elemento principal, usa su transform.
+   * Si es compañero en selección masiva, le copia el transform del activo.
+   */
+  const getTransformStyle = (): string | undefined => {
+    if (transform) {
+      // Soy el elemento que está siendo arrastrado físicamente
+      return `translate3d(${transform.x / zoom}px, ${transform.y / zoom}px, 0)`;
+    }
+
+    if (
+      isSelectedInBulk && 
+      globalActive && 
+      globalActive.data.current?.type === "element" &&
+      globalActive.rect.current.translated && 
+      globalActive.rect.current.initial
+    ) {
+      // Soy un compañero seleccionado. Clono matemáticamente el desplazamiento del jefe.
+      const deltaX = globalActive.rect.current.translated.left - globalActive.rect.current.initial.left;
+      const deltaY = globalActive.rect.current.translated.top - globalActive.rect.current.initial.top;
+      
+      // Aplicamos un factor para compensar que el delta que nos da dnd-kit a veces no trae el zoom aplicado
+      return `translate3d(${deltaX / zoom}px, ${deltaY / zoom}px, 0)`;
+    }
+
+    return undefined;
   };
 
   const resizeState = useRef<{
@@ -133,26 +166,10 @@ export default function TableElement({ element }: { element: SeatingElement }) {
     if (!isSingleSelected || !isArea) return null;
 
     const handles = [
-      {
-        id: "top-left",
-        style: { top: -8, left: -8 },
-        cursor: "cursor-nw-resize",
-      },
-      {
-        id: "top-right",
-        style: { top: -8, right: -8 },
-        cursor: "cursor-ne-resize",
-      },
-      {
-        id: "bottom-left",
-        style: { bottom: -8, left: -8 },
-        cursor: "cursor-sw-resize",
-      },
-      {
-        id: "bottom-right",
-        style: { bottom: -8, right: -8 },
-        cursor: "cursor-se-resize",
-      },
+      { id: "top-left", style: { top: -8, left: -8 }, cursor: "cursor-nw-resize" },
+      { id: "top-right", style: { top: -8, right: -8 }, cursor: "cursor-ne-resize" },
+      { id: "bottom-left", style: { bottom: -8, left: -8 }, cursor: "cursor-sw-resize" },
+      { id: "bottom-right", style: { bottom: -8, right: -8 }, cursor: "cursor-se-resize" },
     ];
 
     return handles.map((h) => (
@@ -194,50 +211,28 @@ export default function TableElement({ element }: { element: SeatingElement }) {
     const seats = [];
 
     for (let i = 0; i < element.seats; i++) {
-      let x = 0,
-        y = 0,
-        angleDegrees = 0;
+      let x = 0, y = 0, angleDegrees = 0;
 
       if (element.type === "round_table" || element.type === "cocktail_table") {
         angleDegrees = (i * 360) / element.seats;
         const radius = element.width / 2 + 26;
-        x =
-          element.width / 2 +
-          radius * Math.cos((angleDegrees - 90) * (Math.PI / 180));
-        y =
-          element.height / 2 +
-          radius * Math.sin((angleDegrees - 90) * (Math.PI / 180));
+        x = element.width / 2 + radius * Math.cos((angleDegrees - 90) * (Math.PI / 180));
+        y = element.height / 2 + radius * Math.sin((angleDegrees - 90) * (Math.PI / 180));
       } else if (element.type === "half_moon_table") {
         angleDegrees = -180 + (i * 180) / Math.max(element.seats - 1, 1);
         const radius = element.width / 2 + 22;
-        x =
-          element.width / 2 + radius * Math.cos(angleDegrees * (Math.PI / 180));
-        y =
-          element.height / 2 +
-          radius * Math.sin(angleDegrees * (Math.PI / 180));
+        x = element.width / 2 + radius * Math.cos(angleDegrees * (Math.PI / 180));
+        y = element.height / 2 + radius * Math.sin(angleDegrees * (Math.PI / 180));
       } else if (element.type === "square_table") {
         const seatsPerEdge = Math.ceil(element.seats / 4);
         const edge = Math.floor(i / seatsPerEdge);
         const posInEdge = i % seatsPerEdge;
         const spacing = element.width / (seatsPerEdge + 1);
         const offset = spacing * (posInEdge + 1);
-        if (edge === 0) {
-          x = offset;
-          y = -22;
-          angleDegrees = 0;
-        } else if (edge === 1) {
-          x = element.width + 22;
-          y = offset;
-          angleDegrees = 90;
-        } else if (edge === 2) {
-          x = offset;
-          y = element.height + 22;
-          angleDegrees = 180;
-        } else {
-          x = -22;
-          y = offset;
-          angleDegrees = 270;
-        }
+        if (edge === 0) { x = offset; y = -22; angleDegrees = 0; }
+        else if (edge === 1) { x = element.width + 22; y = offset; angleDegrees = 90; }
+        else if (edge === 2) { x = offset; y = element.height + 22; angleDegrees = 180; }
+        else { x = -22; y = offset; angleDegrees = 270; }
       } else if (element.type === "rectangular_table") {
         const topSeats = Math.ceil(element.seats / 2);
         const isTop = i < topSeats;
@@ -257,7 +252,6 @@ export default function TableElement({ element }: { element: SeatingElement }) {
       const assignedGuestId = element.assignedSeats[i];
       const guestInfo = assignedGuestId ? getGuestInfo(assignedGuestId) : null;
 
-      // Si `guestInfo` es null, el asiento se dibuja libre automáticamente
       const isAssigned = !!guestInfo;
 
       seats.push(
@@ -270,8 +264,7 @@ export default function TableElement({ element }: { element: SeatingElement }) {
           seatNumber={i + 1}
           guestName={
             guestInfo
-              ? guestInfo.nombre ||
-                `${guestInfo.familyName} #${guestInfo.index + 1}`
+              ? guestInfo.nombre || `${guestInfo.familyName} #${guestInfo.index + 1}`
               : undefined
           }
           status={guestInfo?.estatus}
@@ -288,30 +281,19 @@ export default function TableElement({ element }: { element: SeatingElement }) {
   const getAreaStyles = () => {
     switch (element.type) {
       case "stage":
-      case "cake_area":
-        return { bg: "#ffe4e6", border: "#f43f5e", text: "#be123c" };
-      case "dance_floor":
-        return { bg: "#e0e7ff", border: "#6366f1", text: "#4338ca" };
-      case "dj_booth":
-        return { bg: "#e0f2fe", border: "#0ea5e9", text: "#0369a1" };
-      case "buffet":
-        return { bg: "#dcfce7", border: "#22c55e", text: "#15803d" };
-      case "head_table":
-        return { bg: "#fef3c7", border: "#f59e0b", text: "#b45309" };
-      default:
-        return {
-          bg: "#dbeafe",
-          border: isSelected ? "#2563eb" : "#60a5fa",
-          text: "#1e40af",
-        };
+      case "cake_area": return { bg: "#ffe4e6", border: "#f43f5e", text: "#be123c" };
+      case "dance_floor": return { bg: "#e0e7ff", border: "#6366f1", text: "#4338ca" };
+      case "dj_booth": return { bg: "#e0f2fe", border: "#0ea5e9", text: "#0369a1" };
+      case "buffet": return { bg: "#dcfce7", border: "#22c55e", text: "#15803d" };
+      case "head_table": return { bg: "#fef3c7", border: "#f59e0b", text: "#b45309" };
+      default: return { bg: "#dbeafe", border: isSelected ? "#2563eb" : "#60a5fa", text: "#1e40af" };
     }
   };
 
   const areaStyle = getAreaStyles();
   const AreaIcon = AREA_ICONS[element.type];
 
-  const isCircular =
-    element.type === "round_table" || element.type === "cocktail_table";
+  const isCircular = element.type === "round_table" || element.type === "cocktail_table";
   const isHalfMoon = element.type === "half_moon_table";
 
   const renderHalfMoonShape = () => {
@@ -330,9 +312,7 @@ export default function TableElement({ element }: { element: SeatingElement }) {
         <path
           d={pathD}
           fill={isOver ? "#eff6ff" : areaStyle.bg}
-          stroke={
-            isOver ? "#2563eb" : isSelected ? "#C5A669" : areaStyle.border
-          }
+          stroke={isOver ? "#2563eb" : isSelected ? "#C5A669" : areaStyle.border}
           strokeWidth={isSelected ? 3 : 2.5}
           strokeDasharray={isArea ? "6 4" : undefined}
         />
@@ -343,20 +323,20 @@ export default function TableElement({ element }: { element: SeatingElement }) {
   let borderRadiusClass = "rounded-xl";
   if (isCircular) borderRadiusClass = "rounded-full";
 
+  const isPartOfActiveDrag = isSelectedInBulk && globalActive && globalActive.data.current?.type === "element";
+
   return (
     <div
       ref={setNodeRef}
       className={`absolute table-element-card ${
-        isDragging ? "z-[70]" : isSelected ? "z-[60]" : "z-10"
+        isDragging || isPartOfActiveDrag ? "z-[70]" : isSelected ? "z-[60]" : "z-10"
       }`}
       style={{
         left: element.x,
         top: element.y,
         width: element.width,
         height: element.height,
-        transform: transform
-          ? `translate3d(${transform.x / zoom}px, ${transform.y / zoom}px, 0)`
-          : undefined,
+        transform: getTransformStyle(),
         touchAction: "none",
       }}
       onClick={(e) => {
@@ -384,7 +364,7 @@ export default function TableElement({ element }: { element: SeatingElement }) {
       {isHalfMoon && (
         <div
           className={`absolute inset-0 ${
-            isDragging ? "opacity-80" : "opacity-100"
+            isDragging || isPartOfActiveDrag ? "opacity-80" : "opacity-100"
           } ${isOver ? "scale-[1.02]" : ""}`}
           style={{ transition: "transform 0.15s" }}
         >
@@ -405,7 +385,6 @@ export default function TableElement({ element }: { element: SeatingElement }) {
                   className="block text-[11px] font-bold tracking-widest uppercase mt-0.5"
                   style={{ color: areaStyle.border, opacity: 0.8 }}
                 >
-                  {/* Renderizamos conteo real libre de fantasmas */}
                   {validAssignedCount}/{element.seats}
                 </span>
               )}
@@ -428,7 +407,7 @@ export default function TableElement({ element }: { element: SeatingElement }) {
             ${isArea ? "border-2 border-dashed" : "border-[3px]"}
             ${borderRadiusClass}
             ${isOver ? "ring-4 ring-[#2563eb]/30 scale-[1.02]" : ""}
-            ${isDragging ? "opacity-80 shadow-2xl scale-[1.03]" : "opacity-100"}
+            ${isDragging || isPartOfActiveDrag ? "opacity-80 shadow-2xl scale-[1.03]" : "opacity-100"}
             ${isSelected ? "!border-[#C5A669] shadow-md ring-2 ring-[#C5A669]/20" : ""}
           `}
           style={{

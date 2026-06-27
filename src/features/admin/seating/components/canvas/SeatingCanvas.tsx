@@ -2,19 +2,21 @@
 
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useSeatingStore } from "../../stores/useSeatingStore";
+import { useZoomStore } from "../../stores/useZoomStore";
 import TableElement from "./TableElement";
 import { ZoomIn, ZoomOut, Maximize2, Trash2 } from "lucide-react";
 import { useDroppable } from "@dnd-kit/core";
 import { ConfirmModalState } from "@/types";
+
 interface SeatingCanvasProps {
   openConfirmModal: (config: Omit<ConfirmModalState, "isLoading">) => void;
 }
 
-export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) {
+export default function SeatingCanvas({
+  openConfirmModal,
+}: SeatingCanvasProps) {
   const {
     elements,
-    zoom,
-    setZoom,
     selectedElementIds,
     setSelectedElementIds,
     setSelectedElementId,
@@ -22,6 +24,8 @@ export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) 
     showToast,
     isInitialized,
   } = useSeatingStore();
+
+  const { zoom, setZoom } = useZoomStore();
 
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
@@ -40,7 +44,33 @@ export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) 
     data: { type: "canvas" },
   });
 
-  // Centra dinámicamente todo el plano basándose en el bounding box de las mesas
+  const handleZoomTarget = useCallback(
+    (newZoom: number, mouseX?: number, mouseY?: number) => {
+      const container = containerRef.current;
+      if (!container) return;
+
+      const currentZoom = useZoomStore.getState().zoom;
+      if (currentZoom === newZoom) return;
+
+      // Si no mandan coordenadas (ej. se presionaron los botones + o -), usa el centro exacto del div
+      const targetX = mouseX ?? container.clientWidth / 2;
+      const targetY = mouseY ?? container.clientHeight / 2;
+
+      // 1. Calculamos la coordenada en el plano 1x gigante
+      const pointX = (container.scrollLeft + targetX) / currentZoom;
+      const pointY = (container.scrollTop + targetY) / currentZoom;
+
+      // 2. Setemos el Zoom en React
+      setZoom(newZoom);
+
+      // 3. ✨ SÍNCRONO: Asignamos el scroll instantáneamente.
+      // Al quitar requestAnimationFrame, la rueda vuelve a tener precisión absoluta.
+      container.scrollLeft = pointX * newZoom - targetX;
+      container.scrollTop = pointY * newZoom - targetY;
+    },
+    [setZoom],
+  );
+
   const fitToScreen = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -52,8 +82,10 @@ export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) 
       return;
     }
 
-    let minX = Infinity, maxX = -Infinity;
-    let minY = Infinity, maxY = -Infinity;
+    let minX = Infinity,
+      maxX = -Infinity;
+    let minY = Infinity,
+      maxY = -Infinity;
 
     elements.forEach((el) => {
       if (el.x < minX) minX = el.x;
@@ -69,7 +101,10 @@ export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) 
     const availableWidth = container.clientWidth - padding * 2;
     const availableHeight = container.clientHeight - padding * 2;
 
-    let newZoom = Math.min(availableWidth / contentWidth, availableHeight / contentHeight);
+    let newZoom = Math.min(
+      availableWidth / contentWidth,
+      availableHeight / contentHeight,
+    );
     newZoom = Math.min(Math.max(newZoom, 0.4), 1.8);
     setZoom(newZoom);
 
@@ -77,12 +112,13 @@ export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) 
       const contentCenterX = minX + contentWidth / 2;
       const contentCenterY = minY + contentHeight / 2;
 
-      container.scrollLeft = contentCenterX * newZoom - container.clientWidth / 2;
-      container.scrollTop = contentCenterY * newZoom - container.clientHeight / 2;
+      container.scrollLeft =
+        contentCenterX * newZoom - container.clientWidth / 2;
+      container.scrollTop =
+        contentCenterY * newZoom - container.clientHeight / 2;
     }, 10);
   }, [elements, setZoom]);
 
-  // Zoom matemático de precisión apuntando exactamente hacia el puntero del mouse
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -91,31 +127,25 @@ export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) 
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
 
-        const currentZoom = useSeatingStore.getState().zoom;
+        const currentZoom = useZoomStore.getState().zoom;
         const factor = e.deltaY < 0 ? 1.1 : 0.9;
         const newZoom = Math.min(Math.max(currentZoom * factor, 0.3), 2);
 
-        if (newZoom === currentZoom) return;
-
         const rect = container.getBoundingClientRect();
+
+        // Sacamos la coordenada exacta de dónde está el puntero
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
 
-        const canvasMouseX = (container.scrollLeft + mouseX) / currentZoom;
-        const canvasMouseY = (container.scrollTop + mouseY) / currentZoom;
-
-        setZoom(newZoom);
-
-        container.scrollLeft = canvasMouseX * newZoom - mouseX;
-        container.scrollTop = canvasMouseY * newZoom - mouseY;
+        // Le mandamos las coordenadas a nuestra función unificada
+        handleZoomTarget(newZoom, mouseX, mouseY);
       }
     };
 
     container.addEventListener("wheel", handleWheel, { passive: false });
     return () => container.removeEventListener("wheel", handleWheel);
-  }, [setZoom]);
+  }, [handleZoomTarget]);
 
-  // Centrado inicial de resguardo
   useEffect(() => {
     if (isInitialized && elements.length > 0) {
       fitToScreen();
@@ -124,9 +154,8 @@ export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) 
       container.scrollLeft = 2000 - container.clientWidth / 2;
       container.scrollTop = 2000 - container.clientHeight / 2;
     }
-  }, [isInitialized]);
+  }, [isInitialized]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // INICIO DEL ARRASTRE DE SELECCIÓN
   const handlePointerDown = (e: React.PointerEvent) => {
     const target = e.target as HTMLElement;
 
@@ -151,7 +180,6 @@ export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) 
     setSelectedElementId(null);
   };
 
-  // DIBUJANDO EL CUADRO
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!isSelecting) return;
 
@@ -199,7 +227,6 @@ export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) 
     setIsSelecting(false);
   };
 
-  // 🔥 Ejecución del Popover múltiple inyectando la acción nativa en el prop recibido
   const handleBulkDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -221,11 +248,10 @@ export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) 
 
   return (
     <>
-      {/* CONTROLES DE ZOOM EN LA ESQUINA INFERIOR DERECHA */}
       <div className="zoom-controls absolute bottom-6 right-6 flex items-center gap-1 bg-white/95 backdrop-blur-sm p-1 rounded-full shadow-md border border-[#EBE5DA] z-40">
         <button
-          onClick={() => setZoom(Math.max(zoom - 0.1, 0.3))}
-          className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] cursor-pointer"
+          onClick={() => handleZoomTarget(Math.max(zoom - 0.1, 0.3))}
+          className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] cursor-pointer transition-colors"
         >
           <ZoomOut size={16} />
         </button>
@@ -233,8 +259,8 @@ export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) 
           {Math.round(zoom * 100)}%
         </span>
         <button
-          onClick={() => setZoom(Math.min(zoom + 0.1, 2))}
-          className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] cursor-pointer"
+          onClick={() => handleZoomTarget(Math.min(zoom + 0.1, 2))}
+          className="p-1.5 rounded-full hover:bg-[#F9F7F2] text-[#5A5A5A] cursor-pointer transition-colors"
         >
           <ZoomIn size={16} />
         </button>
@@ -258,7 +284,6 @@ export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) 
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
-        {/* POPOVER DE ELIMINACIÓN MASIVA */}
         {selectedElementIds.length > 1 && (
           <div
             className="multi-delete-popover fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#FDFBF7] border border-[#EBE5DA] shadow-xl rounded-2xl p-3 flex items-center gap-4 animate-in slide-in-from-top-3 duration-200"
@@ -285,7 +310,6 @@ export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) 
           </div>
         )}
 
-        {/* LIENZO INTERNO DE TRABAJO (4000px por 4000px) */}
         <div
           ref={canvasAreaRef}
           className="relative origin-top-left canvas-droppable-area"
@@ -302,7 +326,6 @@ export default function SeatingCanvas({ openConfirmModal }: SeatingCanvasProps) 
               <TableElement key={el.id} element={el} />
             ))}
 
-            {/* CUADRO VISUAL DE LA SELECCIÓN */}
             {isSelecting && (
               <div
                 className="absolute border border-[#C5A669] bg-[#C5A669]/10 rounded pointer-events-none z-50"

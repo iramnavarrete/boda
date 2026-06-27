@@ -46,9 +46,8 @@ export interface FamilyElement {
 export interface SeatingStore {
   elements: SeatingElement[];
   families: FamilyElement[];
-  zoom: number;
-  canvasOffset: { x: number; y: number };
   selectedElementId: string | null;
+  selectedElementIds: string[];
   toastMsg: string | null;
   isInitialized: boolean;
   hasUnsavedChanges: boolean;
@@ -64,6 +63,11 @@ export interface SeatingStore {
   ) => void;
   removeElement: (id: string) => void;
   updateElementPosition: (id: string, x: number, y: number) => void;
+  updateMultipleElementPositions: (
+    ids: string[],
+    dx: number,
+    dy: number,
+  ) => void;
   updateElementGeometry: (
     id: string,
     width: number,
@@ -94,13 +98,10 @@ export interface SeatingStore {
     familyId: string,
   ) => Promise<void>;
 
-  setZoom: (zoom: number) => void;
-  setCanvasOffset: (offset: { x: number; y: number }) => void;
   setSelectedElementId: (id: string | null) => void;
+  setSelectedElementIds: (ids: string[]) => void;
   showToast: (msg: string) => void;
   addLayoutElements: (newElements: SeatingElement[]) => void;
-  selectedElementIds: string[];
-  setSelectedElementIds: (ids: string[]) => void;
   removeMultipleElements: (ids: string[]) => void;
 }
 
@@ -117,14 +118,61 @@ export const generateFamilyColors = (
   });
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 🔥 HELPER DE AGRUPACIÓN INTELIGENTE
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Reordena los asientos de una mesa agrupándolos automáticamente por familia,
+ * manteniendo el orden de llegada de las familias a la mesa.
+ * También compacta automáticamente eliminando los huecos.
+ */
+const groupSeatsByFamily = (
+  seats: string[],
+  families: FamilyElement[],
+  maxSeats: number,
+): string[] => {
+  // 1. Nos quedamos solo con los invitados reales que están en esta mesa
+  const filled = seats.filter((s) => s && s !== "");
+
+  const familyOrder: string[] = [];
+  const guestsByFamily: Record<string, string[]> = {};
+
+  // 2. Mapeamos a qué familia pertenece cada invitado
+  filled.forEach((guestId) => {
+    const family = families.find((f) => f.guests.some((g) => g.id === guestId));
+    const famId = family ? family.id : "independent";
+
+    if (!guestsByFamily[famId]) {
+      guestsByFamily[famId] = [];
+      familyOrder.push(famId);
+    }
+    guestsByFamily[famId].push(guestId);
+  });
+
+  // 3. Reconstruimos el arreglo fusionando a los miembros por familia
+  const result: string[] = [];
+  familyOrder.forEach((famId) => {
+    result.push(...guestsByFamily[famId]);
+  });
+
+  // 4. Rellenamos el resto de la mesa con espacios vacíos
+  while (result.length < maxSeats) {
+    result.push("");
+  }
+
+  return result.slice(0, maxSeats);
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 let toastTimeout: ReturnType<typeof setTimeout>;
 
 export const useSeatingStore = create<SeatingStore>((set, get) => ({
   elements: [],
   families: [],
-  zoom: 1,
-  canvasOffset: { x: 0, y: 0 },
   selectedElementId: null,
+  selectedElementIds: [],
   toastMsg: null,
   isInitialized: false,
   hasUnsavedChanges: false,
@@ -172,6 +220,14 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
       hasUnsavedChanges: true,
     })),
 
+  updateMultipleElementPositions: (ids, dx, dy) =>
+    set((state) => ({
+      elements: state.elements.map((el) =>
+        ids.includes(el.id) ? { ...el, x: el.x + dx, y: el.y + dy } : el,
+      ),
+      hasUnsavedChanges: true,
+    })),
+
   updateElementGeometry: (id, width, height, x, y) =>
     set((state) => ({
       elements: state.elements.map((el) =>
@@ -183,7 +239,17 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
   updateElementSeats: (id, seats) =>
     set((state) => ({
       elements: state.elements.map((el) =>
-        el.id === id ? { ...el, seats } : el,
+        el.id === id
+          ? {
+              ...el,
+              seats,
+              assignedSeats: groupSeatsByFamily(
+                el.assignedSeats,
+                state.families,
+                seats,
+              ),
+            }
+          : el,
       ),
       hasUnsavedChanges: true,
     })),
@@ -196,85 +262,100 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
       hasUnsavedChanges: true,
     })),
 
+  // 🔥 CORRECCIÓN: Filtramos los strings vacíos antes de contar o empujar a la mesa
   assignGuestToTable: (tableId, guestId) =>
-    set((state) => ({
-      elements: state.elements.map((el) => {
-        // Limpia el invitado de donde estuviera antes (deja un hueco "")
-        const newSeats = el.assignedSeats.map((s) => (s === guestId ? "" : s));
+    set((state) => {
+      return {
+        elements: state.elements.map((el) => {
+          // Filtramos huecos ("") y al mismo tiempo sacamos al invitado si ya estaba en otra mesa
+          const newSeats = el.assignedSeats.filter(
+            (s) => s && s !== "" && s !== guestId,
+          );
 
-        if (el.id === tableId) {
-          const emptyIndex = newSeats.findIndex((s) => !s || s === "");
-          if (emptyIndex !== -1 && emptyIndex < el.seats) {
-            newSeats[emptyIndex] = guestId;
-          } else if (newSeats.length < el.seats) {
+          if (el.id === tableId) {
             newSeats.push(guestId);
           }
-        }
-        return { ...el, assignedSeats: newSeats };
-      }),
-      hasUnsavedChanges: true,
-    })),
 
+          return {
+            ...el,
+            assignedSeats: groupSeatsByFamily(
+              newSeats,
+              state.families,
+              el.seats,
+            ),
+          };
+        }),
+        hasUnsavedChanges: true,
+      };
+    }),
+
+  // 🔥 CORRECCIÓN: Filtramos los strings vacíos para calcular bien el espacio real (availableSpace)
   assignFamilyToTable: (tableId, familyId) =>
     set((state) => {
       const family = state.families.find((f) => f.id === familyId);
       if (!family) return state;
       const guestIds = family.guests.map((g) => g.id);
 
-      let nextState = state.elements.map((el) => ({
-        ...el,
-        assignedSeats: el.assignedSeats.map((s) =>
-          guestIds.includes(s) ? "" : s,
-        ),
-      }));
+      return {
+        elements: state.elements.map((el) => {
+          // Filtramos espacios vacíos y sacamos a toda la familia de las mesas donde estuvieran
+          const newSeats = el.assignedSeats.filter(
+            (s) => s && s !== "" && !guestIds.includes(s),
+          );
 
-      nextState = nextState.map((el) => {
-        if (el.id === tableId) {
-          const newSeats = [...el.assignedSeats];
-          const guestsToAssign = [...guestIds];
-
-          for (let i = 0; i < el.seats; i++) {
-            if (
-              (!newSeats[i] || newSeats[i] === "") &&
-              guestsToAssign.length > 0
-            ) {
-              newSeats[i] = guestsToAssign.shift() as string;
-            }
+          if (el.id === tableId) {
+            // Al no tener huecos estorbando, esta resta sí da el tamaño real libre de la mesa
+            const availableSpace = el.seats - newSeats.length;
+            const guestsToAdd = guestIds.slice(0, availableSpace);
+            newSeats.push(...guestsToAdd);
           }
-          return { ...el, assignedSeats: newSeats };
-        }
-        return el;
-      });
-      return { elements: nextState, hasUnsavedChanges: true };
+
+          return {
+            ...el,
+            assignedSeats: groupSeatsByFamily(
+              newSeats,
+              state.families,
+              el.seats,
+            ),
+          };
+        }),
+        hasUnsavedChanges: true,
+      };
     }),
 
   removeGuestFromTable: (tableId, guestId) => {
     set((state) => ({
-      elements: state.elements.map((el) =>
-        el.id === tableId
-          ? {
-              ...el,
-              // Deja un hueco "" para no alterar el orden de los demás
-              assignedSeats: el.assignedSeats.map((s) =>
-                s === guestId ? "" : s,
-              ),
-            }
-          : el,
-      ),
+      elements: state.elements.map((el) => {
+        if (el.id !== tableId) return el;
+        // Purgamos huecos antes de re-agrupar
+        const newSeats = el.assignedSeats.filter(
+          (s) => s && s !== "" && s !== guestId,
+        );
+        return {
+          ...el,
+          assignedSeats: groupSeatsByFamily(newSeats, state.families, el.seats),
+        };
+      }),
       hasUnsavedChanges: true,
     }));
     removeHighlightSeats("guest", guestId);
   },
+
   removeFamilyFromTable: (familyId) => {
     set((state) => {
       const family = state.families.find((f) => f.id === familyId);
       if (!family) return state;
       const guestIds = family.guests.map((g) => g.id);
+
       return {
         elements: state.elements.map((el) => ({
           ...el,
-          assignedSeats: el.assignedSeats.map((s) =>
-            guestIds.includes(s) ? "" : s,
+          assignedSeats: groupSeatsByFamily(
+            el.assignedSeats.filter(
+              (s) => s && s !== "" && !guestIds.includes(s),
+            ),
+            state.families,
+            el.seats,
           ),
         })),
         hasUnsavedChanges: true,
@@ -282,6 +363,7 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     });
     removeHighlightSeats("family", familyId);
   },
+
   updateGuestName: (familyId, guestId, name) =>
     set((state) => ({
       hasUnsavedChanges: true,
@@ -319,8 +401,12 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
 
     const newElements = state.elements.map((el) => ({
       ...el,
-      assignedSeats: el.assignedSeats.map((seatId) =>
-        seatId === guestId ? "" : seatId,
+      assignedSeats: groupSeatsByFamily(
+        el.assignedSeats.filter(
+          (seatId) => seatId && seatId !== "" && seatId !== guestId,
+        ),
+        state.families,
+        el.seats,
       ),
     }));
 
@@ -355,7 +441,13 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
       set((currentState) => ({
         elements: currentState.elements.map((el) => ({
           ...el,
-          assignedSeats: el.assignedSeats.filter((s) => !guestIds.includes(s)),
+          assignedSeats: groupSeatsByFamily(
+            el.assignedSeats.filter(
+              (s) => s && s !== "" && !guestIds.includes(s),
+            ),
+            currentState.families,
+            el.seats,
+          ),
         })),
         families: currentState.families.filter((f) => f.id !== familyId),
         hasUnsavedChanges: true,
@@ -398,16 +490,15 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     }));
   },
 
-  setZoom: (zoom) => set({ zoom }),
-  setCanvasOffset: (canvasOffset) => set({ canvasOffset }),
   setSelectedElementId: (id) => set({ selectedElementId: id }),
+  setSelectedElementIds: (ids) => set({ selectedElementIds: ids }),
+
   addLayoutElements: (newElements) =>
     set((state) => ({
       elements: [...state.elements, ...newElements],
       hasUnsavedChanges: true,
     })),
-  selectedElementIds: [],
-  setSelectedElementIds: (ids) => set({ selectedElementIds: ids }),
+
   removeMultipleElements: (ids) =>
     set((state) => ({
       elements: state.elements.filter((el) => !ids.includes(el.id)),

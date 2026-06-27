@@ -30,6 +30,7 @@ import {
   useSeatingStore,
 } from "../../stores/useSeatingStore";
 import { SeatingService } from "../../services/seatingService";
+import { useZoomStore } from "../../stores/useZoomStore";
 import GuestAssignmentSidebar from "../sidebar/GuestAssignmentSidebar";
 import { useEventPermissions } from "@/features/admin/hooks/useEventPermissions";
 import SeatingCanvas from "../canvas/SeatingCanvas";
@@ -74,12 +75,12 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
 
   const {
     updateElementPosition,
+    updateMultipleElementPositions,
     assignGuestToTable,
     assignFamilyToTable,
     addElement,
     elements,
     families,
-    zoom,
     showToast,
     toastMsg,
     initialize,
@@ -90,6 +91,8 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     executeDeleteFamily,
     executeAddSeatToFamily,
   } = useSeatingStore();
+
+  const { zoom } = useZoomStore();
 
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
@@ -349,15 +352,28 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       const delta = event.delta;
       if (delta.x !== 0 || delta.y !== 0) {
         const id = String(active.id).replace("element-", "");
-        const element = useSeatingStore
-          .getState()
-          .elements.find((e) => e.id === id);
-        if (element) {
-          updateElementPosition(
-            id,
-            element.x + delta.x / zoom,
-            element.y + delta.y / zoom,
+
+        // Si hay múltiples elementos seleccionados y el elemento arrastrado
+        // es parte de esa selección, mueve todo el grupo con el mismo delta.
+        const currentSelectedIds = useSeatingStore.getState().selectedElementIds;
+        if (currentSelectedIds.length > 1 && currentSelectedIds.includes(id)) {
+          updateMultipleElementPositions(
+            currentSelectedIds,
+            delta.x / zoom,
+            delta.y / zoom,
           );
+        } else {
+          // Movimiento individual normal
+          const element = useSeatingStore
+            .getState()
+            .elements.find((e) => e.id === id);
+          if (element) {
+            updateElementPosition(
+              id,
+              element.x + delta.x / zoom,
+              element.y + delta.y / zoom,
+            );
+          }
         }
       }
       return;
