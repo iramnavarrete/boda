@@ -1,7 +1,8 @@
 import Tooltip from "@/features/shared/components/Tooltip";
-import { useSeatingStore, GuestStatus } from "../../stores/useSeatingStore";
+import { useSeatingStore } from "../../stores/useSeatingStore";
 import { RotateCcw, Trash2 } from "lucide-react";
 import { useSeatingModalContext } from "../SeatingModalContext";
+import { GuestStatus } from "@/types";
 
 interface TableSeatProps {
   x: number;

@@ -12,13 +12,15 @@ import {
   DocumentReference,
   CollectionReference,
   Timestamp,
+  setDoc,
 } from "firebase/firestore";
 import {
   Guest,
   GuestContactInfo,
   GuestFormData,
+  GuestStatus,
   ImportedGuest,
-} from "../../types/types";
+} from "@/types";
 import { db } from "@/lib/firebase/config";
 import { generateGuestID } from "@/utils/generators";
 
@@ -202,6 +204,27 @@ export const GuestService = {
     await batch.commit();
   },
 
+  updateGuestList: async (
+    invitationId: string,
+    familyId: string,
+    guests: { id: string; name: string; status: GuestStatus }[],
+  ) => {
+    const payload = guests.map((g) => ({
+      id: g.id,
+      name: g.name,
+      status: g.status,
+    }));
+
+    // Actualiza tu documento de Firebase con este nuevo payload
+    await setDoc(
+      paths.guest(invitationId, familyId),
+      {
+        guests: payload,
+      },
+      { merge: true },
+    );
+  },
+
   deleteGuest: async (invitationId: string, guestId: string) => {
     const batch = writeBatch(db);
     batch.delete(paths.guestContact(invitationId, guestId));
@@ -363,31 +386,47 @@ export const GuestService = {
     }
   },
 
-  reduceGuestCount: async (invitationId: string, guestId: string) => {
-    const guestRef = paths.guest(invitationId, guestId);
+  removeGuestSeatAndReduceCount: async (
+    invitationId: string,
+    familyDocId: string, // El ID del documento en Firestore (antiguo guestId/familyId)
+    updatedGuestsList: { id: string; nombre: string; estatus: GuestStatus }[],
+  ) => {
+    const guestRef = paths.guest(invitationId, familyDocId);
 
     try {
       const docSnap = await getDoc(guestRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        const currentTotal = Number(data.invitados) || 1;
-        const currentConfirmed = Number(data.confirmados) || 0;
-        const newTotal = Math.max(1, currentTotal - 1);
-
-        const payload: Partial<Guest> = {
-          invitados: newTotal,
-          ultimaModificacion: serverTimestamp(),
-        };
-
-        // Si el nuevo total es menor a los confirmados, hay que ajustar los confirmados también
-        if (newTotal < currentConfirmed) {
-          payload.confirmados = newTotal;
-        }
-
-        await updateDoc(guestRef, payload);
+      if (!docSnap.exists()) {
+        throw new Error("El documento de la familia no existe");
       }
+
+      // TODO no hacer el getDoc sino más bien enviar el guest y que se actualice directamente sin el get
+      const data = docSnap.data();
+      const currentConfirmed = Number(data.confirmados) || 0;
+
+      // El nuevo total de invitados permitidos es el tamaño de la lista purgada
+      // Usamos Math.max(1, ...) por seguridad para que el documento nunca quede en 0 invitados si no lo deseas
+      const newTotal = Math.max(1, updatedGuestsList.length);
+
+      // Creamos el payload unificado
+      const payload: Partial<Guest> = {
+        invitados: newTotal,
+        asientos: updatedGuestsList,
+        ultimaModificacion: serverTimestamp(),
+      };
+
+      // Si al reducir el total este queda por debajo de los que ya habían confirmado en Firestore,
+      // ajustamos de manera segura el contador de confirmados.
+      if (newTotal < currentConfirmed) {
+        payload.confirmados = newTotal;
+      }
+
+      // Una única escritura en la base de datos para actualizar todo el estado del grupo
+      await updateDoc(guestRef, payload);
     } catch (e) {
-      console.error("Error reduciendo total de invitados", e);
+      console.error(
+        "Error unificado al remover asiento y reducir contador:",
+        e,
+      );
       throw e;
     }
   },

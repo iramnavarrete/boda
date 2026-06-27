@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { useSeatingStore, Family, Guest } from "../../stores/useSeatingStore";
+import { useSeatingStore, Family } from "../../stores/useSeatingStore";
 import { useSeatingModalContext } from "../SeatingModalContext";
 import {
   X,
@@ -17,6 +17,7 @@ import {
   highlightSeats,
   removeHighlightSeats,
 } from "../../utils/highlightHelper";
+import { GuestSeat } from "@/types";
 
 export function DraggableGuest({
   guest,
@@ -26,7 +27,7 @@ export function DraggableGuest({
   tableAlias,
   seatNumber,
 }: {
-  guest: Guest;
+  guest: GuestSeat;
   family: Family;
   isAssigned: boolean;
   tableId?: string;
@@ -37,7 +38,7 @@ export function DraggableGuest({
   const { updateGuestName, removeGuestFromTable } = useSeatingStore();
 
   const [isEditing, setIsEditing] = useState(false);
-  const [nameValue, setNameValue] = useState(guest.name || "");
+  const [nameValue, setNameValue] = useState(guest.nombre || "");
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `guest-${guest.id}`,
@@ -53,7 +54,7 @@ export function DraggableGuest({
   });
 
   const guestIndex = family.guests.findIndex((g) => g.id === guest.id);
-  const displayName = guest.name || `${family.name} #${guestIndex + 1}`;
+  const displayName = guest.nombre || `${family.name} #${guestIndex + 1}`;
 
   const handleSaveLocalEdit = () => {
     updateGuestName(family.id, guest.id, nameValue);
@@ -61,7 +62,7 @@ export function DraggableGuest({
   };
 
   const StatusIcon = () => {
-    switch (guest.status) {
+    switch (guest.estatus) {
       case "confirmed":
         return <CheckCircle2 size={12} className="text-green-500" />;
       case "declined":
@@ -73,7 +74,7 @@ export function DraggableGuest({
 
   return (
     <div
-      className={`select-none relative flex flex-col gap-1.5 p-1.5 rounded-md border text-xs transition-colors group/guest ${isAssigned ? "bg-transparent border-transparent opacity-70 cursor-default" : guest.status === "declined" ? "bg-red-50/50 border-red-100 opacity-60" : "bg-white border border-[#EBE5DA] cursor-grab hover:border-[#C5A669]"}`}
+      className={`select-none relative flex flex-col gap-1.5 p-1.5 rounded-md border text-xs transition-colors group/guest ${isAssigned ? "bg-transparent border-transparent opacity-70 cursor-default" : guest.estatus === "declined" ? "bg-red-50/50 border-red-100 opacity-60" : "bg-white border border-[#EBE5DA] cursor-grab hover:border-[#C5A669]"}`}
       style={{ opacity: isDragging ? 0.3 : 1 }}
       onMouseEnter={() => highlightSeats("guest", guest.id)}
       onMouseLeave={() => removeHighlightSeats("guest", guest.id)}
@@ -107,7 +108,7 @@ export function DraggableGuest({
               />
             ) : (
               <span
-                className={`truncate font-medium ${guest.name ? "text-[#2C2C29]" : "text-[#A8A29E] italic"} ${guest.status === "declined" ? "line-through" : ""}`}
+                className={`truncate font-medium ${guest.nombre ? "text-[#2C2C29]" : "text-[#A8A29E] italic"} ${guest.estatus === "declined" ? "line-through" : ""}`}
               >
                 {displayName}
               </span>
@@ -137,7 +138,7 @@ export function DraggableGuest({
                 <button
                   onClick={() => {
                     setIsEditing(true);
-                    setNameValue(guest.name || "");
+                    setNameValue(guest.nombre || "");
                   }}
                   className="p-1 hover:bg-[#F9F7F2] rounded text-[#C5A669] shadow-sm bg-white border border-[#EBE5DA]"
                 >

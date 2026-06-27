@@ -270,11 +270,11 @@ export default function TableElement({ element }: { element: SeatingElement }) {
           seatNumber={i + 1}
           guestName={
             guestInfo
-              ? guestInfo.name ||
+              ? guestInfo.nombre ||
                 `${guestInfo.familyName} #${guestInfo.index + 1}`
               : undefined
           }
-          status={guestInfo?.status}
+          status={guestInfo?.estatus}
           colorBg={guestInfo?.familyColorBg}
           colorBorder={guestInfo?.familyColorBorder}
           tableId={element.id}

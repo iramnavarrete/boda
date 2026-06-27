@@ -1,5 +1,5 @@
 import { GuestService } from "@/services/guestService";
-import { GuestFormData } from "@/types";
+import { GuestFormData, GuestSeat } from "@/types";
 import { create } from "zustand";
 import { SeatingService } from "../services/seatingService";
 import { removeHighlightSeats } from "../utils/highlightHelper";
@@ -32,14 +32,6 @@ export interface SeatingElement {
   assignedSeats: string[];
 }
 
-export type GuestStatus = "confirmed" | "pending" | "declined";
-
-export interface Guest {
-  id: string;
-  name: string;
-  status: GuestStatus;
-}
-
 export interface Family {
   id: string;
   name: string;
@@ -47,7 +39,7 @@ export interface Family {
   aliases: string[];
   colorBg: string;
   colorBorder: string;
-  guests: Guest[];
+  guests: GuestSeat[];
   hasUnsavedChanges?: boolean;
 }
 
@@ -292,18 +284,8 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
       hasUnsavedChanges: true,
       families: state.families.map((f) => {
         if (f.id === familyId) {
-          const guestIndex = f.guests.findIndex((g) => g.id === guestId);
-          const newAliases = [...(f.aliases || [])];
-          for (let i = 0; i <= guestIndex; i++) {
-            if (newAliases[i] === undefined) {
-              newAliases[i] = "";
-            }
-          }
-          newAliases[guestIndex] = name || "";
-
           return {
             ...f,
-            aliases: newAliases,
             hasUnsavedChanges: true,
             guests: f.guests.map((g) =>
               g.id === guestId ? { ...g, name: name || "" } : g,
@@ -330,56 +312,34 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     const family = state.families.find((f) => f.id === familyId);
     if (!family) return;
 
-    const deletedIndex = family.guests.findIndex((g) => g.id === guestId);
-    if (deletedIndex === -1) return;
+    const updatedGuests = family.guests.filter((g) => g.id !== guestId);
 
-    // Eliminamos el Alias EXACTO de la lista
-    const newAliases = [...(family.aliases || [])];
-    newAliases.splice(deletedIndex, 1);
-
-    // Re-mapeamos los IDs de las sillas para los invitados de esta familia
-    const newElements = state.elements.map((el) => {
-      const updatedSeats = el.assignedSeats.map((seatId) => {
-        if (seatId === guestId) return ""; // El que borraste queda como silla libre
-
-        // Si el ID es de la misma familia y estaba posicionado DESPUÉS del que borramos,
-        // recorremos su ID "- 1" para que cuadre con Firebase.
-        if (seatId && seatId.startsWith(`${familyId}_seat_`)) {
-          const seatIndex = parseInt(seatId.split("_seat_")[1]);
-          if (seatIndex > deletedIndex) {
-            return `${familyId}_seat_${seatIndex - 1}`;
-          }
-        }
-        return seatId;
-      });
-      return { ...el, assignedSeats: updatedSeats };
-    });
-
-    try {
-      // Mandamos las 3 peticiones al servidor para matar al fantasma por completo
-      await GuestService.reduceGuestCount(invitationId, familyId);
-      await SeatingService.updateSeatAlias(invitationId, familyId, newAliases);
-      await SeatingService.savePlan(invitationId, newElements);
-    } catch (error) {
-      console.error(error);
-      get().showToast(
-        "Error al sincronizar asiento eliminado con la base de datos.",
-      );
-    }
-
-    set((currentState) => ({
-      hasUnsavedChanges: true,
-      elements: newElements,
-      families: currentState.families.map((f) =>
-        f.id === familyId
-          ? {
-              ...f,
-              guests: f.guests.filter((g) => g.id !== guestId),
-              aliases: newAliases,
-            }
-          : f,
+    const newElements = state.elements.map((el) => ({
+      ...el,
+      assignedSeats: el.assignedSeats.map((seatId) =>
+        seatId === guestId ? "" : seatId,
       ),
     }));
+
+    try {
+      await GuestService.removeGuestSeatAndReduceCount(
+        invitationId,
+        familyId,
+        updatedGuests,
+      );
+      await SeatingService.savePlan(invitationId, newElements);
+
+      set((currentState) => ({
+        hasUnsavedChanges: true,
+        elements: newElements,
+        families: currentState.families.map((f) =>
+          f.id === familyId ? { ...f, guests: updatedGuests } : f,
+        ),
+      }));
+    } catch (error) {
+      console.error(error);
+      get().showToast("Error al sincronizar asiento eliminado.");
+    }
   },
 
   executeDeleteFamily: async (invitationId: string, familyId: string) => {
@@ -405,6 +365,7 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     const family = state.families.find((f) => f.id === familyId);
     if (!family) return;
 
+    const newGuestId = crypto.randomUUID();
     const newCount = family.guests.length + 1;
 
     await GuestService.saveGuest(
@@ -421,13 +382,11 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     set((currentState) => ({
       families: currentState.families.map((f) => {
         if (f.id === familyId) {
-          const nextIndex = f.guests.length;
-          const newGuestId = `${familyId}_seat_${nextIndex}`;
           return {
             ...f,
             guests: [
               ...f.guests,
-              { id: newGuestId, name: "", status: "pending" },
+              { id: newGuestId, nombre: "", estatus: "pending" },
             ],
           };
         }

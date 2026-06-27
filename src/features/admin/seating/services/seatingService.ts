@@ -1,12 +1,7 @@
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import {
-  SeatingElement,
-  Family,
-  GuestStatus,
-  Guest as StoreGuest,
-} from "../stores/useSeatingStore";
-import { Guest as DbGuest } from "@/types";
+import { SeatingElement, Family } from "../stores/useSeatingStore";
+import { Guest as DbGuest, Guest, GuestSeat, GuestStatus } from "@/types";
 
 interface ExtendedDbGuest extends DbGuest {
   aliasAsientos?: string[];
@@ -72,7 +67,7 @@ export const SeatingService = {
       const deadline = rawGuest.fechaLimiteConfirmacion || null;
       const aliases = rawGuest.aliasAsientos || [];
 
-      const familyGuests: StoreGuest[] = Array.from(
+      const familyGuests: GuestSeat[] = Array.from(
         { length: totalTickets },
         (_, j) => {
           let currentStatus: GuestStatus = "pending";
@@ -88,8 +83,8 @@ export const SeatingService = {
 
           return {
             id: `${rawGuest.id}_seat_${j}`,
-            name: seatName,
-            status: currentStatus,
+            nombre: seatName,
+            estatus: currentStatus,
           };
         },
       );

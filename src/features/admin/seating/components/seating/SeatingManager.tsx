@@ -27,7 +27,6 @@ import {
 import {
   ElementType,
   Family,
-  Guest,
   useSeatingStore,
 } from "../../stores/useSeatingStore";
 import { SeatingService } from "../../services/seatingService";
@@ -40,8 +39,8 @@ import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
 import { useConfirmModal } from "@/features/admin/hooks/useConfirmModal";
 import ElementsPalette from "./ElementsPalette";
 import LayoutSetupModal from "../canvas/LayoutSetupModal";
+import { GuestSeat } from "@/types";
 
-// 🔥 CORRECCIÓN: Separamos palette_element y palette_layout para que Extract funcione sin dar "never"
 export type DragItemData =
   | {
       type: "palette_element";
@@ -60,7 +59,7 @@ export type DragItemData =
       label: string;
     }
   | { type: "element" }
-  | { type: "guest"; guest: Guest & { familyName?: string; index?: number } }
+  | { type: "guest"; guest: GuestSeat & { familyName?: string; index?: number } }
   | { type: "family"; family: Family }
   | Record<string, unknown>;
 
@@ -224,7 +223,8 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     try {
       await executeAddSeatToFamily(invitationId, familyId);
       showToast("Asiento agregado exitosamente.");
-    } catch {
+    } catch (err) {
+      console.log(err, "ERROR AL AGREGAR");
       showToast("No se pudo agregar el asiento.");
     }
   };
@@ -586,7 +586,7 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
                       DragItemData,
                       { type: "guest" }
                     >
-                  ).guest?.name || `Invitado`}
+                  ).guest?.nombre || `Invitado`}
                 </span>
               </div>
             ) : activeDragItem?.type === "family" &&

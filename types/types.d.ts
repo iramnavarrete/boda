@@ -41,6 +41,7 @@ export type Guest = {
   asistio?: boolean;
   pasesUsados?: number;
   horaLlegada?: Timestamp | FieldValue | null;
+  asientos?: GuestSeat[] | null;
 };
 
 export type GuestContactInfo = {
@@ -48,6 +49,14 @@ export type GuestContactInfo = {
 };
 
 export type GuestFormDataKeys = keyof GuestFormData;
+
+export type GuestStatus = "confirmed" | "pending" | "declined";
+
+export interface GuestSeat {
+  id: string;
+  nombre: string;
+  estatus: GuestStatus;
+}
 
 export interface GalleryImage {
   src: string; // Ruta de la imagen de alta resolución para PhotoSwipe
