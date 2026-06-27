@@ -37,7 +37,12 @@ export default function GuestAssignmentSidebar({
     elements.forEach((el) => {
       if (el.seats && el.seats > 0) {
         totalSeats += el.seats;
-        occupiedSeats += el.assignedSeats.length;
+
+        const realOccupiedCount = el.assignedSeats.filter(
+          (seatId) => seatId && seatId !== "",
+        ).length;
+
+        occupiedSeats += realOccupiedCount;
       }
     });
 
@@ -169,7 +174,11 @@ export default function GuestAssignmentSidebar({
 
       <div className="p-3 overflow-y-auto flex-1 w-full pb-10">
         {sortedFamilies.map((family) => (
-          <DraggableFamily key={family.id} family={family} isFirstElement={sortedFamilies[0].id === family.id } />
+          <DraggableFamily
+            key={family.id}
+            family={family}
+            isFirstElement={sortedFamilies[0].id === family.id}
+          />
         ))}
       </div>
     </div>
