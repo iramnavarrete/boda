@@ -135,8 +135,11 @@ export function TableSettingsPopover({
     families,
     showToast,
   } = useSeatingStore();
+  const [numberValue, setNumberValue] = useState(
+    element.alias.replace(/\D/g, ""),
+  );
 
-  // 🔥 1. Obtenemos el total de invitados que realmente existen (sin contar fantasmas)
+  // Obtenemos el total de invitados que realmente existen (sin contar fantasmas)
   const validAssignedCount = isTable
     ? element.assignedSeats.filter((seatId) => {
         if (!seatId || seatId === "") return false;
@@ -147,7 +150,7 @@ export function TableSettingsPopover({
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseInt(e.target.value);
 
-    // 🔥 2. Validamos el tamaño de la mesa contra el conteo real purgado
+    // Validamos el tamaño de la mesa contra el conteo real purgado
     if (newValue < validAssignedCount) {
       if (element.seats !== validAssignedCount) {
         updateElementSeats(element.id, validAssignedCount);
@@ -182,7 +185,7 @@ export function TableSettingsPopover({
         }
       }
 
-      // 🔥 3. Si se encontró un ID en la silla, pero NO pertenece a un invitado real (fantasma),
+      // Si se encontró un ID en la silla, pero NO pertenece a un invitado real (fantasma),
       // lo forzamos a mostrarse libre.
       const isAssigned = !!guestInfo;
 
@@ -217,14 +220,45 @@ export function TableSettingsPopover({
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <label className="block text-[9px] text-[#A8A29E] uppercase font-bold tracking-widest mb-1.5">
-                Nombre / Alias
+                {isTable ? "Número de mesa" : "Nombre / Alias"}
               </label>
-              <input
-                value={element.alias}
-                onChange={(e) => updateElementAlias(element.id, e.target.value)}
-                className="w-full text-sm font-semibold text-[#2C2C29] bg-white border border-[#EBE5DA] rounded-lg px-3 py-2 focus:border-[#C5A669] focus:outline-none"
-              />
+
+              {isTable ? (
+                <div className="flex items-center gap-2 bg-white border border-[#EBE5DA] rounded-lg px-3 py-2 focus-within:border-[#C5A669] transition-colors">
+                  <span className="text-sm font-semibold text-[#A8A29E]">
+                    Mesa
+                  </span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={numberValue}
+                    onChange={(e) => {
+                      const num = e.target.value.replace(/\D/g, "");
+                      setNumberValue(num);
+                      if (num) updateElementAlias(element.id, `Mesa ${num}`);
+                    }}
+                    onBlur={() => {
+                      // Al perder el foco, si quedó vacío restauramos el valor actual
+                      if (!numberValue) {
+                        setNumberValue(element.alias.replace(/\D/g, ""));
+                      }
+                    }}
+                    className="w-16 text-sm font-semibold text-[#2C2C29] bg-transparent outline-none"
+                    placeholder="1"
+                  />
+                </div>
+              ) : (
+                <input
+                  value={element.alias}
+                  onChange={(e) =>
+                    updateElementAlias(element.id, e.target.value)
+                  }
+                  className="w-full text-sm font-semibold text-[#2C2C29] bg-white border border-[#EBE5DA] rounded-lg px-3 py-2 focus:border-[#C5A669] focus:outline-none"
+                  placeholder="Nombre del área"
+                />
+              )}
             </div>
+
             <div className="mt-5 shrink-0">
               <Tooltip text="Eliminar elemento" position="top" align="center">
                 <button
