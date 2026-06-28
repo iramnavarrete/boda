@@ -18,6 +18,7 @@ import {
   Family,
   FamilyContactInfo,
   FamilyFormData,
+  GuestSeat,
   GuestStatus,
   ImportedFamily,
 } from "@/types";
@@ -409,46 +410,57 @@ export const FamiliesService = {
 
   removeFamilySeatAndReduceCount: async (
     invitationId: string,
-    familyDocId: string, // El ID del documento en Firestore (antiguo guestId/familyId)
-    updatedGuestsList: { id: string; nombre: string; estatus: GuestStatus }[],
+    familyDocId: string,
+    updatedGuestsList: GuestSeat[],
   ) => {
     const familyRef = familyPaths.family(invitationId, familyDocId);
-
     try {
       const docSnap = await getDoc(familyRef);
-      if (!docSnap.exists()) {
+      if (!docSnap.exists())
         throw new Error("El documento de la familia no existe");
-      }
 
-      // TODO no hacer el getDoc sino más bien enviar el family y que se actualice directamente sin el get
       const data = docSnap.data();
       const currentConfirmed = Number(data.confirmados) || 0;
-
-      // El nuevo total de invitados permitidos es el tamaño de la lista purgada
-      // Usamos Math.max(1, ...) por seguridad para que el documento nunca quede en 0 invitados si no lo deseas
       const newTotal = Math.max(1, updatedGuestsList.length);
 
-      // Creamos el payload unificado
       const payload: Partial<Family> = {
         invitados: newTotal,
         asientos: updatedGuestsList,
         ultimaModificacion: serverTimestamp(),
       };
 
-      // Si al reducir el total este queda por debajo de los que ya habían confirmado en Firestore,
-      // ajustamos de manera segura el contador de confirmados.
       if (newTotal < currentConfirmed) {
         payload.confirmados = newTotal;
       }
 
-      // Una única escritura en la base de datos para actualizar todo el estado del grupo
       await updateDoc(familyRef, payload);
     } catch (e) {
-      console.error(
-        "Error unificado al remover asiento y reducir contador:",
-        e,
-      );
+      console.error("Error al remover asiento:", e);
       throw e;
     }
+  },
+
+  initializeFamilySeats: async (
+    invitationId: string,
+    familyId: string,
+    totalSeats: number,
+    confirmedCount: number,
+    isAttending: boolean | null,
+  ): Promise<GuestSeat[]> => {
+    const seats: GuestSeat[] = Array.from({ length: totalSeats }, (_, j) => {
+      let estatus: GuestStatus = "pending";
+      if (isAttending === false) estatus = "declined";
+      else if (isAttending === true)
+        estatus = j < confirmedCount ? "confirmed" : "declined";
+
+      return { id: crypto.randomUUID(), nombre: "", estatus };
+    });
+
+    await updateDoc(familyPaths.family(invitationId, familyId), {
+      asientos: seats,
+      ultimaModificacion: serverTimestamp(),
+    });
+
+    return seats;
   },
 };

@@ -60,7 +60,10 @@ export type DragItemData =
       label: string;
     }
   | { type: "element" }
-  | { type: "guest"; guest: GuestSeat & { familyName?: string; index?: number } }
+  | {
+      type: "guest";
+      guest: GuestSeat & { familyName?: string; index?: number };
+    }
   | { type: "family"; family: FamilyElement }
   | Record<string, unknown>;
 
@@ -128,12 +131,24 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
 
       unsubscribe = FamiliesService.subscribeToFamilies(
         invitationId,
-        (realGuests) => {
+        async (rawFamilies) => {
           const formattedFamilies =
-            SeatingService.formatGuestsToFamilies(realGuests);
+            await SeatingService.formatFamiliesToFamiliesSeats(
+              invitationId,
+              rawFamilies,
+            );
 
           if (!useSeatingStore.getState().isInitialized) {
-            initialize(dbElements, formattedFamilies);
+            // Migramos los IDs legacy antes de inicializar
+            const { elements: migratedElements, hadChanges } =
+              SeatingService.migrateLegacyIds(dbElements, formattedFamilies);
+
+            initialize(migratedElements, formattedFamilies);
+
+            // Si había IDs legacy, guardamos el plan migrado automáticamente
+            if (hadChanges) {
+              await SeatingService.savePlan(invitationId, migratedElements);
+            }
           } else {
             useSeatingStore.setState({ families: formattedFamilies });
           }
@@ -173,19 +188,16 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     let message = `¿Deseas eliminar este asiento declinado de forma permanente y liberar el lugar en el plano?\n\n💡 Nota: No te preocupes, si este invitado cambia de opinión, podrás agregar nuevos asientos a "${family.name}" más adelante usando el botón de "+" en el listado de invitados.`;
     const isDanger = true;
 
-    if (family.deadline) {
+    if (family.deadline && family.allowChanges) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
       const [year, month, day] = family.deadline.split("-").map(Number);
       const deadlineDate = new Date(year, month - 1, day);
       deadlineDate.setHours(0, 0, 0, 0);
-
-      if (today < deadlineDate) {
-        title = "⚠️ Fecha límite no superada";
-        message = `La fecha límite de confirmación para este invitado AÚN NO HA PASADO. El invitado podría cambiar de opinión y confirmar su asistencia.\n\nSi eliminas este asiento, reducirás su número total de invitados permitidos en el sistema.\n\n¿Estás completamente seguro de que deseas eliminar este asiento?\n\n💡 Nota: Si continúas, podrás revertir esto agregando un asiento extra manualmente a "${family.name}" en el futuro.`;
-      }
-    } else {
+      title = "⚠️ Fecha límite no superada";
+      message = `La fecha límite de confirmación para este invitado AÚN NO HA PASADO. El invitado podría cambiar de opinión y confirmar su asistencia.\n\nSi eliminas este asiento, reducirás su número total de invitados permitidos en el sistema.\n\n¿Estás completamente seguro de que deseas eliminar este asiento?\n\n💡 Nota: Si continúas, podrás revertir esto agregando un asiento extra manualmente a "${family.name}" en el futuro.`;
+    } else if (family.allowChanges) {
       title = "⚠️ Sin fecha límite";
       message = `Este invitado no tiene fecha límite de confirmación asignada. Podría cambiar su estado de asistencia.\n\n¿Estás seguro de que deseas eliminar este asiento y reducir el número de invitados de esta familia?\n\n💡 Nota: Podrás agregar nuevos asientos a "${family.name}" más adelante si lo requieres.`;
     }
@@ -345,7 +357,8 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
 
         // Si hay múltiples elementos seleccionados y el elemento arrastrado
         // es parte de esa selección, mueve todo el grupo con el mismo delta.
-        const currentSelectedIds = useSeatingStore.getState().selectedElementIds;
+        const currentSelectedIds =
+          useSeatingStore.getState().selectedElementIds;
         if (currentSelectedIds.length > 1 && currentSelectedIds.includes(id)) {
           updateMultipleElementPositions(
             currentSelectedIds,

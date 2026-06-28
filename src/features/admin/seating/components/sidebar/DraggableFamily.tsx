@@ -45,7 +45,7 @@ export function DraggableFamily({
   });
 
   return (
-    <div className="mb-3 bg-[#FDFBF7] rounded-lg border border-[#EBE5DA] overflow- flex flex-col min-h-0 select-none">
+    <div className="mb-3 bg-[#FDFBF7] rounded-lg border border-[#EBE5DA] flex flex-col min-h-0 select-none">
       <div
         ref={setNodeRef}
         {...attributes}
@@ -133,7 +133,7 @@ export function DraggableFamily({
 
       {isExpanded && (
         <div
-          className={`p-1.5 space-y-1 ${isDragging ? "hidden" : "block"} bg-white`}
+          className={`p-1.5 space-y-1 ${isDragging ? "hidden" : "block"} bg-white rounded-lg`}
         >
           {family.guests.map((guest) => {
             const table = elements.find((el) =>
@@ -156,13 +156,13 @@ export function DraggableFamily({
           })}
 
           {/* 🔥 Botón interactivo para añadir un asiento rápido al grupo */}
-          <button
+          {/* <button
             onClick={() => triggerAddSeat(family.id)}
             className="w-full flex items-center justify-center gap-1.5 py-1.5 mt-1 border border-dashed border-[#EBE5DA] text-[#A8A29E] hover:text-[#C5A669] hover:border-[#C5A669] hover:bg-[#FDFBF7] rounded-md text-[10px] font-bold uppercase tracking-wider transition-all"
           >
             <UserPlus size={11} />
             Agregar Asiento
-          </button>
+          </button> */}
         </div>
       )}
     </div>

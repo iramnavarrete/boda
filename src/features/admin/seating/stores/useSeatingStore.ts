@@ -39,6 +39,7 @@ export interface FamilyElement {
   colorBg: string;
   colorBorder: string;
   guests: GuestSeat[];
+  allowChanges: boolean;
 }
 
 export interface SeatingStore {
@@ -272,7 +273,6 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
       };
     }),
 
-  // 🔥 CORRECCIÓN: Filtramos los strings vacíos para calcular bien el espacio real (availableSpace)
   assignFamilyToTable: (tableId, familyId) =>
     set((state) => {
       const family = state.families.find((f) => f.id === familyId);
@@ -347,39 +347,19 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     const family = state.families.find((f) => f.id === familyId);
     if (!family) return;
 
-    const removedIndex = family.guests.findIndex((g) => g.id === guestId);
-    if (removedIndex === -1) return;
-
     const updatedGuests = family.guests.filter((g) => g.id !== guestId);
-
-    // 🔥 Usamos los IDs reales del store, no los reconstruimos con string
-    const idRemap: Record<string, string> = {};
-    family.guests.forEach((g, oldIndex) => {
-      if (oldIndex === removedIndex) return;
-      const newIndex = oldIndex < removedIndex ? oldIndex : oldIndex - 1;
-      // updatedGuests[newIndex] es el guest que quedará en esa posición
-      const newId = updatedGuests[newIndex]?.id;
-      if (newId && g.id !== newId) {
-        idRemap[g.id] = newId;
-      }
-    });
-
-    console.log("idRemap real:", idRemap);
-
     const updatedFamilies = state.families.map((f) =>
       f.id === familyId ? { ...f, guests: updatedGuests } : f,
     );
 
-    const newElements = state.elements.map((el) => {
-      const remappedSeats = el.assignedSeats
-        .filter((seatId) => seatId && seatId !== "" && seatId !== guestId)
-        .map((seatId) => idRemap[seatId] ?? seatId);
-
-      return {
-        ...el,
-        assignedSeats: groupSeatsByFamily(remappedSeats, updatedFamilies),
-      };
-    });
+    // Sin remap — filtramos el UUID directamente
+    const newElements = state.elements.map((el) => ({
+      ...el,
+      assignedSeats: groupSeatsByFamily(
+        el.assignedSeats.filter((s) => s && s !== "" && s !== guestId),
+        updatedFamilies,
+      ),
+    }));
 
     try {
       await FamiliesService.removeFamilySeatAndReduceCount(
