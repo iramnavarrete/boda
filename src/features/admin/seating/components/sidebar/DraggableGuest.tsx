@@ -35,10 +35,7 @@ export function DraggableGuest({
   seatNumber?: number;
 }) {
   const { triggerSeatRemoval } = useSeatingModalContext();
-  const { updateGuestName, removeGuestFromTable } = useSeatingStore();
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [nameValue, setNameValue] = useState(guest.nombre || "");
+  const { removeGuestFromTable } = useSeatingStore();
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `guest-${guest.id}`,
@@ -55,11 +52,6 @@ export function DraggableGuest({
 
   const guestIndex = family.guests.findIndex((g) => g.id === guest.id);
   const displayName = guest.nombre || `${family.name} #${guestIndex + 1}`;
-
-  const handleSaveLocalEdit = () => {
-    updateGuestName(family.id, guest.id, nameValue);
-    setIsEditing(false);
-  };
 
   const StatusIcon = () => {
     switch (guest.estatus) {
@@ -81,14 +73,14 @@ export function DraggableGuest({
     >
       <div className="flex items-center justify-between w-full">
         <div
-          ref={!isEditing ? setNodeRef : undefined}
-          {...(!isEditing ? attributes : {})}
-          {...(!isEditing ? listeners : {})}
+          ref={setNodeRef}
+          {...attributes}
+          {...listeners}
           className="flex items-center gap-1.5 flex-1 min-w-0 cursor-grab"
         >
           <GripVertical
             size={12}
-            className={isAssigned || isEditing ? "opacity-0" : "text-[#EBE5DA]"}
+            className={isAssigned ? "opacity-0" : "text-[#EBE5DA]"}
           />
 
           <div className="flex items-center gap-1.5 min-w-0">
@@ -97,85 +89,44 @@ export function DraggableGuest({
               className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0"
               style={{ backgroundColor: family.colorBg }}
             />
-
-            {isEditing ? (
-              <input
-                autoFocus
-                className="flex-1 text-[11px] border-b border-[#C5A669] bg-transparent outline-none focus:border-b-2 font-medium text-[#2C2C29]"
-                value={nameValue}
-                onChange={(e) => setNameValue(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSaveLocalEdit()}
-              />
-            ) : (
-              <span
-                className={`truncate font-medium ${guest.nombre ? "text-[#2C2C29]" : "text-[#A8A29E] italic"} ${guest.estatus === "declined" ? "line-through" : ""}`}
-              >
-                {displayName}
-              </span>
-            )}
+            <span
+              className={`truncate font-medium ${guest.nombre ? "text-[#2C2C29]" : "text-[#A8A29E] italic"} ${guest.estatus === "declined" ? "line-through" : ""}`}
+            >
+              {displayName}
+            </span>
           </div>
         </div>
 
         <div className="flex items-center gap-1 opacity-0 group-hover/guest:opacity-100 transition-opacity shrink-0 bg-white/80 rounded pl-1">
-          {isEditing ? (
-            <>
+          {isAssigned && tableId && (
+            <Tooltip position="top" align="right" text="Desasignar">
               <button
-                onClick={handleSaveLocalEdit}
-                className="text-[9px] uppercase font-bold bg-[#C5A669] text-white px-1.5 py-0.5 rounded ml-1"
+                onClick={() => removeGuestFromTable(tableId, guest.id)}
+                className="p-1 bg-white border border-[#EBE5DA] shadow-sm hover:bg-red-50 rounded text-red-400 hover:text-red-600"
               >
-                Ok
+                <RotateCcw size={10} />
               </button>
-              <button
-                onClick={() => setIsEditing(false)}
-                className="text-[#A8A29E] hover:text-red-500 p-0.5"
-              >
-                <X size={12} />
-              </button>
-            </>
-          ) : (
-            <>
-              <Tooltip position="top" align="right" text="Asignar nombre local">
-                <button
-                  onClick={() => {
-                    setIsEditing(true);
-                    setNameValue(guest.nombre || "");
-                  }}
-                  className="p-1 hover:bg-[#F9F7F2] rounded text-[#C5A669] shadow-sm bg-white border border-[#EBE5DA]"
-                >
-                  <Edit2 size={10} />
-                </button>
-              </Tooltip>
-              {isAssigned && tableId && (
-                <Tooltip position="top" align="right" text="Desasignar">
-                  <button
-                    onClick={() => removeGuestFromTable(tableId, guest.id)}
-                    className="p-1 bg-white border border-[#EBE5DA] shadow-sm hover:bg-red-50 rounded text-red-400 hover:text-red-600"
-                  >
-                    <RotateCcw size={10} />
-                  </button>
-                </Tooltip>
-              )}
-              <Tooltip
-                position="top"
-                align="right"
-                text="Eliminar asiento de la lista"
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    triggerSeatRemoval(family.id, guest.id);
-                  }}
-                  className="p-1 bg-white border border-[#EBE5DA] shadow-sm hover:bg-red-50 rounded text-red-500 hover:text-red-700 ml-0.5"
-                >
-                  <Trash2 size={10} />
-                </button>
-              </Tooltip>
-            </>
+            </Tooltip>
           )}
+          <Tooltip
+            position="top"
+            align="right"
+            text="Eliminar asiento de la lista"
+          >
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerSeatRemoval(family.id, guest.id);
+              }}
+              className="p-1 bg-white border border-[#EBE5DA] shadow-sm hover:bg-red-50 rounded text-red-500 hover:text-red-700 ml-0.5"
+            >
+              <Trash2 size={10} />
+            </button>
+          </Tooltip>
         </div>
       </div>
 
-      {isAssigned && tableAlias && !isEditing && (
+      {isAssigned && tableAlias && (
         <span className="text-[9px] font-bold px-1.5 py-[1px] rounded bg-green-50 text-green-700 flex items-center gap-1 border border-green-200 w-fit ml-[38px]">
           <CheckCircle2 size={10} /> {tableAlias} - Ast {seatNumber}
         </span>

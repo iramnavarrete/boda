@@ -238,16 +238,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     setIsSaving(true);
     try {
       await SeatingService.savePlan(invitationId, elements);
-
-      const unsavedFamilies = families.filter((f) => f.hasUnsavedChanges);
-      if (unsavedFamilies.length > 0) {
-        await Promise.all(
-          unsavedFamilies.map((f) =>
-            SeatingService.updateSeatAlias(invitationId, f.id, f.aliases),
-          ),
-        );
-      }
-
       markSaved();
       showToast("Todos los cambios guardados correctamente.");
     } catch (error) {

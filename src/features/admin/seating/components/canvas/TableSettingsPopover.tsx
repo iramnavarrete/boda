@@ -14,7 +14,6 @@ interface SeatGuestInfo {
   status: GuestStatus;
   familyId: string;
   familyName: string;
-  aliases: string[];
   colorBg: string;
   colorBorder: string;
   index: number;
@@ -34,22 +33,14 @@ const SeatListItem = ({
   seat: SeatItemData;
   elementId: string;
 }) => {
-  const { removeGuestFromTable, updateGuestName } = useSeatingStore();
+  const { removeGuestFromTable } = useSeatingStore();
   const { triggerSeatRemoval } = useSeatingModalContext();
-  const [isEditing, setIsEditing] = useState(false);
-  const [nameValue, setNameValue] = useState(seat.guest?.name || "");
-
-  const handleSaveLocalEdit = () => {
-    if (!seat.guest || !seat.guestId) return;
-    updateGuestName(seat.guest.familyId, seat.guestId, nameValue);
-    setIsEditing(false);
-  };
 
   return (
     <div className="flex items-center justify-between gap-2 py-1 px-2 rounded-lg bg-[#F9F7F2] group/seat">
       <div className="flex items-center gap-2 min-w-0 flex-1">
         <div
-          className="relative w-5 h-5 rounded-full border shadow-sm flex items-center justify-center shrink-0 transition-colors"
+          className="relative w-5 h-5 rounded-full border shadow-sm flex items-center justify-center shrink-0"
           style={{
             backgroundColor:
               seat.isAssigned && seat.guest ? seat.guest.colorBg : "#EBECEF",
@@ -77,81 +68,38 @@ const SeatListItem = ({
             />
           )}
         </div>
-
-        {isEditing ? (
-          <input
-            autoFocus
-            className="flex-1 text-[11px] border-b border-[#C5A669] bg-transparent outline-none focus:border-b-2 font-medium text-[#2C2C29]"
-            value={nameValue}
-            onChange={(e) => setNameValue(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSaveLocalEdit()}
-          />
-        ) : (
-          <span
-            className={`text-xs font-medium truncate ${
-              seat.isAssigned ? "text-[#2C2C29]" : "text-[#A8A29E] italic"
-            } ${seat.guest?.status === "declined" ? "line-through" : ""}`}
-          >
-            {seat.isAssigned && seat.guest
-              ? seat.guest.name ||
-                `${seat.guest.familyName} #${seat.guest.index + 1}`
-              : "Disponible"}
-          </span>
-        )}
+        <span
+          className={`text-xs font-medium truncate ${
+            seat.isAssigned ? "text-[#2C2C29]" : "text-[#A8A29E] italic"
+          } ${seat.guest?.status === "declined" ? "line-through" : ""}`}
+        >
+          {seat.isAssigned && seat.guest
+            ? seat.guest.name ||
+              `${seat.guest.familyName} #${seat.guest.index + 1}`
+            : "Disponible"}
+        </span>
       </div>
 
       {seat.isAssigned && seat.guestId && seat.guest && (
         <div className="flex items-center gap-1 opacity-0 group-hover/seat:opacity-100 transition-opacity">
-          {isEditing ? (
-            <>
-              <button
-                onClick={handleSaveLocalEdit}
-                className="text-[9px] uppercase font-bold bg-[#C5A669] text-white px-1 py-0.5 rounded"
-              >
-                Ok
-              </button>
-              <button
-                onClick={() => setIsEditing(false)}
-                className="text-[#A8A29E] hover:text-red-500 p-0.5"
-              >
-                <X size={12} />
-              </button>
-            </>
-          ) : (
-            <>
-              <Tooltip text="Asignar nombre local" position="left">
-                <button
-                  onClick={() => {
-                    setIsEditing(true);
-                    setNameValue(seat.guest!.name || "");
-                  }}
-                  className="p-1 hover:bg-white rounded text-[#C5A669]"
-                >
-                  <Edit2 size={10} />
-                </button>
-              </Tooltip>
-
-              <Tooltip text="Quitar de la mesa" position="left">
-                <button
-                  onClick={() => removeGuestFromTable(elementId, seat.guestId!)}
-                  className="p-1 hover:bg-red-50 text-red-400 rounded"
-                >
-                  <RotateCcw size={10} />
-                </button>
-              </Tooltip>
-
-              <Tooltip text="Eliminar asiento de la lista" position="left">
-                <button
-                  onClick={() =>
-                    triggerSeatRemoval(seat.guest!.familyId, seat.guestId!)
-                  }
-                  className="p-1 hover:bg-red-50 text-red-500 rounded ml-0.5"
-                >
-                  <Trash2 size={10} />
-                </button>
-              </Tooltip>
-            </>
-          )}
+          <Tooltip text="Quitar de la mesa" position="left">
+            <button
+              onClick={() => removeGuestFromTable(elementId, seat.guestId!)}
+              className="p-1 hover:bg-red-50 text-red-400 rounded"
+            >
+              <RotateCcw size={10} />
+            </button>
+          </Tooltip>
+          <Tooltip text="Eliminar asiento de la lista" position="left">
+            <button
+              onClick={() =>
+                triggerSeatRemoval(seat.guest!.familyId, seat.guestId!)
+              }
+              className="p-1 hover:bg-red-50 text-red-500 rounded ml-0.5"
+            >
+              <Trash2 size={10} />
+            </button>
+          </Tooltip>
         </div>
       )}
     </div>
@@ -213,7 +161,6 @@ export function TableSettingsPopover({
             ...g,
             familyId: f.id,
             familyName: f.name,
-            aliases: f.aliases,
             colorBg: f.colorBg,
             colorBorder: f.colorBorder,
             index: f.guests.findIndex((gu) => gu.id === guestId),

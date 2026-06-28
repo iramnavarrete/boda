@@ -72,32 +72,24 @@ export const SeatingService = {
   formatGuestsToFamilies: (rawGuests: ExtendedDbFamily[]): FamilyElement[] => {
     return rawGuests.map((rawGuest: ExtendedDbFamily, i: number) => {
       const hue = Math.floor((i * (360 / rawGuests.length)) % 360);
-
       const familyName = rawGuest.nombre || `Grupo ${i + 1}`;
       const totalTickets = Number(rawGuest.invitados) || 1;
       const confirmedCount = Number(rawGuest.confirmados) || 0;
       const isAttending = rawGuest.asistencia;
-
       const deadline = rawGuest.fechaLimiteConfirmacion || null;
-      const aliases = rawGuest.aliasAsientos || [];
 
       const familyGuests: GuestSeat[] = Array.from(
         { length: totalTickets },
         (_, j) => {
           let currentStatus: GuestStatus = "pending";
-
           if (isAttending === false) {
             currentStatus = "declined";
           } else if (isAttending === true) {
             currentStatus = j < confirmedCount ? "confirmed" : "declined";
           }
-
-          // 🔥 Eliminado el fallback que ponía el nombre de la familia en el índice 0
-          const seatName = aliases[j] || "";
-
           return {
             id: `${rawGuest.id}_seat_${j}`,
-            nombre: seatName,
+            nombre: "",
             estatus: currentStatus,
           };
         },
@@ -106,8 +98,7 @@ export const SeatingService = {
       return {
         id: rawGuest.id,
         name: familyName,
-        deadline: deadline,
-        aliases: aliases,
+        deadline,
         colorBg: `hsl(${hue}, 80%, 85%)`,
         colorBorder: `hsl(${hue}, 70%, 65%)`,
         guests: familyGuests,

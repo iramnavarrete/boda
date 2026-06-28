@@ -36,11 +36,9 @@ export interface FamilyElement {
   id: string;
   name: string;
   deadline: string | null;
-  aliases: string[];
   colorBg: string;
   colorBorder: string;
   guests: GuestSeat[];
-  hasUnsavedChanges?: boolean;
 }
 
 export interface SeatingStore {
@@ -81,8 +79,6 @@ export interface SeatingStore {
   assignFamilyToTable: (tableId: string, familyId: string) => void;
   removeGuestFromTable: (tableId: string, guestId: string) => void;
   removeFamilyFromTable: (familyId: string) => void;
-  updateGuestName: (familyId: string, guestId: string, name: string) => void;
-  clearFamilyUnsavedChanges: (familyId: string) => void;
 
   executeRemoveSeat: (
     invitationId: string,
@@ -130,15 +126,13 @@ export const generateFamilyColors = (
 const groupSeatsByFamily = (
   seats: string[],
   families: FamilyElement[],
-  maxSeats: number,
 ): string[] => {
-  // 1. Nos quedamos solo con los invitados reales que están en esta mesa
+  // Solo trabajamos con IDs reales, nunca con ""
   const filled = seats.filter((s) => s && s !== "");
 
   const familyOrder: string[] = [];
   const guestsByFamily: Record<string, string[]> = {};
 
-  // 2. Mapeamos a qué familia pertenece cada invitado
   filled.forEach((guestId) => {
     const family = families.find((f) => f.guests.some((g) => g.id === guestId));
     const famId = family ? family.id : "independent";
@@ -150,18 +144,13 @@ const groupSeatsByFamily = (
     guestsByFamily[famId].push(guestId);
   });
 
-  // 3. Reconstruimos el arreglo fusionando a los miembros por familia
   const result: string[] = [];
   familyOrder.forEach((famId) => {
     result.push(...guestsByFamily[famId]);
   });
 
-  // 4. Rellenamos el resto de la mesa con espacios vacíos
-  while (result.length < maxSeats) {
-    result.push("");
-  }
-
-  return result.slice(0, maxSeats);
+  // 🔥 Sin relleno de "" — el array solo contiene IDs reales
+  return result;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -186,10 +175,9 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     }),
 
   markSaved: () =>
-    set((state) => ({
+    set({
       hasUnsavedChanges: false,
-      families: state.families.map((f) => ({ ...f, hasUnsavedChanges: false })),
-    })),
+    }),
 
   showToast: (msg) => {
     set({ toastMsg: msg });
@@ -246,7 +234,6 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
               assignedSeats: groupSeatsByFamily(
                 el.assignedSeats,
                 state.families,
-                seats,
               ),
             }
           : el,
@@ -278,11 +265,7 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
 
           return {
             ...el,
-            assignedSeats: groupSeatsByFamily(
-              newSeats,
-              state.families,
-              el.seats,
-            ),
+            assignedSeats: groupSeatsByFamily(newSeats, state.families),
           };
         }),
         hasUnsavedChanges: true,
@@ -312,11 +295,7 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
 
           return {
             ...el,
-            assignedSeats: groupSeatsByFamily(
-              newSeats,
-              state.families,
-              el.seats,
-            ),
+            assignedSeats: groupSeatsByFamily(newSeats, state.families),
           };
         }),
         hasUnsavedChanges: true,
@@ -333,7 +312,7 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
         );
         return {
           ...el,
-          assignedSeats: groupSeatsByFamily(newSeats, state.families, el.seats),
+          assignedSeats: groupSeatsByFamily(newSeats, state.families),
         };
       }),
       hasUnsavedChanges: true,
@@ -355,7 +334,6 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
               (s) => s && s !== "" && !guestIds.includes(s),
             ),
             state.families,
-            el.seats,
           ),
         })),
         hasUnsavedChanges: true,
@@ -363,30 +341,6 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     });
     removeHighlightSeats("family", familyId);
   },
-
-  updateGuestName: (familyId, guestId, name) =>
-    set((state) => ({
-      hasUnsavedChanges: true,
-      families: state.families.map((f) => {
-        if (f.id === familyId) {
-          return {
-            ...f,
-            hasUnsavedChanges: true,
-            guests: f.guests.map((g) =>
-              g.id === guestId ? { ...g, name: name || "" } : g,
-            ),
-          };
-        }
-        return f;
-      }),
-    })),
-
-  clearFamilyUnsavedChanges: (familyId) =>
-    set((state) => ({
-      families: state.families.map((f) =>
-        f.id === familyId ? { ...f, hasUnsavedChanges: false } : f,
-      ),
-    })),
 
   executeRemoveSeat: async (
     invitationId: string,
@@ -406,7 +360,6 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
           (seatId) => seatId && seatId !== "" && seatId !== guestId,
         ),
         state.families,
-        el.seats,
       ),
     }));
 
@@ -446,7 +399,6 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
               (s) => s && s !== "" && !guestIds.includes(s),
             ),
             currentState.families,
-            el.seats,
           ),
         })),
         families: currentState.families.filter((f) => f.id !== familyId),

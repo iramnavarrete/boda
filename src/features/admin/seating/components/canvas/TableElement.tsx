@@ -246,11 +246,10 @@ export default function TableElement({ element }: { element: SeatingElement }) {
         angleDegrees = 180;
       }
 
-      const assignedGuestId = element.assignedSeats[i];
+      const assignedGuestId = element.assignedSeats[i]; // undefined si no hay nadie
       const guestInfo = assignedGuestId ? getGuestInfo(assignedGuestId) : null;
-
       const isAssigned = !!guestInfo;
-
+      
       seats.push(
         <TableSeat
           key={i}
