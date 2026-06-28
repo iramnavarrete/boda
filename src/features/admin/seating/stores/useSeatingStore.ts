@@ -342,26 +342,44 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     removeHighlightSeats("family", familyId);
   },
 
-  executeRemoveSeat: async (
-    invitationId: string,
-    familyId: string,
-    guestId: string,
-  ) => {
+  executeRemoveSeat: async (invitationId, familyId, guestId) => {
     const state = get();
     const family = state.families.find((f) => f.id === familyId);
     if (!family) return;
 
+    const removedIndex = family.guests.findIndex((g) => g.id === guestId);
+    if (removedIndex === -1) return;
+
     const updatedGuests = family.guests.filter((g) => g.id !== guestId);
 
-    const newElements = state.elements.map((el) => ({
-      ...el,
-      assignedSeats: groupSeatsByFamily(
-        el.assignedSeats.filter(
-          (seatId) => seatId && seatId !== "" && seatId !== guestId,
-        ),
-        state.families,
-      ),
-    }));
+    // 🔥 Usamos los IDs reales del store, no los reconstruimos con string
+    const idRemap: Record<string, string> = {};
+    family.guests.forEach((g, oldIndex) => {
+      if (oldIndex === removedIndex) return;
+      const newIndex = oldIndex < removedIndex ? oldIndex : oldIndex - 1;
+      // updatedGuests[newIndex] es el guest que quedará en esa posición
+      const newId = updatedGuests[newIndex]?.id;
+      if (newId && g.id !== newId) {
+        idRemap[g.id] = newId;
+      }
+    });
+
+    console.log("idRemap real:", idRemap);
+
+    const updatedFamilies = state.families.map((f) =>
+      f.id === familyId ? { ...f, guests: updatedGuests } : f,
+    );
+
+    const newElements = state.elements.map((el) => {
+      const remappedSeats = el.assignedSeats
+        .filter((seatId) => seatId && seatId !== "" && seatId !== guestId)
+        .map((seatId) => idRemap[seatId] ?? seatId);
+
+      return {
+        ...el,
+        assignedSeats: groupSeatsByFamily(remappedSeats, updatedFamilies),
+      };
+    });
 
     try {
       await FamiliesService.removeFamilySeatAndReduceCount(
@@ -371,12 +389,10 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
       );
       await SeatingService.savePlan(invitationId, newElements);
 
-      set((currentState) => ({
-        hasUnsavedChanges: true,
+      set(() => ({
+        hasUnsavedChanges: false,
         elements: newElements,
-        families: currentState.families.map((f) =>
-          f.id === familyId ? { ...f, guests: updatedGuests } : f,
-        ),
+        families: updatedFamilies,
       }));
     } catch (error) {
       console.error(error);

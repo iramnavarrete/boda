@@ -111,14 +111,24 @@ export function DraggableGuest({
           <Tooltip
             position="top"
             align="right"
-            text="Eliminar asiento de la lista"
+            text={
+              guest.estatus === "confirmed"
+                ? "No puedes eliminar un asiento confirmado"
+                : "Eliminar asiento de la lista"
+            }
           >
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                if (guest.estatus === "confirmed") return;
                 triggerSeatRemoval(family.id, guest.id);
               }}
-              className="p-1 bg-white border border-[#EBE5DA] shadow-sm hover:bg-red-50 rounded text-red-500 hover:text-red-700 ml-0.5"
+              disabled={guest.estatus === "confirmed"}
+              className={`p-1 bg-white border border-[#EBE5DA] shadow-sm hover:bg-red-50 rounded ml-0.5 transition-colors ${
+                guest.estatus === "confirmed"
+                  ? "text-gray-300 cursor-not-allowed opacity-50"
+                  : "text-red-500 hover:text-red-700"
+              }`}
             >
               <Trash2 size={10} />
             </button>

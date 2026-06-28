@@ -109,7 +109,7 @@ export function TableSeat({
         >
           <RotateCcw size={12} />
         </button>
-        {guestId && (
+        {guestId && status !== "confirmed" && (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -121,7 +121,6 @@ export function TableSeat({
               }
             }}
             className="p-1 hover:bg-red-50 text-red-500 hover:text-red-700 rounded transition-colors shrink-0 ml-0.5"
-            title="Eliminar asiento"
           >
             <Trash2 size={12} />
           </button>

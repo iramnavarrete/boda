@@ -82,7 +82,7 @@ const SeatListItem = ({
 
       {seat.isAssigned && seat.guestId && seat.guest && (
         <div className="flex items-center gap-1 opacity-0 group-hover/seat:opacity-100 transition-opacity">
-          <Tooltip text="Quitar de la mesa" position="left">
+          <Tooltip text="Quitar de la mesa" position="top" align="right">
             <button
               onClick={() => removeGuestFromTable(elementId, seat.guestId!)}
               className="p-1 hover:bg-red-50 text-red-400 rounded"
@@ -90,12 +90,25 @@ const SeatListItem = ({
               <RotateCcw size={10} />
             </button>
           </Tooltip>
-          <Tooltip text="Eliminar asiento de la lista" position="left">
+          <Tooltip
+            text={
+              seat.guest.status === "confirmed"
+                ? "No puedes eliminar un asiento confirmado"
+                : "Eliminar asiento de la lista"
+            }
+            position="top"
+            align="right"
+          >
             <button
               onClick={() =>
                 triggerSeatRemoval(seat.guest!.familyId, seat.guestId!)
               }
-              className="p-1 hover:bg-red-50 text-red-500 rounded ml-0.5"
+              disabled={seat.guest.status === "confirmed"}
+              className={`p-1 hover:bg-red-50 rounded ml-0.5 transition-colors ${
+                seat.guest.status === "confirmed"
+                  ? "text-gray-300 cursor-not-allowed pointer-events-none"
+                  : "text-red-500 hover:text-red-700"
+              }`}
             >
               <Trash2 size={10} />
             </button>
