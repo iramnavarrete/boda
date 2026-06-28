@@ -96,7 +96,7 @@ export function TableSeat({
             {status === "confirmed"
               ? "Confirmado"
               : status === "declined"
-                ? "Cancelado"
+                ? "Declinado"
                 : "Pendiente"}
           </span>
         </div>

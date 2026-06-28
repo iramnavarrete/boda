@@ -74,7 +74,6 @@ export default function TableElement({ element }: { element: SeatingElement }) {
    */
   const getTransformStyle = (): string | undefined => {
     if (transform) {
-      // Soy el elemento que está siendo arrastrado físicamente
       return `translate3d(${transform.x / zoom}px, ${transform.y / zoom}px, 0)`;
     }
 
@@ -85,11 +84,9 @@ export default function TableElement({ element }: { element: SeatingElement }) {
       globalActive.rect.current.translated && 
       globalActive.rect.current.initial
     ) {
-      // Soy un compañero seleccionado. Clono matemáticamente el desplazamiento del jefe.
       const deltaX = globalActive.rect.current.translated.left - globalActive.rect.current.initial.left;
       const deltaY = globalActive.rect.current.translated.top - globalActive.rect.current.initial.top;
       
-      // Aplicamos un factor para compensar que el delta que nos da dnd-kit a veces no trae el zoom aplicado
       return `translate3d(${deltaX / zoom}px, ${deltaY / zoom}px, 0)`;
     }
 
@@ -329,7 +326,11 @@ export default function TableElement({ element }: { element: SeatingElement }) {
     <div
       ref={setNodeRef}
       className={`absolute table-element-card ${
-        isDragging || isPartOfActiveDrag ? "z-[70]" : isSelected ? "z-[60]" : "z-10"
+        isDragging || isPartOfActiveDrag 
+          ? "z-[70]" 
+          : isSelected 
+            ? "z-[60]" 
+            : "z-10 hover:z-[50] transition-[z-index] duration-0 delay-[400ms] hover:delay-0"
       }`}
       style={{
         left: element.x,
