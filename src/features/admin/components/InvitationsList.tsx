@@ -37,7 +37,7 @@ const InvitationCard = ({
 
   return (
     <Link
-      href={`/admin/invitations/${invitation.id}${isAdminOrHost ? "/dashboard" : ""}`}
+      href={`/admin/invitations/${invitation.id}${isAdminOrHost ? "/dashboard" : "/checkin"}`}
       className="group relative flex flex-col h-full bg-white rounded-2xl overflow-hidden border border-[#EBE5DA] transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(197,166,105,0.2)] hover:-translate-y-1 hover:border-[#C5A669]"
     >
       {canEditEventDetails && (

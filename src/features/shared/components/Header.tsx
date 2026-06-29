@@ -222,7 +222,7 @@ const Header = ({
       });
     }
 
-    if (isAdminOrHost || isGuardia) {
+    if (isAdminOrHost) {
       items.push({
         label: "Invitados",
         href: basePath,
