@@ -385,7 +385,13 @@ const FamiliesStatsPieChart = ({ stats }: { stats: DashboardStats }) => {
   );
 };
 
-const ActivityItem = ({ activity }: { activity: FamilyActivity }) => {
+const ActivityItem = ({
+  activity,
+}: {
+  activity: FamilyActivity & {
+    guestName?: string;
+  }; /* tipado agregado por retrocompatibilidad */
+}) => {
   const timeAgo = useTimeAgo(activity.timestamp);
 
   // Configuramos colores y textos dependiendo del tipo de acción
@@ -399,7 +405,7 @@ const ActivityItem = ({ activity }: { activity: FamilyActivity }) => {
   if (activity.action === "confirm") {
     config = {
       icon: <CheckCircle2 size={16} />,
-      text: `confirmó asistencia${activity.confirmedGuests ? ` de ${activity.confirmedGuests} invitado${activity.confirmedGuests === 1 ? "" : "s"}` : ''}`,
+      text: `confirmó asistencia${activity.confirmedGuests ? ` de ${activity.confirmedGuests} invitado${activity.confirmedGuests === 1 ? "" : "s"}` : ""}`,
       bgColor: "bg-[#E7F3EF]", // Verde suave
       iconColor: "text-[#2D5B4F]",
     };
@@ -422,7 +428,7 @@ const ActivityItem = ({ activity }: { activity: FamilyActivity }) => {
       <div className="flex-1 pt-0.5">
         <p className="text-sm text-stone-600 leading-snug">
           <strong className="text-charcoal-800 font-bold">
-            {activity.familyName}
+            {activity.familyName || activity.guestName}
           </strong>{" "}
           {config.text}
         </p>
@@ -505,7 +511,11 @@ export default function InvitationDashboard() {
 
   const invitationData = useInvitationStore((state) => state.invitationData);
 
-  const { families, isLoadingFamilies: isLoadingFamilies, error } = useFamiliesData(invitationData?.id);
+  const {
+    families,
+    isLoadingFamilies: isLoadingFamilies,
+    error,
+  } = useFamiliesData(invitationData?.id);
 
   const stats = useFamiliesStats(families);
 
