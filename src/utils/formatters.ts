@@ -17,6 +17,9 @@ const meses = [
 ];
 
 export const formatTimeStamp = (timestamp: Timestamp) => {
+  if (!timestamp || typeof timestamp.toDate !== "function") {
+    return "";
+  }
   const date = timestamp.toDate();
   return `${date.getDate()} / ${meses[date.getMonth()]} / ${date.getFullYear()}`;
 };
