@@ -1,12 +1,12 @@
 import assistanceSchema from "@/validation/yupSchema";
 import { Formik, FormikProps } from "formik";
-import { FC, useCallback, useRef, useState, useEffect } from "react";
+import { FC, useCallback, useRef, useState, useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Separator from "@/icons/separator";
 import { useSearchParams } from "next/navigation";
 import AnimatedEntrance from "../AnimatedEntrance";
 import { Family, FamilyFormData, Invitation } from "@/types";
-import { QrCode, Plus, Minus, ArrowRight } from "lucide-react";
+import { Plus, Minus, ArrowRight, Clock } from "lucide-react";
 import { FamiliesService } from "@/services/familiesService";
 import { useInvitationStore } from "../../stores/invitationStore";
 import { FamilyQuotesService } from "@/services/familyQuotesService";
@@ -165,25 +165,17 @@ const TicketCard: FC<StateCardProps> = ({
 
           {/* Contenedor del QR */}
           <div className="mx-auto w-36 h-36 bg-white rounded-xl shadow-sm border border-stone-200 flex items-center justify-center mt-8 mb-4 relative transition-transform hover:scale-[1.02] duration-300">
-            {isDefaultId(familyData.id) ? (
-              // Mostramos el ícono de Lucide si es el usuario genérico
-              <QrCode size={160} className="text-[#2C2C29]" strokeWidth={1} />
-            ) : (
-              // Generamos el QR real usando el ID del invitado
               <div className="w-full h-full flex items-center justify-center">
                 <ReactQRCode
-                  value={familyData.id!}
+                  value={familyData.id || "QRCode"}
                   size={256}
-                  // style={{ height: "auto", maxWidth: "100%", width: "100%" }}
                   dataModulesSettings={{
                     style: "rounded",
                   }}
                   finderPatternInnerSettings={{ style: "rounded" }}
                   finderPatternOuterSettings={{ style: "rounded" }}
-                  svgProps={{fill: "#2C2C29" }}
                 />
               </div>
-            )}
           </div>
 
           <p className="text-[9px] text-stone-400 uppercase tracking-[0.25em] text-center mb-8 max-w-[40ch]">
@@ -323,6 +315,29 @@ const Assistants: FC<Props> = ({
   const isFormLocked =
     familyData.cambiosPermitidos === false || isExpiredLocal();
 
+  // Generamos la fecha objetivo segura
+  const deadlineString = familyData?.fechaLimiteConfirmacion
+    ? familyData.fechaLimiteConfirmacion.includes("T")
+      ? familyData.fechaLimiteConfirmacion
+      : `${familyData.fechaLimiteConfirmacion}T23:59:59`
+    : undefined;
+
+  // Formateamos la fecha a un string legible (Ej: "15 de noviembre a las 11:59 p. m.")
+  const formattedDeadline = useMemo(() => {
+    if (!deadlineString) return "";
+    const d = new Date(deadlineString);
+    const datePart = new Intl.DateTimeFormat("es-MX", {
+      day: "numeric",
+      month: "long",
+    }).format(d);
+    const timePart = new Intl.DateTimeFormat("es-MX", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }).format(d);
+    return `${datePart} a las ${timePart}`;
+  }, [deadlineString]);
+
   const handleGetFamilyData = useCallback(
     (id: string) => {
       if (!isDefaultId(id) && invitationData) {
@@ -399,10 +414,20 @@ const Assistants: FC<Props> = ({
               Confirmación de asistencia
             </p>
             {!isFormLocked && !isFormSubmitted && (
-              <p className="font-nourdLight text-sm text-center px-10 max-w-sm text-stone-600">
-                Tu lugar te espera. Por favor, confirma tu asistencia a
-                continuación.
-              </p>
+              <div className="flex flex-col items-center gap-3">
+                <p className="font-nourdLight text-sm text-center px-10 max-w-sm text-stone-600">
+                  Tu lugar te espera. Por favor, confirma tu asistencia a
+                  continuación.
+                </p>
+                {familyData?.fechaLimiteConfirmacion && formattedDeadline && (
+                  <div className="flex items-center gap-1.5 mx-6 px-4 py-1.5 bg-white/60 border border-[#EBE5DA] rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+                    <Clock size={12} className="text-[#C5A669] shrink-0" />
+                    <span className="text-[10px] font-bold text-[#5A5A5A] uppercase tracking-widest text-center">
+                      Tienes hasta el {formattedDeadline} para confirmar
+                    </span>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </AnimatedEntrance>
@@ -717,7 +742,9 @@ const Assistants: FC<Props> = ({
                                           }
                                           className="w-full bg-transparent border-b border-sand py-2 text-sm text-[#2C2C29] placeholder:text-stone-300 focus:border-stone-500 outline-none resize-none transition-colors"
                                           rows={1}
-                                          style={{ fieldSizing: "content" }}
+                                          style={
+                                            { fieldSizing: "content" }
+                                          }
                                           placeholder="Escribe aquí tu mensaje..."
                                         />
                                       </div>
@@ -768,7 +795,7 @@ const Assistants: FC<Props> = ({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="mt-8"
+                  className="mt-8 flex flex-col items-center gap-6"
                 >
                   <button
                     onClick={() => {
@@ -786,6 +813,15 @@ const Assistants: FC<Props> = ({
                   >
                     Modificar mi respuesta
                   </button>
+
+                  {familyData?.fechaLimiteConfirmacion && formattedDeadline && (
+                    <div className="flex items-center gap-1.5 mx-6 px-2 py-1.5 bg-white/40 border border-[#EBE5DA] rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+                      <Clock size={12} className="text-[#A8A29E] shrink-0" />
+                      <span className="text-[9px] font-bold text-[#A8A29E] uppercase tracking-widest text-center">
+                        Puedes ajustar hasta el {formattedDeadline}
+                      </span>
+                    </div>
+                  )}
                 </motion.div>
               )}
           </div>
