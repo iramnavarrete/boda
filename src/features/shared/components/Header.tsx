@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Users,
   ScanLine,
+  LayoutTemplate,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, usePathname } from "next/navigation";
@@ -213,31 +214,34 @@ const Header = ({
 
     const items: NavItemType[] = [];
 
+    // Validamos permisos y agrupamos
     if (isAdminOrHost) {
-      items.push({
-        label: "Inicio",
-        href: `${basePath}/dashboard`,
-        icon: <Home size={18} />,
-        active: pathname?.includes("/dashboard"),
-      });
-    }
-
-    if (isAdminOrHost) {
-      items.push({
-        label: "Invitados",
-        href: basePath,
-        icon: <UserIcon size={18} />,
-        active: pathname === basePath,
-      });
-    }
-
-    if (isAdminOrHost) {
-      items.push({
-        label: "Mensajes",
-        href: `${basePath}/quotes`,
-        icon: <Mail size={18} />,
-        active: pathname?.includes("/quotes"),
-      });
+      items.push(
+        {
+          label: "Inicio",
+          href: `${basePath}/dashboard`,
+          icon: <Home size={18} />,
+          active: pathname?.includes("/dashboard"),
+        },
+        {
+          label: "Invitados",
+          href: basePath,
+          icon: <UserIcon size={18} />,
+          active: pathname === basePath,
+        },
+        {
+          label: "Mesas",
+          href: `${basePath}/seating`,
+          icon: <LayoutTemplate size={18} />,
+          active: pathname?.includes("/seating"),
+        },
+        {
+          label: "Mensajes",
+          href: `${basePath}/quotes`,
+          icon: <Mail size={18} />,
+          active: pathname?.includes("/quotes"),
+        },
+      );
     }
 
     if (isAdminOrHost || isGuardia) {
@@ -286,14 +290,14 @@ const Header = ({
                 <Link
                   href="/admin"
                   title="Mis Eventos"
-                  className="hidden p-2 lg:p-1.5 md:flex items-center gap-2 text-sm font-bold text-primary hover:text-gold transition-colors hover:bg-sand-50 rounded-full lg:rounded-xl"
+                  className="hidden p-2 lg:p-1.5 lg:flex items-center gap-2 text-sm font-bold text-primary hover:text-gold transition-colors hover:bg-sand-50 rounded-full lg:rounded-xl"
                 >
                   <div className="rounded-lg bg-transparent transition-colors">
                     <CalendarHeart size={20} />
                   </div>
-                  <span className="hidden lg:block">Mis Eventos</span>
+                  <span>Mis Eventos</span>
                 </Link>
-                <div className="hidden md:block bg-sand-200 w-px h-8 ml-2.5 mr-4" />
+                <div className="hidden lg:block bg-sand-200 w-px h-8 ml-2.5 mr-4" />
                 <div
                   className={cn(
                     "w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-colors mr-2",
@@ -335,9 +339,9 @@ const Header = ({
           </div>
         </div>
 
-        {/* CENTRO (Desktop Nav) */}
+        {/* CENTRO (Desktop Nav lg+) */}
         {navItems.length > 0 && (
-          <nav className="hidden md:flex items-center gap-1 md:flex-1 justify-end px-2">
+          <nav className="hidden lg:flex items-center gap-1 lg:flex-1 justify-end px-2">
             {navItems.map((item) => (
               <DesktopNavLink
                 key={item.href}
@@ -349,36 +353,35 @@ const Header = ({
           </nav>
         )}
 
-        {/* DERECHA (Acciones) */}
+        {/* DERECHA (Acciones lg+) */}
         <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
             {variant === "landing" ? (
               <Link
                 href="/#paquetes"
                 title="Paquetes"
-                className="flex items-center justify-center gap-2 p-2.5 lg:px-5 lg:py-2.5 bg-primary text-paper rounded-full text-xs font-bold uppercase tracking-widest hover:bg-charcoal-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                className="flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-paper rounded-full text-xs font-bold uppercase tracking-widest hover:bg-charcoal-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
               >
                 <Gem size={14} className="text-gold" />
-                <span className="hidden lg:block">Paquetes</span>
+                <span>Paquetes</span>
               </Link>
             ) : (
               <button
                 onClick={AuthService.logout}
                 title="Cerrar Sesión"
-                className="flex items-center justify-center gap-2 text-stone-400 hover:text-red-500 hover:bg-red-50 p-2.5 lg:px-3 lg:py-1.5 rounded-full lg:rounded-lg text-sm font-medium transition-colors"
+                className="flex items-center justify-center gap-2 text-stone-400 hover:text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
               >
                 <LogOut size={18} className="text-red-400" />{" "}
-                <span className="hidden lg:block text-red-400">
-                  Cerrar Sesión
-                </span>
+                <span className="text-red-400">Cerrar Sesión</span>
               </button>
             )}
           </div>
 
+          {/* Menú Hamburuguesa para pantallas menores a LG */}
           <button
             onClick={toggleMenu}
             className={cn(
-              "md:hidden flex items-center gap-2 p-2 rounded-lg transition-all active:scale-95 text-stone-600",
+              "lg:hidden flex items-center gap-2 p-2 rounded-lg transition-all active:scale-95 text-stone-600",
               isMenuOpen ? "bg-sand-100" : "hover:bg-sand-100",
             )}
           >
@@ -387,7 +390,7 @@ const Header = ({
         </div>
       </div>
 
-      {/* MOBILE MENU */}
+      {/* MOBILE MENU (< lg) */}
       <AnimatePresence>
         {isMenuOpen && (
           <>
@@ -397,7 +400,7 @@ const Header = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={handleMobileClose}
-              className="fixed inset-0 bg-stone-900/10 backdrop-blur-sm z-30 top-16 md:hidden"
+              className="fixed inset-0 bg-stone-900/10 backdrop-blur-sm z-30 top-16 lg:hidden"
             />
             <motion.div
               initial={{ y: -10, opacity: 0 }}
@@ -405,7 +408,7 @@ const Header = ({
               exit={{ y: -10, opacity: 0 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
               className={cn(
-                "absolute top-0 pt-16 z-40 w-full border-b shadow-2xl overflow-hidden rounded-b-2xl md:hidden",
+                "absolute top-0 pt-16 z-40 w-full border-b shadow-2xl overflow-hidden rounded-b-2xl lg:hidden",
                 config.mobileBg,
               )}
             >
@@ -486,7 +489,7 @@ const DesktopNavLink = ({
     href={href}
     title={label}
     className={cn(
-      "flex items-center justify-center gap-2 p-2.5 lg:px-4 lg:py-2 rounded-full text-sm font-medium transition-all border border-transparent",
+      "flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border border-transparent",
       baseClassName,
       active && activeClassName,
     )}
@@ -501,7 +504,7 @@ const DesktopNavLink = ({
         {icon}
       </span>
     )}
-    <span className="hidden lg:block">{label}</span>
+    <span>{label}</span>
   </Link>
 );
 
