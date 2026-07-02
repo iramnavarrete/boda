@@ -41,6 +41,7 @@ import { useConfirmModal } from "@/features/admin/hooks/useConfirmModal";
 import ElementsPalette from "./ElementsPalette";
 import LayoutSetupModal from "../canvas/LayoutSetupModal";
 import { GuestSeat } from "@/types";
+import MobileFallback from "./MobileFallback";
 
 export type DragItemData =
   | {
@@ -466,8 +467,10 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     <SeatingModalContext.Provider
       value={{ triggerSeatRemoval, triggerFamilyRemoval, triggerAddSeat }}
     >
+      {/* ⚠️ PANTALLA DE BLOQUEO (SOLO MÓVILES) ⚠️ */}
+      <MobileFallback />
       <div
-        className="flex flex-row w-full overflow-hidden relative select-none"
+        className="hidden lg:flex flex-row w-full overflow-hidden relative select-none"
         style={{ height: "calc(100dvh - 4rem - 1px)" }}
       >
         <DndContext
@@ -640,6 +643,7 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
             ) : null}
           </DragOverlay>
         </DndContext>
+
         {toastMsg && (
           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-[#2C2C29] text-white px-4 py-2.5 rounded-xl shadow-xl z-[100] flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4 duration-300">
             <AlertCircle size={16} className="text-[#C5A669]" />
