@@ -231,9 +231,9 @@ const Header = ({
         },
         {
           label: "Mesas",
-          href: `${basePath}/seating`,
+          href: `${basePath}/seating-planner`,
           icon: <LayoutTemplate size={18} />,
-          active: pathname?.includes("/seating"),
+          active: pathname?.includes("/seating-planner"),
         },
         {
           label: "Mensajes",

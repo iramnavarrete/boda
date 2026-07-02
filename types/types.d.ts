@@ -184,7 +184,8 @@ export type ActivityActionType = "view" | "confirm" | "decline";
 export interface FamilyActivity {
   id?: string;
   familyId: string;
-  familyName: string;
+  familyName: string; // TODO ELIMINAR ESTE CAMPO
+  guestName?: string;
   action: ActivityActionType;
   confirmedGuests?: number | null;
   timestamp: Timestamp;
