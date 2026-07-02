@@ -9,7 +9,8 @@ export default function GuestAssignmentSidebar({
 }: {
   onClose?: () => void;
 }) {
-  const { families, elements } = useSeatingStore();
+  const families = useSeatingStore((state) => state.families);
+  const elements = useSeatingStore((state) => state.elements);
 
   const { setNodeRef } = useDroppable({
     id: "guests-area",

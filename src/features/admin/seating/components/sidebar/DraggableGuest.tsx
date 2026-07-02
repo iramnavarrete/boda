@@ -35,7 +35,7 @@ export function DraggableGuest({
   seatNumber?: number;
 }) {
   const { triggerSeatRemoval } = useSeatingModalContext();
-  const { removeGuestFromTable } = useSeatingStore();
+  const removeGuestFromTable = useSeatingStore((state) => state.removeGuestFromTable);
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `guest-${guest.id}`,

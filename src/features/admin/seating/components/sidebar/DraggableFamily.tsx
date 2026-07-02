@@ -25,8 +25,9 @@ export function DraggableFamily({
   family: FamilyElement;
   isFirstElement: boolean;
 }) {
-  const { elements, removeFamilyFromTable } = useSeatingStore();
-  const { triggerFamilyRemoval, triggerAddSeat } = useSeatingModalContext();
+  const elements = useSeatingStore((state) => state.elements);
+  const removeFamilyFromTable = useSeatingStore((state) => state.removeFamilyFromTable);
+  const { triggerFamilyRemoval } = useSeatingModalContext();
   const [isExpanded, setIsExpanded] = useState(false);
 
   const assignedCount = useMemo(

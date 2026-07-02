@@ -18,7 +18,9 @@ export default function LayoutSetupModal({
   dropX,
   dropY,
 }: LayoutSetupModalProps) {
-  const { elements, addLayoutElements, showToast } = useSeatingStore();
+  const elements = useSeatingStore((state) => state.elements);
+  const addLayoutElements = useSeatingStore((state) => state.addLayoutElements);
+  const showToast = useSeatingStore((state) => state.showToast);
 
   const [totalTables, setTotalTables] = useState<number | string>(15);
   const [seatsPerTable, setSeatsPerTable] = useState(10);

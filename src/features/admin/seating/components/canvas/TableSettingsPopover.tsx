@@ -33,7 +33,7 @@ const SeatListItem = ({
   seat: SeatItemData;
   elementId: string;
 }) => {
-  const { removeGuestFromTable } = useSeatingStore();
+  const removeGuestFromTable = useSeatingStore((state) => state.removeGuestFromTable);
   const { triggerSeatRemoval } = useSeatingModalContext();
 
   return (
@@ -128,13 +128,11 @@ export function TableSettingsPopover({
   isTable: boolean;
   onClose: () => void;
 }) {
-  const {
-    updateElementSeats,
-    updateElementAlias,
-    removeElement,
-    families,
-    showToast,
-  } = useSeatingStore();
+  const updateElementSeats = useSeatingStore((state) => state.updateElementSeats);
+  const updateElementAlias = useSeatingStore((state) => state.updateElementAlias);
+  const removeElement = useSeatingStore((state) => state.removeElement);
+  const families = useSeatingStore((state) => state.families);
+  const showToast = useSeatingStore((state) => state.showToast);
   const [numberValue, setNumberValue] = useState(
     element.alias.replace(/\D/g, ""),
   );

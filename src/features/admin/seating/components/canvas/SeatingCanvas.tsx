@@ -15,17 +15,16 @@ interface SeatingCanvasProps {
 export default function SeatingCanvas({
   openConfirmModal,
 }: SeatingCanvasProps) {
-  const {
-    elements,
-    selectedElementIds,
-    setSelectedElementIds,
-    setSelectedElementId,
-    removeMultipleElements,
-    showToast,
-    isInitialized,
-  } = useSeatingStore();
+  const elements = useSeatingStore((state) => state.elements);
+  const selectedElementIds = useSeatingStore((state) => state.selectedElementIds);
+  const setSelectedElementIds = useSeatingStore((state) => state.setSelectedElementIds);
+  const setSelectedElementId = useSeatingStore((state) => state.setSelectedElementId);
+  const removeMultipleElements = useSeatingStore((state) => state.removeMultipleElements);
+  const showToast = useSeatingStore((state) => state.showToast);
+  const isInitialized = useSeatingStore((state) => state.isInitialized);
 
-  const { zoom, setZoom } = useZoomStore();
+  const zoom = useZoomStore((state) => state.zoom);
+  const setZoom = useZoomStore((state) => state.setZoom);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
@@ -244,8 +243,6 @@ export default function SeatingCanvas({
     });
   };
 
-  const gridSize = 20 * zoom;
-
   return (
     <>
       <div className="zoom-controls absolute bottom-6 right-6 flex items-center gap-1 bg-white/95 backdrop-blur-sm p-1 rounded-full shadow-md border border-[#EBE5DA] z-40">
@@ -317,7 +314,7 @@ export default function SeatingCanvas({
             width: "4000px",
             height: "4000px",
             backgroundImage: `linear-gradient(#EBE5DA 1px, transparent 1px), linear-gradient(90deg, #EBE5DA 1px, transparent 1px)`,
-            backgroundSize: `${gridSize}px ${gridSize}px`,
+            backgroundSize: "20px 20px",
             transform: `scale(${zoom})`,
           }}
         >

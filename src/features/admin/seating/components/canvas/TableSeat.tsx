@@ -31,7 +31,8 @@ export function TableSeat({
   tableId,
   guestId,
 }: TableSeatProps) {
-  const { removeGuestFromTable, families } = useSeatingStore();
+  const removeGuestFromTable = useSeatingStore((state) => state.removeGuestFromTable);
+  const families = useSeatingStore((state) => state.families);
   const { triggerSeatRemoval } = useSeatingModalContext();
 
   const familyId = guestId

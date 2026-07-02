@@ -26,20 +26,14 @@ const AREA_ICONS: Record<string, React.ElementType> = {
   candy_bar: Candy,
 };
 
-export default function TableElement({ element }: { element: SeatingElement }) {
-  const {
-    selectedElementId,
-    selectedElementIds,
-    setSelectedElementId,
-    families,
-    updateElementGeometry,
-  } = useSeatingStore();
-
-  const { zoom } = useZoomStore();
-
-  const isSingleSelected = selectedElementId === element.id;
-  const isSelectedInBulk = selectedElementIds?.includes(element.id) ?? false;
+function TableElement({ element }: { element: SeatingElement }) {
+  const isSingleSelected = useSeatingStore((state) => state.selectedElementId === element.id);
+  const isSelectedInBulk = useSeatingStore((state) => state.selectedElementIds?.includes(element.id) ?? false);
   const isSelected = isSingleSelected || isSelectedInBulk;
+
+  const setSelectedElementId = useSeatingStore((state) => state.setSelectedElementId);
+  const updateElementGeometry = useSeatingStore((state) => state.updateElementGeometry);
+  const families = useSeatingStore((state) => state.families);
 
   const isTable = element.seats !== undefined && element.seats > 0;
   const isArea = !isTable;
@@ -74,7 +68,8 @@ export default function TableElement({ element }: { element: SeatingElement }) {
    */
   const getTransformStyle = (): string | undefined => {
     if (transform) {
-      return `translate3d(${transform.x / zoom}px, ${transform.y / zoom}px, 0)`;
+      const currentZoom = useZoomStore.getState().zoom;
+      return `translate3d(${transform.x / currentZoom}px, ${transform.y / currentZoom}px, 0)`;
     }
 
     if (
@@ -84,10 +79,11 @@ export default function TableElement({ element }: { element: SeatingElement }) {
       globalActive.rect.current.translated && 
       globalActive.rect.current.initial
     ) {
+      const currentZoom = useZoomStore.getState().zoom;
       const deltaX = globalActive.rect.current.translated.left - globalActive.rect.current.initial.left;
       const deltaY = globalActive.rect.current.translated.top - globalActive.rect.current.initial.top;
       
-      return `translate3d(${deltaX / zoom}px, ${deltaY / zoom}px, 0)`;
+      return `translate3d(${deltaX / currentZoom}px, ${deltaY / currentZoom}px, 0)`;
     }
 
     return undefined;
@@ -125,8 +121,9 @@ export default function TableElement({ element }: { element: SeatingElement }) {
     if (!resizeState.current) return;
     const { x, y, w, h, posX, posY, corner } = resizeState.current;
 
-    const dx = (e.clientX - x) / zoom;
-    const dy = (e.clientY - y) / zoom;
+    const currentZoom = useZoomStore.getState().zoom;
+    const dx = (e.clientX - x) / currentZoom;
+    const dy = (e.clientY - y) / currentZoom;
 
     const MIN_SIZE = 60;
     const MAX_SIZE = 1500;
@@ -274,22 +271,8 @@ export default function TableElement({ element }: { element: SeatingElement }) {
     return seats;
   };
 
-  const getAreaStyles = () => {
-    switch (element.type) {
-      case "stage":
-      case "cake_area": return { bg: "#ffe4e6", border: "#f43f5e", text: "#be123c" };
-      case "dance_floor": return { bg: "#e0e7ff", border: "#6366f1", text: "#4338ca" };
-      case "dj_booth": return { bg: "#e0f2fe", border: "#0ea5e9", text: "#0369a1" };
-      case "buffet": return { bg: "#dcfce7", border: "#22c55e", text: "#15803d" };
-      case "head_table": return { bg: "#fef3c7", border: "#f59e0b", text: "#b45309" };
-      default: return { bg: "#dbeafe", border: isSelected ? "#2563eb" : "#60a5fa", text: "#1e40af" };
-    }
-  };
-
-  const areaStyle = getAreaStyles();
   const AreaIcon = AREA_ICONS[element.type];
 
-  const isCircular = element.type === "round_table" || element.type === "cocktail_table";
   const isHalfMoon = element.type === "half_moon_table";
 
   const renderHalfMoonShape = () => {
@@ -307,30 +290,25 @@ export default function TableElement({ element }: { element: SeatingElement }) {
       >
         <path
           d={pathD}
-          fill={isOver ? "#eff6ff" : areaStyle.bg}
-          stroke={isOver ? "#2563eb" : isSelected ? "#C5A669" : areaStyle.border}
-          strokeWidth={isSelected ? 3 : 2.5}
           strokeDasharray={isArea ? "6 4" : undefined}
         />
       </svg>
     );
   };
 
-  let borderRadiusClass = "rounded-xl";
-  if (isCircular) borderRadiusClass = "rounded-full";
-
   const isPartOfActiveDrag = isSelectedInBulk && globalActive && globalActive.data.current?.type === "element";
 
   return (
     <div
       ref={setNodeRef}
-      className={`absolute table-element-card ${
-        isDragging || isPartOfActiveDrag 
-          ? "z-[70]" 
-          : isSelected 
-            ? "z-[60]" 
-            : "z-10 hover:z-[50] transition-[z-index] duration-0 delay-[400ms] hover:delay-0"
-      }`}
+      className="absolute table-element-card"
+      data-selected={isSelected}
+      data-single-selected={isSingleSelected}
+      data-dragging={isDragging || isPartOfActiveDrag}
+      data-is-over={isOver}
+      data-is-table={isTable}
+      data-is-area={isArea}
+      data-type={element.type}
       style={{
         left: element.x,
         top: element.y,
@@ -362,29 +340,18 @@ export default function TableElement({ element }: { element: SeatingElement }) {
       </div>
 
       {isHalfMoon && (
-        <div
-          className={`absolute inset-0 ${
-            isDragging || isPartOfActiveDrag ? "opacity-80" : "opacity-100"
-          } ${isOver ? "scale-[1.02]" : ""}`}
-          style={{ transition: "transform 0.15s" }}
-        >
+        <div className="half-moon-content">
           {renderHalfMoonShape()}
           <div
             className="absolute inset-0 flex items-center justify-center pointer-events-none"
             style={{ paddingBottom: element.height * 0.3 }}
           >
             <div className="text-center">
-              <span
-                className="block font-serif font-bold text-[1rem]"
-                style={{ color: areaStyle.text }}
-              >
+              <span className="block font-serif font-bold text-[1rem] element-alias">
                 {element.alias}
               </span>
               {isTable && (
-                <span
-                  className="block text-[11px] font-bold tracking-widest uppercase mt-0.5"
-                  style={{ color: areaStyle.border, opacity: 0.8 }}
-                >
+                <span className="block text-[11px] font-bold tracking-widest uppercase mt-0.5 element-capacity">
                   {validAssignedCount}/{element.seats}
                 </span>
               )}
@@ -394,7 +361,6 @@ export default function TableElement({ element }: { element: SeatingElement }) {
             {...attributes}
             {...listeners}
             className="absolute inset-0 cursor-grab active:cursor-grabbing"
-            style={{ background: "transparent" }}
           />
         </div>
       )}
@@ -403,50 +369,20 @@ export default function TableElement({ element }: { element: SeatingElement }) {
         <div
           {...attributes}
           {...listeners}
-          className={`absolute inset-0 flex flex-col items-center justify-center shadow-sm cursor-grab active:cursor-grabbing transition-colors
-            ${isArea ? "border-2 border-dashed" : "border-[3px]"}
-            ${borderRadiusClass}
-            ${isOver ? "ring-4 ring-[#2563eb]/30 scale-[1.02]" : ""}
-            ${isDragging || isPartOfActiveDrag ? "opacity-80 shadow-2xl scale-[1.03]" : "opacity-100"}
-            ${isSelected ? "!border-[#C5A669] shadow-md ring-2 ring-[#C5A669]/20" : ""}
-          `}
-          style={{
-            backgroundColor: isOver
-              ? isTable
-                ? "#eff6ff"
-                : "#FDFBF7"
-              : areaStyle.bg,
-            borderColor: isSelected
-              ? "#C5A669"
-              : isOver
-                ? "#2563eb"
-                : areaStyle.border,
-          }}
+          className="table-element-inner"
         >
           {isArea && AreaIcon && (
-            <div
-              className="absolute top-2 left-2"
-              style={{ color: areaStyle.text }}
-            >
+            <div className="absolute top-2 left-2 area-icon-container">
               <AreaIcon size={20} strokeWidth={2} />
             </div>
           )}
 
           <div className="text-center px-4 w-full">
-            <span
-              className={`block font-serif truncate w-full ${
-                isArea ? "font-bold opacity-90" : "font-bold text-[#1e3a8a]"
-              }`}
-              style={
-                isArea
-                  ? { color: areaStyle.text, fontSize: "1.1rem" }
-                  : { fontSize: "1rem" }
-              }
-            >
+            <span className="block font-serif truncate w-full element-alias">
               {element.alias}
             </span>
             {isTable && (
-              <span className="block text-[11px] font-bold tracking-widest uppercase text-[#3b82f6] mt-0.5 opacity-80">
+              <span className="block text-[11px] font-bold tracking-widest uppercase mt-0.5 element-capacity">
                 {validAssignedCount}/{element.seats}
               </span>
             )}
@@ -456,3 +392,5 @@ export default function TableElement({ element }: { element: SeatingElement }) {
     </div>
   );
 }
+
+export default React.memo(TableElement);
