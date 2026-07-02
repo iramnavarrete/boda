@@ -1,5 +1,12 @@
-import React from "react";
-import { FilterCounts, Family, TagCounts, TagFilterType, WhatsappCounts, WhatsappFilterType } from "@/types";
+import React, { useEffect } from "react";
+import {
+  FilterCounts,
+  Family,
+  TagCounts,
+  TagFilterType,
+  WhatsappCounts,
+  WhatsappFilterType,
+} from "@/types";
 import SearchAndFilterBar from "../../SearchAndFilterBar";
 import FamiliesGridView from "../../FamiliesGridView";
 import FamiliesTableView from "../../FamiliesTableView";
@@ -61,6 +68,11 @@ const FamiliesMainSection: React.FC<FamiliesMainSectionProps> = ({
   onSendWhatsApp,
   onLockToggle,
 }) => {
+  // Reiniciamos filtros al recargar
+  useEffect(() => {
+    setSearchTerm?.("");
+  }, [setSearchTerm]);
+
   return (
     <>
       <SearchAndFilterBar

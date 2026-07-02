@@ -80,6 +80,11 @@ export default function CheckInPage() {
     return () => unsubscribe();
   }, [invitationId, toast]);
 
+  // Reiniciamos filtros al recargar
+  useEffect(() => {
+    setSearchTerm?.("");
+  }, [setSearchTerm]);
+
   const requestCameraAccess = useCallback(async () => {
     setCameraError(null);
 
