@@ -1,186 +1,119 @@
-import { useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { useSeatingStore } from "../../stores/useSeatingStore";
-import { X, Users, Armchair } from "lucide-react";
+import { X, Search } from "lucide-react";
 import { DraggableFamily } from "./DraggableFamily";
+import { cn } from "@heroui/theme";
+import { useGuestAssignment } from "../../hooks/useGuestAssignment";
+import { SidebarStats } from "./SidebarStats";
+import { SidebarTabs } from "./SidebarTabs";
 
 export default function GuestAssignmentSidebar({
   onClose,
 }: {
   onClose?: () => void;
 }) {
-  const families = useSeatingStore((state) => state.families);
-  const elements = useSeatingStore((state) => state.elements);
-
   const { setNodeRef } = useDroppable({
     id: "guests-area",
     data: { type: "sidebar" },
   });
 
-  const stats = useMemo(() => {
-    let totalGuests = 0;
-    let assignedGuests = 0;
-
-    // Cálculo de Invitados
-    families.forEach((f) => {
-      totalGuests += f.guests.length;
-      f.guests.forEach((g) => {
-        if (elements.some((el) => el.assignedSeats.includes(g.id))) {
-          assignedGuests++;
-        }
-      });
-    });
-
-    let totalSeats = 0;
-    let occupiedSeats = 0;
-
-    // Cálculo de Asientos en el plano
-    elements.forEach((el) => {
-      if (el.seats && el.seats > 0) {
-        totalSeats += el.seats;
-
-        const realOccupiedCount = el.assignedSeats.filter(
-          (seatId) => seatId && seatId !== "",
-        ).length;
-
-        occupiedSeats += realOccupiedCount;
-      }
-    });
-
-    return {
-      guests: {
-        total: totalGuests,
-        assigned: assignedGuests,
-        pending: totalGuests - assignedGuests,
-      },
-      seats: {
-        total: totalSeats,
-        occupied: occupiedSeats,
-        available: totalSeats - occupiedSeats,
-      },
-    };
-  }, [families, elements]);
-
-  const sortedFamilies = useMemo(() => {
-    return [...families].sort((a, b) => {
-      const aIsFullyAssigned =
-        a.guests.length > 0 &&
-        a.guests.every((g) =>
-          elements.some((el) => el.assignedSeats.includes(g.id)),
-        );
-      const bIsFullyAssigned =
-        b.guests.length > 0 &&
-        b.guests.every((g) =>
-          elements.some((el) => el.assignedSeats.includes(g.id)),
-        );
-
-      if (aIsFullyAssigned && !bIsFullyAssigned) return 1;
-      if (!aIsFullyAssigned && bIsFullyAssigned) return -1;
-      return 0; // Mantiene el orden original si ambas están en el mismo estado
-    });
-  }, [families, elements]);
+  // Consumimos toda la lógica desde nuestro Custom Hook segmentado
+  const {
+    searchQuery,
+    setSearchQuery,
+    filter,
+    setFilter,
+    stats,
+    assignedGuestIds,
+    filteredAndSortedFamilies,
+  } = useGuestAssignment();
 
   return (
     <div
       ref={setNodeRef}
-      className="flex flex-col h-full w-full bg-white flex-1 min-h-0 select-none max-w-72"
-      style={{ minWidth: "16.5rem" }}
+      className="flex flex-col h-full bg-white shrink-0 select-none w-[320px]"
     >
-      <div className="p-3 border-b border-[#EBE5DA] bg-[#FDFBF7] shrink-0">
-        <div className="flex justify-between items-center mb-3">
-          <div className="flex flex-col">
-            <h2 className="font-serif text-[15px] font-semibold text-[#2C2C29]">
-              Asignación
+      <div className="p-4 border-b border-[#EBE5DA] bg-[#FDFBF7] shrink-0">
+        {/* HEADER: Título y Total */}
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-3">
+            <h2 className="font-serif text-[17px] font-bold text-[#2C2C29]">
+              Invitados
             </h2>
+            <span className="text-[10px] font-bold text-[#C5A669] bg-amber-50/50 px-2 py-0.5 rounded-md border border-amber-100/50 shadow-sm">
+              {stats.guests.total} personas
+            </span>
           </div>
           {onClose && (
             <button
               onClick={onClose}
-              className="lg:hidden p-1 bg-white rounded-md border border-[#EBE5DA]"
+              className="lg:hidden p-1.5 bg-white hover:bg-[#F9F7F2] border border-[#EBE5DA] rounded-md transition-colors text-[#A8A29E] hover:text-[#2C2C29] shadow-sm"
             >
-              <X size={14} className="text-[#A8A29E]" />
+              <X size={14} />
             </button>
           )}
         </div>
 
-        {/* Tarjetas de Estadísticas */}
-        <div className="flex flex-col gap-2.5">
-          {/* SECCIÓN: ASIENTOS */}
-          <div className="bg-white p-2 rounded-lg border border-[#EBE5DA] shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5 text-[#5A5A5A]">
-                <Armchair size={12} />
-                <span className="text-[10px] uppercase font-bold tracking-widest">
-                  Lugares
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-[#A8A29E] bg-[#F9F7F2] px-1.5 py-0.5 rounded border border-[#EBE5DA]">
-                Total: {stats.seats.total}
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <div className="flex-1 bg-blue-50/50 border border-blue-100/50 rounded-md flex flex-col items-center py-1">
-                <span className="text-[14px] font-serif font-bold text-blue-700">
-                  {stats.seats.occupied}
-                </span>
-                <span className="text-[8px] uppercase font-bold text-blue-500/80">
-                  Ocupados
-                </span>
-              </div>
-              <div className="flex-1 bg-gray-50/50 border border-gray-100 rounded-md flex flex-col items-center py-1">
-                <span className="text-[14px] font-serif font-bold text-[#5A5A5A]">
-                  {stats.seats.available}
-                </span>
-                <span className="text-[8px] uppercase font-bold text-[#A8A29E]">
-                  Disponibles
-                </span>
-              </div>
-            </div>
-          </div>
+        {/* BADGES SEGMENTADOS */}
+        <SidebarStats stats={stats} />
 
-          {/* SECCIÓN: INVITADOS */}
-          <div className="bg-white p-2 rounded-lg border border-[#EBE5DA] shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-1.5 text-[#5A5A5A]">
-                <Users size={12} />
-                <span className="text-[10px] uppercase font-bold tracking-widest">
-                  Invitados
-                </span>
-              </div>
-              <span className="text-[10px] font-bold text-[#A8A29E] bg-[#F9F7F2] px-1.5 py-0.5 rounded border border-[#EBE5DA]">
-                Total: {stats.guests.total}
-              </span>
-            </div>
-            <div className="flex gap-2">
-              <div className="flex-1 bg-green-50/50 border border-green-100/50 rounded-md flex flex-col items-center py-1">
-                <span className="text-[14px] font-serif font-bold text-green-700">
-                  {stats.guests.assigned}
-                </span>
-                <span className="text-[8px] uppercase font-bold text-green-600/80">
-                  Sentados
-                </span>
-              </div>
-              <div className="flex-1 bg-orange-50/50 border border-orange-100/50 rounded-md flex flex-col items-center py-1">
-                <span className="text-[14px] font-serif font-bold text-orange-600">
-                  {stats.guests.pending}
-                </span>
-                <span className="text-[8px] uppercase font-bold text-orange-500/80">
-                  Pendientes
-                </span>
-              </div>
-            </div>
-          </div>
+        {/* BUSCADOR COMPACTO */}
+        <div className="relative mb-3">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A29E]"
+            size={14}
+          />
+          <input
+            type="text"
+            placeholder="Buscar familia..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-8 pr-3 py-2 bg-white border border-[#EBE5DA] rounded-lg text-xs font-medium text-[#2C2C29] focus:outline-none focus:border-[#C5A669] focus:ring-1 focus:ring-[#C5A669]/20 transition-all placeholder:text-[#A8A29E] placeholder:font-normal shadow-sm"
+          />
         </div>
+
+        {/* TABS SEGMENTADOS */}
+        <SidebarTabs filter={filter} setFilter={setFilter} />
       </div>
 
-      <div className="p-3 overflow-y-auto flex-1 w-full pb-10">
-        {sortedFamilies.map((family) => (
-          <DraggableFamily
-            key={family.id}
-            family={family}
-            isFirstElement={sortedFamilies[0].id === family.id}
-          />
-        ))}
+      {/* LISTADO DE FAMILIAS CON SCROLL FORZADO */}
+      <div className="p-3 overflow-y-scroll overflow-x-hidden flex-1 w-full pb-10 scrollbar-thin scrollbar-thumb-[#EBE5DA]">
+        {filteredAndSortedFamilies.length === 0 ? (
+          <div className="py-10 flex flex-col items-center text-center text-[#A8A29E]">
+            <Search size={24} className="opacity-30 mb-2" />
+            <span className="text-xs font-medium text-[#5A5A5A]">
+              No se encontraron resultados
+            </span>
+            <span className="text-[10px] mt-1">
+              Intenta con otro término o filtro.
+            </span>
+          </div>
+        ) : (
+          filteredAndSortedFamilies.map((family) => {
+            const assignedCount = family.guests.filter((g) =>
+              assignedGuestIds.has(g.id),
+            ).length;
+            const isFullyAssigned =
+              family.guests.length > 0 &&
+              assignedCount === family.guests.length;
+
+            return (
+              <div key={family.id} className="relative mb-2">
+                <div
+                  className={cn(
+                    "absolute left-0 top-0 bottom-0 w-1 rounded-l-xl z-10 pointer-events-none transition-colors opacity-90",
+                    isFullyAssigned ? "bg-emerald-400" : "bg-amber-400",
+                  )}
+                />
+                <DraggableFamily
+                  family={family}
+                  isFirstElement={
+                    filteredAndSortedFamilies[0]?.id === family.id
+                  }
+                />
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );
