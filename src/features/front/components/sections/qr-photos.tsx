@@ -8,9 +8,7 @@ import { ReactQRCode } from "@lglab/react-qr-code";
 type Props = {
   containerClassName?: string;
   btnClassName?: string;
-  qrImage?: string;
   urlPhotos?: string;
-  sealImage: string;
 }
 
 const QrPhotos: FC<Props> = ({containerClassName = '', btnClassName = '', urlPhotos }) => {
