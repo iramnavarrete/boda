@@ -16,10 +16,18 @@ export default function SeatingCanvas({
   openConfirmModal,
 }: SeatingCanvasProps) {
   const elements = useSeatingStore((state) => state.elements);
-  const selectedElementIds = useSeatingStore((state) => state.selectedElementIds);
-  const setSelectedElementIds = useSeatingStore((state) => state.setSelectedElementIds);
-  const setSelectedElementId = useSeatingStore((state) => state.setSelectedElementId);
-  const removeMultipleElements = useSeatingStore((state) => state.removeMultipleElements);
+  const selectedElementIds = useSeatingStore(
+    (state) => state.selectedElementIds,
+  );
+  const setSelectedElementIds = useSeatingStore(
+    (state) => state.setSelectedElementIds,
+  );
+  const setSelectedElementId = useSeatingStore(
+    (state) => state.setSelectedElementId,
+  );
+  const removeMultipleElements = useSeatingStore(
+    (state) => state.removeMultipleElements,
+  );
   const showToast = useSeatingStore((state) => state.showToast);
   const isInitialized = useSeatingStore((state) => state.isInitialized);
 
@@ -63,7 +71,6 @@ export default function SeatingCanvas({
       setZoom(newZoom);
 
       // 3. ✨ SÍNCRONO: Asignamos el scroll instantáneamente.
-      // Al quitar requestAnimationFrame, la rueda vuelve a tener precisión absoluta.
       container.scrollLeft = pointX * newZoom - targetX;
       container.scrollTop = pointY * newZoom - targetY;
     },
@@ -150,8 +157,8 @@ export default function SeatingCanvas({
       fitToScreen();
     } else if (containerRef.current) {
       const container = containerRef.current;
-      container.scrollLeft = 2000 - container.clientWidth / 2;
-      container.scrollTop = 2000 - container.clientHeight / 2;
+      container.scrollLeft = 2000 * zoom - container.clientWidth / 2;
+      container.scrollTop = 2000 * zoom - container.clientHeight / 2;
     }
   }, [isInitialized]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -307,33 +314,42 @@ export default function SeatingCanvas({
           </div>
         )}
 
+        {/* CONTENEDOR FANTASMA PARA AJUSTAR BARRAS DE SCROLL EXACTAS AL ZOOM */}
         <div
-          ref={canvasAreaRef}
-          className="relative origin-top-left canvas-droppable-area"
+          className="relative"
           style={{
-            width: "4000px",
-            height: "4000px",
-            backgroundImage: `linear-gradient(#EBE5DA 1px, transparent 1px), linear-gradient(90deg, #EBE5DA 1px, transparent 1px)`,
-            backgroundSize: "20px 20px",
-            transform: `scale(${zoom})`,
+            width: 4000 * zoom,
+            height: 4000 * zoom,
           }}
         >
-          <div ref={setDroppableCanvasRef} className="absolute inset-0">
-            {elements.map((el) => (
-              <TableElement key={el.id} element={el} />
-            ))}
+          <div
+            ref={canvasAreaRef}
+            className="absolute top-0 left-0 origin-top-left canvas-droppable-area"
+            style={{
+              width: "4000px",
+              height: "4000px",
+              backgroundImage: `linear-gradient(#EBE5DA 1px, transparent 1px), linear-gradient(90deg, #EBE5DA 1px, transparent 1px)`,
+              backgroundSize: "20px 20px",
+              transform: `scale(${zoom})`,
+            }}
+          >
+            <div ref={setDroppableCanvasRef} className="absolute inset-0">
+              {elements.map((el) => (
+                <TableElement key={el.id} element={el} />
+              ))}
 
-            {isSelecting && (
-              <div
-                className="absolute border border-[#C5A669] bg-[#C5A669]/10 rounded pointer-events-none z-50"
-                style={{
-                  left: selectionBox.left,
-                  top: selectionBox.top,
-                  width: selectionBox.width,
-                  height: selectionBox.height,
-                }}
-              />
-            )}
+              {isSelecting && (
+                <div
+                  className="absolute border border-[#C5A669] bg-[#C5A669]/10 rounded pointer-events-none z-50"
+                  style={{
+                    left: selectionBox.left,
+                    top: selectionBox.top,
+                    width: selectionBox.width,
+                    height: selectionBox.height,
+                  }}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
