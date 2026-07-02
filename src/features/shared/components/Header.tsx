@@ -285,8 +285,8 @@ const Header = ({
               <>
                 <Link
                   href="/admin"
-                  className="hidden p-1.5 md:flex items-center gap-2 text-sm font-bold text-primary hover:text-gold transition-colors hover:bg-sand-50 rounded-xl"
-                  title="Volver a mis eventos"
+                  title="Mis Eventos"
+                  className="hidden p-2 lg:p-1.5 md:flex items-center gap-2 text-sm font-bold text-primary hover:text-gold transition-colors hover:bg-sand-50 rounded-full lg:rounded-xl"
                 >
                   <div className="rounded-lg bg-transparent transition-colors">
                     <CalendarHeart size={20} />
@@ -355,18 +355,22 @@ const Header = ({
             {variant === "landing" ? (
               <Link
                 href="/#paquetes"
-                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-paper rounded-full text-xs font-bold uppercase tracking-widest hover:bg-charcoal-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                title="Paquetes"
+                className="flex items-center justify-center gap-2 p-2.5 lg:px-5 lg:py-2.5 bg-primary text-paper rounded-full text-xs font-bold uppercase tracking-widest hover:bg-charcoal-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
               >
                 <Gem size={14} className="text-gold" />
-                <span>Paquetes</span>
+                <span className="hidden lg:block">Paquetes</span>
               </Link>
             ) : (
               <button
                 onClick={AuthService.logout}
-                className="flex items-center gap-2 text-stone-400 hover:text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                title="Cerrar Sesión"
+                className="flex items-center justify-center gap-2 text-stone-400 hover:text-red-500 hover:bg-red-50 p-2.5 lg:px-3 lg:py-1.5 rounded-full lg:rounded-lg text-sm font-medium transition-colors"
               >
-                <LogOut size={18} />{" "}
-                <span className="hidden lg:block">Cerrar Sesión</span>
+                <LogOut size={18} className="text-red-400" />{" "}
+                <span className="hidden lg:block text-red-400">
+                  Cerrar Sesión
+                </span>
               </button>
             )}
           </div>
@@ -480,8 +484,9 @@ const DesktopNavLink = ({
 }: NavLinkProps) => (
   <Link
     href={href}
+    title={label}
     className={cn(
-      "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border border-transparent",
+      "flex items-center justify-center gap-2 p-2.5 lg:px-4 lg:py-2 rounded-full text-sm font-medium transition-all border border-transparent",
       baseClassName,
       active && activeClassName,
     )}
@@ -489,14 +494,14 @@ const DesktopNavLink = ({
     {icon && (
       <span
         className={cn(
-          "transition-colors opacity-70 group-hover:opacity-100",
+          "transition-colors opacity-70 group-hover:opacity-100 flex items-center",
           active && "opacity-100 text-current",
         )}
       >
         {icon}
       </span>
     )}
-    {label}
+    <span className="hidden lg:block">{label}</span>
   </Link>
 );
 
@@ -532,7 +537,7 @@ const MenuItem = ({
     {icon && (
       <div
         className={cn(
-          "p-2 rounded-lg transition-colors shadow-sm",
+          "p-2 rounded-lg transition-colors shadow-sm flex items-center",
           active
             ? "bg-white text-current"
             : "bg-white text-stone-400 group-hover:text-current",
