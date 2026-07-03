@@ -140,18 +140,10 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
             );
 
           if (!useSeatingStore.getState().isInitialized) {
-            // Migramos los IDs legacy antes de inicializar
-            const { elements: migratedElements, hadChanges } =
-              SeatingService.migrateLegacyIds(dbElements, formattedFamilies);
-
-            initialize(migratedElements, formattedFamilies);
-
-            // Si había IDs legacy, guardamos el plan migrado automáticamente
-            if (hadChanges) {
-              await SeatingService.savePlan(invitationId, migratedElements);
-            }
+            initialize(dbElements, formattedFamilies);
           } else {
-            useSeatingStore.setState({ families: formattedFamilies });
+            // Actualización en tiempo real con purga de fantasmas
+            useSeatingStore.getState().updateFamilies(formattedFamilies);
           }
         },
         (error) => {
@@ -165,7 +157,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     return () => unsubscribe();
   }, [invitationId, isAdminOrHost, initialize, showToast]);
 
-  // DETONANTE MULTI-MODAL CON NUEVOS MENSAJES DE TRANQUILIDAD
   const triggerSeatRemoval = (familyId: string, guestId: string) => {
     const family = families.find((f) => f.id === familyId);
     if (!family) return;
@@ -216,7 +207,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     });
   };
 
-  // DETONANTE DE ELIMINACIÓN DE GRUPOS COMPLETOS
   const triggerFamilyRemoval = (familyId: string) => {
     const family = families.find((f) => f.id === familyId);
     if (!family) return;
@@ -234,7 +224,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     });
   };
 
-  // FUNCIÓN SÍNCRONA DE ADICIÓN DE ASIENTOS DESDE EL LISTADO
   const triggerAddSeat = async (familyId: string) => {
     try {
       await executeAddSeatToFamily(invitationId, familyId);
@@ -245,7 +234,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     }
   };
 
-  // GUARDADO GLOBAL MANUAL
   const handleGlobalSave = async () => {
     if (!invitationId || !hasUnsavedChanges) return;
     setIsSaving(true);
@@ -261,7 +249,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     }
   };
 
-  // ALGORITMO DE COLISIÓN
   const customCollisionDetection: CollisionDetection = (args) => {
     const pointerCollisions = pointerWithin(args);
     if (pointerCollisions.length > 0) {
@@ -274,7 +261,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     return rectIntersection(args);
   };
 
-  // MANEJO DE DRAG
   const handleDragStart = (event: DragStartEvent) => {
     setActiveDragItem({
       id: String(event.active.id),
@@ -356,8 +342,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       if (delta.x !== 0 || delta.y !== 0) {
         const id = String(active.id).replace("element-", "");
 
-        // Si hay múltiples elementos seleccionados y el elemento arrastrado
-        // es parte de esa selección, mueve todo el grupo con el mismo delta.
         const currentSelectedIds =
           useSeatingStore.getState().selectedElementIds;
         if (currentSelectedIds.length > 1 && currentSelectedIds.includes(id)) {
@@ -367,7 +351,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
             delta.y / zoom,
           );
         } else {
-          // Movimiento individual normal
           const element = useSeatingStore
             .getState()
             .elements.find((e) => e.id === id);
@@ -467,7 +450,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     <SeatingModalContext.Provider
       value={{ triggerSeatRemoval, triggerFamilyRemoval, triggerAddSeat }}
     >
-      {/* ⚠️ PANTALLA DE BLOQUEO (SOLO MÓVILES) ⚠️ */}
       <MobileFallback />
       <div
         className="hidden lg:flex flex-row w-full overflow-hidden relative select-none"

@@ -55,6 +55,7 @@ export interface SeatingStore {
     dbElements: SeatingElement[],
     dbFamilies: FamilyElement[],
   ) => void;
+  updateFamilies: (families: FamilyElement[]) => void;
   markSaved: () => void;
   addElement: (
     element: Omit<SeatingElement, "assignedSeats" | "alias">,
@@ -116,28 +117,31 @@ export const generateFamilyColors = (
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 🔥 HELPER DE AGRUPACIÓN INTELIGENTE
+// 🔥 HELPER DE AGRUPACIÓN INTELIGENTE (Auto-sanación)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Reordena los asientos de una mesa agrupándolos automáticamente por familia,
- * manteniendo el orden de llegada de las familias a la mesa.
- * También compacta automáticamente eliminando los huecos.
+ * eliminando a cualquier "fantasma" que haya sido borrado de la base de datos.
  */
 const groupSeatsByFamily = (
   seats: string[],
   families: FamilyElement[],
 ): string[] => {
-  // Solo trabajamos con IDs reales, nunca con ""
-  const filled = seats.filter((s) => s && s !== "");
+  // Filtramos fantasmas de forma estricta garantizando que sigan existiendo en families
+  const filled = seats.filter((s) => {
+    if (!s || s === "") return false;
+    return families.some((f) => f.guests.some((g) => g.id === s));
+  });
 
   const familyOrder: string[] = [];
   const guestsByFamily: Record<string, string[]> = {};
 
   filled.forEach((guestId) => {
     const family = families.find((f) => f.guests.some((g) => g.id === guestId));
-    const famId = family ? family.id : "independent";
+    if (!family) return;
 
+    const famId = family.id;
     if (!guestsByFamily[famId]) {
       guestsByFamily[famId] = [];
       familyOrder.push(famId);
@@ -150,7 +154,6 @@ const groupSeatsByFamily = (
     result.push(...guestsByFamily[famId]);
   });
 
-  // 🔥 Sin relleno de "" — el array solo contiene IDs reales
   return result;
 };
 
@@ -167,12 +170,39 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
   isInitialized: false,
   hasUnsavedChanges: false,
 
-  initialize: (dbElements, dbFamilies) =>
+  initialize: (dbElements, dbFamilies) => {
+    // Al iniciar, purgamos fantasmas de la base de datos por si quedaba alguno
+    const cleanedElements = dbElements.map((el) => ({
+      ...el,
+      assignedSeats: groupSeatsByFamily(el.assignedSeats, dbFamilies),
+    }));
+
     set({
-      elements: dbElements,
+      elements: cleanedElements,
       families: dbFamilies,
       isInitialized: true,
       hasUnsavedChanges: false,
+    });
+  },
+
+  updateFamilies: (newFamilies) =>
+    set((state) => {
+      // 🔥 AUTO-SANACIÓN EN MEMORIA: Purgamos invitados eliminados
+      const cleanedElements = state.elements.map((el) => ({
+        ...el,
+        assignedSeats: groupSeatsByFamily(el.assignedSeats, newFamilies),
+      }));
+
+      // Verificamos si la auto-sanación realmente modificó alguna mesa (expulsó a un fantasma)
+      const elementsChanged =
+        JSON.stringify(state.elements) !== JSON.stringify(cleanedElements);
+
+      return {
+        families: newFamilies,
+        elements: cleanedElements,
+        // Si se expulsó un fantasma, encendemos el botón de "Guardar Cambios"
+        hasUnsavedChanges: state.hasUnsavedChanges || elementsChanged,
+      };
     }),
 
   markSaved: () =>
@@ -250,12 +280,10 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
       hasUnsavedChanges: true,
     })),
 
-  // 🔥 CORRECCIÓN: Filtramos los strings vacíos antes de contar o empujar a la mesa
   assignGuestToTable: (tableId, guestId) =>
     set((state) => {
       return {
         elements: state.elements.map((el) => {
-          // Filtramos huecos ("") y al mismo tiempo sacamos al invitado si ya estaba en otra mesa
           const newSeats = el.assignedSeats.filter(
             (s) => s && s !== "" && s !== guestId,
           );
@@ -281,13 +309,11 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
 
       return {
         elements: state.elements.map((el) => {
-          // Filtramos espacios vacíos y sacamos a toda la familia de las mesas donde estuvieran
           const newSeats = el.assignedSeats.filter(
             (s) => s && s !== "" && !guestIds.includes(s),
           );
 
           if (el.id === tableId) {
-            // Al no tener huecos estorbando, esta resta sí da el tamaño real libre de la mesa
             const availableSpace = el.seats - newSeats.length;
             const guestsToAdd = guestIds.slice(0, availableSpace);
             newSeats.push(...guestsToAdd);
@@ -306,7 +332,6 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     set((state) => ({
       elements: state.elements.map((el) => {
         if (el.id !== tableId) return el;
-        // Purgamos huecos antes de re-agrupar
         const newSeats = el.assignedSeats.filter(
           (s) => s && s !== "" && s !== guestId,
         );
@@ -352,7 +377,6 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
       f.id === familyId ? { ...f, guests: updatedGuests } : f,
     );
 
-    // Sin remap — filtramos el UUID directamente
     const newElements = state.elements.map((el) => ({
       ...el,
       assignedSeats: groupSeatsByFamily(

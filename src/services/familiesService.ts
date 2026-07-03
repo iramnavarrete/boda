@@ -61,7 +61,7 @@ export const familyPaths = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const BATCH_CHUNK_SIZE = 200; // 200 docs × 2 writes = 400 ops, dentro del límite de 500
+const BATCH_CHUNK_SIZE = 200;
 
 const byCreatedDesc = (a: Family, b: Family): number =>
   ((b.fechaCreacion as Timestamp)?.seconds ?? 0) -
@@ -80,20 +80,18 @@ export const FamiliesService = {
     if (!invitationId) return () => {};
 
     const q = query(familyPaths.familiesCollection(invitationId));
-
-    // Mantenemos un Map para preservar referencias de objetos no modificados.
-    // Esto permite que React.memo en las tarjetas funcione correctamente:
-    // solo los invitados que cambiaron en Firestore tendrán nueva referencia.
     const cache = new Map<string, Family>();
 
     return onSnapshot(
       q,
       (snapshot) => {
         snapshot.docChanges().forEach((change) => {
-          if (change.type === "removed") {
+          const d = change.doc.data();
+
+          // 🔥 Aseguramos que las familias borradas o con 0 invitados salgan de memoria
+          if (change.type === "removed" || Number(d.invitados) === 0) {
             cache.delete(change.doc.id);
           } else {
-            const d = change.doc.data();
             cache.set(change.doc.id, {
               id: change.doc.id,
               ...d,
@@ -178,12 +176,32 @@ export const FamiliesService = {
     const publicRef = familyPaths.family(invitationId, familyId);
 
     if (isPublic) {
-      // Invitado confirmando su asistencia: solo campos permitidos por las reglas de Firestore
+      // Invitado confirmando su asistencia
+      const docSnap = await getDoc(publicRef);
+      let asientosActualizados: GuestSeat[] = [];
+
+      if (docSnap.exists()) {
+        const existingData = docSnap.data() as Family;
+        const familyGuests = existingData.asientos || [];
+        const confirmados = Number(data.confirmados) || 0;
+        const isAttending = data.asistencia;
+
+        // Actualizamos los estatus en base a la respuesta del invitado
+        asientosActualizados = familyGuests.map((seat, j) => {
+          let estatus: GuestStatus = "pending";
+          if (isAttending === false) estatus = "declined";
+          else if (isAttending === true)
+            estatus = j < confirmados ? "confirmed" : "declined";
+          return { ...seat, estatus };
+        });
+      }
+
       batch.set(
         publicRef,
         {
           asistencia: data.asistencia,
           confirmados: Number(data.confirmados) || 0,
+          asientos: asientosActualizados, // 🔥 Aprovechamos la escritura existente
           ultimaModificacion: timestamp,
         } as Partial<Family>,
         { merge: true },
@@ -191,28 +209,74 @@ export const FamiliesService = {
     } else {
       // Admin: escribe todos los campos
       const tieneTelefono = !!data.telefono?.trim().length;
+      const totalTickets = Number(data.invitados) || 1;
+      const confirmedCount = Number(data.confirmados) || 0;
+      const isAttending = data.asistencia;
 
       const publicPayload: Partial<Family> = {
         nombre: data.nombre,
-        invitados: Number(data.invitados) || 1,
+        invitados: totalTickets,
         notaAnfitrion: data.notaAnfitrion || null,
         cambiosPermitidos: data.cambiosPermitidos ?? true,
         tieneTelefono,
         ultimaModificacion: timestamp,
-        asistencia: data.asistencia,
-        confirmados: Number(data.confirmados) || 0,
+        asistencia: isAttending,
+        confirmados: confirmedCount,
         etiqueta: data.etiqueta || null,
         fechaLimiteConfirmacion: data.fechaLimiteConfirmacion || null,
       };
 
       if (isNew) {
+        // Inicializamos los asientos desde el principio
+        const seats: GuestSeat[] = Array.from(
+          { length: totalTickets },
+          (_, j) => {
+            let estatus: GuestStatus = "pending";
+            if (isAttending === false) estatus = "declined";
+            else if (isAttending === true)
+              estatus = j < confirmedCount ? "confirmed" : "declined";
+            return { id: crypto.randomUUID(), nombre: "", estatus };
+          },
+        );
+
         Object.assign(publicPayload, {
           id: familyId,
           fechaCreacion: timestamp,
           notaInvitado: null,
-          asistencia: null,
-          confirmados: null,
+          asientos: seats, // 🔥 Se guardan en la creación
         });
+      } else {
+        // Edición de familia: Redimensionamos el arreglo si cambiaron los invitados
+        const docSnap = await getDoc(publicRef);
+        if (docSnap.exists()) {
+          const existingData = docSnap.data() as Family;
+          let familyGuests = existingData.asientos || [];
+
+          // 1. Ajustar TAMAÑO
+          if (familyGuests.length < totalTickets) {
+            for (let j = familyGuests.length; j < totalTickets; j++) {
+              familyGuests.push({
+                id: crypto.randomUUID(),
+                nombre: "",
+                estatus: "pending",
+              });
+            }
+          } else if (familyGuests.length > totalTickets) {
+            familyGuests = familyGuests.slice(0, totalTickets); // Recortamos los que sobran
+          }
+
+          // 2. Ajustar ESTATUS
+          familyGuests = familyGuests.map((seat, j) => {
+            let estatus: GuestStatus = seat.estatus;
+            if (isAttending === false) estatus = "declined";
+            else if (isAttending === true)
+              estatus = j < confirmedCount ? "confirmed" : "declined";
+            else estatus = "pending";
+            return { ...seat, estatus };
+          });
+
+          publicPayload.asientos = familyGuests; // 🔥 Lo metemos al payload
+        }
       }
 
       batch.set(
@@ -229,29 +293,33 @@ export const FamiliesService = {
   updateGuestList: async (
     invitationId: string,
     familyId: string,
-    guests: { id: string; name: string; status: GuestStatus }[],
+    guests: { id: string; nombre: string; estatus: GuestStatus }[],
   ) => {
     const payload = guests.map((g) => ({
       id: g.id,
-      name: g.name,
-      status: g.status,
+      nombre: g.nombre,
+      estatus: g.estatus,
     }));
 
-    // Actualiza tu documento de Firebase con este nuevo payload
     await setDoc(
       familyPaths.family(invitationId, familyId),
       {
-        guests: payload,
+        asientos: payload,
       },
       { merge: true },
     );
   },
 
   deleteFamily: async (invitationId: string, familyId: string) => {
-    const batch = writeBatch(db);
-    batch.delete(familyPaths.familyContact(invitationId, familyId));
-    batch.delete(familyPaths.family(invitationId, familyId));
-    await batch.commit();
+    // 🔥 CORRECCIÓN: Soft Delete individual asegurado
+    const payload: Partial<Family> = {
+      confirmados: 0,
+      cambiosPermitidos: false,
+      invitados: 0,
+      asientos: [],
+      ultimaModificacion: serverTimestamp(),
+    };
+    await updateDoc(familyPaths.family(invitationId, familyId), payload);
   },
 
   toggleFamilyLock: async (
@@ -268,7 +336,6 @@ export const FamiliesService = {
       ultimaModificacion: serverTimestamp(),
     };
 
-    // Al desbloquear, siempre establecemos la fecha (null si no se pasa ninguna)
     if (!isLocking) {
       payload.fechaLimiteConfirmacion = newDate ?? null;
     }
@@ -337,7 +404,6 @@ export const FamiliesService = {
           ultimaModificacion: serverTimestamp(),
         };
 
-        // Al desbloquear, siempre establecemos la fecha (null si no se pasa ninguna)
         if (!shouldLock) {
           payload.fechaLimiteConfirmacion = newDate ?? null;
         }
@@ -350,14 +416,20 @@ export const FamiliesService = {
   },
 
   batchDeleteFamilies: async (invitationId: string, familyIds: string[]) => {
-    // Delete también respeta el límite de 500, pero son solo deletes (1 op c/u × 2 refs)
     for (let i = 0; i < familyIds.length; i += BATCH_CHUNK_SIZE) {
       const batch = writeBatch(db);
       const chunk = familyIds.slice(i, i + BATCH_CHUNK_SIZE);
 
       chunk.forEach((id) => {
-        batch.delete(familyPaths.familyContact(invitationId, id));
-        batch.delete(familyPaths.family(invitationId, id));
+        // 🔥 CORRECCIÓN: Soft Delete masivo asegurado
+        const payload: Partial<Family> = {
+          confirmados: 0,
+          cambiosPermitidos: false,
+          invitados: 0,
+          asientos: [],
+          ultimaModificacion: serverTimestamp(),
+        };
+        batch.update(familyPaths.family(invitationId, id), payload);
       });
 
       await batch.commit();
@@ -384,11 +456,18 @@ export const FamiliesService = {
       chunk.forEach((family, index) => {
         const familyId = familyIds[index];
         const tieneTelefono = !!family.telefono?.trim().length;
+        const totalTickets = Number(family.invitados) || 1;
+
+        const seats: GuestSeat[] = Array.from({ length: totalTickets }, () => ({
+          id: crypto.randomUUID(),
+          nombre: "",
+          estatus: "pending",
+        }));
 
         batch.set(familyPaths.family(invitationId, familyId), {
           id: familyId,
           nombre: family.nombre,
-          invitados: Number(family.invitados) || 1,
+          invitados: totalTickets,
           notaAnfitrion: family.notaAnfitrion || null,
           cambiosPermitidos: true,
           tieneTelefono,
@@ -397,6 +476,7 @@ export const FamiliesService = {
           asistencia: null,
           confirmados: 0,
           notaInvitado: null,
+          asientos: seats, // 🔥 Se guardan directo en la importación
         });
 
         batch.set(familyPaths.familyContact(invitationId, familyId), {
@@ -411,56 +491,41 @@ export const FamiliesService = {
   removeFamilySeatAndReduceCount: async (
     invitationId: string,
     familyDocId: string,
-    updatedGuestsList: GuestSeat[],
+    updatedGuestsList: { id: string; nombre: string; estatus: GuestStatus }[],
   ) => {
     const familyRef = familyPaths.family(invitationId, familyDocId);
+
     try {
       const docSnap = await getDoc(familyRef);
-      if (!docSnap.exists())
+      if (!docSnap.exists()) {
         throw new Error("El documento de la familia no existe");
+      }
 
       const data = docSnap.data();
-      const currentConfirmed = Number(data.confirmados) || 0;
-      const newTotal = Math.max(1, updatedGuestsList.length);
+      const newTotal = Math.max(0, updatedGuestsList.length);
+
+      const newConfirmed = updatedGuestsList.filter(
+        (g) => g.estatus === "confirmed",
+      ).length;
 
       const payload: Partial<Family> = {
         invitados: newTotal,
+        confirmados: newConfirmed,
         asientos: updatedGuestsList,
         ultimaModificacion: serverTimestamp(),
       };
 
-      if (newTotal < currentConfirmed) {
-        payload.confirmados = newTotal;
+      if (newConfirmed === 0 && data.asistencia === true) {
+        payload.asistencia = null;
       }
 
       await updateDoc(familyRef, payload);
     } catch (e) {
-      console.error("Error al remover asiento:", e);
+      console.error(
+        "Error unificado al remover asiento y reducir contador:",
+        e,
+      );
       throw e;
     }
-  },
-
-  initializeFamilySeats: async (
-    invitationId: string,
-    familyId: string,
-    totalSeats: number,
-    confirmedCount: number,
-    isAttending: boolean | null,
-  ): Promise<GuestSeat[]> => {
-    const seats: GuestSeat[] = Array.from({ length: totalSeats }, (_, j) => {
-      let estatus: GuestStatus = "pending";
-      if (isAttending === false) estatus = "declined";
-      else if (isAttending === true)
-        estatus = j < confirmedCount ? "confirmed" : "declined";
-
-      return { id: crypto.randomUUID(), nombre: "", estatus };
-    });
-
-    await updateDoc(familyPaths.family(invitationId, familyId), {
-      asientos: seats,
-      ultimaModificacion: serverTimestamp(),
-    });
-
-    return seats;
   },
 };
