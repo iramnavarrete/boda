@@ -1,4 +1,8 @@
-import { Family, FilterCounts as FilterCountsStatus } from "@/types";
+import {
+  Family,
+  FilterCounts as FilterCountsStatus,
+  FamilyActivity,
+} from "@/types";
 import { SeatingElement } from "../seating/stores/useSeatingStore";
 import { useMemo } from "react";
 
@@ -36,7 +40,7 @@ export interface FilterCounts {
 
 interface UseEventStatsOptions {
   elements?: SeatingElement[];
-  viewedFamilyIds?: Set<string>;
+  activities?: FamilyActivity[]; // 🔥 Ahora recibe el array crudo de actividades
   filters?: {
     whatsapp?: "all" | "sent" | "not_sent" | "empty" | string;
     tag?: "all" | "Novia" | "Novio" | "Ambos" | string;
@@ -51,7 +55,22 @@ export const useEventStats = (
   families: Family[],
   options: UseEventStatsOptions = {},
 ) => {
-  const { elements = [], viewedFamilyIds, filters } = options;
+  const { elements = [], activities, filters } = options;
+
+  // 1. Procesamos internamente (y solo 1 vez) quiénes han visto la invitación
+  const viewedFamilyIds = useMemo(() => {
+    // 🔥 Verificación ESTRICTA para evitar fallos de Javascript (truthiness)
+    if (!Array.isArray(activities)) return undefined;
+
+    const ids = new Set<string>();
+    activities.forEach((act) => {
+      // Buscamos si existe al menos un ítem con actividad tipo "view"
+      if (act.action === "view" && act.familyId) {
+        ids.add(act.familyId);
+      }
+    });
+    return ids;
+  }, [activities]);
 
   const stats = useMemo(() => {
     const s: EventStats = {
@@ -76,7 +95,7 @@ export const useEventStats = (
     };
 
     families.forEach((c) => {
-      // -- INVITADOS (Tu lógica precisa) --
+      // -- INVITADOS --
       const invitados = Number(c.invitados) || 0;
       const confirmados = Number(c.confirmados) || 0;
 
@@ -95,16 +114,17 @@ export const useEventStats = (
         s.familias.rechazadas++;
       } else {
         s.familias.sinResponder++;
-        // Solo calculamos "Sin Abrir" si nos pasaron el Set de actividades
-        if (viewedFamilyIds && !viewedFamilyIds.has(c.id)) {
-          s.familias.sinAbrir++;
-        } else if (
-          !viewedFamilyIds &&
-          !c.ultimaModificacion &&
-          c.asistencia === null
-        ) {
-          // Fallback básico si no pasaron el Set
-          s.familias.sinAbrir++;
+
+        if (viewedFamilyIds !== undefined) {
+          // Si nos pasaron el arreglo de actividades, la matemática es exacta
+          if (!viewedFamilyIds.has(c.id)) {
+            s.familias.sinAbrir++;
+          }
+        } else {
+          // Fallback seguro si NO le pasamos las actividades (Ej. Vista general de Invitados)
+          if (c.asistencia === null) {
+            s.familias.sinAbrir++;
+          }
         }
       }
     });

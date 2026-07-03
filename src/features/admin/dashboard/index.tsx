@@ -22,9 +22,7 @@ import { ActivityService } from "@/services/activityService";
 export default function InvitationDashboard() {
   const [lastActivity, setLastActivity] = useState<FamilyActivity | null>(null);
   const [elements, setElements] = useState<SeatingElement[]>([]);
-  const [viewedFamilyIds, setViewedFamilyIds] = useState<Set<string>>(
-    new Set(),
-  );
+  const [activities, setActivities] = useState<FamilyActivity[]>([]);
   const { toast } = useToast();
 
   const timeAgo = useTimeAgo(lastActivity?.timestamp);
@@ -48,13 +46,7 @@ export default function InvitationDashboard() {
     const fetchViewedFamilies = async () => {
       try {
         ActivityService.subscribeToRecentActivity(invitationData.id, undefined, (activities) => {
-          const ids = new Set<string>();
-          activities.forEach((activity) => {
-            if (activity.familyId) {
-              ids.add(activity.familyId);
-            }
-          });
-          setViewedFamilyIds(ids);
+          setActivities(activities);
         });
       } catch (error) {
         console.error("Error al obtener vistas:", error);
@@ -63,7 +55,7 @@ export default function InvitationDashboard() {
     fetchViewedFamilies();
   }, [invitationData?.id]);
 
-  const stats = useEventStats(families || [], {elements, viewedFamilyIds});
+  const stats = useEventStats(families || [], {elements, activities});
 
   useEffect(() => {
     if (error) {
