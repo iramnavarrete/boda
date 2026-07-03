@@ -88,7 +88,13 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
       }
     >
       <div className="flex-1 overflow-y-auto pr-2 -mx-2 px-2 min-h-0">
-        <div className="space-y-2 pb-2">
+        <div className="h-full space-y-2 pb-2">
+          {activities.length === 0 && (
+            <div className="h-full flex flex-col items-center justify-center text-stone-400 text-xs italic text-center px-5">
+              <span className="font-semibold">No hay actividad reciente.<br /></span>
+              Los movimientos de tus invitados aparecerán aquí en tiempo real.
+            </div>
+          )}
           {activities.map((act) => (
             <MemoizedActivityItem key={act.id} activity={act} />
           ))}
