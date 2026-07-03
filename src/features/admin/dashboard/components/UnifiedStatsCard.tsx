@@ -1,5 +1,15 @@
 import React, { useState, useMemo } from "react";
-import { PieChart, CheckCircle2, Clock, XCircle, Users, Mail, Armchair, LayoutTemplate, AlertTriangle } from "lucide-react";
+import {
+  PieChart,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  Users,
+  Mail,
+  Armchair,
+  LayoutTemplate,
+  AlertTriangle,
+} from "lucide-react";
 import theme from "@/utils/theme";
 import DashboardCard from "./DashboardCard";
 import AnimatedDonutChart from "./AnimatedDonutChart";
@@ -60,6 +70,11 @@ const UnifiedStatsCard: React.FC<UnifiedStatsCardProps> = ({ stats }) => {
             color: theme.colors.blue[500],
           },
           {
+            label: "Declinadas",
+            value: stats.familias.rechazadas,
+            color: theme.colors.danger.DEFAULT,
+          },
+          {
             label: "Pendientes",
             value: stats.familias.sinResponder,
             color: theme.colors.gold.DEFAULT,
@@ -107,6 +122,7 @@ const UnifiedStatsCard: React.FC<UnifiedStatsCardProps> = ({ stats }) => {
     <DashboardCard
       icon={PieChart}
       title="Métricas del Evento"
+      className="h-full"
       subtitle="Análisis detallado"
       headerRight={
         <div className="flex bg-[#F9F7F2] rounded-xl border border-[#EBE5DA] p-1">
@@ -181,6 +197,14 @@ const UnifiedStatsCard: React.FC<UnifiedStatsCardProps> = ({ stats }) => {
                 label="Confirmación Parcial"
                 value={stats.familias.parciales}
                 colorClass="text-[#60a5fa]"
+                showBorder={false}
+              />
+              <StatRow
+                icon={XCircle}
+                label="Familias Declinadas"
+                value={stats.familias.rechazadas}
+                colorClass="text-[#853935]"
+                isWarning={true}
                 showBorder={false}
               />
               <StatRow
