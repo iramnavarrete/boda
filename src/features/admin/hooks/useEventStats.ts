@@ -53,7 +53,6 @@ export const useEventStats = (
 ) => {
   const { elements = [], viewedFamilyIds, filters } = options;
 
-  // A. ESTADÍSTICAS GLOBALES
   const stats = useMemo(() => {
     const s: EventStats = {
       invitados: { total: 0, confirmados: 0, pendientes: 0, rechazados: 0 },
@@ -166,37 +165,23 @@ export const useEventStats = (
     });
   }, [families, filters]);
 
-  // C. CONTADORES DE FILTROS CRUZADOS
   const filterCounts = useMemo<FilterCounts>(() => {
-    const w = filters?.whatsapp || "all";
-    const t = filters?.tag || "all";
-
-    const famsForWhatsapp = families.filter(
-      (g) => t === "all" || g.etiqueta === t,
-    );
-    const famsForTags = families.filter((g) => {
-      if (w === "sent") return !!(g.whatsappEnviado && g.tieneTelefono);
-      if (w === "not_sent") return !!(!g.whatsappEnviado && g.tieneTelefono);
-      if (w === "empty") return !g.tieneTelefono;
-      return true;
-    });
-
     return {
       whatsapp: {
-        all: famsForWhatsapp.length,
-        sent: famsForWhatsapp.filter(
+        all: filteredFamilies.length,
+        sent: filteredFamilies.filter(
           (g) => g.whatsappEnviado && g.tieneTelefono,
         ).length,
-        not_sent: famsForWhatsapp.filter(
+        not_sent: filteredFamilies.filter(
           (g) => !g.whatsappEnviado && g.tieneTelefono,
         ).length,
-        empty: famsForWhatsapp.filter((g) => !g.tieneTelefono).length,
+        empty: filteredFamilies.filter((g) => !g.tieneTelefono).length,
       },
       etiquetas: {
-        all: famsForTags.length,
-        Novia: famsForTags.filter((g) => g.etiqueta === "Novia").length,
-        Novio: famsForTags.filter((g) => g.etiqueta === "Novio").length,
-        Ambos: famsForTags.filter((g) => g.etiqueta === "Ambos").length,
+        all: filteredFamilies.length,
+        Novia: filteredFamilies.filter((g) => g.etiqueta === "Novia").length,
+        Novio: filteredFamilies.filter((g) => g.etiqueta === "Novio").length,
+        Ambos: filteredFamilies.filter((g) => g.etiqueta === "Ambos").length,
       },
       status: filteredFamilies.reduce(
         (acc, g) => {
@@ -215,7 +200,7 @@ export const useEventStats = (
         { all: 0, confirmed: 0, partial: 0, rejected: 0, pending: 0 },
       ),
     };
-  }, [families, filters, filteredFamilies]);
+  }, [filteredFamilies]);
 
   return { stats, filteredFamilies, filterCounts };
 };
