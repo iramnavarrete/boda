@@ -1,9 +1,13 @@
 import React from "react";
 import { Users, CheckCircle2, Clock, XCircle } from "lucide-react";
-import { DashboardStats } from "@/types";
+import { useWeddingAdminContext } from "../context/WeddingAdminContext";
 
-interface StatsSidebarProps {
-  stats: DashboardStats;
+interface StatCardProps {
+  title: string;
+  value: number;
+  icon: React.ReactElement;
+  colorClass?: string;
+  borderHoverClass?: string;
 }
 
 const StatCard = ({
@@ -12,7 +16,7 @@ const StatCard = ({
   icon,
   colorClass,
   borderHoverClass,
-}: any) => {
+}: StatCardProps) => {
   return (
     <div
       className={`
@@ -44,10 +48,11 @@ const StatCard = ({
   );
 };
 
-export default function StatsSidebar({ stats }: StatsSidebarProps) {
+export default function StatsSidebar() {
+  const { stats } = useWeddingAdminContext();
+
   return (
     <div className="flex flex-col gap-2 w-full lg:w-32 font-sans">
-
       {/* CONTENEDOR FLEXIBLE: Scroll horizontal en móvil, Columna en Desktop */}
       <div className="flex flex-row lg:flex-col gap-2 overflow-x-auto lg:overflow-visible pb-2 lg:pb-0 scrollbar-hide -mx-4 px-4 lg:mx-0 lg:px-0">
         <div className="min-w-[100px] lg:w-full bg-primary-800/90 text-white p-3 rounded-xl shadow-md shadow-charcoal/20 relative overflow-hidden shrink-0 flex flex-col justify-center min-h-[70px] group border border-primary hover:z-10 transition-all">
