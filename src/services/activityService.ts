@@ -6,6 +6,7 @@ import {
   limit,
   onSnapshot,
   serverTimestamp,
+  QueryConstraint,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { FamilyActivity } from "@/types";
@@ -52,13 +53,18 @@ export const ActivityService = {
    */
   subscribeToRecentActivity: (
     invitationId: string,
-    limitCount: number = 30,
+    limitCount: number | undefined,
     callback: (activities: FamilyActivity[]) => void,
   ) => {
+    const queryConstraints: QueryConstraint[] = [orderBy("timestamp", "desc")];
+
+    if (limitCount !== undefined && limitCount > 0) {
+      queryConstraints.push(limit(limitCount));
+    }
+
     const q = query(
       collection(db, invitationsCollectionName, invitationId, "activity"),
-      orderBy("timestamp", "desc"),
-      limit(limitCount),
+      ...queryConstraints,
     );
 
     const unsubscribe = onSnapshot(

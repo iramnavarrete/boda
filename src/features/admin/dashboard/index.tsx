@@ -10,20 +10,60 @@ import { FamilyActivity } from "@/types";
 // Componentes del Módulo
 import EventHeroCard from "./components/EventHeroCard";
 import RecentActivityCard from "./components/RecentActivityCard";
-import UnifiedStatsCard from "./components/UnifiedStatsCard";
 import MessagesCard from "./components/MessagesCard";
 import CountdownCard from "./components/CountdownCard";
 import { formatToEventDate, getEventTypeName } from "@/utils/formatters";
+import { SeatingElement } from "../seating/stores/useSeatingStore";
+import { SeatingService } from "../seating/services/seatingService";
+import { useEventStats } from "../hooks/useEventStats";
+import UnifiedStatsCard from "./components/UnifiedStatsCard";
+import { ActivityService } from "@/services/activityService";
 
 export default function InvitationDashboard() {
   const [lastActivity, setLastActivity] = useState<FamilyActivity | null>(null);
+  const [elements, setElements] = useState<SeatingElement[]>([]);
+  const [viewedFamilyIds, setViewedFamilyIds] = useState<Set<string>>(
+    new Set(),
+  );
   const { toast } = useToast();
 
   const timeAgo = useTimeAgo(lastActivity?.timestamp);
   const router = useRouter();
   const invitationData = useInvitationStore((state) => state.invitationData);
 
-  const { isLoadingFamilies, error } = useFamiliesData(invitationData?.id);
+  const { isLoadingFamilies, families, error } = useFamiliesData(
+    invitationData?.id,
+  );
+
+  useEffect(() => {
+    if (invitationData?.id) {
+      SeatingService.getPlan(invitationData.id)
+        .then((planElements) => setElements(planElements))
+        .catch(console.error);
+    }
+  }, [invitationData?.id]);
+
+  useEffect(() => {
+    if (!invitationData?.id) return;
+    const fetchViewedFamilies = async () => {
+      try {
+        ActivityService.subscribeToRecentActivity(invitationData.id, undefined, (activities) => {
+          const ids = new Set<string>();
+          activities.forEach((activity) => {
+            if (activity.familyId) {
+              ids.add(activity.familyId);
+            }
+          });
+          setViewedFamilyIds(ids);
+        });
+      } catch (error) {
+        console.error("Error al obtener vistas:", error);
+      }
+    };
+    fetchViewedFamilies();
+  }, [invitationData?.id]);
+
+  const stats = useEventStats(families || [], {elements, viewedFamilyIds});
 
   useEffect(() => {
     if (error) {
@@ -65,7 +105,8 @@ export default function InvitationDashboard() {
             />
           </div>
           <div className="lg:col-span-2 flex flex-col min-h-0">
-            <UnifiedStatsCard />
+            {/* 3. Inyectamos los cálculos en la tarjeta unificada */}
+            <UnifiedStatsCard stats={stats.stats} />
           </div>
         </div>
 

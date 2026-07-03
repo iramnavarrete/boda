@@ -18,7 +18,6 @@ import { useFamilyActions } from "@/features/admin/hooks/useFamilyActions";
 import { useToast } from "@/features/shared/components/Toast";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import { useExpiredFamiliesWatcher } from "@/features/admin/hooks/useExpiredFamiliesWatcher";
-import { useFamiliesFiltersAndCounts } from "@/features/admin/hooks/useFamiliesFiltersAndCounts";
 import { useWhatsappModal } from "@/features/admin/hooks/useWhatsappModal";
 import { useUnlockModal } from "@/features/admin/hooks/useUnlockModal";
 import { useFamilyDeletion } from "@/features/admin/hooks/useFamilyDeletion";
@@ -28,6 +27,7 @@ import { useLockActions, useEditActions } from "@/features/admin/hooks/family";
 // Stores
 import { useFamiliesFiltersStore } from "@/features/admin/stores/useFamiliesFiltersStore";
 import { useFamiliesSelectionStore } from "@/features/admin/stores/useFamiliesSelectionStore";
+import { useEventStats } from "../hooks/useEventStats";
 
 export default function WeddingAdmin() {
   const invitationData = useInvitationStore((state) => state.invitationData);
@@ -67,8 +67,10 @@ export default function WeddingAdmin() {
   useExpiredFamiliesWatcher(families, invitationData?.id);
 
   // Filtered data
-  const { finalFilteredFamilies, filterCounts, whatsappCounts, tagCounts } =
-    useFamiliesFiltersAndCounts(filteredFamilies, whatsappFilter, tagFilter);
+  const { filteredFamilies: finalFilteredFamilies, filterCounts: { whatsapp: whatsappCounts, etiquetas: tagCounts, status: statusCounts } } = useEventStats(
+    filteredFamilies,
+    { filters: { whatsapp: whatsappFilter, tag: tagFilter } },
+  );
 
   // Modals
   const whatsapp = useWhatsappModal(invitationData?.id);
@@ -138,7 +140,7 @@ export default function WeddingAdmin() {
               setSearchTerm={setSearchTerm}
               filterStatus={filterStatus}
               setFilterStatus={setFilterStatus}
-              filterCounts={filterCounts}
+              filterCounts={statusCounts}
               whatsappFilter={whatsappFilter}
               setWhatsappFilter={setWhatsappFilter}
               whatsappCounts={whatsappCounts}
