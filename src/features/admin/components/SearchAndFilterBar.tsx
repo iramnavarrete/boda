@@ -18,75 +18,39 @@ import {
   MoreVertical,
   Tag,
 } from "lucide-react";
-import {
-  FilterCounts,
-  FilterType,
-  TagCounts,
-  TagFilterType,
-  WhatsappCounts,
-  WhatsappFilterType,
-} from "@/types";
 import DashedSeparator from "./DashedSeparator";
 import { cn } from "@heroui/theme";
 import TextureButton from "@/features/shared/components/TextureButton";
+import { useWeddingAdminContext } from "@/features/admin/context/WeddingAdminContext";
 
-interface SearchAndFilterBarProps {
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  filterStatus: FilterType;
-  setFilterStatus: (status: FilterType) => void;
-  filterCounts: FilterCounts;
-  onExportExcel: () => void;
-  onNewFamily: () => void;
-  disabled: boolean;
-  filteredFamiliesCount: number;
-}
+export default function SearchAndFilterBar() {
+  const {
+    searchTerm,
+    setSearchTerm,
+    filterStatus,
+    setFilterStatus,
+    statusCounts,
+    whatsappFilter,
+    setWhatsappFilter,
+    whatsappCounts,
+    tagFilter,
+    setTagFilter,
+    tagCounts,
+    viewMode,
+    setViewMode,
+    finalFilteredFamilies,
+    selectedFamilies,
+    handleNewFamily,
+    handleExportExcel,
+    openImportModal,
+  } = useWeddingAdminContext();
 
-interface SearchAndFilterBarProps {
-  searchTerm: string;
-  setSearchTerm: (term: string) => void;
-  filterStatus: FilterType;
-  setFilterStatus: (status: FilterType) => void;
-  filterCounts: FilterCounts;
-  whatsappFilter: WhatsappFilterType;
-  setWhatsappFilter: (status: WhatsappFilterType) => void;
-  whatsappCounts: WhatsappCounts;
-  tagFilter: TagFilterType;
-  setTagFilter: (status: TagFilterType) => void;
-  tagCounts: TagCounts;
-  viewMode?: "grid" | "table";
-  setViewMode?: (mode: "grid" | "table") => void;
-  onExportExcel: () => void;
-  onImportExcel: () => void; // NUEVA PROP
-  onNewFamily: () => void;
-  disabled: boolean;
-  filteredFamiliesCount: number;
-}
+  const filteredFamiliesCount = finalFilteredFamilies.length;
+  const disabled = selectedFamilies.size > 0;
 
-export default function SearchAndFilterBar({
-  searchTerm,
-  setSearchTerm,
-  filterStatus,
-  setFilterStatus,
-  filterCounts,
-  whatsappFilter,
-  setWhatsappFilter,
-  whatsappCounts,
-  setTagFilter,
-  tagCounts,
-  tagFilter,
-  viewMode,
-  setViewMode,
-  onExportExcel,
-  onImportExcel,
-  onNewFamily,
-  disabled,
-  filteredFamiliesCount,
-}: SearchAndFilterBarProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
 
-  // --- ESTADO PARA EL MENÚ DE OPCIONES ---
   const [isOptionsOpen, setIsOptionsOpen] = useState(false);
   const optionsRef = useRef<HTMLDivElement>(null);
 
@@ -130,7 +94,7 @@ export default function SearchAndFilterBar({
 
     if (tagFilter !== "all") {
       activeCount++;
-      lastActiveLabel = 'Familias ' + tagFilter;
+      lastActiveLabel = "Familias " + tagFilter;
     }
 
     if (activeCount === 0) return "Todos";
@@ -138,19 +102,16 @@ export default function SearchAndFilterBar({
     return `${activeCount} filtros`;
   };
 
-  // --- NUEVA LÓGICA DE COLOR ADAPTADA A MÚLTIPLES FILTROS ---
   const getFilterColor = () => {
     const activeCount =
       (filterStatus !== "all" ? 1 : 0) +
       (whatsappFilter !== "all" ? 1 : 0) +
       (tagFilter !== "all" ? 1 : 0);
 
-    // Si hay más de un filtro activo, usamos un estilo dorado para destacar la combinación
     if (activeCount > 1) {
       return "text-[#C5A669] bg-[#FDFBF7] border-[#C5A669] ring-1 ring-[#C5A669]/20";
     }
 
-    // Si solo hay un filtro activo, respetamos su color semántico
     if (filterStatus === "confirmed")
       return "text-green-700 bg-green-50 border-green-200 ring-1 ring-green-100";
     if (filterStatus === "pending")
@@ -170,7 +131,6 @@ export default function SearchAndFilterBar({
     if (tagFilter !== "all")
       return "text-gold bg-sand-light border-gold ring-1 ring-gold/20";
 
-    // Estado por defecto (Todos)
     return "text-stone-custom bg-white/90 border-sand hover:border-gold/50";
   };
 
@@ -183,7 +143,7 @@ export default function SearchAndFilterBar({
     setTagFilter("all");
     setIsFilterOpen(false);
   };
-  
+
   return (
     <div className="w-full font-sans">
       <fieldset
@@ -233,7 +193,6 @@ export default function SearchAndFilterBar({
 
             <div
               className={cn(
-                // Cambio: En móvil w-56 (columna), en desktop w-max para acomodar horizontalmente todas las columnas sin scroll
                 "absolute top-full right-0 w-56 md:w-max bg-white/95 backdrop-blur-sm text-stone-800 rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
                 "transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) z-50 flex flex-col",
                 isFilterOpen
@@ -241,7 +200,6 @@ export default function SearchAndFilterBar({
                   : "opacity-0 translate-y-0 scale-95 pointer-events-none",
               )}
             >
-              {/* Contenedor que cambia a fila (row) en pantallas grandes y deshabilita el scroll */}
               <div className="p-2 max-h-[60vh] md:max-h-none overflow-y-auto md:overflow-visible no-scrollbar flex-1 flex flex-col md:flex-row md:p-4 md:gap-4 md:space-y-0 space-y-0.5">
                 {/* --- COLUMNA 1: ASISTENCIA --- */}
                 <div className="flex flex-col gap-0.5 w-full md:w-52 shrink-0">
@@ -268,7 +226,7 @@ export default function SearchAndFilterBar({
                       Todas las familias
                     </span>
                     <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {filterCounts?.all || 0}
+                      {statusCounts?.all || 0}
                     </span>
                   </button>
                   <DashedSeparator className="m-0 hidden md:block" />
@@ -292,7 +250,7 @@ export default function SearchAndFilterBar({
                       Familias completas
                     </span>
                     <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {filterCounts?.confirmed || 0}
+                      {statusCounts?.confirmed || 0}
                     </span>
                   </button>
                   <button
@@ -315,7 +273,7 @@ export default function SearchAndFilterBar({
                       Familias parciales
                     </span>
                     <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {filterCounts?.partial || 0}
+                      {statusCounts?.partial || 0}
                     </span>
                   </button>
                   <button
@@ -338,7 +296,7 @@ export default function SearchAndFilterBar({
                       Familias pendientes
                     </span>
                     <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {filterCounts?.pending || 0}
+                      {statusCounts?.pending || 0}
                     </span>
                   </button>
                   <button
@@ -361,7 +319,7 @@ export default function SearchAndFilterBar({
                       Familias rechazadas
                     </span>
                     <span className="text-stone-light text-xs bg-white/90 px-1.5 py-0.5 rounded border border-sand">
-                      {filterCounts?.rejected || 0}
+                      {statusCounts?.rejected || 0}
                     </span>
                   </button>
                 </div>
@@ -582,34 +540,32 @@ export default function SearchAndFilterBar({
         {/* GRUPO DERECHO: Acciones */}
         <div className="flex gap-2 flex-row-reverse md:flex-row sm:gap-3 shrink-0 relative h-[46px]">
           {/* Toggle Vista (Solo Desktop) */}
-          {viewMode && setViewMode && (
-            <div className="hidden md:flex items-center bg-white/90 border border-[#EBE5DA] rounded-xl p-1 shadow-sm h-full">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={cn(
-                  "p-2 rounded-lg transition-all flex items-center justify-center h-full",
-                  viewMode === "grid"
-                    ? "bg-[#FDFBF7] text-[#C5A669] shadow-sm border border-[#EBE5DA]"
-                    : "text-[#A8A29E] hover:text-[#5A5A5A] border border-transparent",
-                )}
-                title="Vista de cuadrícula"
-              >
-                <LayoutGrid size={16} />
-              </button>
-              <button
-                onClick={() => setViewMode("table")}
-                className={cn(
-                  "p-2 rounded-lg transition-all flex items-center justify-center h-full",
-                  viewMode === "table"
-                    ? "bg-[#FDFBF7] text-[#C5A669] shadow-sm border border-[#EBE5DA]"
-                    : "text-[#A8A29E] hover:text-[#5A5A5A] border border-transparent",
-                )}
-                title="Vista de lista"
-              >
-                <List size={16} />
-              </button>
-            </div>
-          )}
+          <div className="hidden md:flex items-center bg-white/90 border border-[#EBE5DA] rounded-xl p-1 shadow-sm h-full">
+            <button
+              onClick={() => setViewMode("grid")}
+              className={cn(
+                "p-2 rounded-lg transition-all flex items-center justify-center h-full",
+                viewMode === "grid"
+                  ? "bg-[#FDFBF7] text-[#C5A669] shadow-sm border border-[#EBE5DA]"
+                  : "text-[#A8A29E] hover:text-[#5A5A5A] border border-transparent",
+              )}
+              title="Vista de cuadrícula"
+            >
+              <LayoutGrid size={16} />
+            </button>
+            <button
+              onClick={() => setViewMode("table")}
+              className={cn(
+                "p-2 rounded-lg transition-all flex items-center justify-center h-full",
+                viewMode === "table"
+                  ? "bg-[#FDFBF7] text-[#C5A669] shadow-sm border border-[#EBE5DA]"
+                  : "text-[#A8A29E] hover:text-[#5A5A5A] border border-transparent",
+              )}
+              title="Vista de lista"
+            >
+              <List size={16} />
+            </button>
+          </div>
 
           {/* Menú de Más Opciones (Importar/Exportar) */}
           <div className="relative h-full" ref={optionsRef}>
@@ -626,7 +582,6 @@ export default function SearchAndFilterBar({
               <MoreVertical size={18} />
             </button>
 
-            {/* Contenido del Dropdown de Opciones */}
             <div
               className={cn(
                 "absolute top-full right-0 mt-2 w-48 bg-white/95 backdrop-blur-sm rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden z-50 transition-all duration-300 origin-top-right",
@@ -638,7 +593,7 @@ export default function SearchAndFilterBar({
               <div className="p-1.5 flex flex-col gap-1">
                 <button
                   onClick={() => {
-                    onImportExcel();
+                    openImportModal();
                     setIsOptionsOpen(false);
                   }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-stone-600 font-medium hover:bg-sand-light hover:text-[#C5A669] rounded-xl transition-colors text-left"
@@ -647,7 +602,7 @@ export default function SearchAndFilterBar({
                 </button>
                 <button
                   onClick={() => {
-                    onExportExcel();
+                    handleExportExcel();
                     setIsOptionsOpen(false);
                   }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-stone-600 font-medium hover:bg-sand-light hover:text-[#C5A669] rounded-xl transition-colors text-left"
@@ -660,7 +615,7 @@ export default function SearchAndFilterBar({
 
           <TextureButton
             icon={<Plus size={18} />}
-            onClick={onNewFamily}
+            onClick={handleNewFamily}
             className="px-4 xl:px-6 py-0 h-full w-full md:w-auto rounded-xl transition-all shadow-lg shadow-[#C5A669]/20 hover:shadow-[#C5A669]/30 hover:-translate-y-0.5 font-bold"
           >
             <span>Nueva Familia</span>

@@ -5,50 +5,7 @@ import FamiliesMainSection from "@/features/admin/components/families/views/Fami
 import { useWeddingAdminContext } from "@/features/admin/context/WeddingAdminContext";
 
 export const WeddingAdminLayout = memo(function WeddingAdminLayout() {
-  const {
-    // Datos de familias
-    finalFilteredFamilies,
-    isLoadingFamilies,
-
-    // Filtros
-    viewMode,
-    setViewMode,
-    searchTerm,
-    setSearchTerm,
-    filterStatus,
-    setFilterStatus,
-    statusCounts,
-    whatsappFilter,
-    setWhatsappFilter,
-    whatsappCounts,
-    tagFilter,
-    setTagFilter,
-    tagCounts,
-
-    // Selección
-    selectedFamilies,
-    handleSelectFamily,
-    handleSelectAll,
-    clearSelection,
-    isFilterActive,
-
-    // Acciones por familia
-    handleNewFamily,
-    handleEdit,
-    handleDeleteFamily,
-    handleLockToggle,
-    handleExportExcel,
-    openImportModal,
-    whatsapp,
-
-    // Acciones masivas
-    handleBulkUpdateLock,
-    handleBulkDelete,
-  } = useWeddingAdminContext();
-
-  const selectedCount = selectedFamilies.size;
-  const isSelectedAll =
-    selectedCount > 0 && selectedCount === finalFilteredFamilies.length;
+  const { isFilterActive } = useWeddingAdminContext();
 
   return (
     <div className="bg-[#F9F7F2] min-h-screen font-sans text-[#2C2C29]">
@@ -70,47 +27,13 @@ export const WeddingAdminLayout = memo(function WeddingAdminLayout() {
               Familias {isFilterActive && "(filtrado)"}
             </h3>
 
-            <FamiliesMainSection
-              viewMode={viewMode}
-              setViewMode={setViewMode}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              filterStatus={filterStatus}
-              setFilterStatus={setFilterStatus}
-              filterCounts={statusCounts}
-              whatsappFilter={whatsappFilter}
-              setWhatsappFilter={setWhatsappFilter}
-              whatsappCounts={whatsappCounts}
-              tagFilter={tagFilter}
-              setTagFilter={setTagFilter}
-              tagCounts={tagCounts}
-              selectedFamilies={selectedFamilies}
-              filteredFamilies={finalFilteredFamilies}
-              isLoadingFamilies={isLoadingFamilies}
-              disabled={selectedCount > 0}
-              onImportExcel={openImportModal}
-              onExportExcel={handleExportExcel}
-              onNewFamily={handleNewFamily}
-              onSelectFamily={handleSelectFamily}
-              onSendReminder={(g) => whatsapp.open(g, "reminder")}
-              onEdit={handleEdit}
-              onDelete={handleDeleteFamily}
-              onSendWhatsApp={(g) => whatsapp.open(g, "initial")}
-              onLockToggle={handleLockToggle}
-            />
+            <FamiliesMainSection />
           </main>
         </div>
       </section>
 
       {/* Barra flotante de acciones masivas */}
-      <FloatingBulkActionsBar
-        count={selectedCount}
-        isSelectedAll={isSelectedAll}
-        onUpdateLock={handleBulkUpdateLock}
-        onDelete={handleBulkDelete}
-        onCancel={clearSelection}
-        onSelectAll={handleSelectAll}
-      />
+      <FloatingBulkActionsBar />
     </div>
   );
 });

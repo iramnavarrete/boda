@@ -2,26 +2,25 @@ import React, { useState, useRef, useEffect } from "react";
 import { X, Lock, Unlock, Trash2, ChevronUp, CheckSquare } from "lucide-react";
 import { cn } from "@heroui/theme";
 import DashedSeparator from "./DashedSeparator";
+import { useWeddingAdminContext } from "@/features/admin/context/WeddingAdminContext";
 
 interface BulkActionsProps {
-  count: number;
-  isSelectedAll: boolean;
-  onUpdateLock: (lock: boolean) => void;
-  onDelete: () => void;
-  onCancel: () => void;
-  onSelectAll: () => void;
   className?: string;
 }
 
-const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
-  count,
-  isSelectedAll,
-  onUpdateLock,
-  onDelete,
-  onCancel,
-  onSelectAll,
-  className,
-}) => {
+const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({ className }) => {
+  const {
+    selectedFamilies,
+    finalFilteredFamilies,
+    handleSelectAll,
+    clearSelection,
+    handleBulkUpdateLock,
+    handleBulkDelete,
+  } = useWeddingAdminContext();
+
+  const count = selectedFamilies.size;
+  const isSelectedAll = count > 0 && count === finalFilteredFamilies.length;
+
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -114,7 +113,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
                       Selección
                     </div>
                     <button
-                      onClick={() => handleAction(onSelectAll)}
+                      onClick={() => handleAction(handleSelectAll)}
                       className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-sand-light/50 hover:text-gold hover:border hover:border-gold/30 border border-transparent transition-all text-left group"
                     >
                       <div className="text-stone-300 group-hover:text-gold transition-colors">
@@ -130,7 +129,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
                   Edición
                 </div>
                 <button
-                  onClick={() => handleAction(() => onUpdateLock(true))}
+                  onClick={() => handleAction(() => handleBulkUpdateLock(true))}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-sand-light/50 hover:text-gold hover:border hover:border-gold/30 border border-transparent transition-all text-left group"
                 >
                   <div className="text-stone-300 group-hover:text-gold transition-colors">
@@ -140,7 +139,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
                 </button>
 
                 <button
-                  onClick={() => handleAction(() => onUpdateLock(false))}
+                  onClick={() => handleAction(() => handleBulkUpdateLock(false))}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-sand-light/50 hover:text-gold hover:border hover:border-gold/30 border border-transparent transition-all text-left group"
                 >
                   <div className="text-stone-300 group-hover:text-gold transition-colors">
@@ -155,7 +154,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
                   Zona de Peligro
                 </div>
                 <button
-                  onClick={() => handleAction(onDelete)}
+                  onClick={() => handleAction(handleBulkDelete)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-danger-600 hover:bg-red-50 hover:border hover:border-danger-100 border border-transparent transition-all text-left group"
                 >
                   <div className="text-danger-300 group-hover:text-danger-600 transition-colors">
@@ -171,7 +170,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({
 
           {/* Botón Cerrar */}
           <button
-            onClick={onCancel}
+            onClick={clearSelection}
             className="group bg-transparent hover:bg-danger-50 border border-transparent hover:border-danger-100 text-stone-400 hover:text-danger-600 rounded-xl p-2 transition-all ml-1"
             title="Cancelar selección"
           >

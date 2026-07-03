@@ -13,6 +13,7 @@ import { cn } from "@heroui/theme";
 import PartialConfirmationBadge from "./PartialConfirmationBadge";
 import { isPartialConfirmation } from "@/utils/family";
 import { FamilyActionButtons, FamilyLockButton } from "./FamilyActionButtons";
+import { useWeddingAdminContext } from "../context/WeddingAdminContext";
 
 interface FamiliesTableViewProps {
   filteredFamilies: Family[];
@@ -183,36 +184,20 @@ const FamilyRow = memo(
 
 FamilyRow.displayName = "FamilyRow";
 
-const FamiliesTableView: React.FC<FamiliesTableViewProps> = ({
-  filteredFamilies: families = [],
-  selectedFamilies,
-  onSelectFamily,
-  onEdit,
-  onDelete,
-  onSendWhatsApp,
-  onSendReminder,
-  onLockToggle,
-}) => {
+const FamiliesTableView: React.FC = () => {
+  const {
+      selectedFamilies,
+      handleSelectFamily,
+      handleLockToggle,
+      finalFilteredFamilies,
+      handleEdit,
+      handleDeleteFamily,
+      whatsapp,
+    } = useWeddingAdminContext();
   const { query } = useRouter();
   const isAnySelected = selectedFamilies.size > 0;
 
-  const handleSelect = useCallback(
-    (id: string) => onSelectFamily(id),
-    [onSelectFamily],
-  );
-  const handleEdit = useCallback((g: Family) => onEdit(g), [onEdit]);
-  const handleDelete = useCallback((g: Family) => onDelete(g), [onDelete]);
-  const handleWhatsApp = useCallback(
-    (g: Family) => onSendWhatsApp(g),
-    [onSendWhatsApp],
-  );
-  const handleReminder = useCallback(
-    (g: Family) => onSendReminder(g),
-    [onSendReminder],
-  );
-  const handleLock = useCallback((g: Family) => onLockToggle(g), [onLockToggle]);
-
-  if (!Array.isArray(families)) return null;
+  if (!Array.isArray(finalFilteredFamilies)) return null;
 
   return (
     <div className="w-full overflow-x-auto rounded-2xl bg-white border border-[#EBE5DA] shadow-sm">
@@ -230,19 +215,19 @@ const FamiliesTableView: React.FC<FamiliesTableViewProps> = ({
           </tr>
         </thead>
         <tbody className="text-sm">
-          {families.map((g) => (
+          {finalFilteredFamilies.map((g) => (
             <FamilyRow
               key={g.id}
               family={g}
               isSelected={selectedFamilies.has(g.id)}
               isAnySelected={isAnySelected}
               invitationId={query.invitationId}
-              onSelectFamily={handleSelect}
+              onSelectFamily={handleSelectFamily}
               onEdit={handleEdit}
-              onDelete={handleDelete}
-              onSendWhatsApp={handleWhatsApp}
-              onSendReminder={handleReminder}
-              onLockToggle={handleLock}
+              onDelete={handleDeleteFamily}
+              onSendWhatsApp={(g) => whatsapp.open(g, "initial")}
+              onSendReminder={(g) => whatsapp.open(g, "reminder")}
+              onLockToggle={handleLockToggle}
             />
           ))}
         </tbody>

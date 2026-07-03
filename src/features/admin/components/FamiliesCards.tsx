@@ -14,6 +14,7 @@ import { useRouter } from "next/router";
 import { FamilyActionButtons, FamilyLockButton } from "./FamilyActionButtons";
 import PartialConfirmationBadge from "./PartialConfirmationBadge";
 import { isPartialConfirmation } from "@/utils/family";
+import { useWeddingAdminContext } from "../context/WeddingAdminContext";
 
 interface FamiliesCardsProps {
   families: Family[];
@@ -173,50 +174,34 @@ const FamilyCard = memo(
 
 FamilyCard.displayName = "FamilyCard";
 
-const FamiliesCards: React.FC<FamiliesCardsProps> = ({
-  families,
-  selectedFamilies,
-  onSelectFamily,
-  onEdit,
-  onDelete,
-  onSendWhatsApp,
-  onSendReminder,
-  onLockToggle,
-}) => {
+const FamiliesCards: React.FC = () => {
+  const {
+    selectedFamilies,
+    handleSelectFamily,
+    handleLockToggle,
+    finalFilteredFamilies,
+    handleEdit,
+    handleDeleteFamily,
+    whatsapp,
+  } = useWeddingAdminContext();
   const { query } = useRouter();
   const isAnySelected = selectedFamilies.size > 0;
 
-  const handleSelect = useCallback(
-    (id: string) => onSelectFamily(id),
-    [onSelectFamily],
-  );
-  const handleEdit = useCallback((g: Family) => onEdit(g), [onEdit]);
-  const handleDelete = useCallback((g: Family) => onDelete(g), [onDelete]);
-  const handleWhatsApp = useCallback(
-    (f: Family) => onSendWhatsApp(f),
-    [onSendWhatsApp],
-  );
-  const handleReminder = useCallback(
-    (f: Family) => onSendReminder(f),
-    [onSendReminder],
-  );
-  const handleLock = useCallback((f: Family) => onLockToggle(f), [onLockToggle]);
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-2 select-none pb-20">
-      {families.map((g) => (
+      {finalFilteredFamilies.map((g) => (
         <FamilyCard
           key={g.id}
           families={g}
           isSelected={selectedFamilies.has(g.id)}
           isAnySelected={isAnySelected}
           invitationId={query.invitationId}
-          onSelectFamily={handleSelect}
+          onSelectFamily={handleSelectFamily}
           onEdit={handleEdit}
-          onDelete={handleDelete}
-          onSendWhatsApp={handleWhatsApp}
-          onSendReminder={handleReminder}
-          onLockToggle={handleLock}
+          onDelete={handleDeleteFamily}
+          onSendWhatsApp={(g) => whatsapp.open(g, "initial")}
+          onSendReminder={(g) => whatsapp.open(g, "reminder")}
+          onLockToggle={handleLockToggle}
         />
       ))}
     </div>

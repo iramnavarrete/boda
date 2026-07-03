@@ -68,13 +68,19 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
           className="group bg-transparent hover:bg-red-50 border border-transparent hover:border-red-100 text-stone-400 hover:text-red-500 rounded-xl p-2 transition-all ml-1"
           title="Cancelar selección"
         >
-          <X size={20} className="transform group-hover:rotate-90 transition-transform duration-300" strokeWidth={2.5} />
+          <X
+            size={20}
+            className="transform group-hover:rotate-90 transition-transform duration-300"
+            strokeWidth={2.5}
+          />
         </button>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0 bg-sand-light/30">
+      <form
+        onSubmit={handleSubmit}
+        className="flex flex-col flex-1 overflow-hidden min-h-0 bg-sand-light/30"
+      >
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          
           {/* Asistencia Toggle */}
           <div className="relative">
             <div className="mb-2 px-1">
@@ -98,7 +104,14 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
                     : "text-stone-500 hover:text-stone-700 hover:bg-white/50",
                 )}
               >
-                <CheckCircle2 size={16} className={formData.asistencia === true ? "text-green-600" : "text-stone-400 opacity-50"} />
+                <CheckCircle2
+                  size={16}
+                  className={
+                    formData.asistencia === true
+                      ? "text-green-600"
+                      : "text-stone-400 opacity-50"
+                  }
+                />
                 Sí
               </button>
 
@@ -114,7 +127,14 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
                     : "text-stone-500 hover:text-stone-700 hover:bg-white/50",
                 )}
               >
-                <XCircleIcon size={16} className={formData.asistencia === false ? "text-red-500" : "text-stone-400 opacity-50"} />
+                <XCircleIcon
+                  size={16}
+                  className={
+                    formData.asistencia === false
+                      ? "text-red-500"
+                      : "text-stone-400 opacity-50"
+                  }
+                />
                 No
               </button>
             </div>
@@ -148,14 +168,23 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
                     min="1"
                     className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all shadow-sm"
                     value={formData.invitados || ""}
-                    onChange={(e) => handleNumberChange("invitados", e.target.value)}
+                    onChange={(e) =>
+                      handleNumberChange("invitados", e.target.value)
+                    }
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-stone-400 pointer-events-none">
                     pers.
                   </span>
                 </div>
               </div>
-              <div className={cn("transition-opacity duration-300", formData.asistencia === false ? "opacity-50 grayscale" : "opacity-100")}>
+              <div
+                className={cn(
+                  "transition-opacity duration-300",
+                  formData.asistencia === false
+                    ? "opacity-50 grayscale"
+                    : "opacity-100",
+                )}
+              >
                 <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
                   Confirmados {formData.asistencia === true && "*"}
                 </label>
@@ -168,7 +197,9 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
                     disabled={formData.asistencia === false}
                     className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all disabled:bg-sand-light disabled:text-stone-300 shadow-sm"
                     value={formData.confirmados || ""}
-                    onChange={(e) => handleNumberChange("confirmados", e.target.value)}
+                    onChange={(e) =>
+                      handleNumberChange("confirmados", e.target.value)
+                    }
                   />
                   {formData.asistencia === false && (
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
@@ -183,7 +214,10 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
             <div>
               <label className="flex items-center gap-1.5 text-sm font-medium text-charcoal mb-2 ml-1">
                 <Tag size={14} className="text-gold" />
-                Etiqueta <span className="font-normal text-xs text-stone-400">(Opcional)</span>
+                Etiqueta{" "}
+                <span className="font-normal text-xs text-stone-400">
+                  (Opcional)
+                </span>
               </label>
               <div className="flex flex-wrap gap-2">
                 {TAG_OPTIONS.map((tag) => (
@@ -224,7 +258,9 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
                     <option value="54">🇦🇷 +54</option>
                     <option value="56">🇨🇱 +56</option>
                   </select>
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400"><ChevronDown size={14} /></div>
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none text-stone-400">
+                    <ChevronDown size={14} />
+                  </div>
                   <div className="w-px h-6 bg-sand ml-1"></div>
                 </div>
 
@@ -242,68 +278,108 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
 
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
-                Nota para familia <span className="font-normal text-xs">(Opcional)</span>
+                Nota para familia{" "}
+                <span className="font-normal text-xs">(Opcional)</span>
               </label>
               <textarea
                 style={{ fieldSizing: "content" }}
                 className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all placeholder:text-stone-300 shadow-sm max-h-20 resize-none"
                 value={formData.notaAnfitrion || ""}
-                onChange={(e) => handleTextChange("notaAnfitrion", e.target.value)}
+                onChange={(e) =>
+                  handleTextChange("notaAnfitrion", e.target.value)
+                }
                 placeholder="Ej. 'Los esperamos con ansias'..."
               />
             </div>
 
             {/* SECCIÓN DE PERMISOS */}
-            <div className={cn("rounded-xl transition-all", formData.cambiosPermitidos ? "bg-white border border-sand shadow-sm" : "border border-transparent hover:bg-white/50")}>
-              <button
-                type="button"
-                onClick={() => {
-                  const newState = !formData.cambiosPermitidos;
-                  handleTextChange("cambiosPermitidos", newState);
-                  if (!newState) handleTextChange("fechaLimiteConfirmacion", null);
-                }}
-                className="flex items-center gap-3 p-3 w-full text-left rounded-xl group"
+            {isEdit && (
+              <div
+                className={cn(
+                  "rounded-xl transition-all",
+                  formData.cambiosPermitidos
+                    ? "bg-white border border-sand shadow-sm"
+                    : "border border-transparent hover:bg-white/50",
+                )}
               >
-                <div className={cn("w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0", formData.cambiosPermitidos ? "bg-gold border-gold text-white" : "bg-white border-stone-300 text-transparent group-hover:border-stone-400")}>
-                  <Check size={14} strokeWidth={3} />
-                </div>
-                <div>
-                  <span className={cn("block text-sm font-medium select-none transition-colors", formData.cambiosPermitidos ? "text-gold" : "text-stone-custom")}>
-                    Permitir cambios de asistencia
-                  </span>
-                  <span className="text-xs text-stone-light hidden sm:block">
-                    Si esta activo, la familia podrá modificar su respuesta.
-                  </span>
-                </div>
-              </button>
-
-              {formData.cambiosPermitidos && (
-                <div className="pl-11 pr-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                  <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
-                    Fecha límite de confirmación <span className="font-normal normal-case text-stone-400">(Opcional)</span>
-                  </label>
-                  <div className="relative flex items-center">
-                    <Calendar size={14} className="absolute left-3 text-stone-400 pointer-events-none" />
-                    <input
-                      type="date"
-                      className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-sand bg-[#FDFBF7] text-stone-custom focus:bg-white focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all shadow-sm text-sm"
-                      value={formData.fechaLimiteConfirmacion || ""}
-                      onChange={(e) => handleTextChange("fechaLimiteConfirmacion", e.target.value !== "" ? e.target.value : null)}
-                    />
-                    {formData.fechaLimiteConfirmacion && (
-                      <button
-                        type="button"
-                        onClick={() => handleTextChange("fechaLimiteConfirmacion", null)}
-                        className="absolute right-3 p-1 rounded-full text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                        title="Quitar fecha límite"
-                      >
-                        <X size={14} />
-                      </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newState = !formData.cambiosPermitidos;
+                    handleTextChange("cambiosPermitidos", newState);
+                    if (!newState)
+                      handleTextChange("fechaLimiteConfirmacion", null);
+                  }}
+                  className="flex items-center gap-3 p-3 w-full text-left rounded-xl group"
+                >
+                  <div
+                    className={cn(
+                      "w-5 h-5 rounded border flex items-center justify-center transition-all shrink-0",
+                      formData.cambiosPermitidos
+                        ? "bg-gold border-gold text-white"
+                        : "bg-white border-stone-300 text-transparent group-hover:border-stone-400",
                     )}
+                  >
+                    <Check size={14} strokeWidth={3} />
                   </div>
-                </div>
-              )}
-            </div>
+                  <div>
+                    <span
+                      className={cn(
+                        "block text-sm font-medium select-none transition-colors",
+                        formData.cambiosPermitidos
+                          ? "text-gold"
+                          : "text-stone-custom",
+                      )}
+                    >
+                      Permitir cambios de asistencia
+                    </span>
+                    <span className="text-xs text-stone-light hidden sm:block">
+                      Si esta activo, la familia podrá modificar su respuesta.
+                    </span>
+                  </div>
+                </button>
+
+                {formData.cambiosPermitidos && (
+                  <div className="pl-11 pr-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
+                      Fecha límite de confirmación{" "}
+                      <span className="font-normal normal-case text-stone-400">
+                        (Opcional)
+                      </span>
+                    </label>
+                    <div className="relative flex items-center">
+                      <Calendar
+                        size={14}
+                        className="absolute left-3 text-stone-400 pointer-events-none"
+                      />
+                      <input
+                        type="date"
+                        className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-sand bg-[#FDFBF7] text-stone-custom focus:bg-white focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all shadow-sm text-sm"
+                        value={formData.fechaLimiteConfirmacion || ""}
+                        onChange={(e) =>
+                          handleTextChange(
+                            "fechaLimiteConfirmacion",
+                            e.target.value !== "" ? e.target.value : null,
+                          )
+                        }
+                      />
+                      {formData.fechaLimiteConfirmacion && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleTextChange("fechaLimiteConfirmacion", null)
+                          }
+                          className="absolute right-3 p-1 rounded-full text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          title="Quitar fecha límite"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
