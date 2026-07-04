@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Search,
-  Filter,
   ChevronDown,
   LayoutList,
   Plus,
@@ -17,609 +16,399 @@ import {
   ClipboardPaste,
   MoreVertical,
   Tag,
+  LucideIcon,
+  FilterX,
+  Mail
 } from "lucide-react";
-import DashedSeparator from "./DashedSeparator";
 import { cn } from "@heroui/theme";
 import TextureButton from "@/features/shared/components/TextureButton";
 import { useWeddingAdminContext } from "@/features/admin/context/WeddingAdminContext";
 
-export default function SearchAndFilterBar() {
-  const {
-    searchTerm,
-    setSearchTerm,
-    filterStatus,
-    setFilterStatus,
-    statusCounts,
-    whatsappFilter,
-    setWhatsappFilter,
-    whatsappCounts,
-    tagFilter,
-    setTagFilter,
-    tagCounts,
-    viewMode,
-    setViewMode,
-    finalFilteredFamilies,
-    selectedFamilies,
-    handleNewFamily,
-    handleExportExcel,
-    openImportModal,
-  } = useWeddingAdminContext();
+// ============================================================================
+// 1. INTERFACES ESTRICTAS (Cero 'any')
+// ============================================================================
+interface FilterOption {
+  value: string;
+  label: string;
+  count: number;
+  icon?: LucideIcon;
+  iconColor?: string;
+  activeColorClass?: string; // 🔥 Nueva propiedad para personalizar el color del badge seleccionado
+}
 
-  const filteredFamiliesCount = finalFilteredFamilies.length;
-  const disabled = selectedFamilies.size > 0;
+interface FilterDropdownProps<T extends string = string> {
+  label: string;
+  options: FilterOption[];
+  currentValue: T;
+  onChange: (val: T) => void;
+  isOpen: boolean;
+  onToggle: () => void;
+  fallbackColorClass?: string;
+}
 
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const filterRef = useRef<HTMLDivElement>(null);
+type DropdownType = "status" | "whatsapp" | "tag" | "options" | null;
 
-  const [isOptionsOpen, setIsOptionsOpen] = useState(false);
-  const optionsRef = useRef<HTMLDivElement>(null);
+// ============================================================================
+// 2. CUSTOM HOOK: Lógica y Estados aislados
+// ============================================================================
+function useSearchAndFilterBar() {
+  const context = useWeddingAdminContext();
+  const { setFilterStatus, setWhatsappFilter, setTagFilter } = context;
+  const [openDropdown, setOpenDropdown] = useState<DropdownType>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
+  // Click outside unificado
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        filterRef.current &&
-        !filterRef.current.contains(event.target as Node)
-      ) {
-        setIsFilterOpen(false);
-      }
-      if (
-        optionsRef.current &&
-        !optionsRef.current.contains(event.target as Node)
-      ) {
-        setIsOptionsOpen(false);
+      const target = event.target as HTMLElement;
+      if (!target.closest(".dropdown-container")) {
+        setOpenDropdown(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const getFilterLabel = () => {
-    let activeCount = 0;
-    let lastActiveLabel = "";
-
-    if (filterStatus !== "all") {
-      activeCount++;
-      if (filterStatus === "confirmed") lastActiveLabel = "Familias completas";
-      if (filterStatus === "partial") lastActiveLabel = "Familias parciales";
-      if (filterStatus === "pending") lastActiveLabel = "Familias pendientes";
-      if (filterStatus === "rejected") lastActiveLabel = "Familias rechazadas";
-    }
-
-    if (whatsappFilter !== "all") {
-      activeCount++;
-      if (whatsappFilter === "sent") lastActiveLabel = "WA Enviado";
-      if (whatsappFilter === "not_sent") lastActiveLabel = "WA Pendiente";
-      if (whatsappFilter === "empty") lastActiveLabel = "Sin Teléfono";
-    }
-
-    if (tagFilter !== "all") {
-      activeCount++;
-      lastActiveLabel = "Familias " + tagFilter;
-    }
-
-    if (activeCount === 0) return "Todos";
-    if (activeCount === 1) return lastActiveLabel;
-    return `${activeCount} filtros`;
-  };
-
-  const getFilterColor = () => {
-    const activeCount =
-      (filterStatus !== "all" ? 1 : 0) +
-      (whatsappFilter !== "all" ? 1 : 0) +
-      (tagFilter !== "all" ? 1 : 0);
-
-    if (activeCount > 1) {
-      return "text-[#C5A669] bg-[#FDFBF7] border-[#C5A669] ring-1 ring-[#C5A669]/20";
-    }
-
-    if (filterStatus === "confirmed")
-      return "text-green-700 bg-green-50 border-green-200 ring-1 ring-green-100";
-    if (filterStatus === "pending")
-      return "text-gold bg-sand/30 border-sand ring-1 ring-gold/20";
-    if (filterStatus === "partial")
-      return "text-orange-700 bg-orange-50 border-orange-200 ring-1 ring-orange-100";
-    if (filterStatus === "rejected")
-      return "text-red-700 bg-red-50 border-red-200 ring-1 ring-red-100";
-
-    if (whatsappFilter === "sent")
-      return "text-green-700 bg-green-50 border-green-200 ring-1 ring-green-100";
-    if (whatsappFilter === "not_sent")
-      return "text-stone-700 bg-stone-100 border-stone-200 ring-1 ring-stone-200";
-    if (whatsappFilter === "empty")
-      return "text-red-700 bg-red-50 border-red-200 ring-1 ring-red-200";
-
-    if (tagFilter !== "all")
-      return "text-gold bg-sand-light border-gold ring-1 ring-gold/20";
-
-    return "text-stone-custom bg-white/90 border-sand hover:border-gold/50";
-  };
-
   const hasActiveFilters =
-    filterStatus !== "all" || whatsappFilter !== "all" || tagFilter !== "all";
+    context.filterStatus !== "all" ||
+    context.whatsappFilter !== "all" ||
+    context.tagFilter !== "all";
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setFilterStatus("all");
     setWhatsappFilter("all");
     setTagFilter("all");
-    setIsFilterOpen(false);
+    setOpenDropdown(null);
+  }, [setFilterStatus, setWhatsappFilter, setTagFilter]);
+
+  const handleDropdownToggle = useCallback((dropdownName: DropdownType) => {
+    setOpenDropdown((prev) => (prev === dropdownName ? null : dropdownName));
+  }, []);
+
+  return {
+    ...context,
+    openDropdown,
+    containerRef,
+    hasActiveFilters,
+    clearFilters,
+    handleDropdownToggle,
   };
+}
+
+// ============================================================================
+// 3. SUB-COMPONENTES UI (Altamente reusables)
+// ============================================================================
+
+const FilterDropdown = <T extends string>({
+  label,
+  options,
+  currentValue,
+  onChange,
+  isOpen,
+  onToggle,
+  fallbackColorClass = "bg-[#FDFBF7] border-[#C5A669] text-[#C5A669] ring-1 ring-[#C5A669]/20",
+}: FilterDropdownProps<T>) => {
+  const currentOption = options.find((o) => o.value === currentValue) || options[0];
+  const isActive = currentValue !== "all";
+  
+  // Referencia para la detección de colisión
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // 🔥 DETECCIÓN DE COLISIÓN DINÁMICA CERO-RENDERS
+  useEffect(() => {
+    if (isOpen && dropdownRef.current) {
+      const el = dropdownRef.current;
+      
+      // 1. Lo reiniciamos hacia la izquierda por defecto para poder medirlo bien
+      el.classList.remove("right-0", "origin-top-right");
+      el.classList.add("left-0", "origin-top-left");
+
+      // 2. Leemos la posición real en la que el navegador lo acaba de dibujar
+      const rect = el.getBoundingClientRect();
+
+      // 3. Si el borde derecho del menú sobrepasa el ancho de la ventana (dejando 16px de margen),
+      // le invertimos las clases directamente en el DOM (esto evita re-renderizar todo React)
+      if (rect.right > window.innerWidth - 16) {
+        el.classList.remove("left-0", "origin-top-left");
+        el.classList.add("right-0", "origin-top-right");
+      }
+    }
+  }, [isOpen]);
+
+  // Usamos el color propio de la opción o el fallback si no lo tiene
+  const appliedColorClass = currentOption.activeColorClass || fallbackColorClass;
 
   return (
-    <div className="w-full font-sans">
+    <div className="relative shrink-0 dropdown-container">
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggle();
+        }}
+        className={cn(
+          "flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all shadow-sm",
+          isActive
+            ? appliedColorClass
+            : "bg-white border-[#EBE5DA] text-[#5A5A5A] hover:bg-[#F9F7F2] hover:border-[#C5A669]/50"
+        )}
+      >
+        <span className="opacity-70">{label}:</span>
+        <span className="font-bold">{currentOption.label}</span>
+        <ChevronDown size={12} className={cn("transition-transform opacity-50", isOpen && "rotate-180")} />
+      </button>
+
+      {isOpen && (
+        <div 
+          ref={dropdownRef}
+          className="absolute top-full mt-1.5 w-[220px] sm:w-56 max-w-[calc(100vw-2rem)] bg-white/95 backdrop-blur-sm rounded-xl border border-[#C5A669]/30 shadow-xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200"
+        >
+          <div className="p-1.5 flex flex-col gap-0.5">
+            {options.map((opt) => {
+              const isSelected = currentValue === opt.value;
+              const Icon = opt.icon;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onChange(opt.value as T); 
+                    onToggle();
+                  }}
+                  className={cn(
+                    "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors text-left",
+                    isSelected
+                      ? "bg-[#F9F7F2] text-[#2C2C29] font-bold"
+                      : "text-[#5A5A5A] hover:bg-stone-50"
+                  )}
+                >
+                  <span className="flex items-center gap-2 truncate pr-2">
+                    {Icon && <Icon size={14} className={cn("shrink-0", opt.iconColor || "text-stone-400")} />}
+                    <span className="truncate">{opt.label}</span>
+                  </span>
+                  <span className="text-[10px] shrink-0 font-bold text-[#A8A29E] bg-white px-1.5 py-0.5 rounded border border-[#EBE5DA]">
+                    {opt.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const SearchInput = ({
+  searchTerm,
+  setSearchTerm,
+  filteredCount
+}: {
+  searchTerm: string;
+  setSearchTerm: (val: string) => void;
+  filteredCount: number;
+}) => (
+  <div className="relative flex-1 group">
+    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-300 group-focus-within:text-[#C5A669] text-[#A8A29E]">
+      <Search size={18} />
+    </div>
+    <input
+      className="w-full pl-10 pr-10 py-3 bg-white border border-[#EBE5DA] rounded-xl outline-none focus:ring-1 focus:ring-[#C5A669] focus:border-[#C5A669]/50 transition-all duration-300 text-sm text-[#2C2C29] placeholder:text-[#A8A29E] shadow-sm"
+      placeholder={`Buscar entre ${filteredCount} familia${filteredCount === 1 ? "" : "s"}...`}
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+    />
+    {searchTerm !== "" && (
+      <button
+        onClick={() => setSearchTerm("")}
+        className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#A8A29E] hover:text-red-400 transition-colors"
+      >
+        <X size={16} />
+      </button>
+    )}
+  </div>
+);
+
+const ViewToggles = ({ viewMode, setViewMode }: { viewMode: string, setViewMode: (val: "table" | "grid") => void }) => (
+  <div className="hidden md:flex items-center bg-white border border-[#EBE5DA] rounded-xl p-1 shadow-sm h-full">
+    <button
+      onClick={() => setViewMode("grid")}
+      className={cn(
+        "p-2 rounded-lg transition-all flex items-center justify-center h-full",
+        viewMode === "grid" ? "bg-[#FDFBF7] text-[#C5A669] shadow-sm border border-[#EBE5DA]" : "text-[#A8A29E] hover:text-[#5A5A5A] border border-transparent"
+      )}
+      title="Vista de cuadrícula"
+    >
+      <LayoutGrid size={16} />
+    </button>
+    <button
+      onClick={() => setViewMode("table")}
+      className={cn(
+        "p-2 rounded-lg transition-all flex items-center justify-center h-full",
+        viewMode === "table" ? "bg-[#FDFBF7] text-[#C5A669] shadow-sm border border-[#EBE5DA]" : "text-[#A8A29E] hover:text-[#5A5A5A] border border-transparent"
+      )}
+      title="Vista de lista"
+    >
+      <List size={16} />
+    </button>
+  </div>
+);
+
+const MoreOptionsDropdown = ({
+  isOpen,
+  onToggle,
+  onImport,
+  onExport
+}: {
+  isOpen: boolean;
+  onToggle: () => void;
+  onImport: () => void;
+  onExport: () => void;
+}) => (
+  <div className="relative h-full dropdown-container">
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle();
+      }}
+      className={cn(
+        "flex items-center justify-center px-3 py-0 h-full bg-white text-stone-custom border rounded-xl hover:bg-[#C5A669]/10 hover:text-[#C5A669] hover:border-[#C5A669]/50 transition-all shadow-sm",
+        isOpen ? "border-[#C5A669]/50 text-[#C5A669] bg-[#C5A669]/5" : "border-[#EBE5DA]"
+      )}
+      title="Más opciones"
+    >
+      <MoreVertical size={18} />
+    </button>
+
+    {isOpen && (
+      <div className="absolute top-full right-0 mt-2 w-48 bg-white/95 backdrop-blur-sm rounded-2xl border border-[#C5A669]/30 shadow-xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200 origin-top-right">
+        <div className="p-1.5 flex flex-col gap-1">
+          <button
+            onClick={onImport}
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-[#5A5A5A] font-medium hover:bg-[#F9F7F2] hover:text-[#C5A669] rounded-xl transition-colors text-left"
+          >
+            <ClipboardPaste size={16} /> Importar Excel
+          </button>
+          <button
+            onClick={onExport}
+            className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-[#5A5A5A] font-medium hover:bg-[#F9F7F2] hover:text-[#C5A669] rounded-xl transition-colors text-left"
+          >
+            <FileSpreadsheet size={16} /> Exportar Lista
+          </button>
+        </div>
+      </div>
+    )}
+  </div>
+);
+
+// ============================================================================
+// 4. COMPONENTE PRINCIPAL (Ultra Limpio)
+// ============================================================================
+export default function SearchAndFilterBar() {
+  const {
+    searchTerm, setSearchTerm, filterStatus, setFilterStatus, statusCounts,
+    whatsappFilter, setWhatsappFilter, whatsappCounts, tagFilter, setTagFilter, tagCounts,
+    viewMode, setViewMode, finalFilteredFamilies, selectedFamilies,
+    handleNewFamily, handleExportExcel, openImportModal,
+    openDropdown, handleDropdownToggle, hasActiveFilters, clearFilters, containerRef
+  } = useSearchAndFilterBar();
+
+  const disabled = selectedFamilies.size > 0;
+
+  // 🔥 Opciones de configuración con colores específicos para la píldora activa
+  const statusOptions: FilterOption[] = [
+    { value: "all", label: "Todas", count: statusCounts?.all || 0, icon: LayoutList },
+    { value: "confirmed", label: "Completas", count: statusCounts?.confirmed || 0, icon: CheckCircle2, iconColor: "text-green-500", activeColorClass: "bg-green-50 border-green-200 text-green-700 ring-1 ring-green-100" },
+    { value: "partial", label: "Parciales", count: statusCounts?.partial || 0, icon: CheckCircle2, iconColor: "text-amber-500", activeColorClass: "bg-amber-50 border-amber-200 text-amber-700 ring-1 ring-amber-100" },
+    { value: "pending", label: "Pendientes", count: statusCounts?.pending || 0, icon: Clock, iconColor: "text-gold", activeColorClass: "bg-[#FDFBF7] border-[#C5A669] text-[#C5A669] ring-1 ring-[#C5A669]/20" },
+    { value: "unopened", label: "Sin Abrir", count: statusCounts?.unopened || 0, icon: Mail, iconColor: "text-stone-400", activeColorClass: "bg-stone-50 border-stone-200 text-stone-600 ring-1 ring-stone-200" },
+    { value: "rejected", label: "Rechazadas", count: statusCounts?.rejected || 0, icon: XCircle, iconColor: "text-red-500", activeColorClass: "bg-red-50 border-red-200 text-red-700 ring-1 ring-red-100" },
+  ];
+
+  const whatsappOptions: FilterOption[] = [
+    { value: "all", label: "Todos", count: whatsappCounts?.all || 0, icon: LayoutList },
+    { value: "sent", label: "Enviados", count: whatsappCounts?.sent || 0, icon: Send, iconColor: "text-green-500", activeColorClass: "bg-green-50 border-green-200 text-green-700 ring-1 ring-green-100" },
+    { value: "not_sent", label: "Pendientes", count: whatsappCounts?.not_sent || 0, icon: MessageCircle, iconColor: "text-stone-400", activeColorClass: "bg-stone-50 border-stone-200 text-stone-600 ring-1 ring-stone-200" },
+    { value: "empty", label: "Sin Teléfono", count: whatsappCounts?.empty || 0, icon: XCircle, iconColor: "text-red-400", activeColorClass: "bg-red-50 border-red-200 text-red-700 ring-1 ring-red-100" },
+  ];
+
+  const tagOptions: FilterOption[] = [
+    { value: "all", label: "Todas", count: tagCounts?.all || 0, icon: LayoutList },
+    { value: "Novia", label: "Novia", count: tagCounts?.Novia || 0, icon: Tag, iconColor: "text-rose-400", activeColorClass: "bg-rose-50 border-rose-200 text-rose-700 ring-1 ring-rose-100" },
+    { value: "Novio", label: "Novio", count: tagCounts?.Novio || 0, icon: Tag, iconColor: "text-blue-400", activeColorClass: "bg-blue-50 border-blue-200 text-blue-700 ring-1 ring-blue-100" },
+    { value: "Ambos", label: "Ambos", count: tagCounts?.Ambos || 0, icon: Tag, iconColor: "text-purple-400", activeColorClass: "bg-purple-50 border-purple-200 text-purple-700 ring-1 ring-purple-100" },
+  ];
+
+  return (
+    <div className="w-full font-sans mb-4" ref={containerRef}>
       <fieldset
         disabled={disabled}
-        className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 mb-3 transition-opacity disabled:opacity-60 disabled:pointer-events-none"
+        className="flex flex-col gap-3 transition-opacity disabled:opacity-60 disabled:pointer-events-none"
       >
-        <div className="flex flex-1 gap-3">
-          {/* Búsqueda */}
-          <div className="relative flex-1 group">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-colors duration-300 group-focus-within:text-gold text-stone-custom">
-              <Search size={18} />
-            </div>
-            <input
-              className="w-full pl-10 pr-10 py-3 bg-white/90 border border-sand rounded-xl outline-none focus:ring-0 focus:ring-gold focus:border-gold/50 transition-all duration-300 text-sm text-charcoal placeholder:text-stone-light shadow-sm"
-              placeholder={`Buscar entre ${filteredFamiliesCount} familia${filteredFamiliesCount === 1 ? "" : "s"}...`}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+        {/* FILA 1: BÚSQUEDA Y ACCIONES */}
+        <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
+          <SearchInput 
+            searchTerm={searchTerm} 
+            setSearchTerm={setSearchTerm} 
+            filteredCount={finalFilteredFamilies.length} 
+          />
+
+          <div className="flex gap-2 flex-row-reverse md:flex-row sm:gap-3 shrink-0 relative h-[46px]">
+            <ViewToggles viewMode={viewMode} setViewMode={setViewMode} />
+            <MoreOptionsDropdown
+              isOpen={openDropdown === "options"}
+              onToggle={() => handleDropdownToggle("options")}
+              onImport={() => { openImportModal(); handleDropdownToggle("options"); }}
+              onExport={() => { handleExportExcel(); handleDropdownToggle("options"); }}
             />
-            {searchTerm !== "" && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-stone-custom hover:text-red-400 transition-colors"
-              >
-                <X size={16} />
-              </button>
-            )}
-          </div>
-
-          {/* FILTRO COMPACTO */}
-          <div className="relative" ref={filterRef}>
-            <button
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`flex h-full items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium transition-all whitespace-nowrap shadow-sm ${getFilterColor()}`}
+            <TextureButton
+              icon={<Plus size={18} />}
+              onClick={handleNewFamily}
+              className="px-4 xl:px-6 py-0 h-full w-full md:w-auto rounded-xl transition-all shadow-lg shadow-[#C5A669]/20 hover:shadow-[#C5A669]/30 hover:-translate-y-0.5 font-bold"
             >
-              <Filter
-                size={16}
-                className={
-                  !hasActiveFilters ? "text-stone-light" : "currentColor"
-                }
-              />
-              <span className="hidden sm:inline">{getFilterLabel()}</span>
-              <ChevronDown
-                size={14}
-                className={`transition-transform duration-200 opacity-60 ${isFilterOpen ? "rotate-180" : ""}`}
-              />
-            </button>
-
-            <div
-              className={cn(
-                "absolute top-full right-0 w-56 md:w-max bg-white/95 backdrop-blur-sm text-stone-800 rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden",
-                "transition-all duration-300 cubic-bezier(0.16, 1, 0.3, 1) z-50 flex flex-col",
-                isFilterOpen
-                  ? "opacity-100 translate-y-1 scale-100"
-                  : "opacity-0 translate-y-0 scale-95 pointer-events-none",
-              )}
-            >
-              <div className="p-2 max-h-[60vh] md:max-h-none overflow-y-auto md:overflow-visible no-scrollbar flex-1 flex flex-col md:flex-row md:p-4 md:gap-4 md:space-y-0 space-y-0.5">
-                {/* --- COLUMNA 1: ASISTENCIA --- */}
-                <div className="flex flex-col gap-0.5 w-full md:w-52 shrink-0">
-                  <div className="px-3 py-1.5 text-[10px] font-bold text-gold uppercase tracking-widest bg-sand-light/50 rounded-lg mb-1">
-                    Asistencia
-                  </div>
-                  <button
-                    onClick={() => setFilterStatus("all")}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      filterStatus === "all"
-                        ? "bg-sand-light text-charcoal font-medium border border-sand"
-                        : "text-stone-custom hover:bg-sand-light hover:text-charcoal border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <LayoutList
-                        size={16}
-                        className={
-                          filterStatus === "all"
-                            ? "text-gold"
-                            : "text-stone-light"
-                        }
-                      />
-                      Todas las familias
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {statusCounts?.all || 0}
-                    </span>
-                  </button>
-                  <DashedSeparator className="m-0 hidden md:block" />
-                  <button
-                    onClick={() => setFilterStatus("confirmed")}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      filterStatus === "confirmed"
-                        ? "bg-green-50 text-green-800 font-medium border border-green-100"
-                        : "text-stone-custom hover:bg-green-50/50 hover:text-green-700 border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5 text-left">
-                      <CheckCircle2
-                        size={16}
-                        className={
-                          filterStatus === "confirmed"
-                            ? "text-green-600"
-                            : "text-stone-light"
-                        }
-                      />
-                      Familias completas
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {statusCounts?.confirmed || 0}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setFilterStatus("partial")}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      filterStatus === "partial"
-                        ? "bg-green-50 text-orange-800 font-medium border border-green-100"
-                        : "text-stone-custom hover:bg-green-50/50 hover:text-orange-700 border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5 text-left">
-                      <CheckCircle2
-                        size={16}
-                        className={
-                          filterStatus === "partial"
-                            ? "text-orange-600"
-                            : "text-stone-light"
-                        }
-                      />
-                      Familias parciales
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {statusCounts?.partial || 0}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setFilterStatus("pending")}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      filterStatus === "pending"
-                        ? "bg-paper/30 text-gold font-medium border border-sand"
-                        : "text-stone-custom hover:bg-paper/30 hover:text-gold border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5 text-left">
-                      <Clock
-                        size={16}
-                        className={
-                          filterStatus === "pending"
-                            ? "text-gold"
-                            : "text-stone-light"
-                        }
-                      />
-                      Familias pendientes
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {statusCounts?.pending || 0}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setFilterStatus("rejected")}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      filterStatus === "rejected"
-                        ? "bg-red-50 text-red-800 font-medium border border-red-100"
-                        : "text-stone-custom hover:bg-red-50/50 hover:text-red-700 border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5 text-left">
-                      <XCircle
-                        size={16}
-                        className={
-                          filterStatus === "rejected"
-                            ? "text-red-500"
-                            : "text-stone-light"
-                        }
-                      />
-                      Familias rechazadas
-                    </span>
-                    <span className="text-stone-light text-xs bg-white/90 px-1.5 py-0.5 rounded border border-sand">
-                      {statusCounts?.rejected || 0}
-                    </span>
-                  </button>
-                </div>
-
-                {/* --- COLUMNA 2: ESTADO WHATSAPP --- */}
-                <div className="mt-2 pt-2 border-t border-sand md:mt-0 md:pt-0 md:border-t-0 md:border-l md:pl-4 flex flex-col gap-0.5 w-full md:w-52 shrink-0">
-                  <div className="px-3 py-1.5 text-[10px] font-bold text-gold uppercase tracking-widest bg-sand-light/50 rounded-lg mb-1">
-                    WhatsApp
-                  </div>
-                  <button
-                    onClick={() => setWhatsappFilter("all")}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      whatsappFilter === "all"
-                        ? "bg-sand-light text-charcoal font-medium border border-sand"
-                        : "text-stone-custom hover:bg-sand-light hover:text-charcoal border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <LayoutList
-                        size={16}
-                        className={
-                          whatsappFilter === "all"
-                            ? "text-gold"
-                            : "text-stone-light"
-                        }
-                      />
-                      Todos
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {whatsappCounts?.all || 0}
-                    </span>
-                  </button>
-                  <DashedSeparator className="m-0 hidden md:block" />
-                  <button
-                    onClick={() => setWhatsappFilter("sent")}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      whatsappFilter === "sent"
-                        ? "bg-green-50 text-green-800 font-medium border border-green-100"
-                        : "text-stone-custom hover:bg-green-50/50 hover:text-green-700 border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <Send
-                        size={16}
-                        className={
-                          whatsappFilter === "sent"
-                            ? "text-green-600"
-                            : "text-stone-light"
-                        }
-                      />
-                      Enviados
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {whatsappCounts?.sent || 0}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setWhatsappFilter("not_sent")}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      whatsappFilter === "not_sent"
-                        ? "bg-stone-100 text-stone-800 font-medium border border-stone-200"
-                        : "text-stone-custom hover:bg-stone-50 hover:text-stone-700 border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <MessageCircle
-                        size={16}
-                        className={
-                          whatsappFilter === "not_sent"
-                            ? "text-stone-500"
-                            : "text-stone-light"
-                        }
-                      />
-                      No enviados
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {whatsappCounts?.not_sent || 0}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setWhatsappFilter("empty")}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      whatsappFilter === "empty"
-                        ? "bg-red-50 text-red-800 font-medium border border-red-200"
-                        : "text-stone-custom hover:bg-red-50/50 hover:text-red-700 border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <XCircle
-                        size={16}
-                        className={
-                          whatsappFilter === "empty"
-                            ? "text-red-500"
-                            : "text-stone-light"
-                        }
-                      />
-                      Sin Teléfono
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {whatsappCounts?.empty || 0}
-                    </span>
-                  </button>
-                </div>
-
-                {/* --- COLUMNA 3: ETIQUETAS --- */}
-                <div className="mt-2 pt-2 border-t border-sand md:mt-0 md:pt-0 md:border-t-0 md:border-l md:pl-4 flex flex-col gap-0.5 w-full md:w-52 shrink-0">
-                  <div className="px-3 py-1.5 text-[10px] font-bold text-gold uppercase tracking-widest bg-sand-light/50 rounded-lg mb-1">
-                    Etiquetas
-                  </div>
-                  <button
-                    onClick={() => setTagFilter("all")}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      tagFilter === "all"
-                        ? "bg-sand-light text-charcoal font-medium border border-sand"
-                        : "text-stone-custom hover:bg-sand-light hover:text-charcoal border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <LayoutList
-                        size={16}
-                        className={
-                          tagFilter === "all" ? "text-gold" : "text-stone-light"
-                        }
-                      />
-                      Todas
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {tagCounts?.all || 0}
-                    </span>
-                  </button>
-                  <DashedSeparator className="m-0 hidden md:block" />
-                  <button
-                    onClick={() => setTagFilter("Novia")}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      tagFilter === "Novia"
-                        ? "bg-paper/30 text-gold font-medium border border-sand"
-                        : "text-stone-custom hover:bg-paper/30 hover:text-gold border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <Tag
-                        size={16}
-                        className={
-                          tagFilter === "Novia"
-                            ? "text-gold"
-                            : "text-stone-light"
-                        }
-                      />
-                      Novia
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {tagCounts?.Novia || 0}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setTagFilter("Novio")}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      tagFilter === "Novio"
-                        ? "bg-paper/30 text-gold font-medium border border-sand"
-                        : "text-stone-custom hover:bg-paper/30 hover:text-gold border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <Tag
-                        size={16}
-                        className={
-                          tagFilter === "Novio"
-                            ? "text-gold"
-                            : "text-stone-light"
-                        }
-                      />
-                      Novio
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {tagCounts?.Novio || 0}
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => setTagFilter("Ambos")}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                      tagFilter === "Ambos"
-                        ? "bg-paper/30 text-gold font-medium border border-sand"
-                        : "text-stone-custom hover:bg-paper/30 hover:text-gold border border-transparent"
-                    }`}
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <Tag
-                        size={16}
-                        className={
-                          tagFilter === "Ambos"
-                            ? "text-gold"
-                            : "text-stone-light"
-                        }
-                      />
-                      Ambos
-                    </span>
-                    <span className="text-stone-light text-xs bg-white px-1.5 py-0.5 rounded border border-sand">
-                      {tagCounts?.Ambos || 0}
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              {hasActiveFilters && (
-                <div className="p-2 md:p-3 border-t border-[#EBE5DA] bg-[#FDFBF7] shrink-0">
-                  <button
-                    onClick={clearFilters}
-                    className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors border border-transparent hover:border-red-100"
-                  >
-                    <X size={14} /> Limpiar filtros
-                  </button>
-                </div>
-              )}
-            </div>
+              <span>Nueva Familia</span>
+            </TextureButton>
           </div>
         </div>
 
-        {/* GRUPO DERECHO: Acciones */}
-        <div className="flex gap-2 flex-row-reverse md:flex-row sm:gap-3 shrink-0 relative h-[46px]">
-          {/* Toggle Vista (Solo Desktop) */}
-          <div className="hidden md:flex items-center bg-white/90 border border-[#EBE5DA] rounded-xl p-1 shadow-sm h-full">
-            <button
-              onClick={() => setViewMode("grid")}
-              className={cn(
-                "p-2 rounded-lg transition-all flex items-center justify-center h-full",
-                viewMode === "grid"
-                  ? "bg-[#FDFBF7] text-[#C5A669] shadow-sm border border-[#EBE5DA]"
-                  : "text-[#A8A29E] hover:text-[#5A5A5A] border border-transparent",
-              )}
-              title="Vista de cuadrícula"
-            >
-              <LayoutGrid size={16} />
-            </button>
-            <button
-              onClick={() => setViewMode("table")}
-              className={cn(
-                "p-2 rounded-lg transition-all flex items-center justify-center h-full",
-                viewMode === "table"
-                  ? "bg-[#FDFBF7] text-[#C5A669] shadow-sm border border-[#EBE5DA]"
-                  : "text-[#A8A29E] hover:text-[#5A5A5A] border border-transparent",
-              )}
-              title="Vista de lista"
-            >
-              <List size={16} />
-            </button>
-          </div>
+        {/* FILA 2: PÍLDORAS DE FILTROS */}
+        <div className="flex flex-wrap items-center gap-2 pb-1">
+          <FilterDropdown
+            label="Familias"
+            options={statusOptions}
+            currentValue={filterStatus}
+            onChange={setFilterStatus}
+            isOpen={openDropdown === "status"}
+            onToggle={() => handleDropdownToggle("status")}
+          />
 
-          {/* Menú de Más Opciones (Importar/Exportar) */}
-          <div className="relative h-full" ref={optionsRef}>
-            <button
-              onClick={() => setIsOptionsOpen(!isOptionsOpen)}
-              className={cn(
-                "flex items-center justify-center px-3 py-0 h-full bg-white/90 text-stone-custom border rounded-xl hover:bg-[#C5A669]/10 hover:text-[#C5A669] hover:border-[#C5A669]/50 transition-all shadow-sm",
-                isOptionsOpen
-                  ? "border-[#C5A669]/50 text-[#C5A669] bg-[#C5A669]/5"
-                  : "border-[#EBE5DA]",
-              )}
-              title="Más opciones"
-            >
-              <MoreVertical size={18} />
-            </button>
+          <FilterDropdown
+            label="WhatsApp"
+            options={whatsappOptions}
+            currentValue={whatsappFilter}
+            onChange={setWhatsappFilter}
+            isOpen={openDropdown === "whatsapp"}
+            onToggle={() => handleDropdownToggle("whatsapp")}
+          />
 
-            <div
-              className={cn(
-                "absolute top-full right-0 mt-2 w-48 bg-white/95 backdrop-blur-sm rounded-2xl border border-gold/50 shadow-[0_20px_40px_-5px_rgba(197,166,105,0.2)] overflow-hidden z-50 transition-all duration-300 origin-top-right",
-                isOptionsOpen
-                  ? "opacity-100 scale-100 translate-y-0"
-                  : "opacity-0 scale-95 -translate-y-2 pointer-events-none",
-              )}
-            >
-              <div className="p-1.5 flex flex-col gap-1">
-                <button
-                  onClick={() => {
-                    openImportModal();
-                    setIsOptionsOpen(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-stone-600 font-medium hover:bg-sand-light hover:text-[#C5A669] rounded-xl transition-colors text-left"
-                >
-                  <ClipboardPaste size={16} /> Importar Excel
-                </button>
-                <button
-                  onClick={() => {
-                    handleExportExcel();
-                    setIsOptionsOpen(false);
-                  }}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-stone-600 font-medium hover:bg-sand-light hover:text-[#C5A669] rounded-xl transition-colors text-left"
-                >
-                  <FileSpreadsheet size={16} /> Exportar Lista
-                </button>
-              </div>
+          <FilterDropdown
+            label="Etiqueta"
+            options={tagOptions}
+            currentValue={tagFilter}
+            onChange={setTagFilter}
+            isOpen={openDropdown === "tag"}
+            onToggle={() => handleDropdownToggle("tag")}
+          />
+
+          {hasActiveFilters && (
+            <div className="pl-2 border-l border-[#EBE5DA] shrink-0">
+              <button
+                onClick={clearFilters}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-red-500 hover:bg-red-50 hover:text-red-600 transition-colors border border-transparent hover:border-red-100"
+              >
+                <FilterX size={14} /> Limpiar
+              </button>
             </div>
-          </div>
-
-          <TextureButton
-            icon={<Plus size={18} />}
-            onClick={handleNewFamily}
-            className="px-4 xl:px-6 py-0 h-full w-full md:w-auto rounded-xl transition-all shadow-lg shadow-[#C5A669]/20 hover:shadow-[#C5A669]/30 hover:-translate-y-0.5 font-bold"
-          >
-            <span>Nueva Familia</span>
-          </TextureButton>
+          )}
         </div>
       </fieldset>
     </div>
