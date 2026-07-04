@@ -19,7 +19,6 @@ const EventHeroCard: React.FC<EventHeroCardProps> = ({
   familiesRoute
 }) => {
   const formattedDate = formatToEventDate(eventDate);
-  console.log(eventDate, formattedDate, "EVENT DATE");
 
   const day = formattedDate.split("/")[0].trim();
   const month = formattedDate.split("/")[1].trim();
