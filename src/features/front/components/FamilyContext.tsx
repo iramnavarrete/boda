@@ -23,33 +23,31 @@ export const FamilyProvider = ({
 }) => {
   const searchParams = useSearchParams();
   const id = searchParams?.get("family");
-  const preview = searchParams?.get("preview");
   const invitationData = useInvitationStore((state) => state.invitationData);
 
   const [family, setFamily] = useState<Family | null>(null);
   const [isLoadingFamily, setIsLoadingFamily] = useState(true);
 
- useEffect(() => {
-   const fetchFamily = async () => {
-     // 🔥 Lógica movida ADENTRO de la función async para evitar el error de "cascading renders"
-     if (!invitationData?.id || !id || id === "_" || preview) {
-       setIsLoadingFamily(false);
-       return;
-     }
+  useEffect(() => {
+    const fetchFamily = async () => {
+      if (!invitationData?.id || !id || id === "_") {
+        setIsLoadingFamily(false);
+        return;
+      }
 
-     setIsLoadingFamily(true);
-     const { family: fetchedFamily, error } = await FamiliesService.getFamily(
-       invitationData.id,
-       id,
-     );
-     if (fetchedFamily && !error) {
-       setFamily(fetchedFamily);
-     }
-     setIsLoadingFamily(false);
-   };
+      setIsLoadingFamily(true);
+      const { family: fetchedFamily, error } = await FamiliesService.getFamily(
+        invitationData.id,
+        id,
+      );
+      if (fetchedFamily && !error) {
+        setFamily(fetchedFamily);
+      }
+      setIsLoadingFamily(false);
+    };
 
-   fetchFamily();
- }, [invitationData?.id, id, preview]);
+    fetchFamily();
+  }, [invitationData?.id, id]);
 
   return (
     <FamilyContext.Provider
