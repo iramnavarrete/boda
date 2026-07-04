@@ -3,7 +3,7 @@ import { Family } from "@/types";
 import { isPartialConfirmation } from "@/utils/family";
 import { useFamiliesFiltersStore } from "@/features/admin/stores/useFamiliesFiltersStore";
 
-export function useFamiliesFiltes(families: Family[]) {
+export function useFamiliesFilters(families: Family[]) {
   const searchTerm = useFamiliesFiltersStore((state) => state.searchTerm);
   const filterStatus = useFamiliesFiltersStore((state) => state.filterStatus);
 
@@ -30,6 +30,10 @@ export function useFamiliesFiltes(families: Family[]) {
           passStatus =
             g.asistencia === false ||
             (g.asistencia === true && g.confirmados === 0);
+          break;
+
+        case "unopened":
+          passStatus = !g.invitacionVista && g.asistencia === null;
           break;
 
         case "pending":

@@ -6,9 +6,11 @@ import { useInvitationStore } from "../../stores/invitationStore";
 import { formatToEventDate } from "@/utils/formatters";
 import { useSearchParams } from "next/navigation";
 import { ActivityService } from "@/services/activityService";
+import { FamiliesService } from "@/services/familiesService";
 import Image from "next/image";
 import { cn } from "@heroui/theme";
 import Music from "../sections/music";
+import { useFamilyContext } from "../FamilyContext";
 
 const animateCoverVariants = {
   none: { opacity: 0, y: 40 },
@@ -40,22 +42,12 @@ const animateFixedVariants = {
   none: {
     opacity: 0,
     y: -20,
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 24,
-      duration: 0.05,
-    },
+    transition: { type: "spring", stiffness: 300, damping: 24, duration: 0.05 },
   },
   showMusic: {
     opacity: 1,
     y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 24,
-      duration: 1,
-    },
+    transition: { type: "spring", stiffness: 300, damping: 24, duration: 1 },
   },
 };
 
@@ -80,33 +72,53 @@ export default function Cover({
   musicIconClassName = "",
 }: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
+  const { family, setFamily } = useFamilyContext();
   const [arrowsScope, animateArrows] = useAnimate();
   const { toggleAudio } = useMusicStore();
   const triggerRef = useRef(null);
-  const isInView = useInView(triggerRef); // top visible
+  const isInView = useInView(triggerRef);
   const [index, setIndex] = useState(0);
 
   const searchParams = useSearchParams();
-  const id = searchParams?.get("family");
   const preview = searchParams?.get("preview");
   const token = searchParams?.get("token");
 
   useEffect(() => {
     if (!isSealVisible) {
-      setTimeout(() => {
-        toggleAudio();
-      }, 5);
+      setTimeout(() => toggleAudio(), 5);
     }
   }, [isSealVisible, toggleAudio]);
 
+  // 🔥 LÓGICA OPTIMIZADA DE VISTAS
   useEffect(() => {
-    if (!isSealVisible && id && !preview && !token && invitationData) {
-      ActivityService.logActivity(invitationData.id, {
-        action: "view",
-        familyId: id,
-      });
+    if (!isSealVisible && family && !preview && !token && invitationData) {
+      // Solo corremos las escrituras si no ha visto la invitación antes
+      if (!family.invitacionVista) {
+        FamiliesService.markInvitationAsViewed(
+          invitationData.id,
+          family.id,
+        );
+
+        ActivityService.logActivity(invitationData.id, {
+          action: "view",
+          familyId: family.id,
+          familyName: family.nombre,
+        });
+
+        // 3. Actualizamos en local para que no vuelva a dispararse en esta sesión
+        setFamily((prev) =>
+          prev ? { ...prev, invitacionVista: true } : prev,
+        );
+      }
     }
-  }, [id, preview, token, isSealVisible, invitationData]);
+  }, [
+    isSealVisible,
+    family,
+    preview,
+    token,
+    invitationData,
+    setFamily,
+  ]);
 
   useEffect(() => {
     (async () => {
@@ -133,20 +145,17 @@ export default function Cover({
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-
     if (!isSealVisible) {
-      interval = setInterval(() => {
-        setIndex((prev) => (prev + 1) % imagesConfig.length);
-      }, 5000); // 5s por imagen
+      interval = setInterval(
+        () => setIndex((prev) => (prev + 1) % imagesConfig.length),
+        5000,
+      );
     }
-
     return () => {
       if (interval) clearInterval(interval);
     };
   }, [isSealVisible, imagesConfig.length]);
 
-  // Variable derivada: Si el sello es visible, obligamos a que el índice activo sea el 0.
-  // Si no es visible, usamos el estado 'index' que va cambiando en el carrusel.
   const activeIndex = isSealVisible ? 0 : index;
 
   return (
@@ -167,7 +176,6 @@ export default function Cover({
                 priority
                 className={cn(
                   "object-cover transition-opacity duration-[1500ms] ease-in-out transform-gpu",
-                  // Utilizamos la variable derivada aquí:
                   activeIndex === i ? "opacity-100" : "opacity-0",
                 )}
                 style={{ objectPosition: img.style.backgroundPosition }}
@@ -227,7 +235,6 @@ export default function Cover({
         </div>
       </div>
 
-      {/* === BOTÓN DE MÚSICA FLOTANTE (Fixed) === */}
       <motion.div
         variants={animateFixedVariants}
         animate={isInView || isSealVisible ? "none" : "showMusic"}

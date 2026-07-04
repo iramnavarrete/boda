@@ -1,8 +1,4 @@
-import {
-  Family,
-  FilterCounts as FilterCountsStatus,
-  FamilyActivity,
-} from "@/types";
+import { Family, FilterCounts as FilterCountsStatus } from "@/types";
 import { SeatingElement } from "../seating/stores/useSeatingStore";
 import { useMemo } from "react";
 
@@ -35,12 +31,11 @@ export interface EventStats {
 export interface FilterCounts {
   whatsapp: { all: number; sent: number; not_sent: number; empty: number };
   etiquetas: { all: number; Novia: number; Novio: number; Ambos: number };
-  status: FilterCountsStatus;
+  status: FilterCountsStatus & { unopened?: number };
 }
 
 interface UseEventStatsOptions {
   elements?: SeatingElement[];
-  activities?: FamilyActivity[]; // 🔥 Ahora recibe el array crudo de actividades
   filters?: {
     whatsapp?: "all" | "sent" | "not_sent" | "empty" | string;
     tag?: "all" | "Novia" | "Novio" | "Ambos" | string;
@@ -55,22 +50,7 @@ export const useEventStats = (
   families: Family[],
   options: UseEventStatsOptions = {},
 ) => {
-  const { elements = [], activities, filters } = options;
-
-  // 1. Procesamos internamente (y solo 1 vez) quiénes han visto la invitación
-  const viewedFamilyIds = useMemo(() => {
-    // 🔥 Verificación ESTRICTA para evitar fallos de Javascript (truthiness)
-    if (!Array.isArray(activities)) return undefined;
-
-    const ids = new Set<string>();
-    activities.forEach((act) => {
-      // Buscamos si existe al menos un ítem con actividad tipo "view"
-      if (act.action === "view" && act.familyId) {
-        ids.add(act.familyId);
-      }
-    });
-    return ids;
-  }, [activities]);
+  const { elements = [], filters } = options;
 
   const stats = useMemo(() => {
     const s: EventStats = {
@@ -115,16 +95,9 @@ export const useEventStats = (
       } else {
         s.familias.sinResponder++;
 
-        if (viewedFamilyIds !== undefined) {
-          // Si nos pasaron el arreglo de actividades, la matemática es exacta
-          if (!viewedFamilyIds.has(c.id)) {
-            s.familias.sinAbrir++;
-          }
-        } else {
-          // Fallback seguro si NO le pasamos las actividades (Ej. Vista general de Invitados)
-          if (c.asistencia === null) {
-            s.familias.sinAbrir++;
-          }
+        // 🔥 Nueva lógica ultra limpia y sin lecturas a la BD
+        if (!c.invitacionVista) {
+          s.familias.sinAbrir++;
         }
       }
     });
@@ -162,7 +135,7 @@ export const useEventStats = (
     }
 
     return s;
-  }, [families, elements, viewedFamilyIds]);
+  }, [families, elements]);
 
   // B. FAMILIAS FILTRADAS
   const filteredFamilies = useMemo(() => {
@@ -208,6 +181,9 @@ export const useEventStats = (
           const inv = Number(g.invitados) || 0;
           const conf = Number(g.confirmados) || 0;
           const partial = g.asistencia === true && conf > 0 && conf < inv;
+
+          const isUnopened = !g.invitacionVista && g.asistencia === null;
+
           return {
             all: acc.all + 1,
             confirmed:
@@ -215,9 +191,17 @@ export const useEventStats = (
             partial: acc.partial + (partial ? 1 : 0),
             rejected: acc.rejected + (g.asistencia === false ? 1 : 0),
             pending: acc.pending + (g.asistencia == null ? 1 : 0),
+            unopened: (acc.unopened || 0) + (isUnopened ? 1 : 0),
           };
         },
-        { all: 0, confirmed: 0, partial: 0, rejected: 0, pending: 0 },
+        {
+          all: 0,
+          confirmed: 0,
+          partial: 0,
+          rejected: 0,
+          pending: 0,
+          unopened: 0,
+        },
       ),
     };
   }, [filteredFamilies]);

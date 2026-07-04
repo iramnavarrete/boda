@@ -28,7 +28,7 @@ import AdminLayout from "@/features/shared/layouts/admin";
 import { useRouter } from "next/router";
 import { cn } from "@heroui/theme";
 import CheckInConfirmModal from "@/features/admin/components/modals/CheckInConfirmModal";
-import { useFamiliesFiltes } from "@/features/admin/hooks/useFamiliesFillters";
+import { useFamiliesFilters } from "@/features/admin/hooks/useFamiliesFillters";
 
 type ModalState =
   | "none"
@@ -62,7 +62,7 @@ export default function CheckInPage() {
   const [families, setFamilies] = useState<Family[]>([]);
 
   const { searchTerm, setSearchTerm, filteredFamilies } =
-    useFamiliesFiltes(families);
+    useFamiliesFilters(families);
 
   const isProcessingRef = useRef(false);
 

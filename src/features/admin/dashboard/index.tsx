@@ -12,17 +12,15 @@ import EventHeroCard from "./components/EventHeroCard";
 import RecentActivityCard from "./components/RecentActivityCard";
 import MessagesCard from "./components/MessagesCard";
 import CountdownCard from "./components/CountdownCard";
-import { formatToEventDate, getEventTypeName } from "@/utils/formatters";
+import { getEventTypeName } from "@/utils/formatters";
 import { SeatingElement } from "../seating/stores/useSeatingStore";
 import { SeatingService } from "../seating/services/seatingService";
 import { useEventStats } from "../hooks/useEventStats";
 import UnifiedStatsCard from "./components/UnifiedStatsCard";
-import { ActivityService } from "@/services/activityService";
 
 export default function InvitationDashboard() {
   const [lastActivity, setLastActivity] = useState<FamilyActivity | null>(null);
   const [elements, setElements] = useState<SeatingElement[]>([]);
-  const [activities, setActivities] = useState<FamilyActivity[]>([]);
   const { toast } = useToast();
 
   const timeAgo = useTimeAgo(lastActivity?.timestamp);
@@ -41,21 +39,7 @@ export default function InvitationDashboard() {
     }
   }, [invitationData?.id]);
 
-  useEffect(() => {
-    if (!invitationData?.id) return;
-    const fetchViewedFamilies = async () => {
-      try {
-        ActivityService.subscribeToRecentActivity(invitationData.id, undefined, (activities) => {
-          setActivities(activities);
-        });
-      } catch (error) {
-        console.error("Error al obtener vistas:", error);
-      }
-    };
-    fetchViewedFamilies();
-  }, [invitationData?.id]);
-
-  const stats = useEventStats(families || [], {elements, activities});
+  const stats = useEventStats(families || [], { elements });
 
   useEffect(() => {
     if (error) {

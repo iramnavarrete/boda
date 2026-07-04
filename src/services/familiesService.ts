@@ -436,6 +436,12 @@ export const FamiliesService = {
     }
   },
 
+  markInvitationAsViewed: async (invitationId: string, familyId: string) => {
+    await updateDoc(familyPaths.family(invitationId, familyId), {
+      invitacionVista: true,
+    });
+  },
+
   batchImportFamilies: async (
     invitationId: string,
     parsedFamilies: ImportedFamily[],

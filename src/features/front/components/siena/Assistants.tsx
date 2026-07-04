@@ -1,6 +1,6 @@
 import assistanceSchema from "@/validation/yupSchema";
 import { Formik, FormikProps } from "formik";
-import { FC, useCallback, useRef, useState, useEffect, useMemo } from "react";
+import { FC, useRef, useState, useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import Separator from "@/icons/separator";
 import { useSearchParams } from "next/navigation";
@@ -16,6 +16,7 @@ import { cn } from "@heroui/theme";
 import html2canvas from "html2canvas";
 import FlowersCoverDown from "@/icons/flowers-cover-down";
 import { ReactQRCode } from "@lglab/react-qr-code";
+import { useFamilyContext } from "../FamilyContext";
 
 const defaultFamily: Family = {
   asistencia: null,
@@ -53,8 +54,6 @@ interface StateCardProps {
   svgsColor?: string;
 }
 
-// ============================================================================
-// COMPONENTES DE ESTADO (EXTRAÍDOS PARA EVITAR ERRORES DE RENDERIZADO)
 const TicketCard: FC<StateCardProps> = ({
   familyData,
   invitationData,
@@ -71,8 +70,6 @@ const TicketCard: FC<StateCardProps> = ({
       setIsDownloading(true);
       toast("Generando tu pase en alta calidad...", "info");
 
-      // Le damos un respiro al navegador de 150ms para que alcance a
-      // renderizar el "toast" y el estado de carga en el botón ANTES de bloquear la pantalla.
       await new Promise((resolve) => setTimeout(resolve, 150));
 
       const canvas = await html2canvas(ticketRef.current, {
@@ -111,20 +108,15 @@ const TicketCard: FC<StateCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-[400px] mx-auto flex flex-col items-center gap-6"
     >
-      {/* TICKET FÍSICO PREMIUM */}
       <div
         ref={ticketRef}
         className="w-full bg-[#FDFBF7] rounded-xl shadow-2xl relative overflow-hidden border border-[#EBE5DA]"
       >
-        {/* FLOR SUPERIOR */}
         <div className="w-full flex justify-center mt-6"></div>
-
-        {/* Ornamentos Superiores y Título */}
         <div className="pt-4 pb-5 px-8 flex flex-col items-center">
           <p className="text-[9px] font-bold text-stone-500 uppercase tracking-[0.3em] mb-4 border border-stone-200 px-5 py-1.5 rounded-full bg-white shadow-sm">
             ✦ Pase de Acceso ✦
           </p>
-
           <p
             className={cn(
               "font-serif text-3xl text-charcoal text-center leading-tight mb-2",
@@ -138,14 +130,12 @@ const TicketCard: FC<StateCardProps> = ({
           </p>
         </div>
 
-        {/* Recorte Lateral (Notches) y Línea Punteada */}
         <div className="relative h-8 flex items-center justify-center">
           <div className="absolute -left-4 w-8 h-8 bg-accent rounded-full shadow-inner border-r border-[#EBE5DA]" />
           <div className="w-full border-t border-dashed border-stone-300 mx-6 opacity-60" />
           <div className="absolute -right-4 w-8 h-8 bg-accent rounded-full shadow-inner border-l border-[#EBE5DA]" />
         </div>
 
-        {/* Detalles del Invitado y QR */}
         <div className="pt-6 pb-6 px-8 flex flex-col items-center">
           <p className="text-[9px] font-bold text-stone-400 uppercase tracking-[0.25em] mb-3">
             Invitado
@@ -163,31 +153,23 @@ const TicketCard: FC<StateCardProps> = ({
             {confirmados > 1 ? "s" : ""}
           </p>
 
-          {/* Contenedor del QR */}
           <div className="mx-auto w-36 h-36 bg-white rounded-xl shadow-sm border border-stone-200 flex items-center justify-center mt-8 mb-4 relative transition-transform hover:scale-[1.02] duration-300">
-              <div className="w-full h-full flex items-center justify-center">
-                <ReactQRCode
-                  value={familyData.id || "QRCode"}
-                  size={256}
-                  dataModulesSettings={{
-                    style: "rounded",
-                  }}
-                  finderPatternInnerSettings={{ style: "rounded" }}
-                  finderPatternOuterSettings={{ style: "rounded" }}
-                />
-              </div>
+            <div className="w-full h-full flex items-center justify-center">
+              <ReactQRCode
+                value={familyData.id || "QRCode"}
+                size={256}
+                dataModulesSettings={{ style: "rounded" }}
+                finderPatternInnerSettings={{ style: "rounded" }}
+                finderPatternOuterSettings={{ style: "rounded" }}
+              />
+            </div>
           </div>
-
           <p className="text-[9px] text-stone-400 uppercase tracking-[0.25em] text-center mb-8 max-w-[40ch]">
             Escanea en la entrada del evento para agilizar tu acceso.
           </p>
-
-          {/* FLOR INFERIOR */}
           <div className="w-full flex justify-center mb-6">
             <FlowersCoverDown className="w-[85%] h-auto text-stone-300 opacity-80" />
           </div>
-
-          {/* Footer del Ticket */}
           <div className="w-full border-t border-dashed border-stone-300/60 pt-4 flex flex-col items-center">
             <p className="text-[9px] text-stone-400 uppercase tracking-[0.2em] text-center mb-1">
               {invitationData?.recepcion?.nombreSalon || "Recepción"} •{" "}
@@ -198,12 +180,9 @@ const TicketCard: FC<StateCardProps> = ({
             </p>
           </div>
         </div>
-
-        {/* Borde dentado inferior (Fringe) simulado con CSS puro */}
         <div className="absolute bottom-0 left-0 right-0 h-2 bg-[linear-gradient(to_right,#EBE5DA_2px,transparent_2px)] bg-[size:6px_100%] opacity-60" />
       </div>
 
-      {/* BOTONES WALLET */}
       <div className="w-full space-y-3 pt-2">
         <button
           onClick={handleDownloadImage}
@@ -292,15 +271,14 @@ const Assistants: FC<Props> = ({
   textClassName = "",
   svgsColor,
   sendFormBtnClassName = "",
-  sealImage,
 }) => {
   const [isDisabled, setIsDisabled] = useState(false);
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isAssistant, setIsAssistant] = useState(false);
   const [familyData, setFamilyData] = useState<Family>(defaultFamily);
 
   const invitationData = useInvitationStore((state) => state.invitationData);
+  const { family, isLoadingFamily, setFamily } = useFamilyContext();
+
   const formikRef = useRef<FormikProps<FamilyFormData>>(null);
   const formContainerRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
@@ -315,14 +293,12 @@ const Assistants: FC<Props> = ({
   const isFormLocked =
     familyData.cambiosPermitidos === false || isExpiredLocal();
 
-  // Generamos la fecha objetivo segura
   const deadlineString = familyData?.fechaLimiteConfirmacion
     ? familyData.fechaLimiteConfirmacion.includes("T")
       ? familyData.fechaLimiteConfirmacion
       : `${familyData.fechaLimiteConfirmacion}T23:59:59`
     : undefined;
 
-  // Formateamos la fecha a un string legible (Ej: "15 de noviembre a las 11:59 p. m.")
   const formattedDeadline = useMemo(() => {
     if (!deadlineString) return "";
     const d = new Date(deadlineString);
@@ -338,45 +314,35 @@ const Assistants: FC<Props> = ({
     return `${datePart} a las ${timePart}`;
   }, [deadlineString]);
 
-  const handleGetFamilyData = useCallback(
-    (id: string) => {
-      if (!isDefaultId(id) && invitationData) {
-        FamiliesService.getFamily(invitationData.id, id).then(
-          ({ family, error }) => {
-            if (error || !family) {
-              setFamilyData(defaultFamily);
-              return;
-            }
-            FamilyQuotesService.getFamilyQuote(invitationData.id, id).then(
-              ({ result, error }) => {
-                const familyDataCopy = { ...family };
-                if (!error && result !== null) {
-                  familyDataCopy.notaInvitado = result.mensaje;
-                }
-                setFamilyData(familyDataCopy);
-                formikRef.current?.setValues({
-                  ...familyDataCopy,
-                  telefono: null,
-                });
-
-                if (familyDataCopy.asistencia !== null) {
-                  setIsFormSubmitted(true);
-                  setIsAssistant(familyDataCopy.asistencia === true);
-                }
-              },
-            );
-          },
-        );
-      }
-    },
-    [invitationData],
-  );
-
   useEffect(() => {
-    if (id) {
-      handleGetFamilyData(id);
-    }
-  }, [id, handleGetFamilyData]);
+    const fetchFamilyData = async () => {
+      if (!id || isDefaultId(id) || !invitationData) return;
+
+      if (family) {
+        const { result, error } = await FamilyQuotesService.getFamilyQuote(
+          invitationData.id,
+          id
+        );
+        const familyDataCopy = { ...family };
+
+        if (!error && result !== null) {
+          familyDataCopy.notaInvitado = result.mensaje;
+        }
+
+        setFamilyData(familyDataCopy);
+        formikRef.current?.setValues({ ...familyDataCopy, telefono: null });
+
+        if (familyDataCopy.asistencia !== null) {
+          setIsFormSubmitted(true);
+        }
+      } else if (!isLoadingFamily) {
+        // Si cargó el contexto pero family sigue null (ej. ID inválido)
+        setFamilyData(defaultFamily);
+      }
+    };
+
+    fetchFamilyData();
+  }, [id, invitationData, family, isLoadingFamily]);
 
   if (!familyData) {
     return (
@@ -434,7 +400,6 @@ const Assistants: FC<Props> = ({
 
         <AnimatedEntrance classname="w-full">
           <div className="flex flex-col items-center justify-center px-5 w-full">
-            {/* LÓGICA DE VISTAS PRINCIPALES */}
             {isFormLocked ? (
               familyData.asistencia === true ? (
                 <TicketCard
@@ -454,14 +419,10 @@ const Assistants: FC<Props> = ({
                 />
               )
             ) : !isFormSubmitted ? (
-              // ============================================================================
-              // FORMULARIO DE CONFIRMACIÓN ELEGANTE (REDESIGN)
-              // ============================================================================
               <div
                 className="w-full max-w-[400px] relative z-0"
                 ref={formContainerRef}
               >
-                {/* TARJETA BLANCA DEL FORMULARIO */}
                 <div className="rounded-xl bg-white shadow-xl px-6 py-12 pt-9 relative z-0 border border-stone-200">
                   <AnimatePresence>
                     <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mb-4 text-center">
@@ -477,7 +438,6 @@ const Assistants: FC<Props> = ({
                       )}
                       key="assistance-form"
                     >
-                      {/* TÍTULO PRINCIPAL (Nombre elegante) */}
                       <p
                         className={cn(
                           "text-3xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.05)] font-newIconScript text-charcoal text-center mb-4",
@@ -486,12 +446,9 @@ const Assistants: FC<Props> = ({
                       >
                         {familyData.nombre}
                       </p>
-
-                      {/* Divisor floral/elegante */}
                       <div className="flex items-center justify-center gap-4 mb-6 opacity-60">
                         <div className="w-12 h-px bg-stone-400" />
                       </div>
-
                       {familyData.notaAnfitrion && (
                         <p className="px-4 text-center text-sm italic text-stone-500 mb-8 font-serif leading-relaxed">
                           &quot;{familyData.notaAnfitrion}&quot;
@@ -516,7 +473,6 @@ const Assistants: FC<Props> = ({
                             )
                               .then(() => {
                                 setIsFormSubmitted(true);
-                                setIsAssistant(data.asistencia === true);
                                 if (data.notaInvitado) {
                                   FamilyQuotesService.saveFamilyQuote(
                                     invitationData.id,
@@ -527,12 +483,14 @@ const Assistants: FC<Props> = ({
                                     },
                                   );
                                 }
+
                                 ActivityService.logActivity(invitationData.id, {
                                   action:
                                     data.asistencia === true
                                       ? "confirm"
                                       : "decline",
                                   familyId: data.id!,
+                                  familyName: data.nombre,
                                   confirmedGuests:
                                     data.asistencia === true &&
                                     data.confirmados &&
@@ -540,18 +498,23 @@ const Assistants: FC<Props> = ({
                                       ? data.confirmados
                                       : null,
                                 });
-                                setFamilyData({
+
+
+
+                                const newFamilyLocal = {
                                   ...data,
                                   id: data.id!,
                                   tieneTelefono: false,
                                   fechaCreacion: null,
                                   ultimaModificacion: null,
-                                });
+                                };
+
+                                setFamilyData(newFamilyLocal);
+                                setFamily(newFamilyLocal);
                               })
                               .catch(() => setIsDisabled(false));
                           } else {
                             setIsFormSubmitted(true);
-                            setIsAssistant(data.asistencia === true);
                             setFamilyData({
                               ...defaultFamily,
                               asistencia: data.asistencia,
@@ -577,8 +540,6 @@ const Assistants: FC<Props> = ({
                               <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mb-4 text-center mt-2">
                                 ¿Confirmas tu asistencia?
                               </p>
-
-                              {/* BOTONES SEGMENTADOS ELEGANTES */}
                               <div className="flex flex-row gap-2 w-full mb-8">
                                 <button
                                   type="button"
@@ -600,7 +561,6 @@ const Assistants: FC<Props> = ({
                                   <span className="text-md">🥂</span> Sí, ahí
                                   estaré
                                 </button>
-
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -651,18 +611,15 @@ const Assistants: FC<Props> = ({
                                               <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mb-6 text-center mt-2">
                                                 Número de pases
                                               </p>
-
-                                              {/* STEPPER NUMÉRICO PREMIUM */}
                                               <div className="flex items-center justify-center gap-8 md:gap-12">
                                                 <button
                                                   type="button"
                                                   onClick={() => {
-                                                    if (confirmados > 1) {
+                                                    if (confirmados > 1)
                                                       setFieldValue(
                                                         "confirmados",
                                                         confirmados - 1,
                                                       );
-                                                    }
                                                   }}
                                                   disabled={confirmados <= 1}
                                                   className="w-12 h-12 flex items-center justify-center rounded-full border border-stone-400 text-stone-500 disabled:opacity-20 disabled:border-stone-300 disabled:text-stone-300 transition-all active:scale-95 hover:bg-stone-100 hover:text-charcoal hover:border-charcoal"
@@ -672,7 +629,6 @@ const Assistants: FC<Props> = ({
                                                     strokeWidth={2}
                                                   />
                                                 </button>
-
                                                 <div className="flex flex-col items-center justify-center min-w-[4rem]">
                                                   <span className="font-serif text-5xl text-charcoal font-bold leading-none">
                                                     {confirmados}
@@ -681,7 +637,6 @@ const Assistants: FC<Props> = ({
                                                     Pase(s)
                                                   </span>
                                                 </div>
-
                                                 <button
                                                   type="button"
                                                   onClick={() => {
@@ -690,12 +645,11 @@ const Assistants: FC<Props> = ({
                                                       Number(
                                                         familyData.invitados,
                                                       )
-                                                    ) {
+                                                    )
                                                       setFieldValue(
                                                         "confirmados",
                                                         confirmados + 1,
                                                       );
-                                                    }
                                                   }}
                                                   disabled={
                                                     confirmados >=
@@ -709,7 +663,6 @@ const Assistants: FC<Props> = ({
                                                   />
                                                 </button>
                                               </div>
-
                                               {familyData.invitados > 1 && (
                                                 <p className="text-[10px] text-stone-400 mt-5 font-medium italic">
                                                   Límite asignado:{" "}
@@ -721,7 +674,6 @@ const Assistants: FC<Props> = ({
                                         )}
                                       </AnimatePresence>
 
-                                      {/* INPUT TEXTO MINIMALISTA */}
                                       <div className="w-full mb-10 mt-2 text-left">
                                         <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-[0.15em] mb-3">
                                           {values.asistencia === true
@@ -749,7 +701,6 @@ const Assistants: FC<Props> = ({
                                         />
                                       </div>
 
-                                      {/* BOTÓN SUBMIT ELEGANTE */}
                                       <button
                                         type="submit"
                                         disabled={isDisabled}
@@ -773,8 +724,7 @@ const Assistants: FC<Props> = ({
                   </AnimatePresence>
                 </div>
               </div>
-            ) : // RESULTADOS DESPUÉS DE HACER CLICK EN ENVIAR (Y form no está bloqueado)
-            familyData.asistencia === true ? (
+            ) : familyData.asistencia === true ? (
               <TicketCard
                 familyData={familyData}
                 invitationData={invitationData}
@@ -787,7 +737,6 @@ const Assistants: FC<Props> = ({
               />
             )}
 
-            {/* BOTÓN FLOTANTE "MODIFICAR MI RESPUESTA" (Fuera de las tarjetas) */}
             {!isFormLocked &&
               isFormSubmitted &&
               familyData.asistencia !== null && (
@@ -801,7 +750,6 @@ const Assistants: FC<Props> = ({
                     onClick={() => {
                       setIsFormSubmitted(false);
                       setIsDisabled(false);
-                      // Hacemos scroll suave a la referencia del contenedor una vez que cambia el estado
                       setTimeout(() => {
                         formContainerRef.current?.scrollIntoView({
                           behavior: "smooth",
@@ -813,7 +761,6 @@ const Assistants: FC<Props> = ({
                   >
                     Modificar mi respuesta
                   </button>
-
                   {familyData?.fechaLimiteConfirmacion && formattedDeadline && (
                     <div className="flex items-center gap-1.5 mx-6 px-2 py-1.5 bg-white/40 border border-[#EBE5DA] rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
                       <Clock size={12} className="text-[#A8A29E] shrink-0" />

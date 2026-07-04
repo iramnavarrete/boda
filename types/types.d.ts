@@ -42,6 +42,7 @@ export type Family = {
   pasesUsados?: number;
   horaLlegada?: Timestamp | FieldValue | null;
   asientos?: GuestSeat[] | null;
+  invitacionVista?: boolean | null;
 };
 
 export type FamilyContactInfo = {
@@ -81,6 +82,7 @@ export interface FilterCounts {
   partial: number;
   rejected: number;
   pending: number;
+  unopened: number;
 }
 
 export type FilterType = keyof FilterCounts;

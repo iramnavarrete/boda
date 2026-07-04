@@ -77,7 +77,8 @@ const Assistants: FC<Props> = ({
     return familyData.fechaLimiteConfirmacion < dateFormatted;
   };
 
-  const isFormLocked = familyData.cambiosPermitidos === false || isExpiredLocal();
+  const isFormLocked =
+    familyData.cambiosPermitidos === false || isExpiredLocal();
 
   const handleGetFamilyData = useCallback(
     (id: string) => {
@@ -324,6 +325,7 @@ const Assistants: FC<Props> = ({
                                             data.confirmados > 0
                                               ? data.confirmados
                                               : null,
+                                          familyName: data.nombre,
                                         },
                                       );
                                       setFamilyData({

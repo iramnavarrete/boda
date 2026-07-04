@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 
 // Hooks de datos
 import { useFamiliesData } from "@/features/admin/hooks/useFamilyData";
-import { useFamiliesFiltes } from "@/features/admin/hooks/useFamiliesFillters";
+import { useFamiliesFilters } from "@/features/admin/hooks/useFamiliesFillters";
 import { useFamilyForm } from "@/features/admin/hooks/useFamilyForm";
 import { useConfirmModal } from "@/features/admin/hooks/useConfirmModal";
 import { useFamiliesStats } from "@/features/admin/hooks/useFamiliesStats";
@@ -45,7 +45,7 @@ export function useWeddingAdmin() {
     filterStatus,
     setFilterStatus,
     filteredFamilies,
-  } = useFamiliesFiltes(families);
+  } = useFamiliesFilters(families);
 
   // ── Filtros adicionales (Zustand — no necesitan estar aquí si los
   //    componentes los leen directo del store, pero los exponemos para

@@ -22,6 +22,7 @@ import FrontLayout from "@/features/shared/layouts/front";
 import CeremonyToast from "@/features/front/components/siena/ceremony-toast";
 import Assistants from "@/features/front/components/siena/Assistants";
 import ParentsGodFathers from "@/features/front/components/siena/parents";
+import { FamilyProvider } from "@/features/front/components/FamilyContext";
 
 interface InvitationPageProps {
   invitationData: Invitation & { eventUrl: string };
@@ -69,42 +70,44 @@ export default function Home({ invitationData }: InvitationPageProps) {
       </Head>
       <FrontLayout>
         {/* Componente que maneja la apertura del Lottie inicial */}
-        <EnvelopeSplash onOpen={() => setIsEnvelopeOpened(true)} />
+        <FamilyProvider>
+          <EnvelopeSplash onOpen={() => setIsEnvelopeOpened(true)} />
 
-        <div style={{ overflow: "hidden" }}>
-          <div className="flex flex-col items-center overflow-hidden bg-texture">
-            <DesktopSidebars />
+          <div style={{ overflow: "hidden" }}>
+            <div className="flex flex-col items-center overflow-hidden bg-texture">
+              <DesktopSidebars />
 
-            {/* Contenido Central (Secciones de la Invitación) */}
-            <div className="max-w-[500px] 2xl:max-w-[600px] relative min-[500px]:border-x-1 border-primary overflow-hidden">
-              <Cover isSealVisible={!isEnvelopeOpened} />
-              <Quote />
-              <ParentsGodFathers />
-              <CountDown />
-              <CeremonyToast />
-              <Gallery />
-              <GiftsTable
-                showCash
-                stores={[
-                  {
-                    type: "amazon",
-                    link: "https://www.amazon.com.mx/hz/wishlist/ls/3Z8K9QG2X7V1?ref_=wl_share&fbclid=IwAR0n5sNqjHkLhYtqLhHjvYJmXqjvYl5b8u4c8Zt9D6w5e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e",
-                    label: "Ver lista",
-                  },
-                ]}
-                transfer={{
-                  bank: "bbva",
-                  beneficiary: "Beneficiario",
-                  cardNumber: "0000 0000 0000 0000",
-                }}
-              />
-              <Assistants />
-              <QrPhotos />
-              <Footer />
-              <AudioController />
+              {/* Contenido Central (Secciones de la Invitación) */}
+              <div className="max-w-[500px] 2xl:max-w-[600px] relative min-[500px]:border-x-1 border-primary overflow-hidden">
+                <Cover isSealVisible={!isEnvelopeOpened} />
+                <Quote />
+                <ParentsGodFathers />
+                <CountDown />
+                <CeremonyToast />
+                <Gallery />
+                <GiftsTable
+                  showCash
+                  stores={[
+                    {
+                      type: "amazon",
+                      link: "https://www.amazon.com.mx/hz/wishlist/ls/3Z8K9QG2X7V1?ref_=wl_share&fbclid=IwAR0n5sNqjHkLhYtqLhHjvYJmXqjvYl5b8u4c8Zt9D6w5e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e",
+                      label: "Ver lista",
+                    },
+                  ]}
+                  transfer={{
+                    bank: "bbva",
+                    beneficiary: "Beneficiario",
+                    cardNumber: "0000 0000 0000 0000",
+                  }}
+                />
+                <Assistants />
+                <QrPhotos />
+                <Footer />
+                <AudioController />
+              </div>
             </div>
           </div>
-        </div>
+        </FamilyProvider>
       </FrontLayout>
     </>
   );

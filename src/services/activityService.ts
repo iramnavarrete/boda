@@ -10,7 +10,6 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { FamilyActivity } from "@/types";
-import { FamiliesService } from "./familiesService";
 import { invitationsCollectionName } from "./invitationsService";
 
 // --- SERVICIO ---
@@ -21,14 +20,10 @@ export const ActivityService = {
    */
   logActivity: async (
     invitationId: string,
-    payload: Omit<FamilyActivity, "id" | "timestamp" | "familyName">,
+    // 🔥 Ahora omitimos el "familyName" del Omit, lo que significa que es OBLIGATORIO enviarlo en el payload
+    payload: Omit<FamilyActivity, "id" | "timestamp">,
   ) => {
-    if (!invitationId || !payload.familyId) return;
-
-    const family = await FamiliesService.getFamily(
-      invitationId,
-      payload.familyId,
-    );
+    if (!invitationId || !payload.familyId || !payload.familyName) return;
 
     try {
       const activityRef = collection(
@@ -37,9 +32,9 @@ export const ActivityService = {
         invitationId,
         "activity",
       );
+      // 🔥 Guardamos directo sin hacer getDoc()
       await addDoc(activityRef, {
         ...payload,
-        familyName: family.family?.nombre,
         timestamp: serverTimestamp(),
       });
     } catch (error) {

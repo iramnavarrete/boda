@@ -102,6 +102,7 @@ export default function Cover({
       ActivityService.logActivity(invitationData.id, {
         action: "view",
         familyId: id,
+        familyName: "Familia desconocida",
       });
     }
   }, [id, preview, token, isSealVisible, invitationData]);
