@@ -4,8 +4,9 @@ import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
 import { useDashboardMessages } from "../hooks/useDashboardMessages";
 import DashboardCard from "./DashboardCard";
 import Loader from "@/features/front/components/Loader";
+import Link from "next/link";
 
-const MessagesCard: React.FC = () => {
+const MessagesCard: React.FC<{ quotesRoute: string }> = ({ quotesRoute }) => {
   const {
     messages,
     currentMessage,
@@ -37,9 +38,9 @@ const MessagesCard: React.FC = () => {
       subtitle="Mensajes de tus invitados"
       className="h-80"
       headerRight={
-        <button className="text-[10px] font-bold text-[#C5A669] hover:text-[#2C3627] transition-colors flex items-center gap-1 uppercase tracking-widest bg-[#FDFBF7] border border-[#EBE5DA] px-3 py-1 rounded-full shadow-sm">
+        <Link href={quotesRoute} className="text-[10px] font-bold text-[#C5A669] hover:text-[#2C3627] transition-colors flex items-center gap-1 uppercase tracking-widest bg-[#FDFBF7] border border-[#EBE5DA] px-3 py-1 rounded-full shadow-sm">
           Ver Todos <ArrowRight size={12} />
-        </button>
+        </Link>
       }
     >
       {isLoading ? (

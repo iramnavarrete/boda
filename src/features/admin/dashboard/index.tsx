@@ -76,11 +76,7 @@ export default function InvitationDashboard() {
       <div className="max-w-[1200px] mx-auto space-y-6">
         <EventHeroCard
           timeAgo={timeAgo}
-          eventDate={formatToEventDate(
-            invitationData?.fecha.toDate() || new Date(),
-          )
-            .split("/")[1]
-            .trim()}
+          eventDate={invitationData?.fecha.toDate() || new Date()}
           eventName={
             `${getEventTypeName(invitationData?.tipo || "")} de ${invitationData?.nombre}` ||
             "Nombre del evento"
@@ -104,7 +100,7 @@ export default function InvitationDashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
           <div className="lg:col-span-7 flex flex-col min-h-0">
-            <MessagesCard />
+            <MessagesCard quotesRoute={`/admin/invitations/${invitationData?.id}/quotes`} />
           </div>
           <div className="lg:col-span-5 flex flex-col min-h-0">
             {invitationData?.imagenPortada && (

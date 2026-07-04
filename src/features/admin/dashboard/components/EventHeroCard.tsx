@@ -1,11 +1,12 @@
 import React from "react";
 import { Gem, MapPin, Clock, Users } from "lucide-react";
 import Link from "next/link";
+import { formatToEventDate } from "@/utils/formatters";
 
 interface EventHeroCardProps {
   timeAgo: string;
   eventName: string;
-  eventDate: string;
+  eventDate: Date;
   eventLocation: string;
   familiesRoute?: string;
 }
@@ -16,8 +17,14 @@ const EventHeroCard: React.FC<EventHeroCardProps> = ({
   eventDate,
   eventLocation,
   familiesRoute
-}) => (
-  <div className="bg-[#2C3627] text-[#FDFBF7] rounded-[24px] p-8 shadow-xl relative overflow-hidden flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
+}) => {
+  const formattedDate = formatToEventDate(eventDate);
+  console.log(eventDate, formattedDate, "EVENT DATE");
+
+  const day = formattedDate.split("/")[0].trim();
+  const month = formattedDate.split("/")[1].trim();
+
+  return <div className="bg-[#2C3627] text-[#FDFBF7] rounded-[24px] p-8 shadow-xl relative overflow-hidden flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
     <div className="absolute top-0 right-0 p-6 opacity-[0.03] pointer-events-none scale-150 transform translate-x-1/4 -translate-y-1/4">
       <Gem size={300} />
     </div>
@@ -25,9 +32,9 @@ const EventHeroCard: React.FC<EventHeroCardProps> = ({
     <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative z-10">
       <div className="bg-white/10 rounded-2xl p-4 text-center backdrop-blur-sm border border-white/20 shadow-inner w-20 shrink-0">
         <p className="text-[#C5A669] text-[10px] font-bold uppercase tracking-widest mb-1">
-          Oct
+          {month}
         </p>
-        <p className="text-3xl font-serif leading-none">25</p>
+        <p className="text-3xl font-serif leading-none">{day}</p>
       </div>
       <div>
         <h1 className="text-3xl lg:text-4xl font-serif font-medium mb-3">
@@ -55,6 +62,6 @@ const EventHeroCard: React.FC<EventHeroCardProps> = ({
       </Link>
     </div>
   </div>
-);
+};
 
 export default React.memo(EventHeroCard);
