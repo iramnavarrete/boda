@@ -97,7 +97,7 @@ export const useFamilyFormModal = (
       return {
         ...prev,
         asistencia: nuevoEstado,
-        confirmados: nuevoEstado === false ? 0 : prev.confirmados,
+        confirmados: !nuevoEstado ? 0 : prev.confirmados,
       };
     });
   }, []);
