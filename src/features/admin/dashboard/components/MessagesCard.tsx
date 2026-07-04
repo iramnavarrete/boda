@@ -38,7 +38,10 @@ const MessagesCard: React.FC<{ quotesRoute: string }> = ({ quotesRoute }) => {
       subtitle="Mensajes de tus invitados"
       className="h-80"
       headerRight={
-        <Link href={quotesRoute} className="text-[10px] font-bold text-[#C5A669] hover:text-[#2C3627] transition-colors flex items-center gap-1 uppercase tracking-widest bg-[#FDFBF7] border border-[#EBE5DA] px-3 py-1 rounded-full shadow-sm">
+        <Link 
+          href={quotesRoute} 
+          className="hidden md:flex text-[10px] font-bold text-[#C5A669] hover:text-[#2C3627] transition-colors items-center gap-1 uppercase tracking-widest bg-[#FDFBF7] border border-[#EBE5DA] px-3 py-1.5 rounded-full shadow-sm"
+        >
           Ver Todos <ArrowRight size={12} />
         </Link>
       }
@@ -70,7 +73,7 @@ const MessagesCard: React.FC<{ quotesRoute: string }> = ({ quotesRoute }) => {
             <div className="flex items-end justify-between pt-2 mt-2 border-t border-[#EBE5DA]/60 shrink-0">
               {/* Controles del Carrusel integrados a la derecha */}
               {messages.length > 1 && (
-                <div className="flex items-center gap-4 shrink-0 pl-4">
+                <div className="flex items-center gap-4 shrink-0 pl-2 sm:pl-4">
                   {/* Paginación Dots */}
                   <div className="hidden sm:flex gap-1.5">
                     {messages.map((_, idx) => (
@@ -103,23 +106,32 @@ const MessagesCard: React.FC<{ quotesRoute: string }> = ({ quotesRoute }) => {
                   </div>
                 </div>
               )}
+              
               {/* Autor con iniciales */}
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#FDFBF7] border border-[#C5A669]/30 flex items-center justify-center shadow-sm shrink-0">
-                  <span className="font-serif text-[#C5A669] text-base font-bold">
+              <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#FDFBF7] border border-[#C5A669]/30 flex items-center justify-center shadow-sm shrink-0">
+                  <span className="font-serif text-[#C5A669] text-sm sm:text-base font-bold">
                     {getInitials(currentMessage.autor)}
                   </span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[11px] font-bold text-[#2C3627] uppercase tracking-[0.2em] leading-tight">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-[#2C3627] uppercase tracking-[0.2em] leading-tight">
                     {currentMessage.autor}
                   </span>
-                  <span className="text-[9px] text-[#A8A29E] font-medium uppercase tracking-[0.15em] mt-0.5">
+                  <span className="text-[8px] sm:text-[9px] text-[#A8A29E] font-medium uppercase tracking-[0.15em] mt-0.5">
                     {timeAgoString}
                   </span>
                 </div>
               </div>
             </div>
+
+            <Link 
+              href={quotesRoute} 
+              className="md:hidden mt-4 w-full flex items-center justify-center gap-2 py-3 bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl text-[10px] font-bold text-[#C5A669] uppercase tracking-widest hover:bg-[#F9F7F2] transition-colors shadow-sm shrink-0 active:scale-[0.98]"
+            >
+              Ver todos los mensajes <ArrowRight size={14} />
+            </Link>
+            
           </div>
         </>
       )}
