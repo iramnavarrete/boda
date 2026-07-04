@@ -7,178 +7,111 @@ import {
   getDocs,
   FirestoreError,
   serverTimestamp,
-  DocumentData,
   updateDoc,
+  collection,
+  doc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { FirestoreResult, FamilyQuote } from "@/types";
-import { Unsubscribe } from "firebase/auth";
-import { familyPaths } from "./familiesService";
+import { FirestoreResult, FamilyQuote, Family } from "@/types";
+import { FamiliesService } from "./familiesService";
+import { invitationsCollectionName } from "./invitationsService";
 
-// Definimos la interfaz para los mensajes tipados correctamente
-type FamilyQuoteMap = FamilyQuote & {
+const getQuotesCollection = (invitationId: string) =>
+  collection(db, invitationsCollectionName, invitationId, "quotes");
+
+const getQuoteDoc = (invitationId: string, familyId: string) =>
+  doc(db, invitationsCollectionName, invitationId, "quotes", familyId);
+
+export type FamilyQuoteMap = Omit<FamilyQuote, "asistencia"> & {
   sortLeido?: boolean;
+  asistencia?: boolean | null | "deleted";
+  parentesco?: string;
 };
 
 export const FamilyQuotesService = {
   subscribeToQuoteMessages: (
     invitationId: string,
-    callback: (messages: FamilyQuoteMap[]) => void, // Sustituye "any" por tu tipo FamilyQuoteMap
-    onError?: (error: FirestoreError) => void, // Sustituye "any" por FirestoreError
+    callback: (messages: FamilyQuoteMap[]) => void,
+    onError?: (error: FirestoreError) => void,
   ) => {
     if (!invitationId) return () => {};
 
-    const messagesMap = new Map<string, FamilyQuote>(); // Mapa de mensajes
-    const familiesCache = new Map<string, DocumentData>(); // Caché en vivo de invitados
-    const quoteUnsubscribes = new Map<string, Unsubscribe>(); // Mapa de desuscripciones
+    let quotesList: FamilyQuoteMap[] = [];
+    let familiesList: Family[] = [];
 
-    const familiesRef = familyPaths.familiesCollection(invitationId);
-    const q = query(familiesRef);
-
+    // "Join" Reactivo: Combina los mensajes con las familias en vivo
     const notifyChanges = () => {
-      const sorted = Array.from(messagesMap.values()).sort((a, b) => {
-        // ÚNICO NIVEL: Ordenar estrictamente por fechaModificacion descendente.
+      const merged = quotesList.map((q): FamilyQuoteMap => {
+        const fam = familiesList.find((f) => f.id === q.id);
+
+        return {
+          ...q,
+          // Si la familia existe, actualizamos su nombre/etiqueta en tiempo real
+          // Si fue eliminada, conservamos los datos originales del quote.
+          autor: fam ? fam.nombre : q.autor,
+          parentesco: fam
+            ? fam.etiqueta || "Invitado"
+            : q.parentesco || "Invitado",
+          // Si fam existe, tomamos su asistencia (boolean | null), si no existe mandamos "deleted"
+          asistencia: fam !== undefined ? fam.asistencia : "deleted",
+        };
+      });
+
+      const sorted = merged.sort((a, b) => {
         const timeA = a.fechaModificacion || 0;
         const timeB = b.fechaModificacion || 0;
         return timeB - timeA;
       });
+
       callback(sorted);
     };
 
-    const mainUnsub = onSnapshot(
-      q,
+    const unsubQuotes = onSnapshot(
+      query(getQuotesCollection(invitationId)),
       (snapshot) => {
-        if (snapshot.empty) {
-          callback([]);
-        }
-
-        const docs = snapshot.docChanges();
-
-        docs.forEach((change) => {
-          const familyId = change.doc.id;
-          const familyData = change.doc.data();
-
-          // Si se elimina al invitado, limpiamos sus listeners y cachés
-          if (change.type === "removed") {
-            const unsub = quoteUnsubscribes.get(familyId);
-            if (unsub) {
-              unsub();
-              quoteUnsubscribes.delete(familyId);
-            }
-            familiesCache.delete(familyId);
-            messagesMap.delete(familyId);
-            notifyChanges();
-            return; // Terminamos la ejecución para este doc
-          }
-
-          // GUARDAMOS SIEMPRE LA VERSIÓN MÁS RECIENTE DEL INVITADO
-          familiesCache.set(familyId, familyData);
-
-          if (change.type === "added") {
-            // Solo creamos el listener del Quote la primera vez
-            if (!quoteUnsubscribes.has(familyId)) {
-              const quoteRef = familyPaths.familyQuote(invitationId, familyId);
-
-              const qUnsub = onSnapshot(
-                quoteRef,
-                (quoteSnap) => {
-                  if (quoteSnap.exists()) {
-                    const qData = quoteSnap.data({
-                      serverTimestamps: "estimate",
-                    });
-                    const text = qData.mensaje;
-
-                    if (text) {
-                      const currentFamilyData =
-                        familiesCache.get(familyId) || {};
-                      const currentLeido = qData.leido || false;
-
-                      let msCreacion = 0;
-                      if (qData.fechaCreacion) {
-                        if (typeof qData.fechaCreacion === "number") {
-                          msCreacion = qData.fechaCreacion;
-                        } else if (
-                          typeof qData.fechaCreacion.toMillis === "function"
-                        ) {
-                          msCreacion = qData.fechaCreacion.toMillis();
-                        }
-                      }
-
-                      // Extracción segura de fechaModificacion
-                      let msModificacion = msCreacion;
-                      if (qData.fechaModificacion) {
-                        if (typeof qData.fechaModificacion === "number") {
-                          msModificacion = qData.fechaModificacion;
-                        } else if (
-                          typeof qData.fechaModificacion.toMillis === "function"
-                        ) {
-                          msModificacion = qData.fechaModificacion.toMillis();
-                        }
-                      }
-
-                      messagesMap.set(familyId, {
-                        id: familyId,
-                        autor: currentFamilyData.nombre || "Invitado",
-                        parentesco: "Invitado",
-                        mensaje: text,
-                        fechaCreacion: msCreacion,
-                        fechaModificacion: msModificacion,
-                        leido: currentLeido,
-                        asistencia: currentFamilyData.asistencia,
-                      });
-                    } else {
-                      messagesMap.delete(familyId);
-                    }
-                  } else {
-                    messagesMap.delete(familyId);
-                  }
-
-                  notifyChanges();
-                },
-                (error) => {
-                  console.warn(
-                    `Esperando permisos para leer mensaje de: ${familyId}`,
-                  );
-                },
-              );
-              quoteUnsubscribes.set(familyId, qUnsub);
-            }
-          } else if (change.type === "modified") {
-            // Si el invitado se modificó (ej. cambió asistencia o nombre)
-            // pero el quote listener ya existía, actualizamos el mapa directamente
-            const existingMsg = messagesMap.get(familyId);
-
-            if (existingMsg) {
-              messagesMap.set(familyId, {
-                ...existingMsg,
-                autor: familyData.nombre || "Invitado",
-                asistencia: familyData.asistencia === true,
-              });
-              notifyChanges();
-            }
-          }
+        quotesList = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data({ serverTimestamps: "estimate" });
+          return {
+            id: docSnap.id,
+            autor: data.autor || "Invitado",
+            mensaje: data.mensaje || "",
+            fechaCreacion: data.fechaCreacion?.toMillis?.() || Date.now(),
+            fechaModificacion:
+              data.fechaModificacion?.toMillis?.() || Date.now(),
+            leido: data.leido || false,
+            parentesco: data.parentesco || "Invitado",
+            asistencia: null, // Valor temporal hasta que haga merge con familiesList
+          } as FamilyQuoteMap;
         });
+        notifyChanges();
       },
       (error) => {
         if (onError) onError(error);
-        else
-          console.error("Error en subscripción de invitados principal:", error);
+        else console.error("Error en subscripción de quotes:", error);
       },
     );
 
+    const unsubFamilies = FamiliesService.subscribeToFamilies(
+      invitationId,
+      (fams) => {
+        familiesList = fams;
+        notifyChanges();
+      },
+      (error) => console.error("Error al obtener familias para quotes:", error),
+    );
+
     return () => {
-      mainUnsub();
-      quoteUnsubscribes.forEach((unsub) => unsub());
+      unsubQuotes();
+      unsubFamilies();
     };
   },
 
-  // FUNCIONES PARA MARCAR LEÍDO / NO LEÍDO EN LA BASE DE DATOS
   toggleMessageReadStatus: async (
     invitationId: string,
     familyId: string,
     currentStatus: boolean,
   ) => {
-    const quoteRef = familyPaths.familyQuote(invitationId, familyId);
+    const quoteRef = getQuoteDoc(invitationId, familyId);
     await setDoc(quoteRef, { leido: !currentStatus }, { merge: true });
   },
 
@@ -186,7 +119,7 @@ export const FamilyQuotesService = {
     if (!familyIds.length) return;
     const batch = writeBatch(db);
     familyIds.forEach((id) => {
-      const quoteRef = familyPaths.familyQuote(invitationId, id);
+      const quoteRef = getQuoteDoc(invitationId, id);
       batch.set(quoteRef, { leido: true }, { merge: true });
     });
     await batch.commit();
@@ -198,52 +131,21 @@ export const FamilyQuotesService = {
     try {
       if (!invitationId) return [];
 
-      const familiesSnapshot = await getDocs(
-        familyPaths.familiesCollection(invitationId),
-      );
+      const quotesSnap = await getDocs(getQuotesCollection(invitationId));
 
-      const messagesPromises = familiesSnapshot.docs.map(async (familyDoc) => {
-        const familyId = familyDoc.id;
-        const familyData = familyDoc.data();
-
-        const quoteRef = familyPaths.familyQuote(invitationId, familyId);
-        const quoteSnapshot = await getDoc(quoteRef);
-
-        if (quoteSnapshot.exists()) {
-          const quoteData = quoteSnapshot.data({
-            serverTimestamps: "estimate",
-          });
-          const text = quoteData.mensaje;
-
-          // Convertimos de forma segura a milisegundos
-          const msCreacion = quoteData.fechaCreacion?.toMillis
-            ? quoteData.fechaCreacion.toMillis()
-            : Date.now();
-
-          const msModificacion = quoteData.fechaModificacion?.toMillis
-            ? quoteData.fechaModificacion.toMillis()
-            : msCreacion;
-
-          if (text) {
-            return {
-              id: familyId,
-              autor: familyData.nombre || "Invitado",
-              parentesco: familyData.grupo || "Invitado",
-              mensaje: text,
-              fechaCreacion: msCreacion,
-              fechaModificacion: msModificacion,
-              leido: quoteData.leido || false,
-              asistencia: familyData.asistencia || false,
-            } as FamilyQuoteMap;
-          }
-        }
-
-        return null;
+      return quotesSnap.docs.map((docSnap) => {
+        const data = docSnap.data({ serverTimestamps: "estimate" });
+        return {
+          id: docSnap.id,
+          autor: data.autor || "Invitado",
+          mensaje: data.mensaje || "",
+          fechaCreacion: data.fechaCreacion?.toMillis?.() || Date.now(),
+          fechaModificacion: data.fechaModificacion?.toMillis?.() || Date.now(),
+          leido: data.leido || false,
+          parentesco: data.parentesco || "Invitado",
+          asistencia: null,
+        } as FamilyQuoteMap;
       });
-
-      const results = await Promise.all(messagesPromises);
-
-      return results.filter((msg): msg is FamilyQuoteMap => msg !== null);
     } catch (error) {
       console.error("Error fetching family messages:", error);
       throw error;
@@ -260,25 +162,21 @@ export const FamilyQuotesService = {
 
     try {
       const timestamp = serverTimestamp();
-
-      const docRef = familyPaths.familyQuote(invitationId, familyId);
-
+      const docRef = getQuoteDoc(invitationId, familyId);
       const { id: _, ...dataToUpdate } = payload;
 
-      // Verificamos si el documento existe explícitamente en lugar de depender del try-catch de Firebase
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        // Si ya existe, solo actualizamos (Ideal para cuando el invitado edita)
         await updateDoc(docRef, {
           ...dataToUpdate,
           leido: false,
           fechaModificacion: timestamp,
         });
       } else {
-        // Si no existe, lo creamos con ambas fechas
         await setDoc(docRef, {
           ...dataToUpdate,
+          familyId, // Conservamos el ID por si borran la familia
           leido: false,
           fechaCreacion: timestamp,
           fechaModificacion: timestamp,
@@ -300,8 +198,7 @@ export const FamilyQuotesService = {
     familyId: string,
   ): FirestoreResult<FamilyQuote> => {
     try {
-      const docRef = familyPaths.familyQuote(invitationId, familyId);
-
+      const docRef = getQuoteDoc(invitationId, familyId);
       const snapshot = await getDoc(docRef);
 
       if (snapshot.exists()) {

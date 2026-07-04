@@ -1,9 +1,8 @@
-import { FamilyQuote } from "@/types";
+import { FamilyQuoteMap, FamilyQuotesService } from "@/services/familyQuotesService";
 import { CheckCircle2, MessageCircle, Search, X } from "lucide-react";
 import { FC, useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import FamilyQuoteCard from "./FamilyQuoteCard";
-import { FamilyQuotesService } from "@/services/familyQuotesService";
 import Loader from "@/features/front/components/Loader";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
 
@@ -27,7 +26,7 @@ const useMasonryColumns = () => {
 
 const FamilyQuotesList: FC = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [messages, setMessages] = useState<FamilyQuote[]>([]);
+  const [messages, setMessages] = useState<FamilyQuoteMap[]>([]);
   const [filter, setFilter] = useState<FilterType>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const colCount = useMasonryColumns();
@@ -100,7 +99,7 @@ const FamilyQuotesList: FC = () => {
   );
 
   const masonryColumns = useMemo(() => {
-    const cols: FamilyQuote[][] = Array.from({ length: colCount }, () => []);
+    const cols: FamilyQuoteMap[][] = Array.from({ length: colCount }, () => []);
     filteredMessages.forEach((msg, idx) => cols[idx % colCount].push(msg));
     return cols;
   }, [filteredMessages, colCount]);

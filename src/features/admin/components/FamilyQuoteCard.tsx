@@ -1,5 +1,5 @@
 import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
-import { FamilyQuote } from "@/types";
+import { FamilyQuoteMap } from "@/services/familyQuotesService";
 import {
   CheckCircle2,
   Mail,
@@ -7,6 +7,8 @@ import {
   Quote,
   Sparkles,
   XCircle,
+  UserMinus,
+  Tag,
 } from "lucide-react";
 
 const getInitials = (name: string) => {
@@ -19,7 +21,7 @@ const getInitials = (name: string) => {
 };
 
 interface FamilyQuoteCardProps {
-  msg: FamilyQuote & { asistencia?: string | boolean | null }; // Tipado extendido por si asistencia no está en FamilyQuote
+  msg: FamilyQuoteMap;
   onManualToggle: (id: string, currentStatus: boolean) => void;
 }
 
@@ -45,7 +47,6 @@ export default function FamilyQuoteCard({
         relative rounded-[20px] group flex flex-col w-full overflow-hidden
         transition-[box-shadow,transform] duration-300 bg-white/70 shadow-[0_8px_30px_rgba(197,166,105,0.15)] hover:-translate-y-1 hover:shadow-[0_14px_40px_rgba(197,166,105,0.22)]
       `}
-      // Si hace click en la tarjeta lo marcamos como leído en automático
       onClick={() => onManualToggle(id, false)}
     >
       <div className="p-6 md:p-8 flex flex-col flex-1 relative">
@@ -59,7 +60,7 @@ export default function FamilyQuoteCard({
           <Quote size={24} className="fill-current" />
         </div>
 
-        <p className="font-serif text-lg md:text-xl italic leading-relaxed mb-8 flex-1 text-stone-custom">
+        <p className="font-serif text-lg md:text-xl italic leading-relaxed mb-8 flex-1 text-stone-custom break-words ">
           {`${mensaje}`}
         </p>
 
@@ -70,7 +71,7 @@ export default function FamilyQuoteCard({
                 {getInitials(autor)}
               </div>
 
-              {/* Badge de Asistencia (Aparece sobre el círculo) */}
+              {/* Badges de Asistencia (Manejando el estado "deleted") */}
               {asistencia === true ? (
                 <div
                   title="Asistencia confirmada"
@@ -91,6 +92,16 @@ export default function FamilyQuoteCard({
                     className="text-red-500 bg-red-50 rounded-full"
                   />
                 </div>
+              ) : asistencia === "deleted" ? (
+                <div
+                  title="Familia eliminada de la lista"
+                  className="absolute -bottom-1 -right-1 bg-white rounded-full p-[2px] shadow-sm cursor-help"
+                >
+                  <UserMinus
+                    size={14}
+                    className="text-stone-400 bg-stone-100 rounded-full p-0.5"
+                  />
+                </div>
               ) : null}
             </div>
             <div className="flex flex-col">
@@ -98,8 +109,8 @@ export default function FamilyQuoteCard({
                 {autor}
               </p>
 
-              {/* Alineamos el Rol y el Indicador de Asistencia uno al lado del otro */}
-              <div className="flex items-center gap-2 mt-0.5">
+              <div className="flex items-center gap-0.5 mt-0.5">
+                <Tag size={10} className="text-gold-500" />
                 <span className="text-[10px] uppercase tracking-widest text-gold-500 font-bold">
                   {parentesco}
                 </span>
