@@ -1,5 +1,5 @@
 import React, { Dispatch, SetStateAction } from "react";
-import { Activity, Eye, CheckCircle2, XCircle } from "lucide-react";
+import { Activity, CheckCircle2, XCircle, MailOpen } from "lucide-react";
 import { FamilyActivity } from "@/types";
 import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
 import { useRecentActivities } from "../hooks/useRecentActivities";
@@ -10,8 +10,8 @@ const ActivityItem: React.FC<{ activity: FamilyActivity }> = ({ activity }) => {
   const timeAgo = useTimeAgo(activity.timestamp);
 
   let config = {
-    icon: <Eye size={14} />,
-    text: "vio la invitación",
+    icon: <MailOpen size={14} />,
+    text: "abrió la invitación",
     bgColor: "bg-stone-100",
     iconColor: "text-stone-500",
   };

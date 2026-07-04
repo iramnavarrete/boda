@@ -318,10 +318,12 @@ const Assistants: FC<Props> = ({
     const fetchFamilyData = async () => {
       if (!id || isDefaultId(id) || !invitationData) return;
 
-      if (family) {
+      if (familyData.id === id) return;
+
+      if (family && family.id === id) {
         const { result, error } = await FamilyQuotesService.getFamilyQuote(
           invitationData.id,
-          id
+          id,
         );
         const familyDataCopy = { ...family };
 
@@ -336,13 +338,12 @@ const Assistants: FC<Props> = ({
           setIsFormSubmitted(true);
         }
       } else if (!isLoadingFamily) {
-        // Si cargó el contexto pero family sigue null (ej. ID inválido)
         setFamilyData(defaultFamily);
       }
     };
 
     fetchFamilyData();
-  }, [id, invitationData, family, isLoadingFamily]);
+  }, [id, invitationData, family, isLoadingFamily, familyData.id]);
 
   if (!familyData) {
     return (
@@ -498,8 +499,6 @@ const Assistants: FC<Props> = ({
                                       ? data.confirmados
                                       : null,
                                 });
-
-
 
                                 const newFamilyLocal = {
                                   ...data,

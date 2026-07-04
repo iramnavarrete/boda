@@ -83,42 +83,41 @@ export default function Cover({
   const preview = searchParams?.get("preview");
   const token = searchParams?.get("token");
 
+  const hasLoggedRef = useRef(false);
+
   useEffect(() => {
     if (!isSealVisible) {
       setTimeout(() => toggleAudio(), 5);
     }
   }, [isSealVisible, toggleAudio]);
 
-  // 🔥 LÓGICA OPTIMIZADA DE VISTAS
   useEffect(() => {
-    if (!isSealVisible && family && !preview && !token && invitationData) {
-      // Solo corremos las escrituras si no ha visto la invitación antes
-      if (!family.invitacionVista) {
-        FamiliesService.markInvitationAsViewed(
-          invitationData.id,
-          family.id,
-        );
+    if (!isSealVisible && family && invitationData) {
+      if (!preview && !token) {
+        if (!hasLoggedRef.current) {
+          hasLoggedRef.current = true;
 
-        ActivityService.logActivity(invitationData.id, {
-          action: "view",
-          familyId: family.id,
-          familyName: family.nombre,
-        });
+          ActivityService.logActivity(invitationData.id, {
+            action: "view",
+            familyId: family.id,
+            familyName: family.nombre,
+          }).catch(console.error);
 
-        // 3. Actualizamos en local para que no vuelva a dispararse en esta sesión
-        setFamily((prev) =>
-          prev ? { ...prev, invitacionVista: true } : prev,
-        );
+          if (!family.invitacionVista) {
+            FamiliesService.markInvitationAsViewed(
+              invitationData.id,
+              family.id,
+            ).catch(console.error);
+
+            // Actualizamos el contexto local
+            setFamily((prev) =>
+              prev ? { ...prev, invitacionVista: true } : prev,
+            );
+          }
+        }
       }
     }
-  }, [
-    isSealVisible,
-    family,
-    preview,
-    token,
-    invitationData,
-    setFamily,
-  ]);
+  }, [isSealVisible, family, preview, token, invitationData, setFamily]);
 
   useEffect(() => {
     (async () => {

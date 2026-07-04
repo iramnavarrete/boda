@@ -16,11 +16,7 @@ const FamilyContext = createContext<FamilyContextProps>({
   setFamily: () => {},
 });
 
-export const FamilyProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
+export const FamilyProvider = ({ children }: { children: React.ReactNode }) => {
   const searchParams = useSearchParams();
   const id = searchParams?.get("family");
   const invitationData = useInvitationStore((state) => state.invitationData);
@@ -50,9 +46,7 @@ export const FamilyProvider = ({
   }, [invitationData?.id, id]);
 
   return (
-    <FamilyContext.Provider
-      value={{ family, isLoadingFamily, setFamily }}
-    >
+    <FamilyContext.Provider value={{ family, isLoadingFamily, setFamily }}>
       {children}
     </FamilyContext.Provider>
   );
