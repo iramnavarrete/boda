@@ -1,5 +1,5 @@
 import { SearchX } from "lucide-react";
-import FamiliesCards from "./FamiliesCards";
+import FamiliesCards from "./families/cards/FamiliesCards";
 import Loader from "@/features/front/components/Loader";
 import { useWeddingAdminContext } from "../context/WeddingAdminContext";
 

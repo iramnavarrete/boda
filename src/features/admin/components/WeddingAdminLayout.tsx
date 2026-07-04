@@ -1,6 +1,6 @@
 import { memo } from "react";
-import StatsSidebar from "@/features/admin/components/StatsSidebar";
-import FloatingBulkActionsBar from "@/features/admin/components/FloatingBulkActionsBar";
+import StatsSidebar from "@/features/admin/components/families/bars/StatsSidebar";
+import FloatingBulkActionsBar from "@/features/admin/components/families/bars/FloatingBulkActionsBar";
 import FamiliesMainSection from "@/features/admin/components/families/views/FamiliesMainSection";
 import { useWeddingAdminContext } from "@/features/admin/context/WeddingAdminContext";
 

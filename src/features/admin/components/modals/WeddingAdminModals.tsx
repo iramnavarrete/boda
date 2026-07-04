@@ -1,9 +1,9 @@
 import { memo } from "react";
-import FamilyFormModal from "@/features/admin/components/FamilyFormModal";
+import FamilyFormModal from "@/features/admin/components/families/modals/FamilyFormModal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
-import SendWhatsappModal from "@/features/admin/components/SendWhatsappModal";
+import SendWhatsappModal from "@/features/admin/components/families/modals/SendWhatsappModal";
 import UnlockChangesModal from "@/features/admin/components/UnlockChangesModal";
-import ImportFamiliesModal from "@/features/admin/components/ImportFamiliesModal";
+import ImportFamiliesModal from "@/features/admin/components/families/modals/ImportFamiliesModal";
 import { useWeddingAdminContext } from "@/features/admin/context/WeddingAdminContext";
 
 /**

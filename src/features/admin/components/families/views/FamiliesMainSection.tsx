@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useWeddingAdminContext } from "@/features/admin/context/WeddingAdminContext";
-import SearchAndFilterBar from "../../SearchAndFilterBar";
+import SearchAndFilterBar from "../bars/SearchAndFilterBar";
 import FamiliesGridView from "../../FamiliesGridView";
 import FamiliesTableView from "../../FamiliesTableView";
 

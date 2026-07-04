@@ -1,6 +1,6 @@
 import React from "react";
 import { Users, CheckCircle2, Clock, XCircle } from "lucide-react";
-import { useWeddingAdminContext } from "../context/WeddingAdminContext";
+import { useWeddingAdminContext } from "../../../context/WeddingAdminContext";
 
 interface StatCardProps {
   title: string;

@@ -13,7 +13,7 @@ import {
 import Modal from "@/features/shared/components/Modal";
 import { cn } from "@heroui/theme";
 import { FamilyFormData } from "@/types";
-import { useFamilyFormModal } from "../hooks/useFamilyFormModal";
+import { useFamilyFormModal } from "../../../hooks/useFamilyFormModal";
 
 // Opciones predefinidas de etiquetas
 const TAG_OPTIONS = ["Novia", "Novio", "Ambos"];

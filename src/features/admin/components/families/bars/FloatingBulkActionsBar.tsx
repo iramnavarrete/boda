@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { X, Lock, Unlock, Trash2, ChevronUp, CheckSquare } from "lucide-react";
 import { cn } from "@heroui/theme";
-import DashedSeparator from "./DashedSeparator";
+import DashedSeparator from "../../DashedSeparator";
 import { useWeddingAdminContext } from "@/features/admin/context/WeddingAdminContext";
 
 interface BulkActionsProps {

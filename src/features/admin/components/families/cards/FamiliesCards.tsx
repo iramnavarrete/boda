@@ -8,13 +8,13 @@ import {
 } from "lucide-react";
 import { Family } from "@/types";
 import { memo, useCallback } from "react";
-import DashedSeparator from "./DashedSeparator";
+import DashedSeparator from "../../DashedSeparator";
 import { cn } from "@heroui/theme";
 import { useRouter } from "next/router";
-import { FamilyActionButtons, FamilyLockButton } from "./FamilyActionButtons";
-import PartialConfirmationBadge from "./PartialConfirmationBadge";
+import { FamilyActionButtons, FamilyLockButton } from "../../FamilyActionButtons";
+import PartialConfirmationBadge from "../../PartialConfirmationBadge";
 import { isPartialConfirmation } from "@/utils/family";
-import { useWeddingAdminContext } from "../context/WeddingAdminContext";
+import { useWeddingAdminContext } from "../../../context/WeddingAdminContext";
 
 interface FamiliesCardsProps {
   families: Family[];
