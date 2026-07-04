@@ -125,7 +125,7 @@ const UnifiedStatsCard: React.FC<UnifiedStatsCardProps> = ({ stats }) => {
       className="h-full"
       subtitle="Análisis detallado"
       headerRight={
-        <div className="flex bg-[#F9F7F2] rounded-xl border border-[#EBE5DA] p-1">
+        <div className="hidden md:flex bg-[#F9F7F2] rounded-xl border border-[#EBE5DA] p-1">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -142,6 +142,24 @@ const UnifiedStatsCard: React.FC<UnifiedStatsCardProps> = ({ stats }) => {
         </div>
       }
     >
+      <div className="w-full flex md:hidden justify-center mb-8 shrink-0">
+        <div className="flex w-full sm:w-auto bg-[#F9F7F2] rounded-xl border border-[#EBE5DA] p-1">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 sm:flex-none px-2 sm:px-4 py-2 sm:py-1.5 rounded-lg text-[9px] sm:text-[10px] font-bold uppercase tracking-wider transition-all ${
+                activeTab === tab.id
+                  ? "bg-white text-[#2C3627] shadow-sm"
+                  : "text-[#A8A29E] hover:text-[#5A5A5A]"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="flex flex-col lg:flex-row items-center gap-8 h-full">
         {/* Gráfico a la izquierda */}
         <div className="w-full lg:w-[45%] flex justify-center py-4">
