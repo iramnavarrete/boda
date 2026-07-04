@@ -1,6 +1,4 @@
 import {
-  collection,
-  doc,
   setDoc,
   onSnapshot,
   query,
@@ -126,7 +124,7 @@ export const FamilyQuotesService = {
                         fechaCreacion: msCreacion,
                         fechaModificacion: msModificacion,
                         leido: currentLeido,
-                        asistencia: currentFamilyData.asistencia === true,
+                        asistencia: currentFamilyData.asistencia,
                       });
                     } else {
                       messagesMap.delete(familyId);

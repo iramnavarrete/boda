@@ -71,7 +71,7 @@ export default function FamilyQuoteCard({
               </div>
 
               {/* Badge de Asistencia (Aparece sobre el círculo) */}
-              {asistencia ? (
+              {asistencia === true ? (
                 <div
                   title="Asistencia confirmada"
                   className="absolute -bottom-1 -right-1 bg-white rounded-full p-[2px] shadow-sm cursor-help"
@@ -81,7 +81,7 @@ export default function FamilyQuoteCard({
                     className="text-green-500 bg-green-50 rounded-full"
                   />
                 </div>
-              ) : (
+              ) : asistencia === false ? (
                 <div
                   title="No podrá asistir"
                   className="absolute -bottom-1 -right-1 bg-white rounded-full p-[2px] shadow-sm cursor-help"
@@ -91,7 +91,7 @@ export default function FamilyQuoteCard({
                     className="text-red-500 bg-red-50 rounded-full"
                   />
                 </div>
-              )}
+              ) : null}
             </div>
             <div className="flex flex-col">
               <p className="font-bold text-charcoal-800 text-sm tracking-wide uppercase">

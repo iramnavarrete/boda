@@ -161,7 +161,7 @@ interface FamilyQuote {
   fechaCreacion: number;
   fechaModificacion: number;
   leido: boolean;
-  asistencia: boolean;
+  asistencia?: boolean;
 }
 
 export type EventType = "boda" | "xv_anos" | "bautizo" | "cumpleanos" | string;

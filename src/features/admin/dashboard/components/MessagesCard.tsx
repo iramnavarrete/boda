@@ -1,5 +1,5 @@
 import React from "react";
-import { MessageCircle, ArrowRight, Quote, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { MessageCircle, ArrowRight, Quote, ChevronLeft, ChevronRight } from "lucide-react";
 import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
 import { useDashboardMessages } from "../hooks/useDashboardMessages";
 import DashboardCard from "./DashboardCard";
