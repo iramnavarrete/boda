@@ -21,8 +21,8 @@ const TAG_OPTIONS = ["Novia", "Novio", "Ambos"];
 interface FamilyFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: FamilyFormData) => void; // AHORA DEVUELVE LA DATA COMPLETA
-  initialData: FamilyFormData; // AHORA RECIBE INITIAL DATA, NO ESTADO EN VIVO
+  onSubmit: (data: FamilyFormData) => void;
+  initialData: FamilyFormData;
   isEdit: boolean;
   onBackdropPress?: () => void;
 }
@@ -81,64 +81,66 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
         className="flex flex-col flex-1 overflow-hidden min-h-0 bg-sand-light/30"
       >
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Asistencia Toggle */}
-          <div className="relative">
-            <div className="mb-2 px-1">
-              <label className="text-xs font-bold text-charcoal uppercase tracking-wider">
-                ¿Asistirá al evento?
-              </label>
-            </div>
-            {formData.asistencia === null && (
-              <span className="absolute right-0 top-0 text-[10px] text-stone-400 bg-white px-2 py-0.5 rounded-full border border-sand animate-in fade-in duration-200">
-                Pendiente
-              </span>
-            )}
-            <div className="flex p-1 bg-stone-200/50 rounded-xl border border-sand">
-              <button
-                type="button"
-                onClick={() => handleAsistenciaToggle(true)}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                  formData.asistencia === true
-                    ? "bg-white text-green-700 shadow-sm ring-1 ring-green-100"
-                    : "text-stone-500 hover:text-stone-700 hover:bg-white/50",
-                )}
-              >
-                <CheckCircle2
-                  size={16}
-                  className={
+          {/* Asistencia Toggle (Solo visible en Edición) */}
+          {isEdit && (
+            <div className="relative">
+              <div className="mb-2 px-1">
+                <label className="text-xs font-bold text-charcoal uppercase tracking-wider">
+                  ¿Asistirá al evento?
+                </label>
+              </div>
+              {formData.asistencia === null && (
+                <span className="absolute right-0 top-0 text-[10px] text-stone-400 bg-white px-2 py-0.5 rounded-full border border-sand animate-in fade-in duration-200">
+                  Pendiente
+                </span>
+              )}
+              <div className="flex p-1 bg-stone-200/50 rounded-xl border border-sand">
+                <button
+                  type="button"
+                  onClick={() => handleAsistenciaToggle(true)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                     formData.asistencia === true
-                      ? "text-green-600"
-                      : "text-stone-400 opacity-50"
-                  }
-                />
-                Sí
-              </button>
+                      ? "bg-white text-green-700 shadow-sm ring-1 ring-green-100"
+                      : "text-stone-500 hover:text-stone-700 hover:bg-white/50",
+                  )}
+                >
+                  <CheckCircle2
+                    size={16}
+                    className={
+                      formData.asistencia === true
+                        ? "text-green-600"
+                        : "text-stone-400 opacity-50"
+                    }
+                  />
+                  Sí
+                </button>
 
-              <div className="w-px bg-stone-300/20 my-2 mx-1" />
+                <div className="w-px bg-stone-300/20 my-2 mx-1" />
 
-              <button
-                type="button"
-                onClick={() => handleAsistenciaToggle(false)}
-                className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                  formData.asistencia === false
-                    ? "bg-white text-red-700 shadow-sm ring-1 ring-red-100"
-                    : "text-stone-500 hover:text-stone-700 hover:bg-white/50",
-                )}
-              >
-                <XCircleIcon
-                  size={16}
-                  className={
+                <button
+                  type="button"
+                  onClick={() => handleAsistenciaToggle(false)}
+                  className={cn(
+                    "flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
                     formData.asistencia === false
-                      ? "text-red-500"
-                      : "text-stone-400 opacity-50"
-                  }
-                />
-                No
-              </button>
+                      ? "bg-white text-red-700 shadow-sm ring-1 ring-red-100"
+                      : "text-stone-500 hover:text-stone-700 hover:bg-white/50",
+                  )}
+                >
+                  <XCircleIcon
+                    size={16}
+                    className={
+                      formData.asistencia === false
+                        ? "text-red-500"
+                        : "text-stone-400 opacity-50"
+                    }
+                  />
+                  No
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Inputs */}
           <div className="space-y-4">
@@ -156,7 +158,13 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-5">
+            {/* Ajuste dinámico de grid: 1 columna al crear, 2 al editar */}
+            <div
+              className={cn(
+                "grid gap-5",
+                isEdit ? "grid-cols-2" : "grid-cols-1",
+              )}
+            >
               <div>
                 <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
                   Cupos Totales*
@@ -177,37 +185,41 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
                   </span>
                 </div>
               </div>
-              <div
-                className={cn(
-                  "transition-opacity duration-300",
-                  formData.asistencia === false
-                    ? "opacity-50 grayscale"
-                    : "opacity-100",
-                )}
-              >
-                <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
-                  Confirmados {formData.asistencia === true && "*"}
-                </label>
-                <div className="relative">
-                  <input
-                    required={formData.asistencia === true}
-                    type="number"
-                    min="0"
-                    max={formData.invitados}
-                    disabled={formData.asistencia === false}
-                    className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all disabled:bg-sand-light disabled:text-stone-300 shadow-sm"
-                    value={formData.confirmados || ""}
-                    onChange={(e) =>
-                      handleNumberChange("confirmados", e.target.value)
-                    }
-                  />
-                  {formData.asistencia === false && (
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
-                      <MinusCircle size={14} />
-                    </span>
+
+              {/* Confirmados (Solo visible en Edición) */}
+              {isEdit && (
+                <div
+                  className={cn(
+                    "transition-opacity duration-300",
+                    formData.asistencia === false
+                      ? "opacity-50 grayscale"
+                      : "opacity-100",
                   )}
+                >
+                  <label className="block text-sm font-medium text-charcoal mb-1.5 ml-1">
+                    Confirmados {formData.asistencia === true && "*"}
+                  </label>
+                  <div className="relative">
+                    <input
+                      required={formData.asistencia === true}
+                      type="number"
+                      min="0"
+                      max={formData.invitados}
+                      disabled={formData.asistencia === false}
+                      className="w-full px-4 py-3 rounded-xl border border-sand bg-white text-stone-custom focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all disabled:bg-sand-light disabled:text-stone-300 shadow-sm"
+                      value={formData.confirmados || ""}
+                      onChange={(e) =>
+                        handleNumberChange("confirmados", e.target.value)
+                      }
+                    />
+                    {formData.asistencia === false && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400">
+                        <MinusCircle size={14} />
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* --- SECCIÓN DE ETIQUETAS --- */}
