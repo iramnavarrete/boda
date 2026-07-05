@@ -43,7 +43,6 @@ export default function CustomLottie({
   autoPlay = false,
   lottieRef,
   options,
-  isClickToPauseDisabled,
   isPaused = false,
   eventListeners,
   ...rest // Resto de props

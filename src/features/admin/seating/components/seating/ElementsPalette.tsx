@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { useSeatingStore, ElementType } from "../../stores/useSeatingStore";
+import { ElementType } from "../../stores/useSeatingStore";
 import {
   Circle,
   Square,

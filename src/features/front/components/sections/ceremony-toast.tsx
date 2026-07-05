@@ -42,6 +42,7 @@ const CardEvent: React.FC<CardEventProps> = ({
 
   useEffect(() => {
     animate(sequence);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInView]);
 
   return (
@@ -122,6 +123,7 @@ const DressCode: React.FC<PropsWithChildren<DressCodeProps>> = ({
 
   useEffect(() => {
     animate(sequence);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isInView]);
 
   return (

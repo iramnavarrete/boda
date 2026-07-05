@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { heroui } = require("@heroui/theme");
 import type { Config } from "tailwindcss";
 

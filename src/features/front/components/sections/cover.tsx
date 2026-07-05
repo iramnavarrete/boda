@@ -95,6 +95,7 @@ export default function Cover({
         toggleAudio();
       }, 5);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSealVisible]);
 
   useEffect(() => {
@@ -147,6 +148,7 @@ export default function Cover({
     return () => {
       if (interval) clearInterval(interval);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSealVisible]);
 
   return (

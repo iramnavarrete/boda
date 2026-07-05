@@ -1,4 +1,4 @@
-import { Check, MessageCircle, Star, Sparkles, Clock } from "lucide-react";
+import { Check, MessageCircle, Star, Sparkles } from "lucide-react";
 import React, { ReactNode } from "react";
 
 interface SectionTitleProps {

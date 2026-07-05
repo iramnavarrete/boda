@@ -1,12 +1,9 @@
-import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { useSeatingStore, FamilyElement } from "../../stores/useSeatingStore";
 import { useSeatingModalContext } from "../SeatingModalContext";
 import {
-  X,
   GripVertical,
   CheckCircle2,
-  Edit2,
   RotateCcw,
   Clock,
   XCircle,

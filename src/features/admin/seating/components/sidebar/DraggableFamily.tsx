@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { useSeatingStore, FamilyElement } from "../../stores/useSeatingStore";
 import {
@@ -6,7 +6,6 @@ import {
   Users,
   ChevronDown,
   ChevronRight,
-  UserPlus,
   Trash2,
   RotateCcw,
 } from "lucide-react";

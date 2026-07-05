@@ -3,7 +3,6 @@ import CountdownTimer from "@/features/front/components/CountDownTimer";
 import ElegantText from "@/features/shared/components/ElegantText";
 import BeigeWaves from "@/icons/beige-waves";
 import FlowersBackground1 from "@/icons/flowers-background-1";
-import Separator from "@/icons/separator";
 import { useInvitationStore } from "../../stores/invitationStore";
 import { cn } from "@heroui/theme";
 import { useCallback } from "react";

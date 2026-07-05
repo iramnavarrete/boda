@@ -4,7 +4,7 @@ import {
   useSeatingStore,
 } from "../../stores/useSeatingStore";
 import { useSeatingModalContext } from "../SeatingModalContext";
-import { Trash2, Users, RotateCcw, Edit2, X } from "lucide-react";
+import { Trash2, Users, RotateCcw, } from "lucide-react";
 import Tooltip from "@/features/shared/components/Tooltip";
 import { GuestStatus } from "@/types";
 

@@ -12,7 +12,7 @@ import {
 import { useInvitationStore } from "../../stores/invitationStore";
 import { formatTo12Hour } from "@/utils/formatters";
 import { cn } from "@heroui/theme";
-import { Info, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import LadiesShoeIcon from "@/icons/ladies-shoe-icon";
 import TieIcon from "@/icons/tie-icon";
 
@@ -132,7 +132,6 @@ interface DressCodeProps {
 const DressCode: React.FC<DressCodeProps> = ({
   title,
   text,
-  arrayRestrictions = [],
   colorPalette,
 }) => {
   return (

@@ -7,7 +7,7 @@ import {
   Tag,
 } from "lucide-react";
 import { Family } from "@/types";
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import DashedSeparator from "../../DashedSeparator";
 import { cn } from "@heroui/theme";
 import { useRouter } from "next/router";
@@ -15,17 +15,6 @@ import { FamilyActionButtons, FamilyLockButton } from "../../FamilyActionButtons
 import PartialConfirmationBadge from "../../PartialConfirmationBadge";
 import { isPartialConfirmation } from "@/utils/family";
 import { useWeddingAdminContext } from "../../../context/WeddingAdminContext";
-
-interface FamiliesCardsProps {
-  families: Family[];
-  selectedFamilies: Set<string>;
-  onSelectFamily: (id: string) => void;
-  onEdit: (family: Family) => void;
-  onDelete: (family: Family) => void;
-  onSendWhatsApp: (family: Family) => void;
-  onSendReminder: (family: Family) => void;
-  onLockToggle: (family: Family) => void;
-}
 
 interface FamilyCardProps {
   families: Family;
