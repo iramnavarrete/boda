@@ -54,7 +54,7 @@ export default function AppCurvedTextured() {
             <p>
               Nos reservamos el derecho de actualizar o modificar esta Política
               de Privacidad en cualquier momento. Te notificaremos sobre cambios
-              significativos actualizando la fecha de "Última actualización" en
+              significativos actualizando la fecha de &quot;Última actualización&quot; en
               la parte superior de esta página.
             </p>
           </section>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const { heroui } = require("@heroui/theme");
 import type { Config } from "tailwindcss";
 
@@ -6,7 +7,7 @@ const config: Config = {
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
-    "./src/features/**/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/features/**/*.{js,ts,jsx,tsx,mdx}",
     "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
@@ -16,6 +17,10 @@ const config: Config = {
         nourdLight: ["var(--font-nourd-light)"],
         nourdMedium: ["var(--font-nourd-medium)"],
         nourdBold: ["var(--font-nourd-bold)"],
+        autography: ["var(--font-autography)"],
+        comprehensionDark: ["var(--font-comprehension-dark)"],
+        comprehensionSemiBold: ["var(--font-comprehension-semi-bold)"],
+        aboveBeyondScript: ["var(--font-above-beyond-script)"],
       },
       colors: {
         primary: {

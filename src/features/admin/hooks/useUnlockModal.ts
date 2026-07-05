@@ -1,31 +1,32 @@
 import { useCallback, useState } from "react";
-import { Guest } from "@/types";
-import { GuestService } from "@/services/guestService";
+import { Family } from "@/types";
+import { FamiliesService } from "@/services/familiesService";
 import { useToast } from "@/features/shared/components/Toast";
 
 interface UnlockModalState {
   isOpen: boolean;
-  guest: Guest | null;
+  family: Family | null;
   isBulk: boolean;
 }
 
-const CLOSED: UnlockModalState = { isOpen: false, guest: null, isBulk: false };
+const CLOSED: UnlockModalState = { isOpen: false, family: null, isBulk: false };
 
 export function useUnlockModal(
   invitationId: string | undefined,
-  selectedGuests: Set<string>,
+  selectedFamilies: Set<string>,
   clearSelection: () => void,
 ) {
   const { toast } = useToast();
   const [modal, setModal] = useState<UnlockModalState>(CLOSED);
 
-  const openForGuest = useCallback(
-    (guest: Guest) => setModal({ isOpen: true, guest, isBulk: false }),
+  const openForFamily = useCallback(
+    (family: Family) =>
+      setModal({ isOpen: true, family: family, isBulk: false }),
     [],
   );
 
   const openForBulk = useCallback(
-    () => setModal({ isOpen: true, guest: null, isBulk: true }),
+    () => setModal({ isOpen: true, family: null, isBulk: true }),
     [],
   );
 
@@ -36,25 +37,25 @@ export function useUnlockModal(
       if (!invitationId) return;
       try {
         if (modal.isBulk) {
-          await GuestService.batchUpdateLock(
+          await FamiliesService.batchUpdateLock(
             invitationId,
-            Array.from(selectedGuests),
+            Array.from(selectedFamilies),
             false,
             newDate ?? undefined,
           );
           clearSelection();
           toast(
-            `Edición habilitada para ${selectedGuests.size} familias.`,
+            `Edición habilitada para ${selectedFamilies.size} familias.`,
             "success",
           );
-        } else if (modal.guest) {
-          await GuestService.toggleGuestLock(
+        } else if (modal.family) {
+          await FamiliesService.toggleFamilyLock(
             invitationId,
-            modal.guest,
+            modal.family,
             false,
             newDate ?? undefined,
           );
-          toast(`Edición habilitada para ${modal.guest.nombre}.`, "success");
+          toast(`Edición habilitada para ${modal.family.nombre}.`, "success");
         }
       } catch {
         toast("Error al habilitar la edición.", "error");
@@ -62,8 +63,8 @@ export function useUnlockModal(
         setModal(CLOSED);
       }
     },
-    [invitationId, modal, selectedGuests, clearSelection, toast],
+    [invitationId, modal, selectedFamilies, clearSelection, toast],
   );
 
-  return { modal, openForGuest, openForBulk, close, execute };
+  return { modal, openForFamily, openForBulk, close, execute };
 }

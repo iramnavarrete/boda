@@ -1,8 +1,8 @@
 import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
-import { Guest } from "../../types/types";
+import { Family } from "../../types/types";
 
-export const exportGuestsToExcel = async (guests: Guest[]) => {
+export const exportFamiliesToExcel = async (families: Family[]) => {
   // 1. Crear el libro de trabajo y la hoja
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Invitados");
@@ -23,24 +23,24 @@ export const exportGuestsToExcel = async (guests: Guest[]) => {
   headerRow.commit();
 
   // 4. Procesar y agregar los datos
-  guests.forEach((guest) => {
+  families.forEach((family) => {
     // Formatear Fecha
     let fechaCreacionStr = "";
     if (
-      guest.fechaCreacion &&
-      typeof (guest.fechaCreacion as any).toDate === "function"
+      family.fechaCreacion &&
+      typeof (family.fechaCreacion as any).toDate === "function"
     ) {
-      fechaCreacionStr = (guest.fechaCreacion as any)
+      fechaCreacionStr = (family.fechaCreacion as any)
         .toDate()
         .toLocaleDateString();
     }
 
     let ultimaModificacionStr = "";
     if (
-      guest.ultimaModificacion &&
-      typeof (guest.ultimaModificacion as any).toDate === "function"
+      family.ultimaModificacion &&
+      typeof (family.ultimaModificacion as any).toDate === "function"
     ) {
-      ultimaModificacionStr = (guest.ultimaModificacion as any)
+      ultimaModificacionStr = (family.ultimaModificacion as any)
         .toDate()
         .toLocaleDateString();
     }
@@ -49,22 +49,22 @@ export const exportGuestsToExcel = async (guests: Guest[]) => {
     let estadoTexto = "PENDIENTE";
     let fontColor = "FF9C5700"; // Texto oscuro para contraste (Naranja oscuro)
 
-    if (guest.asistencia === true) {
+    if (family.asistencia === true) {
       estadoTexto = "CONFIRMADO";
       fontColor = "FF006100"; // Verde oscuro
-    } else if (guest.asistencia === false) {
+    } else if (family.asistencia === false) {
       estadoTexto = "RECHAZADO";
       fontColor = "FF9C0006"; // Rojo oscuro
     }
 
     // Agregar la fila usando las 'keys' definidas arriba
     const row = worksheet.addRow({
-      id: guest.id,
-      nombre: guest.nombre,
+      id: family.id,
+      nombre: family.nombre,
       estado: estadoTexto,
-      invitados: guest.invitados,
-      confirmados: guest.confirmados || "",
-      cambiosPermitidos: guest.cambiosPermitidos ? "Permitido" : "Bloqueado",
+      invitados: family.invitados,
+      confirmados: family.confirmados || "",
+      cambiosPermitidos: family.cambiosPermitidos ? "Permitido" : "Bloqueado",
       fechaCreacion: fechaCreacionStr,
       ultimaModificacion: ultimaModificacionStr,
     });

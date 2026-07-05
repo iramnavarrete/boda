@@ -6,21 +6,21 @@ declare module "react" {
   }
 }
 
-export type GuestFormData = {
+export type FamilyFormData = {
   id?: string; // Opcional al registrar
   nombre: string;
   invitados: number;
   asistencia: boolean | null;
   confirmados: number | null;
   notaInvitado: string | null;
-  telefono: string | null;
+  telefono?: string | null;
   notaAnfitrion: string | null;
   cambiosPermitidos: boolean;
   etiqueta?: string | null;
   fechaLimiteConfirmacion?: string | null;
 };
 
-export type Guest = {
+export type Family = {
   id: string;
   nombre: string;
   invitados: number;
@@ -38,13 +38,26 @@ export type Guest = {
   fechaLimiteConfirmacion?: string | null;
   recordatorioEnviado?: boolean;
   fechaRecordatorioEnviado?: Timestamp | FieldValue | null;
+  asistio?: boolean;
+  pasesUsados?: number;
+  horaLlegada?: Timestamp | FieldValue | null;
+  asientos?: GuestSeat[] | null;
+  invitacionVista?: boolean | null;
 };
 
-export type GuestContactInfo = {
+export type FamilyContactInfo = {
   telefono: string | null;
 };
 
-export type GuestFormDataKeys = keyof GuestFormData;
+export type FamilyFormDataKeys = keyof FamilyFormData;
+
+export type GuestStatus = "confirmed" | "pending" | "declined";
+
+export interface GuestSeat {
+  id: string;
+  nombre: string;
+  estatus: GuestStatus;
+}
 
 export interface GalleryImage {
   src: string; // Ruta de la imagen de alta resolución para PhotoSwipe
@@ -69,6 +82,7 @@ export interface FilterCounts {
   partial: number;
   rejected: number;
   pending: number;
+  unopened: number;
 }
 
 export type FilterType = keyof FilterCounts;
@@ -79,6 +93,7 @@ export interface ConfirmModalState {
   message: string;
   isDanger: boolean;
   isLoading: boolean;
+  showConfirmToast?: boolean;
   action: (() => Promise<void>) | null;
 }
 
@@ -98,8 +113,8 @@ export interface Invitation {
   imagenPortada?: string;
   recepcion: EventLocation;
   ceremonia: EventLocation;
-  usuariosPermitidos: string[];
   fechaISO?: string;
+  configuracionVisual?: ConfiguracionVisual;
 }
 
 // Tipo auxiliar para las escalas de color completas (50-950)
@@ -138,7 +153,7 @@ export type ThemeColors = {
   };
 };
 
-interface GuestQuote {
+interface FamilyQuote {
   id: string;
   autor: string;
   parentesco: string;
@@ -146,7 +161,7 @@ interface GuestQuote {
   fechaCreacion: number;
   fechaModificacion: number;
   leido: boolean;
-  asistencia: boolean;
+  asistencia?: boolean | null | "deleted";
 }
 
 export type EventType = "boda" | "xv_anos" | "bautizo" | "cumpleanos" | string;
@@ -168,10 +183,11 @@ export type FirestoreResult<T> = Promise<{
 
 export type ActivityActionType = "view" | "confirm" | "decline";
 
-export interface GuestActivity {
+export interface FamilyActivity {
   id?: string;
-  guestId: string;
-  guestName: string;
+  familyId: string;
+  familyName: string; // TODO ELIMINAR ESTE CAMPO
+  guestName?: string;
   action: ActivityActionType;
   confirmedGuests?: number | null;
   timestamp: Timestamp;
@@ -195,9 +211,51 @@ export interface TagCounts {
   Novio: number;
   Ambos: number;
 }
-export interface ImportedGuest {
+export interface ImportedFamily {
   nombre: string;
   invitados: number;
   telefono: string;
   notaAnfitrion: string;
+}
+
+export interface ConfiguracionVisual {
+  temaGlobal?: string;
+  secciones?: {
+    quote?: {
+      mostrar: boolean;
+    };
+    padresYPadrinos?: {
+      mostrar: boolean;
+    };
+    galeria?: {
+      mostrar: boolean;
+      variante: string;
+    };
+    mesaRegalos?: {
+      mostrar: boolean;
+      showCash: boolean;
+    };
+  };
+  estilosComponentes?: {
+    contador?: { textClassName?: string; btnClassName?: string };
+    calendario?: {
+      bgClassName?: string;
+      textClassName?: string;
+      heartClassName?: string;
+    };
+  };
+  fondos?: {
+    app?: string;
+    contenedorCentral?: string;
+  };
+}
+
+export type RoleType = "admin" | "host" | "guardia";
+
+export interface UserDoc {
+  uid: string;
+  email: string;
+  isRootAdmin: boolean;
+  invitationsMap: Record<string, RoleType>;
+  createdAt?: string;
 }

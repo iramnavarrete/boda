@@ -198,3 +198,225 @@ html {
 .animate-float-3 {
   animation: gentleFloat 5s ease-in-out 2.1s infinite;
 }
+
+/* Efecto de resaltado ultrarrápido por DOM nativo */
+.seat-wrapper[data-highlighted="true"] {
+  z-index: 50 !important;
+}
+
+.seat-wrapper[data-highlighted="true"] > div > .seat-inner {
+  background-color: #C5A669 !important;
+  border-color: #A8AEBA !important;
+  transform: scale(1.15) !important;
+  box-shadow: 0 0 0 4px rgba(197, 166, 105, 0.4) !important;
+}
+
+.seat-wrapper[data-highlighted="true"] .seat-inner > span {
+  color: white !important;
+}
+
+/* ==========================================================================
+   OPTIMIZACIONES NATIVAS PARA PLANO DE DISTRIBUCIÓN DE MESAS (SEATING CHART)
+   ========================================================================== */
+
+/* Z-indices dinámicos de los elementos en el plano basados en data-attributes */
+.table-element-card {
+  transition: z-index 0s 400ms;
+}
+
+.table-element-card[data-dragging="true"] {
+  z-index: 70 !important;
+}
+
+.table-element-card[data-selected="true"]:not([data-dragging="true"]) {
+  z-index: 60 !important;
+}
+
+.table-element-card:hover {
+  z-index: 50 !important;
+  transition-delay: 0s;
+}
+
+/* Contenedor interno del elemento (para Mesas/Áreas rectangulares/cuadradas/etc) */
+.table-element-inner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  cursor: grab;
+  transition: all 0.15s ease-in-out;
+}
+
+.table-element-inner:active {
+  cursor: grabbing;
+}
+
+/* Bordes: Áreas (Discontinuo) vs Mesas (Continuo) */
+.table-element-card[data-is-area="true"] .table-element-inner {
+  border-width: 2px;
+  border-style: dashed;
+}
+
+.table-element-card[data-is-table="true"] .table-element-inner {
+  border-width: 3px;
+  border-style: solid;
+}
+
+/* Radio de borde: Redondas/Cocteleras vs Otras */
+.table-element-card[data-type="round_table"] .table-element-inner,
+.table-element-card[data-type="cocktail_table"] .table-element-inner {
+  border-radius: 9999px;
+}
+
+.table-element-card:not([data-type="round_table"]):not([data-type="cocktail_table"]) .table-element-inner {
+  border-radius: 0.75rem; /* rounded-xl */
+}
+
+/* Estilos de colores por tipo de elemento */
+.table-element-card[data-type="stage"] .table-element-inner,
+.table-element-card[data-type="cake_area"] .table-element-inner {
+  background-color: #ffe4e6;
+  border-color: #f43f5e;
+  color: #be123c;
+}
+
+.table-element-card[data-type="dance_floor"] .table-element-inner {
+  background-color: #e0e7ff;
+  border-color: #6366f1;
+  color: #4338ca;
+}
+
+.table-element-card[data-type="dj_booth"] .table-element-inner {
+  background-color: #e0f2fe;
+  border-color: #0ea5e9;
+  color: #0369a1;
+}
+
+.table-element-card[data-type="buffet"] .table-element-inner {
+  background-color: #dcfce7;
+  border-color: #22c55e;
+  color: #15803d;
+}
+
+.table-element-card[data-type="head_table"] .table-element-inner {
+  background-color: #fef3c7;
+  border-color: #f59e0b;
+  color: #b45309;
+}
+
+/* Por defecto (Mesas normales y áreas genéricas) */
+.table-element-card .table-element-inner {
+  background-color: #dbeafe;
+  border-color: #60a5fa;
+  color: #1e40af;
+}
+
+/* Hover/Drag Over (Drop target) en el plano */
+.table-element-card[data-is-over="true"] .table-element-inner {
+  transform: scale(1.02);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.table-element-card[data-is-over="true"][data-is-table="true"] .table-element-inner {
+  background-color: #eff6ff !important;
+  border-color: #2563eb !important;
+}
+
+.table-element-card[data-is-over="true"][data-is-area="true"] .table-element-inner {
+  background-color: #FDFBF7 !important;
+  border-color: #2563eb !important;
+}
+
+/* Estado de Arrastre (Dragging) */
+.table-element-card[data-dragging="true"] .table-element-inner {
+  opacity: 0.8;
+  transform: scale(1.03);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Estado Seleccionado */
+.table-element-card[data-selected="true"] .table-element-inner {
+  border-color: #C5A669 !important;
+  box-shadow: 0 0 0 2px rgba(197, 166, 105, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Tipografía y estilos de Alias y Capacidad */
+.table-element-card .element-alias {
+  display: block;
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.table-element-card[data-is-area="true"] .element-alias {
+  font-weight: 700;
+  opacity: 0.9;
+  font-size: 1.1rem;
+  color: inherit;
+}
+
+.table-element-card[data-is-table="true"] .element-alias {
+  font-weight: 700;
+  color: #1e3a8a;
+  font-size: 1rem;
+}
+
+.table-element-card .element-capacity {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.125rem;
+}
+
+.table-element-card[data-is-table="true"] .element-capacity {
+  color: #3b82f6;
+  opacity: 0.8;
+}
+
+/* Contenedor y formas para Media Luna (Half Moon Table) */
+.table-element-card[data-type="half_moon_table"] .half-moon-content {
+  position: absolute;
+  inset: 0;
+  opacity: 1;
+  transition: transform 0.15s, opacity 0.15s;
+}
+
+.table-element-card[data-type="half_moon_table"][data-dragging="true"] .half-moon-content {
+  opacity: 0.8;
+}
+
+.table-element-card[data-type="half_moon_table"] svg path {
+  fill: #dbeafe;
+  stroke: #60a5fa;
+  stroke-width: 2.5;
+  transition: fill 0.15s, stroke 0.15s, stroke-width 0.15s;
+}
+
+.table-element-card[data-type="half_moon_table"][data-selected="true"] svg path {
+  stroke: #C5A669;
+  stroke-width: 3;
+}
+
+.table-element-card[data-type="half_moon_table"][data-is-over="true"] svg path {
+  fill: #eff6ff;
+  stroke: #2563eb;
+}
+
+.table-element-card[data-type="half_moon_table"][data-is-over="true"] .half-moon-content {
+  transform: scale(1.02);
+}
+
+.table-element-card[data-type="half_moon_table"] .element-alias {
+  color: #1e40af;
+}
+
+.table-element-card[data-type="half_moon_table"] .element-capacity {
+  color: #60a5fa;
+}

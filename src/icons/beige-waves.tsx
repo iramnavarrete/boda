@@ -1,10 +1,13 @@
+import { cn } from "@heroui/theme";
+
 const BeigeWaves = (props: React.SVGProps<SVGSVGElement> & {color?: string;}) => {
-  const {color} = props
+  const {color, className} = props
  return  <svg
     viewBox="0 0 496 113"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     preserveAspectRatio="none"
+    className={cn('transform-gpu', className)}
     {...props}
   >
     <path

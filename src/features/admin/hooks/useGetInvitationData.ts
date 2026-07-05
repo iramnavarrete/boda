@@ -17,6 +17,7 @@ export function useGetInvitationData(invitationId: string) {
       setError(error);
     };
     fetchInvitations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { invitationData, isLoading, error };

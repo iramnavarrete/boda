@@ -6,6 +6,7 @@ const {color} = props
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     preserveAspectRatio="none"
+    opacity={0.5}
     {...props}
   >
     <g clipPath="url(#clip0_2021_236)">

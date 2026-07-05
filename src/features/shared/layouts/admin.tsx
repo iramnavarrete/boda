@@ -1,15 +1,18 @@
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import Header from "@/features/shared/components/Header";
 import { InvitationsService } from "@/services/invitationsService";
+import { cn } from "@heroui/theme";
 import { useEffect } from "react";
 import { preload } from "react-dom";
 
 export default function AdminLayout({
   children,
   invitationId,
+  mainClassName = ''
 }: {
   children: React.ReactNode;
   invitationId: string;
+  mainClassName?: string;
 }) {
   preload("/img/textures/cream-paper.png", { as: "image" });
 
@@ -30,7 +33,7 @@ export default function AdminLayout({
     <div className="font-sans antialiased bg-paper min-h-screen text-charcoal-600 selection:bg-gold selection:text-white flex flex-col scrollbar-hide">
       <div className="fixed inset-0 opacity-[0.4] mix-blend-multiply bg-[url('/img/textures/cream-paper.png')] bg-repeat pointer-events-none"></div>
       <Header />
-      <main className="flex-grow flex-1 relative">{children}</main>
+      <main className={cn("flex-grow flex-1 relative", mainClassName)}>{children}</main>
     </div>
   );
 }

@@ -1,11 +1,11 @@
 import Modal from "@/features/shared/components/Modal";
-import { Guest } from "@/types";
-import { Unlock, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Family } from "@/types";
+import { Unlock } from "lucide-react";
+import { useState } from "react";
 
 interface UnlockChangesModalProps {
   isOpen: boolean;
-  guest: Guest | null;
+  family: Family | null;
   isBulk: boolean;
   onClose: () => void;
   onConfirm: (newDate: string | null) => void;
@@ -13,7 +13,7 @@ interface UnlockChangesModalProps {
 
 const UnlockChangesModal = ({
   isOpen,
-  guest,
+  family,
   isBulk,
   onClose,
   onConfirm,
@@ -35,7 +35,7 @@ const UnlockChangesModal = ({
             "las familias seleccionadas modifiquen su"
           ) : (
             <>
-              <b>{guest?.nombre}</b> modifique su
+              <b>{family?.nombre}</b> modifique su
             </>
           )}{" "}
           respuesta, asigna una nueva fecha límite de confirmación.

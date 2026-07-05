@@ -6,10 +6,11 @@ import {
   limit,
   onSnapshot,
   serverTimestamp,
+  QueryConstraint,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { GuestActivity } from "@/types";
-import { GuestService } from "./guestService";
+import { FamilyActivity } from "@/types";
+import { invitationsCollectionName } from "./invitationsService";
 
 // --- SERVICIO ---
 export const ActivityService = {
@@ -19,22 +20,21 @@ export const ActivityService = {
    */
   logActivity: async (
     invitationId: string,
-    payload: Omit<GuestActivity, "id" | "timestamp" | "guestName">,
+    // 🔥 Ahora omitimos el "familyName" del Omit, lo que significa que es OBLIGATORIO enviarlo en el payload
+    payload: Omit<FamilyActivity, "id" | "timestamp">,
   ) => {
-    if (!invitationId || !payload.guestId) return;
-
-    const guest = await GuestService.getGuest(invitationId, payload.guestId);
+    if (!invitationId || !payload.familyId || !payload.familyName) return;
 
     try {
       const activityRef = collection(
         db,
-        "invitations",
+        invitationsCollectionName,
         invitationId,
         "activity",
       );
+      // 🔥 Guardamos directo sin hacer getDoc()
       await addDoc(activityRef, {
         ...payload,
-        guestName: guest.guest?.nombre,
         timestamp: serverTimestamp(),
       });
     } catch (error) {
@@ -48,13 +48,18 @@ export const ActivityService = {
    */
   subscribeToRecentActivity: (
     invitationId: string,
-    limitCount: number = 30,
-    callback: (activities: GuestActivity[]) => void,
+    limitCount: number | undefined,
+    callback: (activities: FamilyActivity[]) => void,
   ) => {
+    const queryConstraints: QueryConstraint[] = [orderBy("timestamp", "desc")];
+
+    if (limitCount !== undefined && limitCount > 0) {
+      queryConstraints.push(limit(limitCount));
+    }
+
     const q = query(
-      collection(db, "invitations", invitationId, "activity"),
-      orderBy("timestamp", "desc"),
-      limit(limitCount),
+      collection(db, invitationsCollectionName, invitationId, "activity"),
+      ...queryConstraints,
     );
 
     const unsubscribe = onSnapshot(
@@ -63,7 +68,7 @@ export const ActivityService = {
         const activities = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        })) as GuestActivity[];
+        })) as FamilyActivity[];
 
         callback(activities);
       },

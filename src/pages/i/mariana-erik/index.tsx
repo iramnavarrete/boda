@@ -182,7 +182,6 @@ export default function Home({ invitationData }: InvitationPageProps) {
                 sealImage="/img/mariana-erik/sello-guinda.png"
               />
               <QrPhotos
-                qrImage="/img/mariana-erik/qr-code.png"
                 urlPhotos="https://photos.app.goo.gl/g2A54M6qEshxmoVA6"
                 btnClassName="text-[#581817] bg-accent"
                 containerClassName="bg-[#581817]"

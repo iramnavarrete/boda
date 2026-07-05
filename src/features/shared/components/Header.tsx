@@ -13,6 +13,10 @@ import {
   Star,
   AppWindow,
   Mail,
+  ShieldCheck,
+  Users,
+  ScanLine,
+  LayoutTemplate,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, usePathname } from "next/navigation";
@@ -24,8 +28,9 @@ import { useRouter } from "next/router";
 import { Invitation } from "@/types";
 import { getEventTypeName } from "@/utils/formatters";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
+import { useEventPermissions } from "@/features/admin/hooks/useEventPermissions";
 
-export type HeaderVariant = "admin" | "landing";
+export type HeaderVariant = "admin" | "landing" | "invitations-panel";
 
 export interface NavItemType {
   label: string;
@@ -35,28 +40,17 @@ export interface NavItemType {
 }
 
 interface HeaderProps {
-  // Configuración Principal
   variant?: HeaderVariant;
-
-  // Estilos (Sobrescriben los defaults del variant)
   className?: string;
-
-  // Contenido
   title?: string;
   subtitle?: string;
-
-  // Navegación Manual (Opcional)
   navItems?: NavItemType[];
-
-  // Callbacks
   onLogout?: () => void;
   onCotizar?: () => void;
-
-  invitationData?: Invitation | null
+  invitationData?: Invitation | null;
 }
 
 // --- CONFIGURACIÓN DE VARIANTES ---
-// Aquí se definen los estilos y textos por defecto para cada modo
 const VARIANT_CONFIG = {
   admin: {
     containerClass: "bg-paper/95",
@@ -88,6 +82,21 @@ const VARIANT_CONFIG = {
     navLinkActive: "text-gold bg-white shadow-sm ring-1 ring-border-button",
     mobileBg: "bg-paper",
   },
+  "invitations-panel": {
+    containerClass: "bg-paper/95",
+    titleClass: "text-primary",
+    subtitleClass: "text-charcoal-400",
+    logoBg: "bg-charcoal-800",
+    logoText: "text-gold-500",
+    logoIcon: <ShieldCheck className="text-current" size={16} />,
+    backButtonIcon: <LogOut size={20} />,
+    backButtonText: "Salir",
+    backButtonHref: "/",
+    backButtonClass: "text-stone-400 hover:text-red-500",
+    navLinkBase: "text-primary hover:text-gold hover:bg-white",
+    navLinkActive: "text-gold bg-white shadow-sm ring-1 ring-border-button",
+    mobileBg: "bg-paper",
+  },
 };
 
 const Header = ({
@@ -96,40 +105,43 @@ const Header = ({
   title,
   subtitle,
   navItems: customNavItems,
-  onCotizar
 }: HeaderProps) => {
   const config = VARIANT_CONFIG[variant];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<string | null>(null); // Solo para landing
-  const router = useRouter();
 
-  // Hooks de Next.js (Solo relevantes para Admin)
+  const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
-  const invitationId = params?.invitationId;
+  const invitationId = params?.invitationId as string | undefined;
+
+  const [activeSection, setActiveSection] = useState<string | null>(
+    variant === "landing" && (pathname || "") === "/" ? "inicio" : null,
+  );
 
   const invitationData = useInvitationStore((state) => state.invitationData);
-  
+
+  const { isAdminOrHost, isAdmin, isGuardia } = useEventPermissions(
+    invitationData?.id,
+  );
+
   const formatEventName = () => {
-    if(!invitationData){
-      return ""
+    if (!invitationData) return "";
+    if (invitationData?.nombre && invitationData?.tipo) {
+      return (
+        getEventTypeName(invitationData.tipo) + " " + invitationData.nombre
+      );
     }
-    if(invitationData?.nombre && invitationData?.tipo){
-      return getEventTypeName(invitationData.tipo) + " " + invitationData.nombre
-    }
-    return ""
-  }
+    return "";
+  };
 
   // --- LÓGICA SCROLL SPY (Solo Landing) ---
   useEffect(() => {
     if (variant !== "landing") return;
-    if (pathname === "/") {
-      setActiveSection("inicio");
-    }
 
     const handleScroll = () => {
       const sections = ["inicio", "demo", "paquetes", "dashboard"];
       const scrollPosition = window.scrollY + 100;
+
       for (const section of sections) {
         const element = document.getElementById(section);
         if (
@@ -141,6 +153,9 @@ const Header = ({
         }
       }
     };
+
+    handleScroll();
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [variant]);
@@ -168,42 +183,91 @@ const Header = ({
           href: "/#dashboard",
           icon: <AppWindow size={18} />,
           active: activeSection === "dashboard",
-        }
+        },
       ];
     }
 
-    // Default Admin logic
+    if (variant === "invitations-panel") {
+      if (!isAdmin) return [];
+      return [
+        {
+          label: "Eventos",
+          href: "/admin",
+          icon: <CalendarHeart size={18} />,
+          active:
+            pathname === "/admin" || pathname?.includes("/admin/invitations"),
+        },
+        {
+          label: "Usuarios y Accesos",
+          href: "/admin/users",
+          icon: <Users size={18} />,
+          active: pathname?.includes("/admin/users"),
+        },
+      ];
+    }
+
+    // Lógica para Admin Dashboard
     const basePath = invitationId
       ? `/admin/invitations/${invitationId}`
       : "/admin";
     if (!invitationId) return [];
 
-    return [
-      {
-        label: "Inicio",
-        href: `${basePath}/dashboard`,
-        icon: <Home size={18} />,
-        active: pathname?.includes("/dashboard"),
-      },
-      {
-        label: "Invitados",
-        href: basePath,
-        icon: <UserIcon size={18} />,
-        active: pathname === basePath,
-      },
-      {
-        label: "Mensajes",
-        href: `${basePath}/quotes`,
-        icon: <Mail size={18} />,
-        active: pathname?.includes("/quotes"),
-      },
-    ];
-  }, [variant, customNavItems, activeSection, invitationId, pathname]);
+    const items: NavItemType[] = [];
+
+    // Validamos permisos y agrupamos
+    if (isAdminOrHost) {
+      items.push(
+        {
+          label: "Inicio",
+          href: `${basePath}/dashboard`,
+          icon: <Home size={18} />,
+          active: pathname?.includes("/dashboard"),
+        },
+        {
+          label: "Invitados",
+          href: basePath,
+          icon: <UserIcon size={18} />,
+          active: pathname === basePath,
+        },
+        {
+          label: "Mesas",
+          href: `${basePath}/seating-planner`,
+          icon: <LayoutTemplate size={18} />,
+          active: pathname?.includes("/seating-planner"),
+        },
+        {
+          label: "Mensajes",
+          href: `${basePath}/quotes`,
+          icon: <Mail size={18} />,
+          active: pathname?.includes("/quotes"),
+        },
+      );
+    }
+
+    if (isAdminOrHost || isGuardia) {
+      items.push({
+        label: "Check-in",
+        href: `${basePath}/checkin`,
+        icon: <ScanLine size={18} />,
+        active: pathname?.includes("/checkin"),
+      });
+    }
+
+    return items;
+  }, [
+    variant,
+    customNavItems,
+    activeSection,
+    invitationId,
+    pathname,
+    isAdmin,
+    isGuardia,
+    isAdminOrHost,
+  ]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   const handleMobileClose = () => setIsMenuOpen(false);
 
-  // --- RENDER ---
   return (
     <header
       className={cn(
@@ -225,15 +289,15 @@ const Header = ({
               <>
                 <Link
                   href="/admin"
-                  className="hidden p-1.5 md:flex items-center gap-2 text-sm font-bold text-primary hover:text-gold transition-colors hover:bg-sand-50 rounded-xl"
-                  title="Volver a mis eventos"
+                  title="Mis Eventos"
+                  className="hidden p-2 lg:p-1.5 lg:flex items-center gap-2 text-sm font-bold text-primary hover:text-gold transition-colors hover:bg-sand-50 rounded-full lg:rounded-xl"
                 >
                   <div className="rounded-lg bg-transparent transition-colors">
                     <CalendarHeart size={20} />
                   </div>
-                  <span className="hidden lg:block">Mis Eventos</span>
+                  <span>Mis Eventos</span>
                 </Link>
-                <div className="hidden md:block bg-sand-200 w-px h-8 ml-2.5 mr-4" />
+                <div className="hidden lg:block bg-sand-200 w-px h-8 ml-2.5 mr-4" />
                 <div
                   className={cn(
                     "w-9 h-9 rounded-full flex items-center justify-center shadow-sm transition-colors mr-2",
@@ -268,16 +332,16 @@ const Header = ({
                     config.subtitleClass,
                   )}
                 >
-                  Panel de Administración
+                  {subtitle || "Panel de Administración"}
                 </p>
               ) : null}
             </div>
           </div>
         </div>
 
-        {/* CENTRO (Desktop Nav) */}
+        {/* CENTRO (Desktop Nav lg+) */}
         {navItems.length > 0 && (
-          <nav className="hidden md:flex items-center gap-1 md:flex-1 justify-end px-2">
+          <nav className="hidden lg:flex items-center gap-1 lg:flex-1 justify-end px-2">
             {navItems.map((item) => (
               <DesktopNavLink
                 key={item.href}
@@ -289,13 +353,14 @@ const Header = ({
           </nav>
         )}
 
-        {/* DERECHA (Acciones) */}
+        {/* DERECHA (Acciones lg+) */}
         <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
             {variant === "landing" ? (
               <Link
                 href="/#paquetes"
-                className="flex items-center gap-2 px-5 py-2.5 bg-primary text-paper rounded-full text-xs font-bold uppercase tracking-widest hover:bg-charcoal-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
+                title="Paquetes"
+                className="flex items-center justify-center gap-2 px-5 py-2.5 bg-primary text-paper rounded-full text-xs font-bold uppercase tracking-widest hover:bg-charcoal-700 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5"
               >
                 <Gem size={14} className="text-gold" />
                 <span>Paquetes</span>
@@ -303,18 +368,20 @@ const Header = ({
             ) : (
               <button
                 onClick={AuthService.logout}
-                className="flex items-center gap-2 text-stone-400 hover:text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
+                title="Cerrar Sesión"
+                className="flex items-center justify-center gap-2 text-stone-400 hover:text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
               >
-                <LogOut size={18} />{" "}
-                <span className="hidden lg:block">Cerrar Sesión</span>
+                <LogOut size={18} className="text-red-400" />{" "}
+                <span className="text-red-400">Cerrar Sesión</span>
               </button>
             )}
           </div>
 
+          {/* Menú Hamburuguesa para pantallas menores a LG */}
           <button
             onClick={toggleMenu}
             className={cn(
-              "md:hidden flex items-center gap-2 p-2 rounded-lg transition-all active:scale-95 text-stone-600",
+              "lg:hidden flex items-center gap-2 p-2 rounded-lg transition-all active:scale-95 text-stone-600",
               isMenuOpen ? "bg-sand-100" : "hover:bg-sand-100",
             )}
           >
@@ -323,7 +390,7 @@ const Header = ({
         </div>
       </div>
 
-      {/* MOBILE MENU */}
+      {/* MOBILE MENU (< lg) */}
       <AnimatePresence>
         {isMenuOpen && (
           <>
@@ -333,7 +400,7 @@ const Header = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={handleMobileClose}
-              className="fixed inset-0 bg-stone-900/10 backdrop-blur-sm z-30 top-16 md:hidden"
+              className="fixed inset-0 bg-stone-900/10 backdrop-blur-sm z-30 top-16 lg:hidden"
             />
             <motion.div
               initial={{ y: -10, opacity: 0 }}
@@ -341,12 +408,11 @@ const Header = ({
               exit={{ y: -10, opacity: 0 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
               className={cn(
-                "absolute top-0 pt-16 z-40 w-full border-b shadow-2xl overflow-hidden rounded-b-2xl md:hidden",
+                "absolute top-0 pt-16 z-40 w-full border-b shadow-2xl overflow-hidden rounded-b-2xl lg:hidden",
                 config.mobileBg,
               )}
             >
               <div className="flex flex-col p-4 space-y-2">
-                {/* Mobile: Links */}
                 {navItems.map((item) => (
                   <MenuItem
                     key={item.href}
@@ -357,9 +423,10 @@ const Header = ({
                   />
                 ))}
 
-                <div className="h-px bg-black/10 my-2" />
+                {navItems.length > 0 && (
+                  <div className="h-px bg-black/10 my-2" />
+                )}
 
-                {/* Mobile: Back Button */}
                 {variant === "admin" && (
                   <MenuItem
                     icon={config.backButtonIcon}
@@ -370,18 +437,15 @@ const Header = ({
                   />
                 )}
 
-                {/* Mobile: Actions */}
                 <div className="pt-2">
                   {variant === "landing" ? (
-                    <>
-                      <Link
+                    <Link
                       onClick={() => toggleMenu()}
-                        href="/#paquetes"
-                        className="flex items-center justify-center gap-3 w-full p-3 rounded-xl text-paper bg-primary hover:bg-charcoal-700 transition-colors font-medium text-sm mt-2 shadow-md"
-                      >
-                        <Gem size={18} className="text-gold" /> Paquetes
-                      </Link>
-                    </>
+                      href="/#paquetes"
+                      className="flex items-center justify-center gap-3 w-full p-3 rounded-xl text-paper bg-primary hover:bg-charcoal-700 transition-colors font-medium text-sm mt-2 shadow-md"
+                    >
+                      <Gem size={18} className="text-gold" /> Paquetes
+                    </Link>
                   ) : (
                     <button
                       onClick={AuthService.logout}
@@ -408,6 +472,11 @@ const Header = ({
   );
 };
 
+interface NavLinkProps extends NavItemType {
+  baseClassName?: string;
+  activeClassName?: string;
+}
+
 const DesktopNavLink = ({
   label,
   active,
@@ -415,11 +484,12 @@ const DesktopNavLink = ({
   icon,
   baseClassName,
   activeClassName,
-}: any) => (
+}: NavLinkProps) => (
   <Link
     href={href}
+    title={label}
     className={cn(
-      "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border border-transparent",
+      "flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border border-transparent",
       baseClassName,
       active && activeClassName,
     )}
@@ -427,16 +497,23 @@ const DesktopNavLink = ({
     {icon && (
       <span
         className={cn(
-          "transition-colors opacity-70 group-hover:opacity-100",
+          "transition-colors opacity-70 group-hover:opacity-100 flex items-center",
           active && "opacity-100 text-current",
         )}
       >
         {icon}
       </span>
     )}
-    {label}
+    <span>{label}</span>
   </Link>
 );
+
+interface MenuItemProps extends NavItemType {
+  onClick?: () => void;
+  className?: string;
+  activeClass?: string;
+  variant?: HeaderVariant;
+}
 
 const MenuItem = ({
   icon,
@@ -447,7 +524,7 @@ const MenuItem = ({
   onClick,
   activeClass,
   variant,
-}: any) => (
+}: MenuItemProps) => (
   <Link
     href={href}
     onClick={onClick}
@@ -463,7 +540,7 @@ const MenuItem = ({
     {icon && (
       <div
         className={cn(
-          "p-2 rounded-lg transition-colors shadow-sm",
+          "p-2 rounded-lg transition-colors shadow-sm flex items-center",
           active
             ? "bg-white text-current"
             : "bg-white text-stone-400 group-hover:text-current",

@@ -29,6 +29,18 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  
+  const removeToast = (id: string) => {
+    // Cerrar (dispara animación)
+    setToasts((prev) =>
+      prev.map((t) => (t.id === id ? { ...t, isOpen: false } : t))
+    );
+  
+    // Eliminar del DOM después de la animación
+    setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 300);
+  };
 
   const addToast = useCallback<ToastCallback>(
     (message: string, type: ToastType = "info", duration = 2000) => {
@@ -52,17 +64,6 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
     []
   );
 
-    const removeToast = (id: string) => {
-      // Cerrar (dispara animación)
-      setToasts((prev) =>
-        prev.map((t) => (t.id === id ? { ...t, isOpen: false } : t))
-      );
-
-      // Eliminar del DOM después de la animación
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 300);
-    };
 
   return (
     <ToastContext.Provider value={{ toast: addToast }}>

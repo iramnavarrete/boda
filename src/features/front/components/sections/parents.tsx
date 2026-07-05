@@ -91,10 +91,15 @@ export default function ParentsGodFathers({textClassName = '', containerClassNam
         </div>
         <Separator className="w-full" color={svgsColor} />
         <AnimatedEntrance>
-          <CountdownTimer
-            textClassName={textClassName}
-            addToCalendarBtnClassName={addToCalendarBtnClassName}
-          />
+          <div className="mt-16 w-full">
+            <p className="font-newIconScript text-4xl text-primary mb-4 drop-shadow-sm">
+              Falta poco
+            </p>
+            <CountdownTimer
+              textClassName={textClassName}
+              addToCalendarBtnClassName={addToCalendarBtnClassName}
+            />
+          </div>
         </AnimatedEntrance>
 
         <BeigeWaves

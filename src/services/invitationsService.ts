@@ -9,66 +9,94 @@ import {
   updateDoc,
   FirestoreError,
   FirestoreErrorCode,
+  documentId,
+  CollectionReference,
+  DocumentReference,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { Invitation } from "@/types";
+import { UserProfile } from "@/stores/authStore";
+
+export const invitationsCollectionName = "invitations";
+
+export const invitationPaths = {
+  invitation: (invId: string): DocumentReference =>
+    doc(db, invitationsCollectionName, invId),
+  invitationsCollection: (): CollectionReference =>
+    collection(db, invitationsCollectionName),
+};
 
 export const InvitationsService = {
-  isAdmin: async (userId: string) => {
+  getUserInvitations: async (user: UserProfile) => {
     try {
-      const adminDocRef = doc(db, "admin-users", "users");
-      const adminDocSnap = await getDoc(adminDocRef);
+      const isRoot = !!user.isRootAdmin;
 
-      if (adminDocSnap.exists()) {
-        const rootUuids = adminDocSnap.data().uuids || [];
-        return rootUuids.includes(userId);
+      // Si es Root, descargamos todas las invitaciones sin filtros
+      if (isRoot) {
+        const q = query(invitationPaths.invitationsCollection());
+        const snapshot = await getDocs(q);
+
+        return snapshot.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() }) as Invitation,
+        );
       }
-      return false;
-    } catch (error) {
-      console.error("Error al verificar rol de administrador:", error);
-      return false;
-    }
-  },
 
-  getUserInvitations: async (userId: string) => {
-    try {
-      // Reutilizamos la función de arriba para evitar repetir código
-      const isAdmin = await InvitationsService.isAdmin(userId);
+      let allowedInvitationIds: string[] = [];
+      const claimsRoles = user.roles;
 
-      // Construimos la consulta según el rol obtenido
-      const q = isAdmin
-        ? query(collection(db, "invitations"))
-        : query(
-            collection(db, "invitations"),
-            where("usuariosPermitidos", "array-contains", userId),
-          );
+      if (claimsRoles && Object.keys(claimsRoles).length > 0) {
+        // ÉXITO: Leemos desde la memoria (Costo: 0 lecturas extra)
+        allowedInvitationIds = Object.keys(claimsRoles);
+      } else {
+        // PLAN B: Si no hay roles en la memoria, buscamos en la base de datos (Costo: 1 lectura)
+        const userDocRef = doc(db, "users", user.uid);
+        const userDocSnap = await getDoc(userDocRef);
 
-      const snapshot = await getDocs(q);
+        if (userDocSnap.exists()) {
+          const invitationsMap = userDocSnap.data().invitationsMap || {};
+          allowedInvitationIds = Object.keys(invitationsMap);
+        }
+      }
 
-      return snapshot.docs.map(
-        (doc) =>
-          ({
-            id: doc.id,
-            ...doc.data(),
-          }) as Invitation,
-      );
+      // Si definitivamente no tiene eventos asignados, no hacemos más consultas
+      if (allowedInvitationIds.length === 0) return [];
+
+      // 3. Consultamos las invitaciones a las que tiene acceso
+      // Dividimos en bloques de 30 para evitar el límite de Firestore
+      const chunks = [];
+      for (let i = 0; i < allowedInvitationIds.length; i += 30) {
+        chunks.push(allowedInvitationIds.slice(i, i + 30));
+      }
+
+      const fetchPromises = chunks.map(async (chunk) => {
+        const q = query(
+          invitationPaths.invitationsCollection(),
+          where(documentId(), "in", chunk),
+        );
+        const snapshot = await getDocs(q);
+        return snapshot.docs.map(
+          (doc) => ({ id: doc.id, ...doc.data() }) as Invitation,
+        );
+      });
+
+      // Ejecutamos las consultas en paralelo y unimos los resultados
+      const results = await Promise.all(fetchPromises);
+      return results.flat();
     } catch (error) {
       console.error("Error obteniendo invitaciones:", error);
       return [];
     }
   },
 
-  createInvitation: async (payload: Invitation) => {
+  createInvitation: async (payload: Partial<Invitation>) => {
     try {
-      // Extraemos el id para usarlo como ruta, y guardamos el resto de los datos
       const { id, ...dataToSave } = payload;
 
       if (!id) {
         throw new Error("El ID de la invitación es obligatorio");
       }
 
-      // Usamos doc() con el ID personalizado y setDoc para crearlo
-      const docRef = doc(db, "invitations", id);
+      const docRef = invitationPaths.invitation(id);
       await setDoc(docRef, dataToSave);
 
       return id;
@@ -80,8 +108,9 @@ export const InvitationsService = {
 
   updateInvitation: async (id: string, payload: Partial<Invitation>) => {
     try {
-      const docRef = doc(db, "invitations", id);
+      const docRef = invitationPaths.invitation(id);
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { id: _, ...dataToUpdate } = payload;
 
       await updateDoc(docRef, dataToUpdate);
@@ -98,7 +127,7 @@ export const InvitationsService = {
     error: FirestoreErrorCode | null;
   }> => {
     try {
-      const privateRef = doc(db, "invitations", invitationId);
+      const privateRef = invitationPaths.invitation(invitationId);
       const snapshot = await getDoc(privateRef);
 
       if (snapshot.exists()) {
