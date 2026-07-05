@@ -293,7 +293,7 @@ const Assistants: FC<Props> = ({
                                 if (!isDefaultId(data.id) && invitationData) {
                                   FamiliesService.saveFamily(
                                     invitationData.id,
-                                    data.id!,
+                                    familyData!,
                                     data,
                                     false,
                                     true,
@@ -336,7 +336,7 @@ const Assistants: FC<Props> = ({
                                         ultimaModificacion: null,
                                       });
                                     })
-                                    .catch((error) => {
+                                    .catch(() => {
                                       setIsDisabled(false);
                                     });
                                 } else {

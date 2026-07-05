@@ -76,6 +76,11 @@ export function useWeddingAdmin() {
     handleCloseModal,
   } = useFamilyForm();
 
+  const currentFamily = useMemo(
+    () => families?.find((f) => f.id === currentFamilyId) || null,
+    [families, currentFamilyId],
+  );
+
   // ── Modal de confirmación genérico ──────────────────────────────────────
   const {
     confirmModal,
@@ -146,7 +151,7 @@ export function useWeddingAdmin() {
   // ── Acciones de edición / creación ─────────────────────────────────────
   const { handleEdit, handleNewFamily, onSaveFamily } = useEditActions({
     invitationId,
-    currentFamilyId,
+    currentFamily,
     handleOpenModal,
     handleCloseModal,
     handleSaveFamily,

@@ -1,5 +1,5 @@
 import { FamiliesService } from "@/services/familiesService";
-import { FamilyFormData, GuestSeat } from "@/types";
+import { Family, GuestSeat } from "@/types";
 import { create } from "zustand";
 import { SeatingService } from "../services/seatingService";
 import { removeHighlightSeats } from "../utils/highlightHelper";
@@ -40,6 +40,7 @@ export interface FamilyElement {
   colorBorder: string;
   guests: GuestSeat[];
   allowChanges: boolean;
+  rawFamily: Family;
 }
 
 export interface SeatingStore {
@@ -388,7 +389,7 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     try {
       await FamiliesService.removeFamilySeatAndReduceCount(
         invitationId,
-        familyId,
+        family.rawFamily,
         updatedGuests,
       );
       await SeatingService.savePlan(invitationId, newElements);
@@ -437,12 +438,12 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
 
     await FamiliesService.saveFamily(
       invitationId,
-      familyId,
+      family.rawFamily,
       {
-        nombre: family.name,
+        ...family.rawFamily,
         invitados: newCount,
         cambiosPermitidos: true,
-      } as FamilyFormData,
+      },
       false,
     );
 

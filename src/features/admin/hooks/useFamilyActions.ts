@@ -13,22 +13,26 @@ export function useFamilyActions(invitationId?: string) {
   }
 
   const handleSaveFamily = async (
-    currentFamilyId: string | null,
+    currentFamily: Family | null,
     formData: FamilyFormData,
     onSuccess: () => void,
   ) => {
     try {
+      // Si la familia es nueva creamos un objeto base con el nuevo ID para pasárselo al servicio
       const familyId =
-        currentFamilyId ||
+        currentFamily?.id ||
         (await FamiliesService.getUniqueFamilyId(invitationId));
+      const familyToSave = currentFamily || ({ id: familyId } as Family);
+
       await FamiliesService.saveFamily(
         invitationId,
-        familyId,
+        familyToSave,
         formData,
-        !currentFamilyId,
+        !currentFamily,
       );
+
       toast(
-        currentFamilyId
+        currentFamily
           ? "Familia actualizada correctamente"
           : "Familia creada con éxito",
         "success",

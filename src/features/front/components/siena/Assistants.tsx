@@ -467,20 +467,24 @@ const Assistants: FC<Props> = ({
                           if (!isDefaultId(data.id) && invitationData) {
                             FamiliesService.saveFamily(
                               invitationData.id,
-                              data.id!,
+                              familyData!,
                               data,
                               false,
                               true,
                             )
                               .then(() => {
                                 setIsFormSubmitted(true);
-                                if (data.notaInvitado) {
+                                if (data.notaInvitado && data.notaInvitado.trim() !== "") {
                                   FamilyQuotesService.saveFamilyQuote(
                                     invitationData.id,
                                     data.id!,
                                     {
                                       autor: data.nombre,
                                       mensaje: data.notaInvitado || "",
+                                      asistencia: data.asistencia,
+                                    },
+                                  ).catch((error) => {
+                                    console.log(error, "ERROR AL GUARDAR LA NOTA DEL INVITADO");
                                     },
                                   );
                                 }

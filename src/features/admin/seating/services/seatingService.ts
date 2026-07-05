@@ -50,7 +50,6 @@ export const SeatingService = {
   },
 
   formatFamiliesToFamiliesSeats: async (
-    invitationId: string,
     rawFamilies: ExtendedDbFamily[],
   ): Promise<FamilyElement[]> => {
     const result: FamilyElement[] = [];
@@ -73,6 +72,7 @@ export const SeatingService = {
         colorBorder: `hsl(${hue}, 70%, 65%)`,
         guests: familyGuests,
         allowChanges: rawFamily.cambiosPermitidos,
+        rawFamily: rawFamily,
       });
     }
 

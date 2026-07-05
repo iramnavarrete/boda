@@ -13,7 +13,7 @@ export type FamilyFormData = {
   asistencia: boolean | null;
   confirmados: number | null;
   notaInvitado: string | null;
-  telefono: string | null;
+  telefono?: string | null;
   notaAnfitrion: string | null;
   cambiosPermitidos: boolean;
   etiqueta?: string | null;

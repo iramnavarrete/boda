@@ -3,11 +3,11 @@ import { Family, FamilyFormData } from "@/types";
 
 interface UseEditActionsProps {
   invitationId?: string;
-  currentFamilyId: string | null;
+  currentFamily: Family | null;
   handleOpenModal: (invitationId: string, family?: Family) => Promise<void>;
   handleCloseModal: () => void;
   handleSaveFamily: (
-    currentFamilyId: string | null,
+    currentFamily: Family | null,
     formData: FamilyFormData,
     onSuccess: () => void,
   ) => Promise<void>;
@@ -15,7 +15,7 @@ interface UseEditActionsProps {
 
 export function useEditActions({
   invitationId,
-  currentFamilyId,
+  currentFamily,
   handleOpenModal,
   handleCloseModal,
   handleSaveFamily,
@@ -33,9 +33,9 @@ export function useEditActions({
 
   const onSaveFamily = useCallback(
     (finalData: FamilyFormData) => {
-      handleSaveFamily(currentFamilyId, finalData, handleCloseModal);
+      handleSaveFamily(currentFamily, finalData, handleCloseModal);
     },
-    [handleSaveFamily, currentFamilyId, handleCloseModal],
+    [handleSaveFamily, currentFamily, handleCloseModal],
   );
 
   return {

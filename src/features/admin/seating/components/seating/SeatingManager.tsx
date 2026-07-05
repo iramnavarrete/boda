@@ -135,7 +135,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
         async (rawFamilies) => {
           const formattedFamilies =
             await SeatingService.formatFamiliesToFamiliesSeats(
-              invitationId,
               rawFamilies,
             );
 

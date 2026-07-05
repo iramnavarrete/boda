@@ -45,15 +45,7 @@ export const familyPaths = {
       "contactInfo",
     ),
   familyQuote: (invId: string, familyId: string): DocumentReference =>
-    doc(
-      db,
-      invitationsCollectionName,
-      invId,
-      familiesCollectionName,
-      familyId,
-      "quotes",
-      "quote",
-    ),
+    doc(db, invitationsCollectionName, invId, "quotes", familyId),
 
   familiesCollection: (invId: string): CollectionReference =>
     collection(db, invitationsCollectionName, invId, familiesCollectionName),
@@ -88,7 +80,6 @@ export const FamiliesService = {
         snapshot.docChanges().forEach((change) => {
           const d = change.doc.data();
 
-          // 🔥 Aseguramos que las familias borradas o con 0 invitados salgan de memoria
           if (change.type === "removed" || Number(d.invitados) === 0) {
             cache.delete(change.doc.id);
           } else {
@@ -166,49 +157,57 @@ export const FamiliesService = {
 
   saveFamily: async (
     invitationId: string,
-    familyId: string,
+    family: Family,
     data: FamilyFormData,
     isNew: boolean,
     isPublic: boolean = false,
   ) => {
     const batch = writeBatch(db);
     const timestamp = serverTimestamp();
-    const publicRef = familyPaths.family(invitationId, familyId);
+    const publicRef = familyPaths.family(invitationId, family.id);
 
     if (isPublic) {
       // Invitado confirmando su asistencia
-      const docSnap = await getDoc(publicRef);
       let asientosActualizados: GuestSeat[] = [];
 
-      if (docSnap.exists()) {
-        const existingData = docSnap.data() as Family;
-        const familyGuests = existingData.asientos || [];
-        const confirmados = Number(data.confirmados) || 0;
-        const isAttending = data.asistencia;
+      const familyName = family.nombre || "Invitado";
+      const familyTag = family.etiqueta || "Invitado";
+      const familyGuests = family.asientos || [];
 
-        // Actualizamos los estatus en base a la respuesta del invitado
-        asientosActualizados = familyGuests.map((seat, j) => {
-          let estatus: GuestStatus = "pending";
-          if (isAttending === false) estatus = "declined";
-          else if (isAttending === true)
-            estatus = j < confirmados ? "confirmed" : "declined";
-          return { ...seat, estatus };
-        });
-      }
+      const confirmados = Number(data.confirmados) || 0;
+      const isAttending = data.asistencia;
+
+      asientosActualizados = familyGuests.map((seat, j) => {
+        let estatus: GuestStatus = "pending";
+        if (isAttending === false) estatus = "declined";
+        else if (isAttending === true)
+          estatus = j < confirmados ? "confirmed" : "declined";
+        return { ...seat, estatus };
+      });
 
       batch.set(
         publicRef,
         {
           asistencia: data.asistencia,
           confirmados: Number(data.confirmados) || 0,
-          asientos: asientosActualizados, // 🔥 Aprovechamos la escritura existente
+          asientos: asientosActualizados,
           ultimaModificacion: timestamp,
         } as Partial<Family>,
         { merge: true },
       );
+
+      batch.set(
+        familyPaths.familyQuote(invitationId, family.id),
+        {
+          asistencia: data.asistencia,
+          autor: familyName,
+          parentesco: familyTag,
+          familyId: family.id,
+        },
+        { merge: true },
+      );
     } else {
       // Admin: escribe todos los campos
-      const tieneTelefono = !!data.telefono?.trim().length;
       const totalTickets = Number(data.invitados) || 1;
       const confirmedCount = Number(data.confirmados) || 0;
       const isAttending = data.asistencia;
@@ -218,7 +217,6 @@ export const FamiliesService = {
         invitados: totalTickets,
         notaAnfitrion: data.notaAnfitrion || null,
         cambiosPermitidos: data.cambiosPermitidos ?? true,
-        tieneTelefono,
         ultimaModificacion: timestamp,
         asistencia: isAttending,
         confirmados: confirmedCount,
@@ -226,8 +224,11 @@ export const FamiliesService = {
         fechaLimiteConfirmacion: data.fechaLimiteConfirmacion || null,
       };
 
+      if (data.telefono !== undefined) {
+        publicPayload.tieneTelefono = !!data.telefono?.trim().length;
+      }
+
       if (isNew) {
-        // Inicializamos los asientos desde el principio
         const seats: GuestSeat[] = Array.from(
           { length: totalTickets },
           (_, j) => {
@@ -240,51 +241,66 @@ export const FamiliesService = {
         );
 
         Object.assign(publicPayload, {
-          id: familyId,
+          id: family.id,
           fechaCreacion: timestamp,
           notaInvitado: null,
-          asientos: seats, // 🔥 Se guardan en la creación
+          asientos: seats,
         });
       } else {
-        // Edición de familia: Redimensionamos el arreglo si cambiaron los invitados
-        const docSnap = await getDoc(publicRef);
-        if (docSnap.exists()) {
-          const existingData = docSnap.data() as Family;
-          let familyGuests = existingData.asientos || [];
+        let familyGuests = family.asientos || [];
 
-          // 1. Ajustar TAMAÑO
-          if (familyGuests.length < totalTickets) {
-            for (let j = familyGuests.length; j < totalTickets; j++) {
-              familyGuests.push({
-                id: crypto.randomUUID(),
-                nombre: "",
-                estatus: "pending",
-              });
-            }
-          } else if (familyGuests.length > totalTickets) {
-            familyGuests = familyGuests.slice(0, totalTickets); // Recortamos los que sobran
+        // Ajustar TAMAÑO
+        if (familyGuests.length < totalTickets) {
+          for (let j = familyGuests.length; j < totalTickets; j++) {
+            familyGuests.push({
+              id: crypto.randomUUID(),
+              nombre: "",
+              estatus: "pending",
+            });
           }
-
-          // 2. Ajustar ESTATUS
-          familyGuests = familyGuests.map((seat, j) => {
-            let estatus: GuestStatus = seat.estatus;
-            if (isAttending === false) estatus = "declined";
-            else if (isAttending === true)
-              estatus = j < confirmedCount ? "confirmed" : "declined";
-            else estatus = "pending";
-            return { ...seat, estatus };
-          });
-
-          publicPayload.asientos = familyGuests; // 🔥 Lo metemos al payload
+        } else if (familyGuests.length > totalTickets) {
+          familyGuests = familyGuests.slice(0, totalTickets);
         }
+
+        familyGuests = familyGuests.map((seat, j) => {
+          let estatus: GuestStatus = seat.estatus;
+          if (isAttending === false) estatus = "declined";
+          else if (isAttending === true)
+            estatus = j < confirmedCount ? "confirmed" : "declined";
+          else estatus = "pending";
+          return { ...seat, estatus };
+        });
+
+        publicPayload.asientos = familyGuests;
       }
 
-      batch.set(
-        familyPaths.familyContact(invitationId, familyId),
-        { telefono: data.telefono || null },
-        { merge: true },
-      );
+      if (data.telefono !== undefined) {
+        batch.set(
+          familyPaths.familyContact(invitationId, family.id),
+          { telefono: data.telefono || null },
+          { merge: true },
+        );
+      }
+
       batch.set(publicRef, publicPayload, { merge: true });
+
+      // VALIDACIÓN: Solo guardamos en quote si cambió algún dato relevante
+      if (
+        family?.nombre !== data.nombre ||
+        family.etiqueta !== data.etiqueta ||
+        family?.asistencia !== data.asistencia
+      ) {
+        batch.set(
+          familyPaths.familyQuote(invitationId, family.id),
+          {
+            autor: data.nombre,
+            parentesco: data.etiqueta || "Invitado",
+            asistencia: isAttending,
+            familyId: family.id,
+          },
+          { merge: true },
+        );
+      }
     }
 
     await batch.commit();
@@ -303,15 +319,12 @@ export const FamiliesService = {
 
     await setDoc(
       familyPaths.family(invitationId, familyId),
-      {
-        asientos: payload,
-      },
+      { asientos: payload },
       { merge: true },
     );
   },
 
   deleteFamily: async (invitationId: string, familyId: string) => {
-    // 🔥 CORRECCIÓN: Soft Delete individual asegurado
     const payload: Partial<Family> = {
       confirmados: 0,
       cambiosPermitidos: false,
@@ -319,7 +332,15 @@ export const FamiliesService = {
       asientos: [],
       ultimaModificacion: serverTimestamp(),
     };
-    await updateDoc(familyPaths.family(invitationId, familyId), payload);
+
+    const batch = writeBatch(db);
+    batch.update(familyPaths.family(invitationId, familyId), payload);
+    batch.set(
+      familyPaths.familyQuote(invitationId, familyId),
+      { asistencia: "deleted" },
+      { merge: true },
+    );
+    await batch.commit();
   },
 
   toggleFamilyLock: async (
@@ -421,7 +442,6 @@ export const FamiliesService = {
       const chunk = familyIds.slice(i, i + BATCH_CHUNK_SIZE);
 
       chunk.forEach((id) => {
-        // 🔥 CORRECCIÓN: Soft Delete masivo asegurado
         const payload: Partial<Family> = {
           confirmados: 0,
           cambiosPermitidos: false,
@@ -430,6 +450,12 @@ export const FamiliesService = {
           ultimaModificacion: serverTimestamp(),
         };
         batch.update(familyPaths.family(invitationId, id), payload);
+
+        batch.set(
+          familyPaths.familyQuote(invitationId, id),
+          { asistencia: "deleted" },
+          { merge: true },
+        );
       });
 
       await batch.commit();
@@ -448,13 +474,10 @@ export const FamiliesService = {
   ) => {
     const timestamp = serverTimestamp();
 
-    // Procesamos en chunks para no superar el límite de 500 ops por batch.
-    // Cada invitado = 2 writes (public + private) → chunk de 200 = 400 ops máx.
     for (let i = 0; i < parsedFamilies.length; i += BATCH_CHUNK_SIZE) {
       const batch = writeBatch(db);
       const chunk = parsedFamilies.slice(i, i + BATCH_CHUNK_SIZE);
 
-      // Generamos todos los IDs del chunk en paralelo
       const familyIds = await Promise.all(
         chunk.map(() => FamiliesService.getUniqueFamilyId(invitationId)),
       );
@@ -482,7 +505,7 @@ export const FamiliesService = {
           asistencia: null,
           confirmados: 0,
           notaInvitado: null,
-          asientos: seats, // 🔥 Se guardan directo en la importación
+          asientos: seats,
         });
 
         batch.set(familyPaths.familyContact(invitationId, familyId), {
@@ -496,18 +519,12 @@ export const FamiliesService = {
 
   removeFamilySeatAndReduceCount: async (
     invitationId: string,
-    familyDocId: string,
+    family: Family,
     updatedGuestsList: { id: string; nombre: string; estatus: GuestStatus }[],
   ) => {
-    const familyRef = familyPaths.family(invitationId, familyDocId);
+    const familyRef = familyPaths.family(invitationId, family.id);
 
     try {
-      const docSnap = await getDoc(familyRef);
-      if (!docSnap.exists()) {
-        throw new Error("El documento de la familia no existe");
-      }
-
-      const data = docSnap.data();
       const newTotal = Math.max(0, updatedGuestsList.length);
 
       const newConfirmed = updatedGuestsList.filter(
@@ -521,11 +538,22 @@ export const FamiliesService = {
         ultimaModificacion: serverTimestamp(),
       };
 
-      if (newConfirmed === 0 && data.asistencia === true) {
+      if (newConfirmed === 0 && family.asistencia === true) {
         payload.asistencia = null;
       }
 
-      await updateDoc(familyRef, payload);
+      const batch = writeBatch(db);
+      batch.update(familyRef, payload);
+
+      if (payload.asistencia !== undefined) {
+        batch.set(
+          familyPaths.familyQuote(invitationId, family.id),
+          { asistencia: payload.asistencia },
+          { merge: true },
+        );
+      }
+
+      await batch.commit();
     } catch (e) {
       console.error(
         "Error unificado al remover asiento y reducir contador:",
