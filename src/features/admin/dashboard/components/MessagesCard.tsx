@@ -69,10 +69,12 @@ const MessagesCard: React.FC<{ quotesRoute: string }> = ({ quotesRoute }) => {
             key={currentMessage.id}
           >
             {/* Mensaje - Arriba (Alineado a la izquierda, separado del autor) */}
-            <div className="items-center overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-[#EBE5DA]">
-              <p className="text-[#5A5A5A] font-serif text-[16px] italic leading-relaxed break-words text-left pl-6 relative z-10 pt-4">
-                &quot;{currentMessage.mensaje}&quot;
-              </p>
+            <div className="flex-1 overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-[#EBE5DA]">
+              <div className="min-h-full flex items-center">
+                <p className="text-[#5A5A5A] font-serif text-[16px] italic leading-relaxed break-words text-left pl-6 relative z-10 py-4 w-full">
+                  &quot;{currentMessage.mensaje}&quot;
+                </p>
+              </div>
             </div>
 
             {/* Autor y Controles - Abajo (Horizontal) */}
