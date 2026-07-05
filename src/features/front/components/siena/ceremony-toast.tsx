@@ -315,18 +315,17 @@ export default function CeremonyToast({
 
             {hasNoDinner && (
               <AnimatedEntrance>
-                <div className="flex flex-col items-center justify-center w-full px-6 mt-4 max-w-md mx-auto text-center bg-accent z-10">
-                  <div className="w-full py-8 border-y border-primary/20 relative">
+                <div className="flex flex-col items-center justify-center w-full px-6 mt-4 max-w-md mx-auto text-center z-10">
+                  <div className="w-full py-8 border-t border-primary/20 relative">
                     {/* Pequeños rombos decorativos en los bordes */}
                     <div className="absolute top-[-3px] left-1/2 -translate-x-1/2 w-1.5 h-1.5 rotate-45 bg-primary/40" />
-                    <div className="absolute bottom-[-3px] left-1/2 -translate-x-1/2 w-1.5 h-1.5 rotate-45 bg-primary/40" />
 
                     <p className="text-[9px] font-nourdMedium text-primary/60 uppercase tracking-[0.4em] mb-4">
                       — Nota Importante —
                     </p>
                     <p
                       className={cn(
-                        "text-primary/90 font-nourdLight text-sm leading-relaxed",
+                        "text-primary/90 font-nourdLight text-sm leading-relaxed bg-accent/70 p-3 rounded-lg border border-primary/20",
                         textClassName,
                       )}
                     >

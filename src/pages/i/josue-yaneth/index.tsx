@@ -83,7 +83,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
                 <Quote />
                 <ParentsGodFathers />
                 <CountDown />
-                <CeremonyToast />
+                <CeremonyToast hasNoDinner />
                 <Gallery />
                 <GiftsTable
                   showCash
