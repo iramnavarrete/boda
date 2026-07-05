@@ -1,5 +1,11 @@
 import React from "react";
-import { MessageCircle, ArrowRight, Quote, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  MessageCircle,
+  ArrowRight,
+  Quote,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
 import { useDashboardMessages } from "../hooks/useDashboardMessages";
 import DashboardCard from "./DashboardCard";
@@ -36,10 +42,10 @@ const MessagesCard: React.FC<{ quotesRoute: string }> = ({ quotesRoute }) => {
       icon={MessageCircle}
       title="Muro de Deseos"
       subtitle="Mensajes de tus invitados"
-      className="h-80"
+      className="h-96 md:h-80"
       headerRight={
-        <Link 
-          href={quotesRoute} 
+        <Link
+          href={quotesRoute}
           className="hidden md:flex text-[10px] font-bold text-[#C5A669] hover:text-[#2C3627] transition-colors items-center gap-1 uppercase tracking-widest bg-[#FDFBF7] border border-[#EBE5DA] px-3 py-1.5 rounded-full shadow-sm"
         >
           Ver Todos <ArrowRight size={12} />
@@ -54,7 +60,7 @@ const MessagesCard: React.FC<{ quotesRoute: string }> = ({ quotesRoute }) => {
         </div>
       ) : (
         <>
-          <div className="absolute top-0 left-2 text-[#C5A669]/20 pointer-events-none z-0">
+          <div className="absolute top-0 left-2 text-[#C5A669]/15 pointer-events-none z-0">
             <Quote size={50} className="transform rotate-180" />
           </div>
 
@@ -63,10 +69,12 @@ const MessagesCard: React.FC<{ quotesRoute: string }> = ({ quotesRoute }) => {
             key={currentMessage.id}
           >
             {/* Mensaje - Arriba (Alineado a la izquierda, separado del autor) */}
-            <div className="flex flex-1 items-center overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-[#EBE5DA] min-h-0">
-              <p className="text-[#5A5A5A] font-serif text-[16px] italic leading-relaxed break-words text-left pl-6 relative z-10 pt-4">
-                &quot;{currentMessage.mensaje}&quot;
-              </p>
+            <div className="flex-1 overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-[#EBE5DA]">
+              <div className="min-h-full flex items-center">
+                <p className="text-[#5A5A5A] font-serif text-[16px] italic leading-relaxed break-words text-left pl-6 relative z-10 py-4 w-full">
+                  &quot;{currentMessage.mensaje}&quot;
+                </p>
+              </div>
             </div>
 
             {/* Autor y Controles - Abajo (Horizontal) */}
@@ -106,32 +114,31 @@ const MessagesCard: React.FC<{ quotesRoute: string }> = ({ quotesRoute }) => {
                   </div>
                 </div>
               )}
-              
+
               {/* Autor con iniciales */}
               <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+                <div className="flex flex-col">
+                  <span className="text-[10px] sm:text-[11px] font-bold text-[#2C3627] uppercase tracking-[0.2em] leading-tight text-end">
+                    {currentMessage.autor}
+                  </span>
+                  <span className="text-[8px] sm:text-[9px] text-[#A8A29E] font-medium uppercase tracking-[0.15em] mt-0.5 text-end">
+                    {timeAgoString}
+                  </span>
+                </div>
                 <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#FDFBF7] border border-[#C5A669]/30 flex items-center justify-center shadow-sm shrink-0">
                   <span className="font-serif text-[#C5A669] text-sm sm:text-base font-bold">
                     {getInitials(currentMessage.autor)}
                   </span>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-[10px] sm:text-[11px] font-bold text-[#2C3627] uppercase tracking-[0.2em] leading-tight">
-                    {currentMessage.autor}
-                  </span>
-                  <span className="text-[8px] sm:text-[9px] text-[#A8A29E] font-medium uppercase tracking-[0.15em] mt-0.5">
-                    {timeAgoString}
-                  </span>
-                </div>
               </div>
             </div>
 
-            <Link 
-              href={quotesRoute} 
+            <Link
+              href={quotesRoute}
               className="md:hidden mt-4 w-full flex items-center justify-center gap-2 py-3 bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl text-[10px] font-bold text-[#C5A669] uppercase tracking-widest hover:bg-[#F9F7F2] transition-colors shadow-sm shrink-0 active:scale-[0.98]"
             >
               Ver todos los mensajes <ArrowRight size={14} />
             </Link>
-            
           </div>
         </>
       )}
