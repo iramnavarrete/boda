@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Scanner } from "@yudiel/react-qr-scanner";
 import {
   Camera,
@@ -17,6 +17,7 @@ import {
   Clock,
   QrCode,
   Users,
+  MapPin,
 } from "lucide-react";
 import { FamiliesService } from "@/services/familiesService";
 import { Family } from "@/types";
@@ -28,7 +29,8 @@ import AdminLayout from "@/features/shared/layouts/admin";
 import { useRouter } from "next/router";
 import { cn } from "@heroui/theme";
 import CheckInConfirmModal from "@/features/admin/components/modals/CheckInConfirmModal";
-import { useFamiliesFilters } from "@/features/admin/hooks/useFamiliesFillters";
+import { SeatingElement } from "@/features/admin/seating/stores/useSeatingStore";
+import { SeatingService } from "@/features/admin/seating/services/seatingService";
 
 type ModalState =
   | "none"
@@ -36,9 +38,11 @@ type ModalState =
   | "confirm"
   | "already_entered"
   | "not_found"
-  | "not_allowed";
+  | "not_allowed"
+  | "pending_response";
 
 type TabState = "scanner" | "directory";
+type CheckInFilterType = "all" | "pending_entry" | "entered" | "no_access";
 
 export default function CheckInPage() {
   const invitationData = useInvitationStore((state) => state.invitationData);
@@ -58,11 +62,13 @@ export default function CheckInPage() {
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isCameraOn, setIsCameraOn] = useState<boolean>(true);
 
-  // Estados del listado manual
+  // Estados de datos
   const [families, setFamilies] = useState<Family[]>([]);
+  const [elements, setElements] = useState<SeatingElement[]>([]);
 
-  const { searchTerm, setSearchTerm, filteredFamilies } =
-    useFamiliesFilters(families);
+  // Estados locales de Búsqueda y Filtrado exclusivos para Check-in
+  const [searchTerm, setSearchTerm] = useState("");
+  const [checkInFilter, setCheckInFilter] = useState<CheckInFilterType>("all");
 
   const isProcessingRef = useRef(false);
 
@@ -80,10 +86,100 @@ export default function CheckInPage() {
     return () => unsubscribe();
   }, [invitationId, toast]);
 
-  // Reiniciamos filtros al recargar
+  // Obtener el plano de mesas para el cruce de datos
   useEffect(() => {
-    setSearchTerm?.("");
-  }, [setSearchTerm]);
+    if (!invitationId) return;
+    SeatingService.getPlan(invitationId).then(setElements).catch(console.error);
+  }, [invitationId]);
+
+  // Calculamos las mesas asignadas a la familia escaneada
+  const assignedTables = useMemo(() => {
+    if (!scannedFamily || !elements.length) return [];
+
+    const familyGuestIds = scannedFamily.asientos?.map((a) => a.id) || [];
+    if (familyGuestIds.length === 0) return [];
+
+    const tables = new Set<string>();
+
+    elements.forEach((el) => {
+      if (el.seats && el.seats > 0) {
+        const hasGuest = el.assignedSeats.some(
+          (seatId) => seatId && familyGuestIds.includes(seatId),
+        );
+        if (hasGuest) tables.add(el.alias);
+      }
+    });
+
+    return Array.from(tables);
+  }, [scannedFamily, elements]);
+
+  // Calculamos los contadores para los Badges
+  const filterCounts = useMemo(() => {
+    let pending = 0;
+    let entered = 0;
+    let noAccess = 0;
+
+    families.forEach((f) => {
+      const confirmados = f.confirmados || 0;
+      const usados = f.pasesUsados || 0;
+
+      if (f.asistencia === true && confirmados > 0 && usados < confirmados) {
+        pending++; // Tienen pases y aún faltan por ingresar
+      }
+      if (usados > 0) {
+        entered++; // Ya cruzaron la puerta (total o parcialmente)
+      }
+      if (
+        f.asistencia === false ||
+        f.asistencia === null ||
+        confirmados === 0
+      ) {
+        noAccess++; // No pueden entrar
+      }
+    });
+
+    return {
+      all: families.length,
+      pending_entry: pending,
+      entered,
+      no_access: noAccess,
+    };
+  }, [families]);
+
+  // Aplicamos los filtros y la búsqueda
+  const filteredFamilies = useMemo(() => {
+    return families.filter((f) => {
+      const matchesSearch = f.nombre
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+      let matchesFilter = true;
+      const confirmados = f.confirmados || 0;
+      const usados = f.pasesUsados || 0;
+
+      switch (checkInFilter) {
+        case "pending_entry":
+          matchesFilter =
+            f.asistencia === true && confirmados > 0 && usados < confirmados;
+          break;
+        case "entered":
+          matchesFilter = usados > 0;
+          break;
+        case "no_access":
+          matchesFilter =
+            f.asistencia === false ||
+            f.asistencia === null ||
+            confirmados === 0;
+          break;
+        case "all":
+        default:
+          matchesFilter = true;
+          break;
+      }
+
+      return matchesSearch && matchesFilter;
+    });
+  }, [families, searchTerm, checkInFilter]);
 
   const requestCameraAccess = useCallback(async () => {
     setCameraError(null);
@@ -140,7 +236,6 @@ export default function CheckInPage() {
   }, [selectedDeviceId]);
 
   useEffect(() => {
-    // Si entramos al tab del scanner, solicitamos cámara si no lo hemos hecho
     if (activeTab === "scanner" && !hasPermission && !cameraError) {
       requestCameraAccess();
     }
@@ -152,7 +247,6 @@ export default function CheckInPage() {
     localStorage.setItem("checkin_camera_id", newId);
   };
 
-  // Función maestra para procesar cualquier familia (por QR o por click manual)
   const processFamilyCheckIn = (family: Family | null, error?: boolean) => {
     if (error || !family) {
       setModalState("not_found");
@@ -161,13 +255,15 @@ export default function CheckInPage() {
 
     setScannedFamily(family);
 
-    if (
+    if (family.asistencia === null) {
+      setModalState("pending_response");
+    } else if (
       family.asistencia === false ||
       !family.confirmados ||
       family.confirmados <= 0
     ) {
       setModalState("not_allowed");
-    } else if (family.asistio) {
+    } else if (family.asistio && family.pasesUsados === family.confirmados) {
       setModalState("already_entered");
     } else {
       setModalState("confirm");
@@ -253,7 +349,7 @@ export default function CheckInPage() {
           </p>
         </div>
 
-        {/* TABS DE NAVEGACIÓN (SEGMENTED CONTROL) */}
+        {/* TABS DE NAVEGACIÓN */}
         <div className="w-full flex items-center p-1 bg-[#F9F7F2] border border-[#EBE5DA] rounded-xl mb-6">
           <button
             onClick={() => setActiveTab("scanner")}
@@ -307,7 +403,6 @@ export default function CheckInPage() {
               </div>
             ) : (
               <>
-                {/* CONTROLES DE CÁMARA */}
                 <div className="w-full flex items-center gap-3 mb-4 relative z-10">
                   {devices.length > 1 ? (
                     <div className="relative flex-1">
@@ -348,7 +443,6 @@ export default function CheckInPage() {
                   </button>
                 </div>
 
-                {/* ÁREA DEL ESCÁNER */}
                 <div className="w-full aspect-[4/5] md:aspect-square bg-[#FDFBF7] rounded-3xl overflow-hidden relative border border-[#EBE5DA] shadow-inner">
                   {isCameraOn ? (
                     <Scanner
@@ -399,11 +493,12 @@ export default function CheckInPage() {
         )}
 
         {/* ============================================================== */}
-        {/* VISTA 2: LISTADO MANUAL (DIRECTORIO) */}
+        {/* VISTA 2: LISTADO MANUAL (DIRECTORIO)                           */}
         {/* ============================================================== */}
         {activeTab === "directory" && (
           <div className="w-full bg-white rounded-[2rem] border border-[#EBE5DA] shadow-sm p-4 md:p-6 flex flex-col flex-1 h-[600px] animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <div className="relative mb-4 shrink-0">
+            {/* BUSCADOR */}
+            <div className="relative mb-3 shrink-0">
               <Search
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-[#A8A29E]"
                 size={18}
@@ -415,6 +510,50 @@ export default function CheckInPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-11 pr-4 py-3.5 bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl text-sm font-medium text-[#2C2C29] focus:outline-none focus:border-[#C5A669] focus:ring-1 focus:ring-[#C5A669]/20 transition-all placeholder:text-[#A8A29E] placeholder:font-normal shadow-sm"
               />
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto mb-4 pb-1 shrink-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {[
+                { id: "all", label: "Todos", count: filterCounts.all },
+                {
+                  id: "pending_entry",
+                  label: "Faltan",
+                  count: filterCounts.pending_entry,
+                },
+                {
+                  id: "entered",
+                  label: "Ingresaron",
+                  count: filterCounts.entered,
+                },
+                {
+                  id: "no_access",
+                  label: "Sin acceso",
+                  count: filterCounts.no_access,
+                },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setCheckInFilter(tab.id as CheckInFilterType)}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all whitespace-nowrap border shrink-0",
+                    checkInFilter === tab.id
+                      ? "bg-[#C5A669] border-[#C5A669] text-white shadow-sm"
+                      : "bg-[#FDFBF7] border-[#EBE5DA] text-[#A8A29E] hover:text-[#5A5A5A] hover:border-[#C5A669]/30",
+                  )}
+                >
+                  {tab.label}
+                  <span
+                    className={cn(
+                      "px-1.5 py-0.5 rounded-md text-[9px]",
+                      checkInFilter === tab.id
+                        ? "bg-white/20"
+                        : "bg-[#EBE5DA]/50 text-[#5A5A5A]",
+                    )}
+                  >
+                    {tab.count}
+                  </span>
+                </button>
+              ))}
             </div>
 
             <div className="flex-1 overflow-y-auto pr-2 space-y-2 -mr-2 scrollbar-thin scrollbar-thumb-[#EBE5DA]">
@@ -431,7 +570,6 @@ export default function CheckInPage() {
                 </div>
               ) : (
                 filteredFamilies.map((family) => {
-                  // Determinar el estado visual
                   const isDeclined = family.asistencia === false;
                   const isPending = family.asistencia === null;
                   const hasEntered = family.asistio === true;
@@ -508,11 +646,12 @@ export default function CheckInPage() {
           family={scannedFamily}
           isSubmitting={isSubmitting}
           isEventDay={isEventDay}
+          assignedTables={assignedTables}
           onClose={handleCloseModal}
           onConfirm={handleConfirm}
         />
 
-        {/* MODAL 2: YA INGRESÓ */}
+        {/* MODAL 2: YA INGRESÓ (O INGRESO PARCIAL COMPLETADO) */}
         <Modal
           isOpen={modalState === "already_entered"}
           onBackdropPress={handleCloseModal}
@@ -533,16 +672,30 @@ export default function CheckInPage() {
                 registrado anteriormente.
               </p>
 
-              <div className="w-full bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl p-4 flex items-center justify-between mb-8 shadow-sm">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#A8A29E]">
-                  Personas ingresadas
-                </span>
-                <div className="flex items-center gap-2 text-[#2C2C29] font-bold">
-                  <CheckCircle2 size={16} className="text-green-500" />
-                  {scannedFamily.pasesUsados ||
-                    scannedFamily.confirmados} de {scannedFamily.confirmados}{" "}
-                  pases
+              <div className="w-full flex flex-col gap-2 mb-8">
+                <div className="w-full bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl p-4 flex items-center justify-between shadow-sm">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#A8A29E]">
+                    Personas ingresadas
+                  </span>
+                  <div className="flex items-center gap-2 text-[#2C2C29] font-bold text-sm">
+                    <CheckCircle2 size={16} className="text-green-500" />
+                    {scannedFamily.pasesUsados ||
+                      scannedFamily.confirmados} de {scannedFamily.confirmados}{" "}
+                    pases
+                  </div>
                 </div>
+
+                {assignedTables.length > 0 && (
+                  <div className="w-full bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl p-4 flex items-center justify-between shadow-sm">
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-[#A8A29E]">
+                      Mesa asignada
+                    </span>
+                    <div className="flex items-center gap-2 text-[#2C2C29] font-bold text-sm">
+                      <MapPin size={16} className="text-[#C5A669]" />
+                      {assignedTables.join(", ")}
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3 w-full">
@@ -582,6 +735,40 @@ export default function CheckInPage() {
                 La familia{" "}
                 <b className="text-[#2C2C29]">{scannedFamily.nombre}</b> declinó
                 la invitación o cuenta con 0 pases confirmados para el evento.
+              </p>
+
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={handleCloseModal}
+                  className="flex-1 px-4 py-3.5 rounded-xl border border-[#EBE5DA] bg-white text-[#2C2C29] font-bold hover:bg-[#F9F7F2] transition-colors shadow-sm text-sm"
+                >
+                  Volver
+                </button>
+              </div>
+            </div>
+          )}
+        </Modal>
+
+        {/* MODAL 3.5: RESPUESTA PENDIENTE */}
+        <Modal
+          isOpen={modalState === "pending_response"}
+          onBackdropPress={handleCloseModal}
+        >
+          {scannedFamily && (
+            <div className="p-8 flex flex-col items-center animate-in fade-in zoom-in duration-300">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center bg-amber-50 text-amber-500 border border-amber-100 mb-6 shadow-sm">
+                <Clock size={32} />
+              </div>
+
+              <h3 className="text-xl font-serif font-bold text-[#2C2C29] mb-4 text-center">
+                Respuesta Pendiente
+              </h3>
+
+              <p className="text-sm text-[#5A5A5A] leading-relaxed text-center mb-8">
+                La familia{" "}
+                <b className="text-[#2C2C29]">{scannedFamily.nombre}</b> nunca
+                respondió a la invitación en tiempo y forma, por lo que no
+                cuenta con pases asignados para el evento.
               </p>
 
               <div className="flex gap-3 w-full">

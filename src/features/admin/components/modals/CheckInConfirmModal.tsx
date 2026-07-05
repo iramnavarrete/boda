@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Modal from "@/features/shared/components/Modal";
-import { UserCheck, Minus, Plus, AlertCircle } from "lucide-react";
+import { UserCheck, Minus, Plus, AlertCircle, MapPin } from "lucide-react";
 import { Family } from "@/types";
 import Tooltip from "@/features/shared/components/Tooltip";
 
@@ -9,6 +9,7 @@ interface CheckInConfirmModalProps {
   family: Family | null;
   isSubmitting: boolean;
   isEventDay: boolean;
+  assignedTables: string[];
   onClose: () => void;
   onConfirm: (pasesUsados: number) => void;
 }
@@ -18,6 +19,7 @@ export default function CheckInConfirmModal({
   family,
   isSubmitting,
   isEventDay,
+  assignedTables,
   onClose,
   onConfirm,
 }: CheckInConfirmModalProps) {
@@ -62,11 +64,20 @@ export default function CheckInConfirmModal({
           Confirmar Ingreso
         </h3>
 
-        <p className="text-sm text-[#5A5A5A] mb-8 leading-relaxed text-center">
+        <p className={`text-sm text-[#5A5A5A] leading-relaxed text-center ${assignedTables.length > 0 ? "mb-4" : "mb-8"}`}>
           Familia <b className="text-[#2C2C29] text-base">{family.nombre}</b>.{" "}
           <br />
           ¿Cuántas personas están ingresando?
         </p>
+
+        {assignedTables.length > 0 && (
+          <div className="flex items-center gap-2 bg-[#FDFBF7] border border-[#EBE5DA] px-4 py-2 rounded-full mb-8 shadow-sm">
+            <MapPin size={14} className="text-[#C5A669]" />
+            <span className="text-xs font-bold text-[#2C2C29]">
+              {assignedTables.join(", ")}
+            </span>
+          </div>
+        )}
 
         <div className="flex items-center justify-center gap-8 mb-8">
           <button
