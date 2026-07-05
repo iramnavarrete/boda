@@ -10,7 +10,7 @@ import { FC, useEffect, useRef, useState } from "react";
 import AnimatedEntrance from "@/features/front/components/AnimatedEntrance";
 import { giftSequence } from "@/constants/animationSequences";
 import { cn } from "@heroui/theme";
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { ArrowRight, ChevronDown, Copy, Check } from "lucide-react";
 
 type StoreGift = {
   type: "amazon" | "liverpool" | "other";
@@ -62,6 +62,8 @@ const GiftsTable: FC<Props> = ({
   transfer,
 }) => {
   const [isCardInfoVisible, setIsCardInfoVisible] = useState(false);
+  const [copiedText, setCopiedText] = useState<string | null>(null);
+
   const ref = useRef(null);
   const isInView = useInView(ref);
 
@@ -71,6 +73,43 @@ const GiftsTable: FC<Props> = ({
     }
   }, [isInView]);
 
+  const handleCopy = async (text: string) => {
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopiedText(text);
+        setTimeout(() => setCopiedText(null), 2000);
+        return;
+      } catch (err) {
+        console.warn(
+          "API Clipboard bloqueada, usando método alternativo...",
+          err,
+        );
+      }
+    }
+
+    // 2. Fallback seguro (Funciona en iframes y webviews de redes sociales)
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    // Ocultar text area para evitar salto de scroll
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    try {
+      document.execCommand("copy");
+      setCopiedText(text);
+      setTimeout(() => setCopiedText(null), 2000);
+    } catch (err) {
+      console.error("Fallo al copiar texto", err);
+    }
+
+    document.body.removeChild(textArea);
+  };
+
   return (
     <div
       className={cn(
@@ -78,7 +117,6 @@ const GiftsTable: FC<Props> = ({
         containerClassName,
       )}
     >
-
       <div className="flex flex-col gap-12 justify-center items-center relative z-10">
         <AnimatedEntrance classname="flex flex-col items-center w-full">
           {/* Overline Editorial */}
@@ -119,14 +157,6 @@ const GiftsTable: FC<Props> = ({
                     ? store.icon
                     : STORE_ICONS[store.type]}
                 </motion.div>
-
-                {/* <p className="font-nourdMedium text-lg text-accent mb-3 tracking-widest uppercase text-[11px]">
-                  {store.type === "amazon"
-                    ? "Amazon"
-                    : store.type === "liverpool"
-                      ? "Liverpool"
-                      : "Mesa de Regalos"}
-                </p> */}
 
                 <a
                   className={cn(
@@ -207,18 +237,56 @@ const GiftsTable: FC<Props> = ({
                         {BANK_LABELS[transfer.bank]}
                       </div>
 
-                      <div className="text-accent/90 text-center font-nourdLight text-sm">
+                      <div className="text-accent/90 text-center font-nourdLight text-sm flex flex-col items-center">
                         <span className="block text-[9px] uppercase tracking-[0.25em] text-accent/50 mb-1 font-nourdMedium">
                           Número de tarjeta
                         </span>
-                        {transfer.cardNumber}
+                        <div className="flex flex-col items-center gap-1">
+                          <span>{transfer.cardNumber}</span>
+                          <button
+                            onClick={() => handleCopy(transfer.cardNumber)}
+                            className="p-1 rounded-md text-accent/50 hover:text-accent hover:bg-accent/10 transition-colors"
+                            title="Copiar número"
+                          >
+                            {copiedText === transfer.cardNumber ? (
+                              <div className="flex gap-1 items-center">
+                                <Check size={12} className="text-accent" />
+                                <span className="text-xs">Copiado</span>
+                              </div>
+                            ) : (
+                              <div className="flex gap-1 items-center">
+                                <Copy size={12} className="text-accent" />
+                                <span className="text-xs">Copiar</span>
+                              </div>
+                            )}
+                          </button>
+                        </div>
                       </div>
 
-                      <div className="text-accent/90 text-center font-nourdLight text-sm">
+                      <div className="text-accent/90 text-center font-nourdLight text-sm flex flex-col items-center">
                         <span className="block text-[9px] uppercase tracking-[0.25em] text-accent/50 mb-1 font-nourdMedium">
                           Beneficiario
                         </span>
-                        {transfer.beneficiary}
+                        <div className="flex flex-col items-center gap-1">
+                          <span>{transfer.beneficiary}</span>
+                          <button
+                            onClick={() => handleCopy(transfer.beneficiary)}
+                            className="p-1 rounded-md text-accent/50 hover:text-accent hover:bg-accent/10 transition-colors"
+                            title="Copiar beneficiario"
+                          >
+                            {copiedText === transfer.beneficiary ? (
+                              <div className="flex gap-1 items-center">
+                                <Check size={12} className="text-accent" />
+                                <span className="text-xs">Copiado</span>
+                              </div>
+                            ) : (
+                              <div className="flex gap-1 items-center">
+                                <Copy size={12} className="text-accent" />
+                                <span className="text-xs">Copiar</span>
+                              </div>
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -230,6 +298,6 @@ const GiftsTable: FC<Props> = ({
       </div>
     </div>
   );
-};
+};;
 
 export default GiftsTable;
