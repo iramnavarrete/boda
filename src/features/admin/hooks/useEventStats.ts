@@ -25,6 +25,7 @@ export interface EventStats {
     asientosOcupados: number;
     asientosDisponibles: number;
     asientosAtencion: number;
+    invitadosSinAsignar: number;
   };
 }
 
@@ -71,6 +72,7 @@ export const useEventStats = (
         asientosOcupados: 0,
         asientosDisponibles: 0,
         asientosAtencion: 0,
+        invitadosSinAsignar: 0,
       },
     };
 
@@ -94,16 +96,16 @@ export const useEventStats = (
         s.familias.rechazadas++;
       } else {
         s.familias.sinResponder++;
-
-        // 🔥 Nueva lógica ultra limpia y sin lecturas a la BD
         if (!c.invitacionVista) {
           s.familias.sinAbrir++;
         }
       }
     });
 
-    // -- LOGÍSTICA DE MESAS (Se ignora automáticamente si no pasan 'elements') --
+    // -- LOGÍSTICA DE MESAS --
     if (elements.length > 0) {
+      const assignedSeatIds = new Set<string>();
+
       elements.forEach((el) => {
         if (el.seats && el.seats > 0) {
           s.logistica.mesasTotal++;
@@ -113,6 +115,9 @@ export const useEventStats = (
             (seat) => seat && seat.trim() !== "",
           );
           s.logistica.asientosOcupados += ocupados.length;
+
+          // Guardamos los IDs de los asignados para cruzar data después
+          ocupados.forEach((id) => assignedSeatIds.add(id));
 
           if (ocupados.length >= el.seats) s.logistica.mesasLlenas++;
           else s.logistica.mesasIncompletas++;
@@ -132,6 +137,19 @@ export const useEventStats = (
         0,
         s.logistica.asientosTotal - s.logistica.asientosOcupados,
       );
+
+      families.forEach((f) => {
+        if (f.asientos && f.asientos.length > 0) {
+          f.asientos.forEach((a) => {
+            if (
+              (a.estatus === "confirmed" || a.estatus === "pending") &&
+              !assignedSeatIds.has(a.id)
+            ) {
+              s.logistica.invitadosSinAsignar++;
+            }
+          });
+        }
+      });
     }
 
     return s;
@@ -181,7 +199,6 @@ export const useEventStats = (
           const inv = Number(g.invitados) || 0;
           const conf = Number(g.confirmados) || 0;
           const partial = g.asistencia === true && conf > 0 && conf < inv;
-
           const isUnopened = !g.invitacionVista && g.asistencia === null;
 
           return {
