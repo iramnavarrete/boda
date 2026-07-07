@@ -206,7 +206,6 @@ const UnifiedStatsCard: React.FC<UnifiedStatsCardProps> = ({ stats }) => {
           {activeTab === "familias" && (
             <div className="flex flex-col gap-3 animate-in fade-in duration-300">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div className="sm:col-span-2">
                   <StatRow
                     icon={CheckCircle2}
                     label="Completas"
@@ -214,7 +213,6 @@ const UnifiedStatsCard: React.FC<UnifiedStatsCardProps> = ({ stats }) => {
                     colorClass="text-[#2C3627]"
                     showBorder={false}
                   />
-                </div>
                 <StatRow
                   icon={Users}
                   label="Parciales"
