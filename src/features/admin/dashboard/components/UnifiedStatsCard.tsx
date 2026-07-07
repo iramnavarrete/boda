@@ -120,7 +120,7 @@ const UnifiedStatsCard: React.FC<UnifiedStatsCardProps> = ({ stats }) => {
     }
   }, [activeTab, stats]);
 
-  const centerLabel = activeTab === "logistica" ? "ASIENTOS" : "TOTAL";
+  const centerLabel = activeTab === "logistica" ? "ASIENTOS" : activeTab.toLocaleUpperCase();
 
   const renderTabsList = (className: string) => (
     <div className={className}>
