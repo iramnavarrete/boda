@@ -196,16 +196,18 @@ export const FamiliesService = {
         { merge: true },
       );
 
-      batch.set(
-        familyPaths.familyQuote(invitationId, family.id),
-        {
-          asistencia: data.asistencia,
-          autor: familyName,
-          parentesco: familyTag,
-          familyId: family.id,
-        },
-        { merge: true },
-      );
+      if (family.asistencia !== data.asistencia) {
+        batch.set(
+          familyPaths.familyQuote(invitationId, family.id),
+          {
+            asistencia: data.asistencia,
+            autor: familyName,
+            parentesco: familyTag,
+            familyId: family.id,
+          },
+          { merge: true },
+        );
+      }
     } else {
       // Admin: escribe todos los campos
       const totalTickets = Number(data.invitados) || 1;
@@ -222,6 +224,7 @@ export const FamiliesService = {
         confirmados: confirmedCount,
         etiqueta: data.etiqueta || null,
         fechaLimiteConfirmacion: data.fechaLimiteConfirmacion || null,
+        ninosPermitidos: data.ninosPermitidos ?? null,
       };
 
       if (data.telefono !== undefined) {
@@ -506,6 +509,7 @@ export const FamiliesService = {
           confirmados: 0,
           notaInvitado: null,
           asientos: seats,
+          ninosPermitidos: null,
         });
 
         batch.set(familyPaths.familyContact(invitationId, familyId), {

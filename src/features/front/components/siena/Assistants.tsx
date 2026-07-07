@@ -30,6 +30,7 @@ const defaultFamily: Family = {
   notaAnfitrion: "",
   tieneTelefono: false,
   ultimaModificacion: null,
+  ninosPermitidos: null,
 };
 
 const isDefaultId = (id?: string) => id === "_";
@@ -318,6 +319,8 @@ const Assistants: FC<Props> = ({
     const fetchFamilyData = async () => {
       if (!id || isDefaultId(id) || !invitationData) return;
 
+      // Candado vital: Si ya cargamos a esta familia, NO la sobreescribas.
+      // Esto evita que el panel colapse si el usuario está tipeando un mensaje y el contexto de Cover dice "ya te vi".
       if (familyData.id === id) return;
 
       if (family && family.id === id) {
@@ -450,10 +453,26 @@ const Assistants: FC<Props> = ({
                       <div className="flex items-center justify-center gap-4 mb-6 opacity-60">
                         <div className="w-12 h-px bg-stone-400" />
                       </div>
+
                       {familyData.notaAnfitrion && (
                         <p className="px-4 text-center text-sm italic text-stone-500 mb-8 font-serif leading-relaxed">
                           &quot;{familyData.notaAnfitrion}&quot;
                         </p>
+                      )}
+
+                      {familyData.ninosPermitidos === false && (
+                        <div className="w-full flex justify-center mb-8 px-2">
+                          <div className="bg-[#FDFBF7] border border-[#EBE5DA] px-5 py-4 rounded-2xl flex flex-col items-center text-center shadow-sm w-full">
+                            <span className="text-[9px] font-bold text-stone-400 uppercase tracking-[0.25em] mb-1.5">
+                              Evento Solo Adultos
+                            </span>
+                            <span className="text-[13px] text-stone-500 font-serif italic leading-relaxed">
+                              &quot;Agradecemos de corazón tu comprensión al
+                              respetar nuestro deseo de tener una boda solo para
+                              adultos.&quot;
+                            </span>
+                          </div>
+                        </div>
                       )}
 
                       <Formik
@@ -482,9 +501,6 @@ const Assistants: FC<Props> = ({
                                       autor: data.nombre,
                                       mensaje: data.notaInvitado || "",
                                       asistencia: data.asistencia,
-                                    },
-                                  ).catch((error) => {
-                                    console.log(error, "ERROR AL GUARDAR LA NOTA DEL INVITADO");
                                     },
                                   );
                                 }
@@ -697,9 +713,7 @@ const Assistants: FC<Props> = ({
                                           }
                                           className="w-full bg-transparent border-b border-sand py-2 text-sm text-[#2C2C29] placeholder:text-stone-300 focus:border-stone-500 outline-none resize-none transition-colors"
                                           rows={1}
-                                          style={
-                                            { fieldSizing: "content" }
-                                          }
+                                          style={{ fieldSizing: "content" }}
                                           placeholder="Escribe aquí tu mensaje..."
                                         />
                                       </div>

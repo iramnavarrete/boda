@@ -18,6 +18,7 @@ export type FamilyFormData = {
   cambiosPermitidos: boolean;
   etiqueta?: string | null;
   fechaLimiteConfirmacion?: string | null;
+  ninosPermitidos?: boolean | null;
 };
 
 export type Family = {
@@ -43,6 +44,7 @@ export type Family = {
   horaLlegada?: Timestamp | FieldValue | null;
   asientos?: GuestSeat[] | null;
   invitacionVista?: boolean | null;
+  ninosPermitidos?: boolean | null;
 };
 
 export type FamilyContactInfo = {
