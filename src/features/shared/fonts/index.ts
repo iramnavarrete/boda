@@ -49,3 +49,9 @@ export const aboveBeyondScript = localFont({
   variable: "--font-above-beyond-script",
   display: "swap",
 });
+
+export const rhymeFormal = localFont({
+  src: "../../../../src/fonts/rhyme-formal.otf",
+  variable: "--font-rhyme-formal",
+  display: "swap",
+});

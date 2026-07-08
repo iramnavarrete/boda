@@ -21,6 +21,7 @@ const config: Config = {
         comprehensionDark: ["var(--font-comprehension-dark)"],
         comprehensionSemiBold: ["var(--font-comprehension-semi-bold)"],
         aboveBeyondScript: ["var(--font-above-beyond-script)"],
+        rhymeFormal: ["var(--font-rhyme-formal)"],
       },
       colors: {
         primary: {

@@ -1,32 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
-import { motion } from "framer-motion";
+import Head from "next/head";
 import CustomLottie from "@/features/shared/components/CustomLottie";
 
 import mobile from "@/public/lottie/envolpe.json";
 import desktop from "@/public/lottie/envolpeDesktop.json";
 import { cn } from "@heroui/theme";
-
-const variants = {
-  hidden: {
-    opacity: 0,
-    transition: { ease: "easeInOut", duration: 0.2 },
-  },
-  loop: { scale: 1.15 },
-};
+import WaxSeal from "@/features/shared/components/WaxSeal";
 
 interface EnvelopeSplashProps {
   className?: string;
   onOpen: () => void; // Callback para avisarle al Home que el sobre se abrió
-  sealImage?: string;
+  sealConfig?: {
+    initials?: string;
+    sealColor?: string;
+    textColor?:string;
+  };
 }
 
 export default function EnvelopeSplash({
   className = "",
   onOpen,
-  sealImage
+  sealConfig
 }: EnvelopeSplashProps) {
   const [isSealVisible, setIsSealVisible] = useState(true);
   const [envolpeDivHidden, setEnvolpeDivHidden] = useState(false);
@@ -71,18 +67,36 @@ export default function EnvelopeSplash({
   return (
     <div
       className={cn(
-        "fixed w-full h-full max-h-[100svh] overflow-hidden z-50",
+        "fixed w-full h-full max-h-[100dvh] overflow-hidden z-50",
         className,
       )}
     >
-      {/* Overlay que se desvanece cuando el Lottie carga */}
-      <motion.div
-        className="absolute inset-0 bg-accent z-[51]"
-        initial={{ opacity: 1 }}
-        animate={{ opacity: isLottieLoaded ? 0 : 1 }}
-        transition={{ duration: 0.5, ease: "easeInOut" }}
+      <Head>
+        <link
+          rel="preload"
+          href="/img/sello-gris.png"
+          as="image"
+          type="image/png"
+          fetchPriority="high"
+        />
+      </Head>
+
+      {/* Estilo local para la animación de escala infinita del sello */}
+      <style>{`
+        @keyframes scalePulse {
+          0% { transform: scale(1); }
+          100% { transform: scale(1.15); }
+        }
+      `}</style>
+
+      {/* Overlay que se desvanece cuando el Lottie carga usando Tailwind transition */}
+      <div
+        className={cn(
+          "absolute inset-0 bg-accent z-[51] transition-opacity duration-500 ease-in-out",
+          isLottieLoaded ? "opacity-0" : "opacity-100",
+        )}
         style={{ display: overlayHidden ? "none" : "block" }}
-        onAnimationComplete={() => {
+        onTransitionEnd={() => {
           if (isLottieLoaded) {
             setOverlayHidden(true);
           }
@@ -97,7 +111,8 @@ export default function EnvelopeSplash({
           autoplay: false,
           rendererSettings: {
             preserveAspectRatio: "xMidYMid slice",
-            className: "cursor-default z-[51] !w-full !h-screen !max-h-[100svh]",
+            className:
+              "cursor-default z-[51] !w-full !h-screen !max-h-[100dvh]",
           },
         }}
         isClickToPauseDisabled
@@ -110,29 +125,21 @@ export default function EnvelopeSplash({
         ]}
       />
 
-      <motion.div
-        variants={variants}
-        initial={{ scale: 1 }}
+      {/* Contenedor del sello animado con Tailwind y animación CSS nativa */}
+      <div
         onClick={handleSealClick}
-        animate={isSealVisible ? "loop" : "hidden"}
-        className="absolute top-[calc(50%-65px)] left-[calc(30%-65px)] xl:top-[calc(70%-65px)] xl:left-[calc(50%-65px)] cursor-pointer z-20"
-        transition={{
-          duration: 1,
-          repeat: isSealVisible ? Infinity : 0,
-          ease: "easeInOut",
-          repeatType: "reverse",
+        className={cn(
+          "absolute top-[calc(50%-65px)] left-[calc(30%-65px)] xl:top-[calc(70%-65px)] xl:left-[calc(50%-65px)] z-20 cursor-pointer transition-opacity duration-200 ease-in-out",
+          isSealVisible ? "opacity-100" : "opacity-0 pointer-events-none",
+        )}
+        style={{
+          animation: isSealVisible
+            ? "scalePulse 1s infinite alternate ease-in-out"
+            : "none",
         }}
       >
-        <Image
-          alt="Sello de carta"
-          className="sello w-full h-auto"
-          width={0}
-          priority
-          height={0}
-          sizes="100vw"
-          src={sealImage || `/img/sello.png`}
-        />
-      </motion.div>
+        <WaxSeal initials={sealConfig?.initials} textColor={sealConfig?.textColor} sealColor={sealConfig?.sealColor} />
+      </div>
     </div>
   );
 }

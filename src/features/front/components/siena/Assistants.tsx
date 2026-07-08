@@ -6,7 +6,14 @@ import Separator from "@/icons/separator";
 import { useSearchParams } from "next/navigation";
 import AnimatedEntrance from "../AnimatedEntrance";
 import { Family, FamilyFormData, Invitation } from "@/types";
-import { Plus, Minus, ArrowRight, Clock } from "lucide-react";
+import {
+  Plus,
+  Minus,
+  ArrowRight,
+  Clock,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
 import { FamiliesService } from "@/services/familiesService";
 import { useInvitationStore } from "../../stores/invitationStore";
 import { FamilyQuotesService } from "@/services/familyQuotesService";
@@ -111,22 +118,21 @@ const TicketCard: FC<StateCardProps> = ({
     >
       <div
         ref={ticketRef}
-        className="w-full bg-[#FDFBF7] rounded-xl shadow-2xl relative overflow-hidden border border-[#EBE5DA]"
+        className={cn(
+          "w-full bg-[#FDFBF7] rounded-xl shadow-2xl relative overflow-hidden border border-[#EBE5DA]",
+          textClassName,
+        )}
       >
         <div className="w-full flex justify-center mt-6"></div>
         <div className="pt-4 pb-5 px-8 flex flex-col items-center">
-          <p className="text-[9px] font-bold text-stone-500 uppercase tracking-[0.3em] mb-4 border border-stone-200 px-5 py-1.5 rounded-full bg-white shadow-sm">
+          {/* Se eliminó color-mix del border */}
+          <p className="text-[9px] font-bold uppercase tracking-[0.3em] mb-4 border border-current opacity-50 px-5 py-1.5 rounded-full bg-white shadow-sm">
             ✦ Pase de Acceso ✦
           </p>
-          <p
-            className={cn(
-              "font-serif text-3xl text-charcoal text-center leading-tight mb-2",
-              textClassName,
-            )}
-          >
+          <p className="font-serif text-3xl text-center leading-tight mb-2">
             {invitationData?.nombre || "Nuestra Boda"}
           </p>
-          <p className="text-[9px] text-stone-400 uppercase tracking-[0.2em] text-center">
+          <p className="text-[9px] text-current opacity-70 uppercase tracking-[0.2em] text-center">
             {formattedDate.replace(/,/g, " •")}
           </p>
         </div>
@@ -138,24 +144,20 @@ const TicketCard: FC<StateCardProps> = ({
         </div>
 
         <div className="pt-6 pb-6 px-8 flex flex-col items-center">
-          <p className="text-[9px] font-bold text-stone-400 uppercase tracking-[0.25em] mb-3">
+          <p className="text-[9px] font-bold text-current opacity-50 uppercase tracking-[0.25em] mb-3">
             Invitado
           </p>
-          <p
-            className={cn(
-              "text-3xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.05)] font-newIconScript text-charcoal text-center mb-4",
-              textClassName,
-            )}
-          >
+          <p className="text-3xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.05)] font-newIconScript text-center mb-4">
             {familyData.nombre}
           </p>
-          <p className="text-[10px] font-bold text-stone-500 uppercase tracking-[0.15em] flex items-center justify-center gap-2">
+          <p className="text-[10px] font-bold text-current opacity-50 uppercase tracking-[0.15em] flex items-center justify-center gap-2">
             {confirmados} Pase{confirmados > 1 ? "s" : ""} Confirmado
             {confirmados > 1 ? "s" : ""}
           </p>
 
-          <div className="mx-auto w-36 h-36 bg-white rounded-xl shadow-sm border border-stone-200 flex items-center justify-center mt-8 mb-4 relative transition-transform hover:scale-[1.02] duration-300">
-            <div className="w-full h-full flex items-center justify-center">
+          {/* Se eliminó color-mix del border del QR */}
+          <div className="mx-auto w-36 h-36 bg-white rounded-xl shadow-sm border border-current/20 flex items-center justify-center mt-8 mb-4 relative transition-transform hover:scale-[1.02] duration-300">
+            <div className="w-full h-full flex items-center justify-center opacity-100">
               <ReactQRCode
                 value={familyData.id || "QRCode"}
                 size={256}
@@ -165,14 +167,15 @@ const TicketCard: FC<StateCardProps> = ({
               />
             </div>
           </div>
-          <p className="text-[9px] text-stone-400 uppercase tracking-[0.25em] text-center mb-8 max-w-[40ch]">
+          <p className="text-[9px] text-current opacity-50 uppercase tracking-[0.25em] text-center mb-8 max-w-[40ch]">
             Escanea en la entrada del evento para agilizar tu acceso.
           </p>
           <div className="w-full flex justify-center mb-6">
-            <FlowersCoverDown className="w-[85%] h-auto text-stone-300 opacity-80" />
+            <FlowersCoverDown className="w-[85%] h-auto text-current opacity-30" />
           </div>
           <div className="w-full border-t border-dashed border-stone-300/60 pt-4 flex flex-col items-center">
-            <p className="text-[9px] text-stone-400 uppercase tracking-[0.2em] text-center mb-1">
+            {/* Se reemplazó el color problemático por text-current opacity-50 */}
+            <p className="text-[9px] text-current opacity-50 uppercase tracking-[0.2em] text-center mb-1">
               {invitationData?.recepcion?.nombreSalon || "Recepción"} •{" "}
               {dateObj.getFullYear()}
             </p>
@@ -223,7 +226,7 @@ const DeclineCard: FC<StateCardProps> = ({ familyData, textClassName }) => {
     >
       <p
         className={cn(
-          "text-[10px] font-bold text-stone-400 uppercase tracking-[0.25em] mb-4",
+          "text-[10px] font-bold text-stone-400 uppercase tracking-[0.25em] mb-4 opacity-60",
           textClassName,
         )}
       >
@@ -319,8 +322,6 @@ const Assistants: FC<Props> = ({
     const fetchFamilyData = async () => {
       if (!id || isDefaultId(id) || !invitationData) return;
 
-      // Candado vital: Si ya cargamos a esta familia, NO la sobreescribas.
-      // Esto evita que el panel colapse si el usuario está tipeando un mensaje y el contexto de Cover dice "ya te vi".
       if (familyData.id === id) return;
 
       if (family && family.id === id) {
@@ -365,34 +366,34 @@ const Assistants: FC<Props> = ({
 
   return (
     <div>
-      <hr className="w-full border-sand/50" />
+      <hr className="w-full border-[color-mix(in_srgb,currentColor_20%,transparent)]" />
       <div
         className={cn(
-          "bg-accent flex flex-col items-center justify-center py-20",
+          "bg-accent flex flex-col items-center justify-center py-20 text-primary",
           containerClassName,
         )}
       >
         <AnimatedEntrance>
-          <div className="flex flex-col items-center justify-center gap-4 pb-8">
+          <div
+            className={cn(
+              "flex flex-col items-center justify-center gap-4 pb-8",
+              textClassName,
+            )}
+          >
             <Separator className="mx-10" color={svgsColor} />
-            <p
-              className={cn(
-                "pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript text-primary px-5 text-center",
-                textClassName,
-              )}
-            >
+            <p className="pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript px-5 text-center">
               Confirmación de asistencia
             </p>
             {!isFormLocked && !isFormSubmitted && (
               <div className="flex flex-col items-center gap-3">
-                <p className="font-nourdLight text-sm text-center px-10 max-w-sm text-stone-600">
+                <p className="font-nourdLight text-sm text-center px-10 max-w-sm opacity-80">
                   Tu lugar te espera. Por favor, confirma tu asistencia a
                   continuación.
                 </p>
                 {familyData?.fechaLimiteConfirmacion && formattedDeadline && (
-                  <div className="flex items-center gap-1.5 mx-6 px-4 py-1.5 bg-white/60 border border-[#EBE5DA] rounded-md shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-                    <Clock size={12} className="text-[#C5A669] shrink-0" />
-                    <span className="text-[10px] font-bold text-[#5A5A5A] uppercase tracking-widest text-center">
+                  <div className="flex items-center gap-1.5 mx-6 px-4 py-1.5 bg-[color-mix(in_srgb,currentColor_3%,transparent)] border border-[color-mix(in_srgb,currentColor_15%,transparent)] rounded-full mt-2">
+                    <Clock size={12} className="opacity-60 shrink-0" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-center opacity-70">
                       Tienes hasta el {formattedDeadline} para confirmar
                     </span>
                   </div>
@@ -409,64 +410,61 @@ const Assistants: FC<Props> = ({
                 <TicketCard
                   familyData={familyData}
                   invitationData={invitationData}
-                  textClassName={textClassName}
                 />
               ) : familyData.asistencia === false ? (
-                <DeclineCard
-                  familyData={familyData}
-                  textClassName={textClassName}
-                />
+                <DeclineCard familyData={familyData} />
               ) : (
-                <ClosedCard
-                  familyData={familyData}
-                  textClassName={textClassName}
-                />
+                <ClosedCard familyData={familyData} />
               )
             ) : !isFormSubmitted ? (
               <div
-                className="w-full max-w-[400px] relative z-0"
+                className={cn(
+                  "w-full max-w-[400px] relative z-0",
+                  textClassName,
+                )}
                 ref={formContainerRef}
               >
-                <div className="rounded-xl bg-white shadow-xl px-6 py-12 pt-9 relative z-0 border border-stone-200">
+                <div className="rounded-xl bg-white shadow-xl px-6 py-12 pt-9 relative z-0 border border-[color-mix(in_srgb,currentColor_10%,transparent)]">
                   <AnimatePresence>
-                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mb-4 text-center">
-                      Invitación para:
-                    </p>
+                    <div className="flex items-center justify-center gap-3 mb-6 opacity-60 w-full">
+                      <div className="w-12 h-px bg-[color-mix(in_srgb,currentColor_30%,transparent)]" />
+                      <span className="text-[10px] uppercase tracking-[0.4em] text-current/60">
+                        Pase de
+                      </span>
+                      <div className="w-12 h-px bg-[color-mix(in_srgb,currentColor_30%,transparent)]" />
+                    </div>
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       className={cn(
-                        "flex flex-col items-center text-primary",
+                        "flex flex-col items-center",
                         textClassName,
                       )}
                       key="assistance-form"
                     >
                       <p
                         className={cn(
-                          "text-3xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.05)] font-newIconScript text-charcoal text-center mb-4",
+                          "text-4xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.03)] font-newIconScript text-center mb-4 leading-none",
                           textClassName,
                         )}
                       >
                         {familyData.nombre}
                       </p>
-                      <div className="flex items-center justify-center gap-4 mb-6 opacity-60">
-                        <div className="w-12 h-px bg-stone-400" />
-                      </div>
 
                       {familyData.notaAnfitrion && (
-                        <p className="px-4 text-center text-sm italic text-stone-500 mb-8 font-serif leading-relaxed">
+                        <p className="px-4 text-center text-sm italic opacity-70 mb-8 font-serif leading-relaxed">
                           &quot;{familyData.notaAnfitrion}&quot;
                         </p>
                       )}
 
                       {familyData.ninosPermitidos === false && (
                         <div className="w-full flex justify-center mb-8 px-2">
-                          <div className="bg-[#FDFBF7] border border-[#EBE5DA] px-5 py-4 rounded-2xl flex flex-col items-center text-center shadow-sm w-full">
-                            <span className="text-[9px] font-bold text-stone-400 uppercase tracking-[0.25em] mb-1.5">
+                          <div className="bg-[color-mix(in_srgb,currentColor_3%,transparent)] border border-[color-mix(in_srgb,currentColor_15%,transparent)] px-5 py-4 rounded-xl flex flex-col items-center text-center w-full">
+                            <span className="text-[9px] font-bold uppercase tracking-[0.25em] mb-1.5 opacity-60">
                               Evento Solo Adultos
                             </span>
-                            <span className="text-[13px] text-stone-500 font-serif italic leading-relaxed">
+                            <span className="text-[13px] font-serif italic leading-relaxed opacity-80">
                               &quot;Agradecemos de corazón tu comprensión al
                               respetar nuestro deseo de tener una boda solo para
                               adultos.&quot;
@@ -493,7 +491,10 @@ const Assistants: FC<Props> = ({
                             )
                               .then(() => {
                                 setIsFormSubmitted(true);
-                                if (data.notaInvitado && data.notaInvitado.trim() !== "") {
+                                if (
+                                  data.notaInvitado &&
+                                  data.notaInvitado.trim() !== ""
+                                ) {
                                   FamilyQuotesService.saveFamilyQuote(
                                     invitationData.id,
                                     data.id!,
@@ -556,10 +557,12 @@ const Assistants: FC<Props> = ({
                               onSubmit={handleSubmit}
                               className="w-full flex flex-col items-center"
                             >
-                              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mb-4 text-center mt-2">
-                                ¿Confirmas tu asistencia?
+                              <p className="text-[11px] font-nourdMedium uppercase tracking-[0.2em] mb-5 text-center opacity-80">
+                                ¿Confirma su asistencia?
                               </p>
-                              <div className="flex flex-row gap-2 w-full mb-8">
+
+                              {/* Botones de Asistencia - Diseño Editorial */}
+                              <div className="flex gap-4 w-full px-2 mb-8">
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -571,15 +574,16 @@ const Assistants: FC<Props> = ({
                                       );
                                   }}
                                   className={cn(
-                                    "flex-1 flex items-center justify-center gap-1 py-3.5 rounded-full transition-all duration-300 font-medium text-sm border",
+                                    "flex-1 flex flex-col items-center justify-center gap-1.5 py-4 rounded-xl transition-all duration-300 font-nourdMedium text-[10px] tracking-widest uppercase border",
                                     values.asistencia === true
-                                      ? "bg-[#2C2C29] border-[#2C2C29] text-white shadow-md"
-                                      : "bg-transparent border-stone-300 text-stone-500 hover:border-stone-400 hover:text-stone-600",
+                                      ? "bg-[color-mix(in_srgb,currentColor_5%,transparent)] border-current shadow-sm scale-[1.02]"
+                                      : "bg-transparent border-[color-mix(in_srgb,currentColor_20%,transparent)] opacity-60 hover:opacity-100",
                                   )}
                                 >
-                                  <span className="text-md">🥂</span> Sí, ahí
-                                  estaré
+                                  <CheckCircle2 size={16} strokeWidth={1.5} />
+                                  Si, asistiré
                                 </button>
+
                                 <button
                                   type="button"
                                   onClick={() => {
@@ -587,15 +591,13 @@ const Assistants: FC<Props> = ({
                                     setFieldValue("confirmados", 0);
                                   }}
                                   className={cn(
-                                    "flex-1 flex items-center justify-center gap-1 py-3.5 rounded-full transition-all duration-300 font-medium text-sm border",
+                                    "flex-1 flex flex-col items-center justify-center gap-1.5 py-4 rounded-xl transition-all duration-300 font-nourdMedium text-[10px] tracking-widest uppercase border",
                                     values.asistencia === false
-                                      ? "bg-[#2C2C29] border-[#2C2C29] text-white shadow-md"
-                                      : "bg-transparent border-stone-300 text-stone-500 hover:border-stone-300 hover:text-stone-600",
+                                      ? "bg-[color-mix(in_srgb,currentColor_5%,transparent)] border-current shadow-sm scale-[1.02]"
+                                      : "bg-transparent border-[color-mix(in_srgb,currentColor_20%,transparent)] opacity-60 hover:opacity-100",
                                   )}
                                 >
-                                  <span className="text-md opacity-80 grayscale">
-                                    🤍
-                                  </span>{" "}
+                                  <XCircle size={16} strokeWidth={1.5} />
                                   No podré ir
                                 </button>
                               </div>
@@ -627,7 +629,7 @@ const Assistants: FC<Props> = ({
                                             className="w-full overflow-hidden"
                                           >
                                             <div className="w-full flex flex-col items-center mb-10">
-                                              <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.2em] mb-6 text-center mt-2">
+                                              <p className="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em] mb-6 text-center mt-2">
                                                 Número de pases
                                               </p>
                                               <div className="flex items-center justify-center gap-8 md:gap-12">
@@ -641,7 +643,7 @@ const Assistants: FC<Props> = ({
                                                       );
                                                   }}
                                                   disabled={confirmados <= 1}
-                                                  className="w-12 h-12 flex items-center justify-center rounded-full border border-stone-400 text-stone-500 disabled:opacity-20 disabled:border-stone-300 disabled:text-stone-300 transition-all active:scale-95 hover:bg-stone-100 hover:text-charcoal hover:border-charcoal"
+                                                  className="w-12 h-12 flex items-center justify-center rounded-full border border-[color-mix(in_srgb,currentColor_30%,transparent)] opacity-70 disabled:opacity-20 transition-all active:scale-95 hover:opacity-100 hover:border-current"
                                                 >
                                                   <Minus
                                                     size={18}
@@ -649,10 +651,10 @@ const Assistants: FC<Props> = ({
                                                   />
                                                 </button>
                                                 <div className="flex flex-col items-center justify-center min-w-[4rem]">
-                                                  <span className="font-serif text-5xl text-charcoal font-bold leading-none">
+                                                  <span className="font-serif text-5xl font-bold leading-none">
                                                     {confirmados}
                                                   </span>
-                                                  <span className="text-[9px] text-stone-400 font-bold uppercase tracking-[0.2em] mt-2">
+                                                  <span className="text-[9px] opacity-60 font-bold uppercase tracking-[0.2em] mt-2">
                                                     Pase(s)
                                                   </span>
                                                 </div>
@@ -674,7 +676,7 @@ const Assistants: FC<Props> = ({
                                                     confirmados >=
                                                     Number(familyData.invitados)
                                                   }
-                                                  className="w-12 h-12 flex items-center justify-center rounded-full border border-stone-400 text-stone-500 disabled:opacity-20 disabled:border-stone-300 disabled:text-stone-300 transition-all active:scale-95 hover:bg-stone-100 hover:text-charcoal hover:border-charcoal"
+                                                  className="w-12 h-12 flex items-center justify-center rounded-full border border-[color-mix(in_srgb,currentColor_30%,transparent)] opacity-70 disabled:opacity-20 transition-all active:scale-95 hover:opacity-100 hover:border-current"
                                                 >
                                                   <Plus
                                                     size={18}
@@ -683,7 +685,7 @@ const Assistants: FC<Props> = ({
                                                 </button>
                                               </div>
                                               {familyData.invitados > 1 && (
-                                                <p className="text-[10px] text-stone-400 mt-5 font-medium italic">
+                                                <p className="text-[10px] opacity-60 mt-5 font-medium italic">
                                                   Límite asignado:{" "}
                                                   {familyData.invitados} pases
                                                 </p>
@@ -694,11 +696,11 @@ const Assistants: FC<Props> = ({
                                       </AnimatePresence>
 
                                       <div className="w-full mb-10 mt-2 text-left">
-                                        <label className="block text-[10px] font-bold text-stone-400 uppercase tracking-[0.15em] mb-3">
+                                        <label className="block text-[10px] font-bold opacity-60 uppercase tracking-[0.15em] mb-3">
                                           {values.asistencia === true
                                             ? "Envía una felicitación"
                                             : "Mensaje para los novios"}{" "}
-                                          <span className="font-normal italic tracking-normal opacity-80">
+                                          <span className="font-normal italic tracking-normal opacity-70">
                                             (opcional)
                                           </span>
                                         </label>
@@ -711,23 +713,26 @@ const Assistants: FC<Props> = ({
                                               e.target.value,
                                             )
                                           }
-                                          className="w-full bg-transparent border-b border-sand py-2 text-sm text-[#2C2C29] placeholder:text-stone-300 focus:border-stone-500 outline-none resize-none transition-colors"
+                                          className="w-full bg-transparent border-b border-[color-mix(in_srgb,currentColor_30%,transparent)] py-2 text-sm placeholder:opacity-40 focus:border-current outline-none resize-none transition-colors placeholder:text-current"
                                           rows={1}
                                           style={{ fieldSizing: "content" }}
                                           placeholder="Escribe aquí tu mensaje..."
                                         />
                                       </div>
 
+                                      {/* Botón Submit - Estilo Enlace Textual */}
                                       <button
                                         type="submit"
                                         disabled={isDisabled}
                                         className={cn(
-                                          "w-full bg-[#2C2C29] text-white py-4 rounded-full text-[11px] font-bold uppercase tracking-[0.2em] hover:bg-[#1a1a18] transition-all flex items-center justify-center gap-3 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed",
-                                          sendFormBtnClassName,
+                                          "flex items-center gap-2 text-xs font-nourdMedium uppercase tracking-[0.2em] border-b border-current pb-1 mt-2 hover:opacity-70 transition-all disabled:opacity-30 disabled:cursor-not-allowed",
                                         )}
                                       >
-                                        Confirmar Asistencia{" "}
-                                        <ArrowRight size={16} />
+                                        Enviar Respuesta
+                                        <ArrowRight
+                                          size={14}
+                                          className="opacity-70 group-hover:translate-x-1 transition-transform"
+                                        />
                                       </button>
                                     </div>
                                   </motion.div>
@@ -761,7 +766,7 @@ const Assistants: FC<Props> = ({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="mt-8 flex flex-col items-center gap-6"
+                  className={cn("mt-12 flex flex-col items-center gap-6", textClassName)}
                 >
                   <button
                     onClick={() => {
@@ -774,14 +779,14 @@ const Assistants: FC<Props> = ({
                         });
                       }, 100);
                     }}
-                    className="text-stone-500 font-medium text-xs uppercase tracking-widest border-b border-stone-300 hover:border-charcoal hover:text-charcoal transition-all pb-0.5"
+                    className="font-medium text-xs uppercase tracking-widest border-b border-[color-mix(in_srgb,currentColor_60%,transparent)] hover:border-current hover:opacity-100 transition-all pb-0.5 opacity-60 text-current"
                   >
                     Modificar mi respuesta
                   </button>
                   {familyData?.fechaLimiteConfirmacion && formattedDeadline && (
-                    <div className="flex items-center gap-1.5 mx-6 px-2 py-1.5 bg-white/40 border border-[#EBE5DA] rounded-full shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
-                      <Clock size={12} className="text-[#A8A29E] shrink-0" />
-                      <span className="text-[9px] font-bold text-[#A8A29E] uppercase tracking-widest text-center">
+                    <div className="flex items-center gap-1.5 mx-6 px-3 py-1.5 bg-[color-mix(in_srgb,currentColor_3%,transparent)] border border-[color-mix(in_srgb,currentColor_15%,transparent)] rounded-full">
+                      <Clock size={12} className="opacity-60 shrink-0" />
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-center opacity-70">
                         Puedes ajustar hasta el {formattedDeadline}
                       </span>
                     </div>

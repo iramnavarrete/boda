@@ -77,7 +77,7 @@ export default function Footer({
               Haz tu evento inolvidable desde la primera impresión. Escríbeme.
             </p>
             <a
-              href="https://wa.me/526142537718?text=Me%20gustar%C3%ADa%20saber%20m%C3%A1s%20informaci%C3%B3n%20sobre%20las%20invitaciones%20digitales"
+              href="https://wa.me/526148750265?text=Me%20gustar%C3%ADa%20saber%20m%C3%A1s%20informaci%C3%B3n%20sobre%20las%20invitaciones%20digitales"
               target="_blank"
               rel="noopener noreferrer"
               className="flex justify-center items-center mt-4"

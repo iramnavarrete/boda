@@ -117,27 +117,27 @@ const GiftsTable: FC<Props> = ({
         containerClassName,
       )}
     >
-      <div className="flex flex-col gap-12 justify-center items-center relative z-10">
+      <div className="flex flex-col gap-12 justify-center items-center relative z-10 text-accent">
         <AnimatedEntrance classname="flex flex-col items-center w-full">
           {/* Overline Editorial */}
-          <p className="text-[10px] font-nourdMedium text-accent/60 uppercase tracking-[0.4em] mb-4 text-center">
+          <p className="text-[10px] font-nourdMedium text-current/60 uppercase tracking-[0.4em] mb-4 text-center">
             — Detalles —
           </p>
 
           {/* Título Script */}
-          <p className="text-4xl md:text-6xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.03)] font-newIconScript text-accent mb-6 text-center">
+          <p className="text-4xl md:text-6xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.03)] font-newIconScript text-current mb-6 text-center">
             Mesa de regalos
           </p>
 
           {/* Divisor minimalista */}
           <div className="flex items-center justify-center gap-3 mb-8 opacity-60">
-            <div className="w-8 h-px bg-accent/30" />
-            <span className="text-accent/50 text-xs">✦</span>
-            <div className="w-8 h-px bg-accent/30" />
+            <div className="w-8 h-px bg-[color-mix(in_srgb,currentColor_30%,transparent)]" />
+            <span className="text-current/50 text-xs">✦</span>
+            <div className="w-8 h-px bg-[color-mix(in_srgb,currentColor_30%,transparent)]" />
           </div>
 
           {/* Texto de introducción */}
-          <p className="text-accent/80 text-center leading-relaxed text-sm md:text-base font-nourdLight px-6 max-w-md italic">
+          <p className="text-current/80 text-center leading-relaxed text-sm md:text-base font-nourdLight px-6 max-w-md italic">
             &quot;Tu presencia es el mejor regalo, pero si deseas tener un
             detalle con nosotros, puedes contribuir a hacer nuestra luna de miel
             aún más especial.&quot;
@@ -150,7 +150,7 @@ const GiftsTable: FC<Props> = ({
             {stores.map((store, idx) => (
               <div
                 key={idx}
-                className="flex flex-col items-center text-center bg-primary z-10 py-2"
+                className="flex flex-col items-center text-center z-10 py-2"
               >
                 <motion.div ref={idx === 0 ? ref : undefined} className="mb-4">
                   {store.type === "other"
@@ -160,7 +160,7 @@ const GiftsTable: FC<Props> = ({
 
                 <a
                   className={cn(
-                    "group flex items-center gap-2 text-[10px] font-nourdMedium text-accent uppercase tracking-[0.2em] border-b border-accent/20 pb-1 hover:border-accent transition-all",
+                    "group flex items-center gap-2 text-[10px] font-nourdMedium text-current uppercase tracking-[0.2em] border-b border-[color-mix(in_srgb,currentColor_20%,transparent)] pb-1 hover:border-current transition-all",
                     btnsClassName,
                   )}
                   href={store.link}
@@ -178,14 +178,14 @@ const GiftsTable: FC<Props> = ({
 
             {/* --- EFECTIVO --- */}
             {showCash && (
-              <div className="flex flex-col items-center text-center bg-primary z-10 py-2">
+              <div className="flex flex-col items-center text-center z-10 py-2 text-current">
                 <div className="mb-4">
-                  <GiftIcon className="w-10 h-10 overflow-visible animated-gift text-accent" />
+                  <GiftIcon className="w-10 h-10 overflow-visible animated-gift" />
                 </div>
-                <p className="font-nourdMedium text-lg text-accent mb-2 tracking-widest uppercase text-[11px]">
+                <p className="font-nourdMedium text-lg mb-2 tracking-widest uppercase text-[11px]">
                   Lluvia de Sobres
                 </p>
-                <div className="text-accent/70 text-center text-xs font-nourdLight">
+                <div className="text-current/70 text-center text-xs font-nourdLight">
                   <p>En efectivo el día de la boda</p>
                 </div>
               </div>
@@ -193,16 +193,16 @@ const GiftsTable: FC<Props> = ({
 
             {/* --- TRANSFERENCIA --- */}
             {transfer && (
-              <div className="flex flex-col items-center text-center bg-primary z-10 py-2 w-full">
+              <div className="flex flex-col items-center text-center z-10 py-2 w-full">
                 <div className="mb-4">{BANK_ICONS[transfer.bank]}</div>
 
-                <p className="font-nourdMedium text-lg text-accent mb-3 tracking-widest uppercase text-[11px]">
+                <p className="font-nourdMedium text-lg mb-3 tracking-widest uppercase text-[11px]">
                   Transferencia
                 </p>
 
                 <button
                   className={cn(
-                    "group flex items-center gap-2 text-[10px] font-nourdMedium text-accent uppercase tracking-[0.2em] border-b border-accent/20 pb-1 hover:border-accent transition-all",
+                    "group flex items-center gap-2 text-[10px] font-nourdMedium uppercase tracking-[0.2em] border-b border-[color-mix(in_srgb,currentColor_20%,transparent)] pb-1 hover:border-current transition-all",
                     btnsClassName,
                   )}
                   onClick={() => setIsCardInfoVisible(!isCardInfoVisible)}
@@ -229,33 +229,33 @@ const GiftsTable: FC<Props> = ({
                   )}
                 >
                   <div className="overflow-hidden flex flex-col items-center w-full">
-                    <div className="w-full py-6 border-y border-accent/20 flex flex-col items-center gap-5">
-                      <div className="text-accent/90 text-center font-nourdLight text-sm">
-                        <span className="block text-[9px] uppercase tracking-[0.25em] text-accent/50 mb-1 font-nourdMedium">
+                    <div className="w-full py-6 border-y border-[color-mix(in_srgb,currentColor_20%,transparent)] flex flex-col items-center gap-5">
+                      <div className="text-current/90 text-center font-nourdLight text-sm">
+                        <span className="block text-[9px] uppercase tracking-[0.25em] text-current/50 mb-1 font-nourdMedium">
                           Banco
                         </span>
                         {BANK_LABELS[transfer.bank]}
                       </div>
 
-                      <div className="text-accent/90 text-center font-nourdLight text-sm flex flex-col items-center">
-                        <span className="block text-[9px] uppercase tracking-[0.25em] text-accent/50 mb-1 font-nourdMedium">
+                      <div className="text-current/90 text-center font-nourdLight text-sm flex flex-col items-center">
+                        <span className="block text-[9px] uppercase tracking-[0.25em] text-current/50 mb-1 font-nourdMedium">
                           Número de tarjeta
                         </span>
                         <div className="flex flex-col items-center gap-1">
                           <span>{transfer.cardNumber}</span>
                           <button
                             onClick={() => handleCopy(transfer.cardNumber)}
-                            className="p-1 rounded-md text-accent/50 hover:text-accent hover:bg-accent/10 transition-colors"
+                            className="p-1 rounded-md text-current/50 hover:text-current hover:bg-[color-mix(in_srgb,currentColor_10%,transparent)] transition-colors"
                             title="Copiar número"
                           >
                             {copiedText === transfer.cardNumber ? (
                               <div className="flex gap-1 items-center">
-                                <Check size={12} className="text-accent" />
+                                <Check size={12} />
                                 <span className="text-xs">Copiado</span>
                               </div>
                             ) : (
                               <div className="flex gap-1 items-center">
-                                <Copy size={12} className="text-accent" />
+                                <Copy size={12} />
                                 <span className="text-xs">Copiar</span>
                               </div>
                             )}
@@ -263,25 +263,25 @@ const GiftsTable: FC<Props> = ({
                         </div>
                       </div>
 
-                      <div className="text-accent/90 text-center font-nourdLight text-sm flex flex-col items-center">
-                        <span className="block text-[9px] uppercase tracking-[0.25em] text-accent/50 mb-1 font-nourdMedium">
+                      <div className="text-current/90 text-center font-nourdLight text-sm flex flex-col items-center">
+                        <span className="block text-[9px] uppercase tracking-[0.25em] text-current/50 mb-1 font-nourdMedium">
                           Beneficiario
                         </span>
                         <div className="flex flex-col items-center gap-1">
                           <span>{transfer.beneficiary}</span>
                           <button
                             onClick={() => handleCopy(transfer.beneficiary)}
-                            className="p-1 rounded-md text-accent/50 hover:text-accent hover:bg-accent/10 transition-colors"
+                            className="p-1 rounded-md text-current/50 hover:text-current hover:bg-[color-mix(in_srgb,currentColor_10%,transparent)] transition-colors"
                             title="Copiar beneficiario"
                           >
                             {copiedText === transfer.beneficiary ? (
                               <div className="flex gap-1 items-center">
-                                <Check size={12} className="text-accent" />
+                                <Check size={12} />
                                 <span className="text-xs">Copiado</span>
                               </div>
                             ) : (
                               <div className="flex gap-1 items-center">
-                                <Copy size={12} className="text-accent" />
+                                <Copy size={12} />
                                 <span className="text-xs">Copiar</span>
                               </div>
                             )}
