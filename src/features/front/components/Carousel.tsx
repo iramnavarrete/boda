@@ -149,7 +149,6 @@ export default function SimpleSlider({
     if (!emblaApi) return;
     const autoplay = emblaApi.plugins().autoplay;
     if (!autoplay) return;
-    console.log("AUTO PLAY DISPONIBLE");
 
     if (isInView && !isLightboxOpen) {
       autoplay.play();
