@@ -1,4 +1,5 @@
-import { motion, useAnimate, useInView } from "framer-motion";
+"use client";
+
 import { useEffect, useRef, useState } from "react";
 import ArrowsIcon from "@/icons/arrows-icon";
 import useMusicStore from "@/stores/musicStore";
@@ -12,45 +13,6 @@ import { cn } from "@heroui/theme";
 import Music from "../sections/music";
 import { useFamilyContext } from "../FamilyContext";
 
-const animateCoverVariants = {
-  none: { opacity: 0, y: 40 },
-  show: {
-    opacity: 1,
-    x: 0,
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 24,
-      duration: 1,
-      delay: 2.4,
-    },
-  },
-  showMusic: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      type: "spring",
-      stiffness: 300,
-      damping: 24,
-      duration: 1,
-      delay: 2,
-    },
-  },
-};
-
-const animateFixedVariants = {
-  none: {
-    opacity: 0,
-    y: -20,
-    transition: { type: "spring", stiffness: 300, damping: 24, duration: 0.05 },
-  },
-  showMusic: {
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring", stiffness: 300, damping: 24, duration: 1 },
-  },
-};
-
 type ImageConfig = {
   src: string;
   style: { backgroundPosition: string };
@@ -58,8 +20,10 @@ type ImageConfig = {
 
 type Props = {
   isSealVisible: boolean;
+  eventTitleClassName?: string;
   imagesConfig?: ImageConfig[];
   musicIconClassName?: string;
+  musicContainerClassName?: string;
 };
 
 export default function Cover({
@@ -69,21 +33,40 @@ export default function Cover({
     { src: "/img/cover2.webp", style: { backgroundPosition: "60%" } },
     { src: "/img/cover3.webp", style: { backgroundPosition: "right" } },
   ],
+  eventTitleClassName ="",
   musicIconClassName = "",
+  musicContainerClassName = ""
 }: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
   const { family, setFamily } = useFamilyContext();
-  const [arrowsScope, animateArrows] = useAnimate();
   const { toggleAudio } = useMusicStore();
-  const triggerRef = useRef(null);
-  const isInView = useInView(triggerRef);
   const [index, setIndex] = useState(0);
+  const [isTriggerInView, setIsTriggerInView] = useState(true);
 
+  const triggerRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const preview = searchParams?.get("preview");
   const token = searchParams?.get("token");
 
+  // 🔥 Ref de seguridad para evitar dobles registros causados por el StrictMode de React
   const hasLoggedRef = useRef(false);
+
+  // --- INTERSECTION OBSERVER NATIVO ---
+  // Reemplaza a `useInView` de Framer Motion
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsTriggerInView(entry.isIntersecting);
+      },
+      { threshold: 0 },
+    );
+
+    if (triggerRef.current) {
+      observer.observe(triggerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     if (!isSealVisible) {
@@ -93,16 +76,20 @@ export default function Cover({
 
   useEffect(() => {
     if (!isSealVisible && family && invitationData) {
+      // 1. Validamos que estemos en un enlace vivo (sin preview y sin token)
       if (!preview && !token) {
+        // 2. Evitamos dobles ejecuciones accidentales (típicas de React)
         if (!hasLoggedRef.current) {
           hasLoggedRef.current = true;
 
+          // 3. SIEMPRE guardamos el log de actividad en el historial (costo: 1 escritura)
           ActivityService.logActivity(invitationData.id, {
             action: "view",
             familyId: family.id,
             familyName: family.nombre,
           }).catch(console.error);
 
+          // 4. SOLO actualizamos la familia en Firebase si es la PRIMERA VEZ que lo abre
           if (!family.invitacionVista) {
             FamiliesService.markInvitationAsViewed(
               invitationData.id,
@@ -118,29 +105,6 @@ export default function Cover({
       }
     }
   }, [isSealVisible, family, preview, token, invitationData, setFamily]);
-
-  useEffect(() => {
-    (async () => {
-      if (isSealVisible === false) {
-        await animateArrows(
-          arrowsScope.current,
-          { opacity: 1, y: 0 },
-          { delay: 2.2 },
-        );
-        animateArrows(
-          arrowsScope.current,
-          { opacity: 1, y: -20 },
-          {
-            repeat: Infinity,
-            ease: "easeInOut",
-            repeatType: "reverse",
-            delay: 0.5,
-            duration: 0.8,
-          },
-        );
-      }
-    })();
-  }, [isSealVisible, arrowsScope, animateArrows]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -159,6 +123,18 @@ export default function Cover({
 
   return (
     <>
+      {/* Animación local para el rebote de las flechas (Inicia después de la transición de entrada) */}
+      <style>{`
+        @keyframes smoothBounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
+        }
+        .animate-smooth-bounce {
+          animation: smoothBounce 1.6s ease-in-out infinite;
+          animation-delay: 3.2s; /* Comienza a rebotar justo cuando termina su animación de entrada */
+        }
+      `}</style>
+
       <div className="relative w-full h-[95svh] bg-black">
         {/* === MOTOR DEL CARRUSEL EN CSS PURO === */}
         <div
@@ -183,18 +159,27 @@ export default function Cover({
           </div>
         </div>
 
-        {/* === CONTENIDO PRINCIPAL ANIMADO CON FRAMER MOTION === */}
+        {/* === CONTENIDO PRINCIPAL ANIMADO CON TAILWIND === */}
         <div className="relative z-10 h-full w-full">
-          <motion.div
-            variants={animateCoverVariants}
-            animate={isSealVisible ? "none" : "show"}
-            viewport={{ once: true, amount: "some" }}
-            initial={{ opacity: 0, x: 20 }}
-            className="h-full w-full"
+          {/* Contenedor del Texto (Aparece a los 2.4s) */}
+          <div className="absolute h-[60%] w-full flex flex-col justify-start bg-gradient-to-b from-black/45 via-black/20"></div>
+          <div
+            className={cn(
+              "h-full w-full transition-all duration-1000 ease-out transform-gpu",
+              isSealVisible
+                ? "opacity-0 translate-x-5"
+                : "opacity-100 translate-x-0 delay-[2200ms]",
+            )}
           >
-            <div className="h-full w-full flex flex-col justify-start drop-shadow-[2px_2px_1px_rgba(0,0,0,0.85)] pt-12">
-              <div className="relative pr-6 flex flex-col items-end">
-                <p className="font-newIconScript text-white text-4xl drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]">
+            {/* Degradado oscuro elegante hacia transparente */}
+            <div className="h-full w-full flex flex-col justify-start">
+              <div className="relative pr-6 flex flex-col items-end pt-12 drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]">
+                <p
+                  className={cn(
+                    "font-newIconScript text-white text-4xl drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]",
+                    eventTitleClassName,
+                  )}
+                >
                   {invitationData?.nombre}
                 </p>
                 <p className="font-nourdLight text-white text-lg mt-2">
@@ -207,42 +192,75 @@ export default function Cover({
                 </p>
               </div>
             </div>
-          </motion.div>
+          </div>
 
+          {/* Trigger para el IntersectionObserver */}
           <div
             ref={triggerRef}
-            className="h-[60px] w-full absolute bottom-11"
+            className="h-[60px] w-full absolute bottom-11 pointer-events-none"
           />
 
-          <motion.div
-            variants={animateCoverVariants}
-            animate={isSealVisible ? "none" : "showMusic"}
-            viewport={{ once: true, amount: "some" }}
-            initial={{ opacity: 0, y: 40 }}
-            className="absolute bottom-11 right-5"
+          {/* Botón de Música (Aparece a los 2s) */}
+          <div
+            className={cn(
+              "absolute bottom-11 right-5 transition-all duration-1000 ease-out transform-gpu",
+              isSealVisible
+                ? "opacity-0 translate-y-10"
+                : "opacity-100 translate-y-0 delay-[2600ms]",
+            )}
           >
             <Music iconClassName={musicIconClassName} />
-          </motion.div>
+          </div>
 
-          <motion.div
-            ref={arrowsScope}
-            initial={{ opacity: 0, y: 40 }}
-            className="absolute bottom-11 left-[calc(50%-16px)]"
+          {/* Flechas (Aparecen a los 2.2s y luego rebotan) */}
+          {/* Indicador EXPLÍCITO de Deslizar (Aparece a los 2.2s y luego rebota) */}
+          <div
+            className={cn(
+              "absolute bottom-11 left-0 right-0 w-full flex justify-center pointer-events-none transition-all duration-1000 ease-out transform-gpu",
+              isSealVisible
+                ? "opacity-0 translate-y-10"
+                : "opacity-100 translate-y-0 delay-[3000ms]",
+            )}
           >
-            <ArrowsIcon className="w-8 h-8 drop-shadow-[2px_4px_2px_rgba(0,0,0,0.25)] text-white" />
-          </motion.div>
+            <div
+              className={cn(
+                "flex flex-col items-center gap-1 text-white drop-shadow-[2px_4px_2px_rgba(0,0,0,0.25)]",
+                isSealVisible ? "" : "animate-smooth-bounce",
+              )}
+            >
+              <span className="text-[9px] uppercase tracking-[0.3em] font-nourdMedium opacity-90 drop-shadow-md">
+                Desliza
+              </span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="opacity-90"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </div>
+          </div>
         </div>
       </div>
 
-      <motion.div
-        variants={animateFixedVariants}
-        animate={isInView || isSealVisible ? "none" : "showMusic"}
-        viewport={{ once: true, amount: "some" }}
-        initial={{ opacity: 0, y: 40 }}
-        className="fixed top-5 right-5 min-[500px]:right-[calc(50%-230px)] 2xl:right-[calc(50%-280px)] z-[51]"
+      {/* === BOTÓN FIJO DE MÚSICA EN TOP RIGHT === */}
+      <div
+        className={cn(
+          "fixed top-5 right-5 min-[500px]:right-[calc(50%-230px)] 2xl:right-[calc(50%-280px)] z-[51] transition-all duration-1000 ease-out transform-gpu",
+          isTriggerInView || isSealVisible
+            ? "opacity-0 -translate-y-5 pointer-events-none duration-75"
+            : "opacity-100 translate-y-0",
+        )}
       >
-        <Music iconClassName={musicIconClassName} />
-      </motion.div>
+        <Music iconClassName={musicIconClassName} containerClassName={musicContainerClassName} />
+      </div>
     </>
   );
 }

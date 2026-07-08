@@ -1,4 +1,5 @@
 import { cn } from "@heroui/theme";
+
 const HandDrawnHeart = ({ className }: { className?: string }) => (
   <svg
     className={className || ""}
@@ -16,7 +17,23 @@ const HandDrawnHeart = ({ className }: { className?: string }) => (
   </svg>
 );
 
-const DynamicCalendar = ({ targetDate }: { targetDate: Date }) => {
+const DynamicCalendar = ({
+  targetDate,
+  calendarOptions = {
+    className: "",
+    hearthClassName: "",
+    heartActiveClassName: "",
+    showOnlyWeek: false,
+  },
+}: {
+  targetDate: Date;
+  calendarOptions?: {
+    className?: string;
+    hearthClassName?: string;
+    heartActiveClassName?: string;
+    showOnlyWeek?: boolean; // Prop agregada para habilitar la vista semanal
+  };
+}) => {
   const year = targetDate.getFullYear();
   const month = targetDate.getMonth();
   const targetDay = targetDate.getDate();
@@ -40,11 +57,12 @@ const DynamicCalendar = ({ targetDate }: { targetDate: Date }) => {
 
   // Calcular el primer día del mes y cuántos días tiene
   const firstDayOfMonth = new Date(year, month, 1).getDay();
+
   // Ajuste para que la semana empiece en Lunes (0 = Domingo, 1 = Lunes, etc.)
   const startDayOffset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-  // Generar el arreglo de días para la cuadrícula
+  // Generar el arreglo de días de todo el mes
   const calendarDays = [];
   for (let i = 0; i < startDayOffset; i++) {
     calendarDays.push(null); // Espacios vacíos antes del primer día
@@ -53,11 +71,30 @@ const DynamicCalendar = ({ targetDate }: { targetDate: Date }) => {
     calendarDays.push(i);
   }
 
+  // --- LÓGICA DE RECORTADO DE SEMANA ---
+  let daysToRender = calendarDays;
+  if (calendarOptions?.showOnlyWeek) {
+    const targetIndex = calendarDays.indexOf(targetDay);
+    // Calculamos el inicio de la fila dividiendo entre 7 (días de la semana)
+    const weekStart = Math.floor(targetIndex / 7) * 7;
+    daysToRender = calendarDays.slice(weekStart, weekStart + 7);
+
+    // Medida de seguridad: Si la semana corta a fin de mes y quedan espacios, los rellenamos
+    while (daysToRender.length < 7) {
+      daysToRender.push(null);
+    }
+  }
+
   // Días de la semana (Lunes a Domingo)
   const weekDays = ["Lu", "Ma", "Mi", "Ju", "Vi", "Sá", "Do"];
 
   return (
-    <div className="bg-[#5C6154] text-[#FDFBF7] px-8 py-6 md:px-10 md:py-12 rounded-[2rem] max-w-[410px] w-11/12 mx-auto shadow-2xl flex flex-col items-center border border-white/10 relative">
+    <div
+      className={cn(
+        "bg-[#5C6154] text-[#FDFBF7] px-4 py-6 md:px-10 md:py-12 rounded-[2rem] max-w-[410px] w-11/12 mx-auto shadow-2xl flex flex-col items-center border border-white/10 relative",
+        calendarOptions?.className,
+      )}
+    >
       {/* Cabecera del Mes y Año (Diseño Editorial) */}
       <div className="flex justify-around w-full mb-4">
         <h2 className="font-newIconScript text-3xl drop-shadow-sm text-center leading-none">
@@ -82,9 +119,9 @@ const DynamicCalendar = ({ targetDate }: { targetDate: Date }) => {
           ))}
         </div>
 
-        {/* Cuadrícula de los números */}
+        {/* Cuadrícula de los números - Iteramos sobre daysToRender */}
         <div className="grid grid-cols-7 gap-y-3 gap-x-2 text-center text-sm md:text-base font-nourdLight">
-          {calendarDays.map((day, index) => {
+          {daysToRender.map((day, index) => {
             const isTargetDay = day === targetDay;
             return (
               <div
@@ -97,7 +134,10 @@ const DynamicCalendar = ({ targetDate }: { targetDate: Date }) => {
                       className={cn(
                         "z-10",
                         isTargetDay
-                          ? "font-nourdMedium text-[#FDFBF7]"
+                          ? cn(
+                              "font-nourdMedium text-[#FDFBF7]",
+                              calendarOptions?.heartActiveClassName,
+                            )
                           : "opacity-90",
                       )}
                     >
@@ -105,7 +145,12 @@ const DynamicCalendar = ({ targetDate }: { targetDate: Date }) => {
                     </span>
                     {/* Dibujar el corazón si es el día del evento */}
                     {isTargetDay && (
-                      <HandDrawnHeart className="absolute w-12 h-12 md:w-14 md:h-14 text-[#C5A669] opacity-80 z-0" />
+                      <HandDrawnHeart
+                        className={cn(
+                          "absolute w-12 h-12 md:w-14 md:h-14 text-[#C5A669] opacity-80 z-0",
+                          calendarOptions?.hearthClassName,
+                        )}
+                      />
                     )}
                   </>
                 ) : (

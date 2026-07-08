@@ -47,22 +47,31 @@ const EditorialEvent: React.FC<EditorialEventProps> = ({
   }, [isInView, sequence]);
 
   return (
-    <div className="flex flex-col items-center justify-center w-full max-w-sm mx-auto relative z-10">
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center w-full max-w-sm mx-auto relative z-10 text-primary",
+        textClassName,
+      )}
+    >
       <AnimatedEntrance classname="w-full flex flex-col items-center">
         {/* ICONO CON FONDO PARA CORTAR LA LÍNEA DEL TIMELINE */}
-        <motion.div ref={ref} className="mb-4 bg-accent p-4 rounded-full">
+        <motion.div ref={ref} className={cn("mb-4 bg-accent p-4 rounded-full")}>
           <IconComponent />
         </motion.div>
 
         {/* Overline */}
-        <p className="text-[9px] font-nourdMedium text-primary/60 uppercase tracking-[0.4em] mb-2 text-center">
+        <p
+          className={cn(
+            "text-[9px] font-nourdMedium text-current/60 uppercase tracking-[0.4em] mb-2 text-center",
+          )}
+        >
           {typeEvent}
         </p>
 
         {/* Título Script */}
         <p
           className={cn(
-            "text-5xl font-newIconScript text-primary mb-6 drop-shadow-[1px_1px_1px_rgba(0,0,0,0.03)]",
+            "text-5xl font-newIconScript mb-6 drop-shadow-[1px_1px_1px_rgba(0,0,0,0.03)]",
             textClassName,
           )}
         >
@@ -72,7 +81,7 @@ const EditorialEvent: React.FC<EditorialEventProps> = ({
         {/* Información Horario (Destacado) */}
         <p
           className={cn(
-            "text-primary text-center text-lg font-nourdMedium tracking-widest mb-4",
+            "text-current text-center text-lg font-nourdMedium tracking-widest mb-4",
             textClassName,
           )}
         >
@@ -82,7 +91,7 @@ const EditorialEvent: React.FC<EditorialEventProps> = ({
         {/* Lugar */}
         <p
           className={cn(
-            "text-primary text-center text-base font-nourdMedium mb-2 px-4",
+            "text-current text-center text-base font-nourdMedium mb-2 px-4",
             textClassName,
           )}
         >
@@ -92,7 +101,7 @@ const EditorialEvent: React.FC<EditorialEventProps> = ({
         {/* Dirección */}
         <div
           className={cn(
-            "text-primary/70 text-center leading-relaxed text-sm font-nourdLight mb-6 px-6",
+            "text-current/70 text-center leading-relaxed text-sm font-nourdLight mb-6 px-6",
             textClassName,
           )}
         >
@@ -101,7 +110,7 @@ const EditorialEvent: React.FC<EditorialEventProps> = ({
 
         {/* Enlace Sutil con Flecha */}
         <a
-          className="group flex items-center gap-2 text-[10px] font-nourdMedium text-primary uppercase tracking-[0.2em] border-b border-primary/20 pb-1 hover:border-primary transition-all"
+          className="group flex items-center gap-2 text-[10px] font-nourdMedium uppercase tracking-[0.2em] border-b border-current pb-1 hover:border-current transition-all"
           href={link}
           target="_blank"
           rel="noopener noreferrer"
@@ -129,11 +138,7 @@ interface DressCodeProps {
   colorPalette: ColorPalette;
 }
 
-const DressCode: React.FC<DressCodeProps> = ({
-  title,
-  text,
-  colorPalette,
-}) => {
+const DressCode: React.FC<DressCodeProps> = ({ title, text, colorPalette }) => {
   return (
     <div className="flex flex-col items-center justify-center w-full mx-auto z-10 pt-10">
       <AnimatedEntrance classname="w-full flex flex-col items-center">
@@ -262,7 +267,7 @@ export default function CeremonyToast({
   return (
     <div className="w-full flex flex-col relative">
       <div className="w-full relative z-20 -mt-11 pointer-events-none">
-        <BeigeWaves className="w-full h-12 block scale-y-[-1]" />
+        <BeigeWaves className="w-full h-12 block scale-y-[-1] drop-shadow-[0_20px_10px_rgba(0,0,0,0.15)]" />
       </div>
 
       <div
@@ -315,20 +320,25 @@ export default function CeremonyToast({
 
             {hasNoDinner && (
               <AnimatedEntrance>
-                <div className="flex flex-col items-center justify-center w-full mt-4 max-w-md mx-auto text-center z-10">
+                <div
+                  className={cn(
+                    "flex flex-col items-center justify-center w-full mt-4 max-w-md mx-auto text-center z-10 text-primary",
+                    textClassName,
+                  )}
+                >
                   <div className="w-full py-4 relative">
                     <div className="flex items-center justify-center gap-3 mb-4 opacity-60">
-                      <div className="w-12 h-px bg-primary/30" />
-                      <span className="text-primary/50 text-xs">✦</span>
-                      <div className="w-12 h-px bg-primary/30" />
+                      <div className="w-12 h-px bg-[color-mix(in_srgb,currentColor_30%,transparent)]" />
+                      <span className="text-current/50 text-xs">✦</span>
+                      <div className="w-12 h-px bg-[color-mix(in_srgb,currentColor_30%,transparent)]" />
                     </div>
 
-                    <p className="text-[9px] font-nourdMedium text-primary/60 uppercase tracking-[0.4em] mb-4">
+                    <p className="text-[9px] font-nourdMedium text-current/60 uppercase tracking-[0.4em] mb-4">
                       — Nota Importante —
                     </p>
                     <p
                       className={cn(
-                        "text-primary/90 font-nourdLight text-sm leading-relaxed bg-accent/70 p-3 rounded-lg border border-primary/20",
+                        "text-current/90 font-nourdLight text-sm leading-relaxed bg-[color-mix(in_srgb,currentColor_3%,transparent)] p-3 rounded-lg border border-[color-mix(in_srgb,currentColor_40%,transparent)]",
                         textClassName,
                       )}
                     >

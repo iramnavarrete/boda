@@ -5,7 +5,11 @@ import { FC, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@heroui/theme";
 
-export function AudioController({ musicPath = "/music.mp3" }: { musicPath?: string }) {
+export function AudioController({
+  musicPath = "/music.mp3",
+}: {
+  musicPath?: string;
+}) {
   const audioRef = useRef<HTMLAudioElement>(null);
   const setAudioRef = useMusicStore((s) => s.setAudioRef);
 
@@ -18,13 +22,18 @@ export function AudioController({ musicPath = "/music.mp3" }: { musicPath?: stri
   return <audio ref={audioRef} loop src={musicPath} />;
 }
 
-const Music: FC<{iconClassName?: string}> = ({iconClassName = ''}) => {
+const Music: FC<{ iconClassName?: string; containerClassName?: string }> = ({
+  iconClassName = "",
+  containerClassName = "",
+}) => {
   const { isPlaying, toggleAudio } = useMusicStore();
-
 
   return (
     <motion.div
-      className="flex bg-accent p-4 rounded-full drop-shadow-[0px_2px_2px_rgba(0,0,0,0.25)]"
+      className={cn(
+        "flex bg-accent p-4 rounded-full drop-shadow-[0px_2px_2px_rgba(0,0,0,0.25)]",
+        containerClassName
+      )}
       onClick={() => toggleAudio()}
       whileTap={{ scale: 0.8 }}
     >
@@ -39,6 +48,6 @@ const Music: FC<{iconClassName?: string}> = ({iconClassName = ''}) => {
       </div>
     </motion.div>
   );
-}
+};
 
 export default Music;

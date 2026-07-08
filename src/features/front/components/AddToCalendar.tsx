@@ -113,7 +113,7 @@ END:VCALENDAR`.trim();
   return (
     <button
       className={cn(
-        "group flex items-center gap-2 text-[10px] font-nourdMedium text-primary uppercase tracking-[0.2em] border-b border-primary/20 pb-1 hover:border-primary transition-all",
+        "flex items-center gap-2 text-[10px] font-nourdMedium text-primary uppercase tracking-[0.2em] border-b border-primary/20 pb-1 hover:border-primary transition-all",
         addToCalendarBtnClassName,
       )}
       onClick={abrirCalendario}
