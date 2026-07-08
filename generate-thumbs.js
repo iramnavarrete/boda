@@ -3,8 +3,10 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
-const inputDir = path.join(__dirname, 'public/img/mariana-erik/gallery');       // carpeta con imágenes originales
-const outputDir = path.join(__dirname, 'public/img/mariana-erik/gallery/thumbs'); // destino de los thumbnails
+const rootGallery = 'public/img/andrea-adrian/gallery'
+
+const inputDir = path.join(__dirname, rootGallery);       // carpeta con imágenes originales
+const outputDir = path.join(__dirname, rootGallery + '/thumbs'); // destino de los thumbnails
 
 const THUMB_WIDTH = 800; // Puedes ajustarlo a lo que necesites
 
