@@ -20,6 +20,7 @@ import {
   nourdBold,
   nourdLight,
   nourdMedium,
+  rhymeFormal,
 } from "@/features/shared/fonts";
 import Head from "next/head";
 import { InvitationsService } from "@/services/invitationsService";
@@ -73,12 +74,19 @@ export default function Home({ invitationData }: InvitationPageProps) {
         <meta name="twitter:image" content={coverImage} />
       </Head>
       <main
-        className={`${newIconScript.variable} ${nourdLight.variable} ${nourdMedium.variable} ${nourdBold.variable}`}
+        className={`${newIconScript.variable} ${nourdLight.variable} ${nourdMedium.variable} ${nourdBold.variable} ${rhymeFormal.variable}`}
       >
         {/* Componente que maneja la apertura del Lottie inicial */}
         <EnvelopeSplash
-          sealImage="/img/mariana-erik/sello-guinda.png"
           onOpen={() => setIsEnvelopeOpened(true)}
+          sealConfig={{
+            initials: eventName
+              .split(" ")
+              .map((el) => el.substring(0, 1))
+              .join(" "),
+            sealColor: "#581817",
+            textColor: '#FFF'
+          }}
         />
 
         <div style={{ overflow: "hidden" }}>

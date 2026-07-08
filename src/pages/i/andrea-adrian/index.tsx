@@ -71,101 +71,21 @@ export default function Home({ invitationData }: InvitationPageProps) {
       <FrontLayout>
         {/* Componente que maneja la apertura del Lottie inicial */}
         <FamilyProvider>
-          <EnvelopeSplash onOpen={() => setIsEnvelopeOpened(true)} />
+          {/* <EnvelopeSplash onOpen={() => setIsEnvelopeOpened(true)} />
 
           <div style={{ overflow: "hidden" }}>
             <div className="flex flex-col items-center overflow-hidden bg-texture">
-              <DesktopSidebars />
+              <DesktopSidebars  />
 
-              {/* Contenido Central (Secciones de la Invitación) */}
               <div className="max-w-[500px] 2xl:max-w-[600px] relative min-[500px]:border-x-1 border-primary overflow-hidden">
                 <Cover isSealVisible={!isEnvelopeOpened} />
                 <Quote />
                 <ParentsGodFathers />
                 <CountDown />
-                <CeremonyToast
-                  forbiddenColors={[
-                    { hex: "#FFFFFF", name: "Blanco / Marfil" },
-                    { hex: "#78866B", name: "Verde Salvia" },
-                    { hex: "#556B2F", name: "Verde Olivo" },
-                    { hex: "#1E4D2B", name: "Verde Esmeralda" },
-                  ]}
-                  textDressCode="Formal / Vaquero"
-                  hasNoDinner
-                />
-                <Gallery
-                  slides={[
-                    {
-                      src: "/img/gallery/g1.jpg",
-                      alt: "Imagen de la galería 1",
-                      thumb: "/img/gallery/thumbs/g1.jpg",
-                      msrc: "/img/gallery/thumbs/g1.jpg",
-                    },
-                    {
-                      src: "/img/gallery/g2.jpg",
-                      alt: "Imagen de la galería 2",
-                      thumb: "/img/gallery/thumbs/g2.jpg",
-                      msrc: "/img/gallery/thumbs/g2.jpg",
-                    },
-                    {
-                      src: "/img/gallery/g3.jpg",
-                      alt: "Imagen de la galería 3",
-                      thumb: "/img/gallery/thumbs/g3.jpg",
-                      msrc: "/img/gallery/thumbs/g3.jpg",
-                    },
-                    {
-                      src: "/img/gallery/g4.jpg",
-                      alt: "Imagen de la galería 4",
-                      thumb: "/img/gallery/thumbs/g4.jpg",
-                      msrc: "/img/gallery/thumbs/g4.jpg",
-                    },
-                    {
-                      src: "/img/gallery/g5.jpg",
-                      alt: "Imagen de la galería 5",
-                      thumb: "/img/gallery/thumbs/g5.jpg",
-                      msrc: "/img/gallery/thumbs/g5.jpg",
-                    },
-                    {
-                      src: "/img/gallery/g6.jpg",
-                      alt: "Imagen de la galería 6",
-                      thumb: "/img/gallery/thumbs/g6.jpg",
-                      msrc: "/img/gallery/thumbs/g6.jpg",
-                    },
-                    {
-                      src: "/img/gallery/g7.jpg",
-                      alt: "Imagen de la galería 7",
-                      thumb: "/img/gallery/thumbs/g7.jpg",
-                      msrc: "/img/gallery/thumbs/g7.jpg",
-                    },
-                    {
-                      src: "/img/gallery/g8.jpg",
-                      alt: "Imagen de la galería 8",
-                      thumb: "/img/gallery/thumbs/g8.jpg",
-                      msrc: "/img/gallery/thumbs/g8.jpg",
-                    },
-                    {
-                      src: "/img/gallery/g9.jpg",
-                      alt: "Imagen de la galería 9",
-                      thumb: "/img/gallery/thumbs/g9.jpg",
-                      msrc: "/img/gallery/thumbs/g9.jpg",
-                    },
-                    {
-                      src: "/img/gallery/g10.jpg",
-                      alt: "Imagen de la galería 10",
-                      thumb: "/img/gallery/thumbs/g10.jpg",
-                      msrc: "/img/gallery/thumbs/g10.jpg",
-                    },
-                  ]}
-                />
+                <CeremonyToast hasNoDinner />
+                <Gallery />
                 <GiftsTable
                   showCash
-                  stores={[
-                    {
-                      type: "amazon",
-                      link: "https://www.amazon.com.mx/hz/wishlist/ls/3Z8K9QG2X7V1?ref_=wl_share&fbclid=IwAR0n5sNqjHkLhYtqLhHjvYJmXqjvYl5b8u4c8Zt9D6w5e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e5gW7e",
-                      label: "Ver lista",
-                    },
-                  ]}
                   transfer={{
                     bank: "bbva",
                     beneficiary: "Beneficiario",
@@ -176,6 +96,146 @@ export default function Home({ invitationData }: InvitationPageProps) {
                 <QrPhotos />
                 <Footer />
                 <AudioController />
+              </div>
+            </div>
+          </div> */}
+          <EnvelopeSplash
+            onOpen={() => setIsEnvelopeOpened(true)}
+            sealConfig={{
+              initials: eventName
+                .split(" ")
+                .map((el) => el.substring(0, 1))
+                .join(" "),
+              sealColor: "#5b0012",
+              textColor: "#FFF",
+            }}
+          />
+
+          <div style={{ overflow: "hidden" }}>
+            <div className="flex flex-col items-center overflow-hidden">
+              <DesktopSidebars
+                flowersClassName="text-[#5b0012]"
+                textClassName="text-[#5b0012]"
+              />
+
+              {/* Contenido Central (Secciones de la Invitación) */}
+              <div className="max-w-[500px] 2xl:max-w-[600px] relative min-[500px]:border-x-1 border-primary overflow-hidden">
+                <Cover
+                  eventTitleClassName="text-[32px]"
+                  isSealVisible={!isEnvelopeOpened}
+                  imagesConfig={[
+                    {
+                      src: "/img/andrea-adrian/gallery/g5.webp",
+                      style: { backgroundPosition: "center" },
+                    },
+                    {
+                      src: "/img/andrea-adrian/gallery/g2.webp",
+                      style: { backgroundPosition: "center" },
+                    },
+                  ]}
+                  musicIconClassName="text-[#5b0012]"
+                  musicContainerClassName="bg-[#fff7f9]"
+                />
+                <Quote
+                  svgColor="#5b0012"
+                  containerClassname="bg-[#5b0012]"
+                  quote="El destino me ha premiado, pues a mi lado te ha puesto. Y para serte honesto, mi corazón está de fiesta, porque desde que tú llegaste, mi historia está completa."
+                />
+                <ParentsGodFathers
+                  containerClassName="border-[#5b0012] bg-[#fff7f9]"
+                  textClassName="text-[#5b0012]"
+                  svgsColor="#5b0012"
+                  addToCalendarBtnClassName="text-[#5b0012] border-[#5b0012]"
+                  bottomWavesColor="#fff7f9"
+                  calendarOptions={{
+                    className: "bg-[#5b0012]",
+                    hearthClassName: "text-[#b73c58]",
+                    showOnlyWeek: false,
+                  }}
+                />
+                <CountDown backgroundImage="/img/andrea-adrian/gallery/g6.webp" />
+                <CeremonyToast
+                  svgsColor="#5b0012"
+                  textClassName="text-[#5b0012]"
+                  containerClassName="#f3ede1"
+                  textDressCode="Formal / Vaquero"
+                  hasNoDinner
+                />
+                <Gallery
+                  svgsColor="#5b0012"
+                  containerClassName="bg-[3f3ede1]"
+                  textClassName="text-[#5b0012]"
+                  slides={[
+                    {
+                      src: "/img/andrea-adrian/gallery/g2.webp",
+                      alt: "Imagen de la galería 2",
+                      thumb: "/img/andrea-adrian/gallery/thumbs/g2.webp",
+                      msrc: "/img/andrea-adrian/gallery/thumbs/g2.webp",
+                    },
+                    {
+                      src: "/img/andrea-adrian/gallery/g1.webp",
+                      alt: "Imagen de la galería 1",
+                      thumb: "/img/andrea-adrian/gallery/thumbs/g1.webp",
+                      msrc: "/img/andrea-adrian/gallery/thumbs/g1.webp",
+                    },
+                    {
+                      src: "/img/andrea-adrian/gallery/g4.webp",
+                      alt: "Imagen de la galería 4",
+                      thumb: "/img/andrea-adrian/gallery/thumbs/g4.webp",
+                      msrc: "/img/andrea-adrian/gallery/thumbs/g4.webp",
+                    },
+                    {
+                      src: "/img/andrea-adrian/gallery/g3.webp",
+                      alt: "Imagen de la galería 3",
+                      thumb: "/img/andrea-adrian/gallery/thumbs/g3.webp",
+                      msrc: "/img/andrea-adrian/gallery/thumbs/g3.webp",
+                    },
+                    {
+                      src: "/img/andrea-adrian/gallery/g5.webp",
+                      alt: "Imagen de la galería 5",
+                      thumb: "/img/andrea-adrian/gallery/thumbs/g5.webp",
+                      msrc: "/img/andrea-adrian/gallery/thumbs/g5.webp",
+                    },
+                    {
+                      src: "/img/andrea-adrian/gallery/g6.webp",
+                      alt: "Imagen de la galería 6",
+                      thumb: "/img/andrea-adrian/gallery/thumbs/g6.webp",
+                      msrc: "/img/andrea-adrian/gallery/thumbs/g6.webp",
+                    },
+                  ]}
+                />
+                <GiftsTable
+                  containerClassName="bg-[#5b0012]"
+                  showCash={true}
+                  transfer={{
+                    bank: "bbva",
+                    cardNumber: "4815 1630 5099 1002",
+                    beneficiary: "Andrea Lara",
+                  }}
+                />
+                <Assistants
+                  svgsColor="#5b0012"
+                  textClassName="text-[#5b0012]"
+                  btnClassName="text-[#5b0012] border-[#5b0012] bg-gold/5"
+                  containerClassName="#f3ede1"
+                  activeConfirmBtnClassName="bg-transparent text-[#5b0012] border-[#5b0012]"
+                  inactiveConfirmBtnClassName="bg-transparent text-stone-400 border-stone-300"
+                  activeDeclineBtnClassName="bg-transparent text-[#5b0012] border-[#5b0012]"
+                  inactiveDeclineBtnClassName="bg-transparent text-stone-400 border-stone-300"
+                  sendFormBtnClassName="text-[#5b0012] border-[#5b0012] bg-gold/5 border"
+                  sealImage="/img/andrea-adrian/sello-guinda.png"
+                />
+                <QrPhotos
+                  urlPhotos="https://photos.app.goo.gl/CvX5tzkMZpkL1Hv36"
+                  btnClassName="text-[#5b0012] bg-accent"
+                  containerClassName="bg-[#5b0012]"
+                />
+                <Footer
+                  textClassName="text-[#5b0012]"
+                  containerClassName="bg-gold/5"
+                  svgsColor="#5b0012"
+                />
+                <AudioController musicPath="/music/exist-for-love.mp3" />
               </div>
             </div>
           </div>
