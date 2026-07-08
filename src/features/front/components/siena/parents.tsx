@@ -258,9 +258,9 @@ export default function ParentsGodFathers({
       </div>
 
       {/* ONDA EN EL FLUJO NORMAL DEL DOCUMENTO */}
-      <div className="w-full relative z-20 mt-auto -mb-[45px] pointer-events-none">
+      <div className="w-full relative z-20 mt-auto -mb-[45px] pointer-events-none drop-shadow-[0_24px_10px_rgba(0,0,0,0.10)]">
         <BeigeWaves
-          className="w-full h-[47px] block drop-shadow-[0_20px_10px_rgba(0,0,0,0.15)]"
+          className="w-full h-[47px] block"
           color={bottomWavesColor}
         />
       </div>
