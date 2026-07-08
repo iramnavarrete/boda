@@ -42,7 +42,7 @@ const QrPhotos: FC<Props> = ({containerClassName = '', btnClassName = '', urlPho
                   dataModulesSettings={{
                     style: "rounded",
                     color: "#fff",
-                    lineWidth: 0.9
+                    lineWidth: 0.9,
                   }}
                   finderPatternInnerSettings={{
                     style: "inpoint-lg",
@@ -65,15 +65,14 @@ const QrPhotos: FC<Props> = ({containerClassName = '', btnClassName = '', urlPho
             </div>
             <p>O sólo haz click en este botón</p>
             <a
-              className={cn(
-                "border-border-button border-1 px-8 py-3 rounded-2xl bg-button-dark font-nourdMedium text-primary",
-                btnClassName,
-              )}
               href={urlPhotos || "https://photos.app.goo.gl/sDAssibZmqngTZmz8"}
               target="_blank"
               rel="noopener noreferrer"
+              className={cn(
+                "flex items-center gap-2 text-[10px] font-nourdMedium uppercase tracking-[0.2em] border-b border-[color-mix(in_srgb,currentColor_20%,transparent)] pb-1 hover:border-current transition-all"
+              )}
             >
-              Abrir album
+              Abrir álbum
             </a>
           </div>
         </motion.div>
