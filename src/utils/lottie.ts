@@ -81,8 +81,6 @@ export const colorizeLottie = <
     keyof typeof originalColorsMap
   >;
 
-  console.log({ newColors });
-
   keys.forEach((key) => {
     // Solución del error TypeScript: casteamos explícitamente a string
     const originalColorArray = originalColorsMap[key] as string;
