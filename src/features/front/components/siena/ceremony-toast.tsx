@@ -141,8 +141,25 @@ const DressCode: React.FC<DressCodeProps> = ({
   forbiddenColors,
   textClassName,
 }) => {
+  // Lógica para distribuir los colores simétricamente
+  const getColorRows = (colors: ColorPalette) => {
+    if (!colors || colors.length === 0) return [];
+    if (colors.length <= 6) return [colors]; // Si son 6 o menos, 1 sola fila
+
+    // Si son más de 6, partimos el arreglo en 2 mitades balanceadas
+    const half = Math.ceil(colors.length / 2);
+    return [colors.slice(0, half), colors.slice(half)];
+  };
+
+  const colorRows = getColorRows(forbiddenColors || []);
+
   return (
-    <div className={cn("flex flex-col items-center justify-center w-full mx-auto z-10 pt-10", textClassName)}>
+    <div
+      className={cn(
+        "flex flex-col items-center justify-center w-full mx-auto z-10 pt-10",
+        textClassName,
+      )}
+    >
       <AnimatedEntrance classname="w-full flex flex-col items-center">
         {/* Overline & Título Principal */}
         <p className="text-[10px] font-nourdMedium text-current opacity-70 uppercase tracking-[0.3em] mb-4 text-center">
@@ -185,31 +202,41 @@ const DressCode: React.FC<DressCodeProps> = ({
             )}
 
             {/* Paleta de Colores Prohibidos Integrada en Mujeres */}
-            {forbiddenColors && forbiddenColors.length > 0 && (
-              <div className="flex flex-col items-center border border-[color-mix(in_srgb,currentColor_20%,transparent)] bg-[color-mix(in_srgb,currentColor_5%,transparent)] rounded-2xl px-6 py-6 w-full relative mt-2">
+            {colorRows.length > 0 && (
+              <div className="flex flex-col items-center border border-[color-mix(in_srgb,currentColor_20%,transparent)] bg-[color-mix(in_srgb,currentColor_5%,transparent)] rounded-2xl py-6 w-full relative mt-2">
                 <p className="text-[9px] font-nourdMedium text-current opacity-80 uppercase tracking-[0.2em] text-center mb-5">
                   Colores Exclusivos (No Permitidos)
                 </p>
-                <div className="flex flex-wrap items-center justify-center gap-4">
-                  {forbiddenColors.map((color, idx) => (
+
+                {/* Contenedor de Filas Dinámicas */}
+                <div className="flex flex-col items-center justify-center gap-3 w-full">
+                  {colorRows.map((row, rowIdx) => (
                     <div
-                      key={idx}
-                      className="relative group flex flex-col items-center justify-center"
+                      key={rowIdx}
+                      className="flex flex-wrap items-center justify-center gap-3 md:gap-4"
                     >
-                      <div
-                        className="w-8 h-8 rounded-full shadow-sm border-2 border-white transition-transform group-hover:scale-110 cursor-pointer"
-                        style={{ backgroundColor: color.hex }}
-                      />
-                      {/* Tooltip animado */}
-                      <div className="absolute bottom-full mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-20 flex flex-col items-center translate-y-2 group-hover:translate-y-0">
-                        <div className="bg-white/95 backdrop-blur-sm text-primary px-3 py-1.5 rounded-lg text-[9px] font-nourdMedium uppercase tracking-widest shadow-lg border border-primary/10 whitespace-nowrap">
-                          {color.name}
+                      {row.map((color, idx) => (
+                        <div
+                          key={idx}
+                          className="relative group flex flex-col items-center justify-center"
+                        >
+                          <div
+                            className="w-8 h-8 rounded-full shadow-sm border-2 border-white transition-transform group-hover:scale-110 cursor-pointer"
+                            style={{ backgroundColor: color.hex }}
+                          />
+                          {/* Tooltip animado */}
+                          <div className="absolute bottom-full mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-20 flex flex-col items-center translate-y-2 group-hover:translate-y-0">
+                            <div className="bg-white/95 backdrop-blur-sm text-primary px-3 py-1.5 rounded-lg text-[9px] font-nourdMedium uppercase tracking-widest shadow-lg border border-primary/10 whitespace-nowrap">
+                              {color.name}
+                            </div>
+                            <div className="w-2 h-2 bg-white/95 border-r border-b border-primary/10 rotate-45 -mt-1 shadow-sm"></div>
+                          </div>
                         </div>
-                        <div className="w-2 h-2 bg-white/95 border-r border-b border-primary/10 rotate-45 -mt-1 shadow-sm"></div>
-                      </div>
+                      ))}
                     </div>
                   ))}
                 </div>
+
                 <p className="text-current opacity-60 text-[11px] italic font-serif mt-5 text-center px-4">
                   *Tonalidades reservadas estrictamente para la novia y las
                   damas de honor.
