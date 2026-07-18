@@ -104,19 +104,6 @@ export interface SeatingStore {
   removeMultipleElements: (ids: string[]) => void;
 }
 
-export const generateFamilyColors = (
-  families: Omit<FamilyElement, "colorBg" | "colorBorder">[],
-): FamilyElement[] => {
-  return families.map((fam, i) => {
-    const hue = Math.floor((i * (360 / families.length)) % 360);
-    return {
-      ...fam,
-      colorBg: `hsl(${hue}, 80%, 85%)`,
-      colorBorder: `hsl(${hue}, 70%, 65%)`,
-    };
-  });
-};
-
 // ─────────────────────────────────────────────────────────────────────────────
 // 🔥 HELPER DE AGRUPACIÓN INTELIGENTE (Auto-sanación)
 // ─────────────────────────────────────────────────────────────────────────────
