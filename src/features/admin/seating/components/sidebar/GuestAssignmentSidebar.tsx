@@ -1,10 +1,17 @@
+import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { X, Search } from "lucide-react";
+import { X, Search, UserMinus } from "lucide-react";
 import { DraggableFamily } from "./DraggableFamily";
 import { cn } from "@heroui/theme";
 import { useGuestAssignment } from "../../hooks/useGuestAssignment";
 import { SidebarStats } from "./SidebarStats";
 import { SidebarTabs } from "./SidebarTabs";
+
+import {
+  UnassignDeclinedPanel,
+  UnassignOptions,
+} from "./UnassignDeclinedPanel";
+import { useSeatingStore } from "../../stores/useSeatingStore";
 
 export default function GuestAssignmentSidebar({
   onClose,
@@ -16,7 +23,6 @@ export default function GuestAssignmentSidebar({
     data: { type: "sidebar" },
   });
 
-  // Consumimos toda la lógica desde nuestro Custom Hook segmentado
   const {
     searchQuery,
     setSearchQuery,
@@ -27,13 +33,24 @@ export default function GuestAssignmentSidebar({
     filteredAndSortedFamilies,
   } = useGuestAssignment();
 
+  // Traemos la acción desde el store
+  const unassignByCriteria = useSeatingStore(
+    (state) => state.unassignByCriteria,
+  );
+
+  const [showUnassignPanel, setShowUnassignPanel] = useState(false);
+
+  const handleUnassignGuests = (options: UnassignOptions) => {
+    unassignByCriteria(options);
+    setShowUnassignPanel(false);
+  };
+
   return (
     <div
       ref={setNodeRef}
       className="flex flex-col h-full bg-white shrink-0 select-none w-[320px]"
     >
-      <div className="p-4 border-b border-[#EBE5DA] bg-[#FDFBF7] shrink-0">
-        {/* HEADER: Título y Total */}
+      <div className="p-4 pb-2 border-b border-[#EBE5DA] bg-[#FDFBF7] shrink-0">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-3">
             <h2 className="font-serif text-[17px] font-bold text-[#2C2C29]">
@@ -53,27 +70,48 @@ export default function GuestAssignmentSidebar({
           )}
         </div>
 
-        {/* BADGES SEGMENTADOS */}
         <SidebarStats stats={stats} />
 
-        {/* BUSCADOR COMPACTO */}
-        <div className="relative mb-3">
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A29E]"
-            size={14}
-          />
-          <input
-            type="text"
-            placeholder="Buscar familia..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-3 py-2 bg-white border border-[#EBE5DA] rounded-lg text-xs font-medium text-[#2C2C29] focus:outline-none focus:border-[#C5A669] focus:ring-1 focus:ring-[#C5A669]/20 transition-all placeholder:text-[#A8A29E] placeholder:font-normal shadow-sm"
-          />
+        <div className="flex gap-2 mb-3">
+          <div className="relative flex-1">
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-[#A8A29E]"
+              size={14}
+            />
+            <input
+              type="text"
+              placeholder="Buscar familia..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-2 bg-white border border-[#EBE5DA] rounded-lg text-xs font-medium text-[#2C2C29] focus:outline-none focus:border-[#C5A669] focus:ring-1 focus:ring-[#C5A669]/20 transition-all placeholder:text-[#A8A29E] placeholder:font-normal shadow-sm"
+            />
+          </div>
+
+          <button
+            onClick={() => setShowUnassignPanel((prev) => !prev)}
+            className={cn(
+              "px-2.5 border border-[#EBE5DA] rounded-lg flex items-center justify-center transition-colors shadow-sm",
+              showUnassignPanel
+                ? "bg-red-50 text-red-500 border-red-200"
+                : "bg-white text-[#A8A29E] hover:text-red-500 hover:bg-red-50",
+            )}
+            title="Liberar asientos"
+          >
+            <UserMinus size={14} />
+          </button>
         </div>
 
-        {/* TABS SEGMENTADOS */}
         <SidebarTabs filter={filter} setFilter={setFilter} />
       </div>
+
+      {showUnassignPanel && (
+        <div className="bg-[#FDFBF7] pt-2">
+          <UnassignDeclinedPanel
+            onClose={() => setShowUnassignPanel(false)}
+            onConfirm={handleUnassignGuests}
+          />
+        </div>
+      )}
 
       {/* LISTADO DE FAMILIAS CON SCROLL FORZADO */}
       <div className="p-3 overflow-y-scroll overflow-x-hidden flex-1 w-full pb-10 scrollbar-thin scrollbar-thumb-[#EBE5DA]">

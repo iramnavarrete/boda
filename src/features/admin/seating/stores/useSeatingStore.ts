@@ -43,6 +43,12 @@ export interface FamilyElement {
   rawFamily: Family;
 }
 
+export interface UnassignOptions {
+  includeNoDeadline: boolean;
+  includePendingNotExpired: boolean;
+  includePendingExpired: boolean;
+}
+
 export interface SeatingStore {
   elements: SeatingElement[];
   families: FamilyElement[];
@@ -83,6 +89,8 @@ export interface SeatingStore {
   removeGuestFromTable: (tableId: string, guestId: string) => void;
   removeFamilyFromTable: (familyId: string) => void;
 
+  unassignByCriteria: (options: UnassignOptions) => void;
+
   executeRemoveSeat: (
     invitationId: string,
     familyId: string,
@@ -105,18 +113,13 @@ export interface SeatingStore {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 🔥 HELPER DE AGRUPACIÓN INTELIGENTE (Auto-sanación)
+// HELPER DE AGRUPACIÓN INTELIGENTE
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * Reordena los asientos de una mesa agrupándolos automáticamente por familia,
- * eliminando a cualquier "fantasma" que haya sido borrado de la base de datos.
- */
 const groupSeatsByFamily = (
   seats: string[],
   families: FamilyElement[],
 ): string[] => {
-  // Filtramos fantasmas de forma estricta garantizando que sigan existiendo en families
   const filled = seats.filter((s) => {
     if (!s || s === "") return false;
     return families.some((f) => f.guests.some((g) => g.id === s));
@@ -159,7 +162,6 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
   hasUnsavedChanges: false,
 
   initialize: (dbElements, dbFamilies) => {
-    // Al iniciar, purgamos fantasmas de la base de datos por si quedaba alguno
     const cleanedElements = dbElements.map((el) => ({
       ...el,
       assignedSeats: groupSeatsByFamily(el.assignedSeats, dbFamilies),
@@ -175,20 +177,17 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
 
   updateFamilies: (newFamilies) =>
     set((state) => {
-      // 🔥 AUTO-SANACIÓN EN MEMORIA: Purgamos invitados eliminados
       const cleanedElements = state.elements.map((el) => ({
         ...el,
         assignedSeats: groupSeatsByFamily(el.assignedSeats, newFamilies),
       }));
 
-      // Verificamos si la auto-sanación realmente modificó alguna mesa (expulsó a un fantasma)
       const elementsChanged =
         JSON.stringify(state.elements) !== JSON.stringify(cleanedElements);
 
       return {
         families: newFamilies,
         elements: cleanedElements,
-        // Si se expulsó un fantasma, encendemos el botón de "Guardar Cambios"
         hasUnsavedChanges: state.hasUnsavedChanges || elementsChanged,
       };
     }),
@@ -353,6 +352,84 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
       };
     });
     removeHighlightSeats("family", familyId);
+  },
+
+  unassignByCriteria: (options: UnassignOptions) => {
+    const { elements, families, showToast } = get();
+    const guestIdsToRemove = new Set<string>();
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    families.forEach((family) => {
+      const hasDeadline = !!family.deadline;
+      let deadlineDate: Date | null = null;
+
+      if (hasDeadline) {
+        deadlineDate = new Date(family.deadline!);
+        deadlineDate.setHours(23, 59, 59, 999);
+      }
+
+      const isExpired = deadlineDate ? deadlineDate < now : false;
+
+      family.guests.forEach((guest) => {
+        const status = (guest.estatus || "pending").toLowerCase();
+
+        if (
+          status !== "declinado" &&
+          status !== "rechazado" &&
+          status !== "declined"
+        )
+          return;
+
+        if (!hasDeadline && options.includeNoDeadline)
+          guestIdsToRemove.add(guest.id);
+        else if (hasDeadline && !isExpired && options.includePendingNotExpired)
+          guestIdsToRemove.add(guest.id);
+        else if (hasDeadline && isExpired && options.includePendingExpired)
+          guestIdsToRemove.add(guest.id);
+      });
+    });
+
+    if (guestIdsToRemove.size === 0) {
+      showToast(
+        "No hay invitados declinados que coincidan con esos criterios.",
+      );
+      return;
+    }
+
+    let removedCount = 0;
+
+    const updatedElements = elements.map((el) => {
+      if (!el.assignedSeats?.length) return el;
+
+      const newSeats = el.assignedSeats.filter(
+        (id) => !guestIdsToRemove.has(id),
+      );
+
+      removedCount += el.assignedSeats.length - newSeats.length;
+
+      return {
+        ...el,
+        assignedSeats: groupSeatsByFamily(newSeats, families),
+      };
+    });
+
+    if (removedCount === 0) {
+      showToast(
+        "Los invitados declinados encontrados ya estaban fuera de las mesas.",
+      );
+      return;
+    }
+
+    set({
+      elements: updatedElements,
+      hasUnsavedChanges: true,
+    });
+
+    const s = removedCount === 1 ? "" : "s";
+    showToast(
+      `${removedCount} asiento${s} declinado${s} liberado${s} exitosamente.`,
+    );
   },
 
   executeRemoveSeat: async (invitationId, familyId, guestId) => {
