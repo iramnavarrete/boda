@@ -178,10 +178,10 @@ export default function Home({ invitationData }: InvitationPageProps) {
                   textClassName="text-[#5b0012]"
                   slides={[
                     {
-                      src: "/img/andrea-adrian/gallery/g2.webp",
-                      alt: "Imagen de la galería 2",
-                      thumb: "/img/andrea-adrian/gallery/thumbs/g2.webp",
-                      msrc: "/img/andrea-adrian/gallery/thumbs/g2.webp",
+                      src: "/img/andrea-adrian/gallery/g6.webp",
+                      alt: "Imagen de la galería 6",
+                      thumb: "/img/andrea-adrian/gallery/thumbs/g6.webp",
+                      msrc: "/img/andrea-adrian/gallery/thumbs/g6.webp",
                     },
                     {
                       src: "/img/andrea-adrian/gallery/g1.webp",
@@ -208,10 +208,22 @@ export default function Home({ invitationData }: InvitationPageProps) {
                       msrc: "/img/andrea-adrian/gallery/thumbs/g5.webp",
                     },
                     {
-                      src: "/img/andrea-adrian/gallery/g6.webp",
-                      alt: "Imagen de la galería 6",
-                      thumb: "/img/andrea-adrian/gallery/thumbs/g6.webp",
-                      msrc: "/img/andrea-adrian/gallery/thumbs/g6.webp",
+                      src: "/img/andrea-adrian/gallery/g7.webp",
+                      alt: "Imagen de la galería 7",
+                      thumb: "/img/andrea-adrian/gallery/thumbs/g7.webp",
+                      msrc: "/img/andrea-adrian/gallery/thumbs/g7.webp",
+                    },
+                    {
+                      src: "/img/andrea-adrian/gallery/g8.webp",
+                      alt: "Imagen de la galería 8",
+                      thumb: "/img/andrea-adrian/gallery/thumbs/g8.webp",
+                      msrc: "/img/andrea-adrian/gallery/thumbs/g8.webp",
+                    },
+                    {
+                      src: "/img/andrea-adrian/gallery/g9.webp",
+                      alt: "Imagen de la galería 9",
+                      thumb: "/img/andrea-adrian/gallery/thumbs/g9.webp",
+                      msrc: "/img/andrea-adrian/gallery/thumbs/g9.webp",
                     },
                   ]}
                 />
