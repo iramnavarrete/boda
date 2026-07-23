@@ -121,6 +121,9 @@ type Props = {
   womenConfig?: DressCodeSection;
   menConfig?: DressCodeSection;
   forbiddenColors?: ColorPalette;
+  // 🔥 Nuevas props agregadas
+  onlyText?: boolean;
+  textRestrictions?: string[];
 };
 
 export default function CeremonyToast({
@@ -129,6 +132,8 @@ export default function CeremonyToast({
   svgsColor,
   textDressCode = "Para nosotros es muy importante compartir este día tan especial con ustedes. Nos encantaría que nos acompañen luciendo su mejor atuendo, respetando la etiqueta sugerida para mantener la armonía de nuestra celebración.",
   hasNoDinner = false,
+  onlyText = false,
+  textRestrictions = [],
 
   // Textos formales y extensos
   womenConfig = {
@@ -249,7 +254,6 @@ export default function CeremonyToast({
         </div>
 
         {/* SECCIÓN DEL CÓDIGO DE VESTIMENTA */}
-        {/* Le agregamos la clase text-accent para que el text-current del hijo lo herede */}
         <div
           className={cn(
             "px-5 bg-primary w-full pb-24 pt-16 relative z-10 text-accent",
@@ -263,6 +267,9 @@ export default function CeremonyToast({
               womenConfig={womenConfig}
               menConfig={menConfig}
               forbiddenColors={forbiddenColors}
+              // 🔥 Pasamos las nuevas props al componente hijo
+              onlyText={onlyText}
+              textRestrictions={textRestrictions}
             />
           </div>
         </div>
