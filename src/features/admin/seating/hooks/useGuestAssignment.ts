@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useSeatingStore } from "../stores/useSeatingStore";
 
-export type FilterType = "all" | "pending" | "assigned";
+export type FilterType = "all" | "pending" | "assigned" | "action";
 
 export function useGuestAssignment() {
   const families = useSeatingStore((state) => state.families);
@@ -56,42 +56,46 @@ export function useGuestAssignment() {
   }, [families, assignedGuestIds, elements]);
 
   const filteredAndSortedFamilies = useMemo(() => {
-    return families
-      .filter((f) => {
-        // Filtro por Búsqueda (Buscador)
-        if (
-          searchQuery &&
-          !f.name.toLowerCase().includes(searchQuery.toLowerCase())
-        ) {
-          return false;
-        }
+    let filtered = families;
 
-        // Determinar el estado de asignación
-        const assignedCount = f.guests.filter((g) =>
-          assignedGuestIds.has(g.id),
-        ).length;
-        const isFullyAssigned =
-          f.guests.length > 0 && assignedCount === f.guests.length;
+    if (searchQuery) {
+      filtered = filtered.filter((f) =>
+        f.name.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+    }
 
-        // Filtro por Tabs
-        if (filter === "assigned" && !isFullyAssigned) return false;
-        if (filter === "pending" && isFullyAssigned) return false;
+    return filtered.filter((family) => {
+      const totalGuests = family.guests.length;
+      if (totalGuests === 0) return false;
 
-        return true;
-      })
-      .sort((a, b) => {
-        const aAssigned =
-          a.guests.length > 0 &&
-          a.guests.every((g) => assignedGuestIds.has(g.id));
-        const bAssigned =
-          b.guests.length > 0 &&
-          b.guests.every((g) => assignedGuestIds.has(g.id));
+      const assignedCount = family.guests.filter((g) =>
+        assignedGuestIds.has(g.id),
+      ).length;
 
-        if (aAssigned && !bAssigned) return 1;
-        if (!aAssigned && bAssigned) return -1;
-        return 0;
-      });
-  }, [families, searchQuery, filter, assignedGuestIds]);
+      const declinedCount = family.guests.filter((g) => {
+        const status = (g.estatus || "").toLowerCase();
+        return ["declinado", "rechazado", "declined"].includes(status);
+      }).length;
+
+      // Evaluamos los 3 estados exactos de los colores:
+      const isGreen = assignedCount === totalGuests; // 100% asignados
+      const isOrange =
+        declinedCount > 0 || (assignedCount > 0 && assignedCount < totalGuests); // A medias o declinados
+      const isYellow = assignedCount === 0 && declinedCount === 0; // Frescos, nadie sentado
+
+      switch (filter) {
+        case "assigned":
+          return isGreen; // Solo los verdes
+        case "pending":
+          return isYellow; // Solo los amarillos
+        case "action": // Antes llamado "declined"
+          return isOrange; // Solo los naranjas
+        case "all":
+        default:
+          return true;
+      }
+    });
+  }, [families, assignedGuestIds, filter, searchQuery]);
 
   return {
     searchQuery,

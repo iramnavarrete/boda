@@ -201,7 +201,7 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       isDanger,
       action: async () => {
         await executeRemoveSeat(invitationId, familyId, guestId);
-        showToast("Asiento eliminado correctamente");
+        showToast("Invitado eliminado correctamente");
       },
     });
   };
