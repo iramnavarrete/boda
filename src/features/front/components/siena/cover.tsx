@@ -24,6 +24,8 @@ type Props = {
   imagesConfig?: ImageConfig[];
   musicIconClassName?: string;
   musicContainerClassName?: string;
+  // 🔥 Nueva propiedad añadida
+  textAlign?: "left" | "right" | "center";
 };
 
 export default function Cover({
@@ -33,9 +35,10 @@ export default function Cover({
     { src: "/img/cover2.webp", style: { backgroundPosition: "60%" } },
     { src: "/img/cover3.webp", style: { backgroundPosition: "right" } },
   ],
-  eventTitleClassName ="",
+  eventTitleClassName = "",
   musicIconClassName = "",
-  musicContainerClassName = ""
+  musicContainerClassName = "",
+  textAlign = "right", // 🔥 Valor por defecto para mantener el diseño original
 }: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
   const { family, setFamily } = useFamilyContext();
@@ -48,11 +51,10 @@ export default function Cover({
   const preview = searchParams?.get("preview");
   const token = searchParams?.get("token");
 
-  // 🔥 Ref de seguridad para evitar dobles registros causados por el StrictMode de React
+  // Ref de seguridad para evitar dobles registros causados por el StrictMode de React
   const hasLoggedRef = useRef(false);
 
   // --- INTERSECTION OBSERVER NATIVO ---
-  // Reemplaza a `useInView` de Framer Motion
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -82,7 +84,7 @@ export default function Cover({
         if (!hasLoggedRef.current) {
           hasLoggedRef.current = true;
 
-          // 3. SIEMPRE guardamos el log de actividad en el historial (costo: 1 escritura)
+          // 3. SIEMPRE guardamos el log de actividad en el historial
           ActivityService.logActivity(invitationData.id, {
             action: "view",
             familyId: family.id,
@@ -123,7 +125,7 @@ export default function Cover({
 
   return (
     <>
-      {/* Animación local para el rebote de las flechas (Inicia después de la transición de entrada) */}
+      {/* Animación local para el rebote de las flechas */}
       <style>{`
         @keyframes smoothBounce {
           0%, 100% { transform: translateY(0); }
@@ -131,7 +133,7 @@ export default function Cover({
         }
         .animate-smooth-bounce {
           animation: smoothBounce 1.6s ease-in-out infinite;
-          animation-delay: 3.2s; /* Comienza a rebotar justo cuando termina su animación de entrada */
+          animation-delay: 3.2s;
         }
       `}</style>
 
@@ -161,7 +163,7 @@ export default function Cover({
 
         {/* === CONTENIDO PRINCIPAL ANIMADO CON TAILWIND === */}
         <div className="relative z-10 h-full w-full">
-          {/* Contenedor del Texto (Aparece a los 2.4s) */}
+          {/* Contenedor del Texto */}
           <div className="absolute h-[60%] w-full flex flex-col justify-start bg-gradient-to-b from-black/45 via-black/20"></div>
           <div
             className={cn(
@@ -173,7 +175,15 @@ export default function Cover({
           >
             {/* Degradado oscuro elegante hacia transparente */}
             <div className="h-full w-full flex flex-col justify-start">
-              <div className="relative pr-6 flex flex-col items-end pt-12 drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]">
+              {/* 🔥 Se aplica la alineación dinámica aquí */}
+              <div
+                className={cn(
+                  "relative flex flex-col pt-12 drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]",
+                  textAlign === "right" && "items-end pr-6 text-right",
+                  textAlign === "left" && "items-start pl-6 text-left",
+                  textAlign === "center" && "items-center px-6 text-center",
+                )}
+              >
                 <p
                   className={cn(
                     "font-newIconScript text-white text-4xl drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]",
@@ -200,7 +210,7 @@ export default function Cover({
             className="h-[60px] w-full absolute bottom-11 pointer-events-none"
           />
 
-          {/* Botón de Música (Aparece a los 2s) */}
+          {/* Botón de Música */}
           <div
             className={cn(
               "absolute bottom-11 right-5 transition-all duration-1000 ease-out transform-gpu",
@@ -212,8 +222,7 @@ export default function Cover({
             <Music iconClassName={musicIconClassName} />
           </div>
 
-          {/* Flechas (Aparecen a los 2.2s y luego rebotan) */}
-          {/* Indicador EXPLÍCITO de Deslizar (Aparece a los 2.2s y luego rebota) */}
+          {/* Indicador EXPLÍCITO de Deslizar */}
           <div
             className={cn(
               "absolute bottom-11 left-0 right-0 w-full flex justify-center pointer-events-none transition-all duration-1000 ease-out transform-gpu",
@@ -259,7 +268,10 @@ export default function Cover({
             : "opacity-100 translate-y-0",
         )}
       >
-        <Music iconClassName={musicIconClassName} containerClassName={musicContainerClassName} />
+        <Music
+          iconClassName={musicIconClassName}
+          containerClassName={musicContainerClassName}
+        />
       </div>
     </>
   );

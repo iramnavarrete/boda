@@ -3,6 +3,7 @@ import { db } from "@/lib/firebase/config";
 import { SeatingElement, FamilyElement } from "../stores/useSeatingStore";
 import { Family, GuestSeat } from "@/types";
 import { invitationsCollectionName } from "@/services/invitationsService";
+import { getFamilyColorByIndex } from "@/utils/familyColors";
 
 interface ExtendedDbFamily extends Family {
   asientos?: GuestSeat[] | null;
@@ -56,20 +57,19 @@ export const SeatingService = {
 
     for (let i = 0; i < rawFamilies.length; i++) {
       const rawFamily = rawFamilies[i];
-      const hue = Math.floor((i * (360 / rawFamilies.length)) % 360);
       const familyName = rawFamily.nombre || `Grupo ${i + 1}`;
       const deadline = rawFamily.fechaLimiteConfirmacion || null;
 
-      // 🔥 CERO LEGACY: Confiamos ciegamente en que FamiliesService
-      // ya estructuró correctamente el array de "asientos" desde el inicio
+      const color = getFamilyColorByIndex(i);
+
       const familyGuests: GuestSeat[] = rawFamily.asientos || [];
 
       result.push({
         id: rawFamily.id,
         name: familyName,
         deadline,
-        colorBg: `hsl(${hue}, 80%, 85%)`,
-        colorBorder: `hsl(${hue}, 70%, 65%)`,
+        colorBg: color.bg,
+        colorBorder: color.border,
         guests: familyGuests,
         allowChanges: rawFamily.cambiosPermitidos,
         rawFamily: rawFamily,

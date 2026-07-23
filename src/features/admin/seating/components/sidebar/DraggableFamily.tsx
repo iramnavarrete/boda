@@ -8,14 +8,15 @@ import {
   ChevronRight,
   Trash2,
   RotateCcw,
+  XCircle,
 } from "lucide-react";
-import { DraggableGuest } from "./DraggableGuest";
 import Tooltip from "@/features/shared/components/Tooltip";
 import { useSeatingModalContext } from "../SeatingModalContext";
 import {
   highlightSeats,
   removeHighlightSeats,
 } from "../../utils/highlightHelper";
+import { DraggableGuest } from "./DraggableGuest";
 
 export function DraggableFamily({
   family,
@@ -25,7 +26,9 @@ export function DraggableFamily({
   isFirstElement: boolean;
 }) {
   const elements = useSeatingStore((state) => state.elements);
-  const removeFamilyFromTable = useSeatingStore((state) => state.removeFamilyFromTable);
+  const removeFamilyFromTable = useSeatingStore(
+    (state) => state.removeFamilyFromTable,
+  );
   const { triggerFamilyRemoval } = useSeatingModalContext();
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -37,6 +40,13 @@ export function DraggableFamily({
     [family, elements],
   );
   const allAssigned = assignedCount === family.guests.length;
+
+  const declinedCount = useMemo(() => {
+    return family.guests.filter((g) => {
+      const status = (g.estatus || "").toLowerCase();
+      return ["declined", "declinado", "rechazado"].includes(status);
+    }).length;
+  }, [family.guests]);
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `family-${family.id}`,
@@ -64,16 +74,40 @@ export function DraggableFamily({
           className="w-3 h-3 rounded-full border border-black/10 shrink-0"
           style={{ backgroundColor: family.colorBg }}
         />
-        <div className="flex-1 flex flex-col min-w-0">
-          <span className="font-serif text-[13px] font-semibold text-[#2C2C29]">
+
+        {/* CONTENEDOR DEL NOMBRE */}
+        <div className="flex-1 pr-1 min-w-0">
+          <span className="font-serif text-[13px] font-semibold text-[#2C2C29] leading-tight break-words block">
             {family.name}
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
-          {assignedCount > 0 && (
+        {/* CONTENEDOR DE BADGES Y ACCIONES */}
+        <div className="relative flex items-center gap-1.5 shrink-0">
+          {/* 🔥 BOTONES FLOTANTES: Fondo degradado dinámico según si es draggable o no */}
+          <div
+            className={`absolute right-full top-0 bottom-0 flex items-center gap-1 pr-1.5 pl-8 bg-gradient-to-r opacity-0 group-hover/fam:opacity-100 transition-opacity pointer-events-none group-hover/fam:pointer-events-auto z-10 ${allAssigned ? "from-transparent via-white to-white" : "from-transparent via-[#F9F7F2] to-[#F9F7F2]"}`}
+          >
+            {assignedCount > 0 && (
+              <Tooltip
+                text="Desasignar familia"
+                position={isFirstElement ? "bottom" : "top"}
+                align="right"
+              >
+                <button
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFamilyFromTable(family.id);
+                  }}
+                  className={`p-1 shadow-sm border border-[#EBE5DA] hover:bg-red-50 text-red-400 hover:text-red-600 rounded transition-colors ${allAssigned ? "bg-white" : "bg-[#F9F7F2]"}`}
+                >
+                  <RotateCcw size={10} />
+                </button>
+              </Tooltip>
+            )}
             <Tooltip
-              text="Desasignar familia"
+              text="Eliminar familia"
               position={isFirstElement ? "bottom" : "top"}
               align="right"
             >
@@ -81,39 +115,60 @@ export function DraggableFamily({
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation();
-                  removeFamilyFromTable(family.id);
+                  triggerFamilyRemoval(family.id);
                 }}
-                className="p-1 opacity-0 group-hover/fam:opacity-100 transition-opacity hover:bg-red-50 text-red-400 hover:text-red-600 rounded"
+                className={`p-1 shadow-sm border border-[#EBE5DA] hover:bg-red-50 text-red-400 hover:text-red-600 rounded transition-colors ${allAssigned ? "bg-white" : "bg-[#F9F7F2]"}`}
               >
-                <RotateCcw size={12} />
+                <Trash2 size={10} />
               </button>
             </Tooltip>
+          </div>
+
+          {/* PÍLDORA DECLINADOS SEPARADA */}
+          {declinedCount > 0 && (
+            <Tooltip
+              text={`${declinedCount} invitado${declinedCount > 1 ? "s" : ""} declinado${declinedCount > 1 ? "s" : ""}`}
+              position={isFirstElement ? "bottom" : "top"}
+              align="right"
+            >
+              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-red-50/80 rounded border border-red-100 cursor-default">
+                <XCircle size={10} className="text-red-400" />
+                <span className="text-[9px] font-bold text-red-500">
+                  {declinedCount}
+                </span>
+              </div>
+            </Tooltip>
           )}
+
+          {/* PÍLDORA ASIGNADOS SEPARADA */}
           <Tooltip
-            text="Eliminar familia completa"
+            text={
+              allAssigned
+                ? "Todos asignados"
+                : assignedCount > 0
+                  ? `Faltan ${family.guests.length - assignedCount} por sentar`
+                  : "Sin asignar"
+            }
             position={isFirstElement ? "bottom" : "top"}
             align="right"
           >
-            <button
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={(e) => {
-                e.stopPropagation();
-                triggerFamilyRemoval(family.id);
-              }}
-              className="p-1 opacity-0 group-hover/fam:opacity-100 transition-opacity hover:bg-red-50 text-red-400 hover:text-red-600 rounded"
-            >
-              <Trash2 size={12} />
-            </button>
+            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-[#F9F7F2] rounded border border-[#EBE5DA] cursor-help">
+              <Users
+                size={10}
+                className={
+                  allAssigned
+                    ? "text-green-600"
+                    : assignedCount > 0
+                      ? "text-orange-400"
+                      : "text-[#C5A669]"
+                }
+              />
+              <span className="text-[9px] font-bold text-[#5A5A5A]">
+                {assignedCount}/{family.guests.length}
+              </span>
+            </div>
           </Tooltip>
-          <div className="flex items-center gap-1 px-1.5 py-0.5 bg-[#F9F7F2] rounded border border-[#EBE5DA]">
-            <Users
-              size={10}
-              className={allAssigned ? "text-green-600" : "text-[#C5A669]"}
-            />
-            <span className="text-[9px] font-bold text-[#5A5A5A]">
-              {assignedCount}/{family.guests.length}
-            </span>
-          </div>
+
           <button
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
@@ -154,7 +209,6 @@ export function DraggableFamily({
               />
             );
           })}
-
           {/* 🔥 Botón interactivo para añadir un asiento rápido al grupo */}
           {/* <button
             onClick={() => triggerAddSeat(family.id)}

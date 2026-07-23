@@ -121,15 +121,20 @@ export default function Home({ invitationData }: InvitationPageProps) {
               {/* Contenido Central (Secciones de la Invitación) */}
               <div className="max-w-[500px] 2xl:max-w-[600px] relative min-[500px]:border-x-1 border-primary overflow-hidden">
                 <Cover
+                  textAlign="left"
                   eventTitleClassName="text-[32px]"
                   isSealVisible={!isEnvelopeOpened}
                   imagesConfig={[
                     {
-                      src: "/img/andrea-adrian/gallery/g5.webp",
+                      src: "/img/andrea-adrian/gallery/g7.webp",
+                      style: { backgroundPosition: "55%" },
+                    },
+                    {
+                      src: "/img/andrea-adrian/gallery/g8.webp",
                       style: { backgroundPosition: "center" },
                     },
                     {
-                      src: "/img/andrea-adrian/gallery/g2.webp",
+                      src: "/img/andrea-adrian/gallery/g9.webp",
                       style: { backgroundPosition: "center" },
                     },
                   ]}
@@ -160,6 +165,12 @@ export default function Home({ invitationData }: InvitationPageProps) {
                   containerClassName="#f3ede1"
                   textDressCode="Formal / Vaquero"
                   hasNoDinner
+                  onlyText={true}
+                  textRestrictions={[
+                    "NO MEZCLILLA AZUL",
+                    "NO TONOS VINO / BORGOÑA",
+                    "¡NO BLANCO!",
+                  ]}
                 />
                 <Gallery
                   svgsColor="#5b0012"
