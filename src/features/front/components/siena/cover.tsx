@@ -24,8 +24,8 @@ type Props = {
   imagesConfig?: ImageConfig[];
   musicIconClassName?: string;
   musicContainerClassName?: string;
-  // 🔥 Nueva propiedad añadida
   textAlign?: "left" | "right" | "center";
+  customTitleComponent?: React.ReactNode;
 };
 
 export default function Cover({
@@ -38,7 +38,8 @@ export default function Cover({
   eventTitleClassName = "",
   musicIconClassName = "",
   musicContainerClassName = "",
-  textAlign = "right", // 🔥 Valor por defecto para mantener el diseño original
+  textAlign = "right",
+  customTitleComponent,
 }: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
   const { family, setFamily } = useFamilyContext();
@@ -175,7 +176,6 @@ export default function Cover({
           >
             {/* Degradado oscuro elegante hacia transparente */}
             <div className="h-full w-full flex flex-col justify-start">
-              {/* 🔥 Se aplica la alineación dinámica aquí */}
               <div
                 className={cn(
                   "relative flex flex-col pt-12 drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]",
@@ -184,22 +184,32 @@ export default function Cover({
                   textAlign === "center" && "items-center px-6 text-center",
                 )}
               >
-                <p
-                  className={cn(
-                    "font-newIconScript text-white text-4xl drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]",
-                    eventTitleClassName,
-                  )}
-                >
-                  {invitationData?.nombre}
-                </p>
-                <p className="font-nourdLight text-white text-lg mt-2">
-                  NUESTRA BODA
-                </p>
-                <p className="font-nourdLight text-white text-md mt-1">
-                  {invitationData &&
-                    invitationData.fechaISO &&
-                    formatToEventDate(invitationData.fechaISO)}
-                </p>
+                {customTitleComponent ? (
+                  !isSealVisible && (
+                    <div className={eventTitleClassName}>
+                      {customTitleComponent}
+                    </div>
+                  )
+                ) : (
+                  <>
+                    <p
+                      className={cn(
+                        "font-newIconScript text-white text-4xl drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]",
+                        eventTitleClassName,
+                      )}
+                    >
+                      {invitationData?.nombre}
+                    </p>
+                    <p className="font-nourdLight text-white text-lg mt-2">
+                      NUESTRA BODA
+                    </p>
+                    <p className="font-nourdLight text-white text-md mt-1">
+                      {invitationData &&
+                        invitationData.fechaISO &&
+                        formatToEventDate(invitationData.fechaISO)}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </div>
