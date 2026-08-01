@@ -7,9 +7,10 @@ type Props = {
   containerClassname?: string;
   svgColor?: string;
   quote?: string;
+  author?: string;
 };
 
-const Quote: FC<Props> = ({ containerClassname = "", svgColor, quote }) => {
+const Quote: FC<Props> = ({ containerClassname = "", svgColor, quote, author }) => {
   return (
     <article
       className={cn(
@@ -17,7 +18,7 @@ const Quote: FC<Props> = ({ containerClassname = "", svgColor, quote }) => {
         containerClassname,
       )}
     >
-      <Waves className="w-full absolute top-[-30px]" color={svgColor} />
+      <Waves className="w-full absolute top-[-30px] z-20" color={svgColor} />
       <div className="w-full flex flex-col items-center justify-center">
         <div className="text-md">
           <div className="text-white font-nourdLight text-center">
@@ -30,6 +31,8 @@ const Quote: FC<Props> = ({ containerClassname = "", svgColor, quote }) => {
               duration={0.2}
               delay={0}
             />
+            <div className="h-2"></div>
+            {author && <ElegantText text={`${author}`} duration={0.2} delay={0.2} />}
           </div>
         </div>
       </div>
