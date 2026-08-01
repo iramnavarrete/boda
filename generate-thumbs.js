@@ -3,17 +3,36 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
-const rootGallery = 'public/img/andrea-adrian/gallery';
+// Capturamos el primer argumento pasado por línea de comandos
+const folderName = process.argv[2];
+
+// Validamos que se haya enviado el parámetro
+if (!folderName) {
+  console.error('❌ Error: Debes proporcionar el nombre de la carpeta como parámetro.');
+  console.error('💡 Ejemplo de uso: node generate-thumbs.js andrea-adrian');
+  process.exit(1); // Detenemos la ejecución
+}
+
+// Sustituimos el valor hardcodeado por la variable
+const rootGallery = `public/img/${folderName}/gallery`;
 
 const inputDir = path.join(__dirname, rootGallery);       // carpeta con imágenes originales
 const outputDir = path.join(__dirname, rootGallery + '/thumbs'); // destino de los thumbnails
 
 const MAX_DIMENSION = 1500; // Límite máximo para el lado más largo
 
+// Validamos que el directorio de entrada exista antes de continuar
+if (!fs.existsSync(inputDir)) {
+  console.error(`❌ Error: La carpeta origen no existe -> ${inputDir}`);
+  process.exit(1);
+}
+
 // Asegúrate de que el directorio de salida exista
 if (!fs.existsSync(outputDir)) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
+
+console.log(`⏳ Procesando imágenes en: ${rootGallery}...`);
 
 // Procesa cada imagen
 fs.readdirSync(inputDir).forEach(file => {
@@ -23,12 +42,12 @@ fs.readdirSync(inputDir).forEach(file => {
   if (/\.(jpe?g|png|webp)$/i.test(file)) {
     sharp(inputPath)
       // fit: 'inside' respeta la proporción original. 
-      // El lado más largo (ancho o alto) será máximo de 1200px.
+      // El lado más largo (ancho o alto) será máximo de 1500px.
       .resize({ 
         width: MAX_DIMENSION, 
         height: MAX_DIMENSION, 
         fit: 'inside',
-        withoutEnlargement: true // Evita que fotos más pequeñas que 1200px se estiren y pixelen
+        withoutEnlargement: true // Evita que fotos más pequeñas se estiren y pixelen
       })
       // Optimizaciones extremas según el formato de la imagen original
       .jpeg({ 
