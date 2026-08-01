@@ -8,6 +8,7 @@ interface WaxSealProps {
   textColor?: string;
   className?: string;
   size?: number;
+  customSvg?: React.ReactNode;
 }
 
 export default function WaxSeal({
@@ -16,6 +17,7 @@ export default function WaxSeal({
   textColor = "#1e241b",
   className,
   size = 130,
+  customSvg,
 }: WaxSealProps) {
   // Separamos las iniciales (Ej: "J & Y")
   const parts = (initials || "J & Y").split("&").map((s) => s.trim());
@@ -68,7 +70,7 @@ export default function WaxSeal({
         }}
       />
 
-      {/* 3. EL GRABADO (ARTE FLORAL Y TEXTO)
+      {/* 3. EL GRABADO (ARTE FLORAL Y TEXTO O SVG PERSONALIZADO)
         Usamos color-burn y opacidad para simular que está hundido en la cera.
       */}
       <div
@@ -85,50 +87,64 @@ export default function WaxSeal({
           }}
         />
 
-        {/* Iniciales con la tipografía de tu invitación */}
-        <div
-          className={`absolute w-[${size * 0.2}px] h-[${size * 0.2}px]`}
-          style={{
-            width: size * 0.2,
-            height: size * 0.2,
-          }}
-        >
+        {customSvg ? (
           <div
-            className={`relative h-full flex justify-center items-center font-newIconScript leading-none text-[${textColor || "#1e241b"}]`}
+            className="absolute flex justify-center items-center"
+            style={{
+              width: size * 0.6, // Ajusta este multiplicador si necesitas que el SVG sea más grande o pequeño
+              height: size * 0.6,
+            }}
           >
-            {/* J un poco más arriba */}
-            <span
-              style={{
-                position: "absolute",
-                fontSize: size * 0.12,
-                transform: `translate(-${size * 0.085}px, -${size * 0.085}px)`,
-              }}
-            >
-              {leftInitial}
-            </span>
-            {/* El ampersand pequeño en el centro */}
-            <span
-              style={{
-                position: "absolute",
-                fontSize: size * 0.07,
-                transform: `translate(-${size * 0.005}px, 0)`,
-              }}
-              className="font-rhymeFormal italic mx-0.5"
-            >
-              &
-            </span>
-            {/* Y un poco más abajo */}
-            <span
-              style={{
-                position: "absolute",
-                fontSize: size * 0.12,
-                transform: `translate(${size * 0.075}px, ${size * 0.075}px)`,
-              }}
-            >
-              {rightInitial}
-            </span>
+            {customSvg}
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Iniciales con la tipografía de tu invitación */}
+            <div
+              className={`absolute w-[${size * 0.2}px] h-[${size * 0.2}px]`}
+              style={{
+                width: size * 0.2,
+                height: size * 0.2,
+              }}
+            >
+              <div
+                className={`relative h-full flex justify-center items-center font-newIconScript leading-none text-[${textColor || "#1e241b"}]`}
+              >
+                {/* J un poco más arriba */}
+                <span
+                  style={{
+                    position: "absolute",
+                    fontSize: size * 0.12,
+                    transform: `translate(-${size * 0.085}px, -${size * 0.085}px)`,
+                  }}
+                >
+                  {leftInitial}
+                </span>
+                {/* El ampersand pequeño en el centro */}
+                <span
+                  style={{
+                    position: "absolute",
+                    fontSize: size * 0.07,
+                    transform: `translate(-${size * 0.005}px, 0)`,
+                  }}
+                  className="font-rhymeFormal italic mx-0.5"
+                >
+                  &
+                </span>
+                {/* Y un poco más abajo */}
+                <span
+                  style={{
+                    position: "absolute",
+                    fontSize: size * 0.12,
+                    transform: `translate(${size * 0.075}px, ${size * 0.075}px)`,
+                  }}
+                >
+                  {rightInitial}
+                </span>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
