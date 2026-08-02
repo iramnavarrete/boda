@@ -1,6 +1,6 @@
 "use client";
 
-import { delay, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ComponentPropsWithoutRef } from "react";
 
 // Permite que el componente reciba todas las props estándar de un SVG + las de Framer Motion
@@ -12,7 +12,7 @@ export default function MelissaSantiagoLogo(props: Props) {
     visible: {
       transition: {
         // delay: 0.3,
-        delayChildren: 2.5, // 🔥 Espera a que termine la animación del sobre
+        delayChildren: 1.5, // 🔥 Espera a que termine la animación del sobre
         staggerChildren: 0.8, // 🔥 Tiempo de espera para empezar a revelar el SIGUIENTE trazo
       },
     },
@@ -25,7 +25,7 @@ export default function MelissaSantiagoLogo(props: Props) {
       opacity: 0,
     },
     visible: {
-      clipPath: "polygon(-10%% -20%, 110% -20%, 110% 120%, -10%% 120%)", // 110% a la derecha por si acaso
+      clipPath: "polygon(-10% -20%, 110% -20%, 110% 120%, -10% 120%)", // 110% a la derecha por si acaso
       opacity: 1,
       transition: {
         duration: 1.5,
