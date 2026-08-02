@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import ArrowsIcon from "@/icons/arrows-icon";
 import useMusicStore from "@/stores/musicStore";
 import { useInvitationStore } from "../../stores/invitationStore";
 import { formatToEventDate } from "@/utils/formatters";
