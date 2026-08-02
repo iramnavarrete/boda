@@ -239,13 +239,13 @@ export default function ParentsGodFathers({
             />
           </div>
 
-          <p className="text-[9px] md:text-[10px] font-nourdMedium text-current/70 uppercase tracking-[0.3em] mb-4 text-center">
+          <div className="text-[9px] md:text-[10px] font-nourdMedium text-current/70 uppercase tracking-[0.3em] mb-4 text-center">
             <ElegantText
               delay={seq.delays.d10}
               text={seq.texts.t10}
               duration={seq.baseDuration}
             />
-          </p>
+          </div>
           <h2 className="text-4xl md:text-5xl text-current mb-8 text-center font-newIconScript drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]">
             <ElegantText
               delay={seq.delays.d11}
