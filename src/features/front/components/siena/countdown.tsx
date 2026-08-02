@@ -89,7 +89,7 @@ export default function CountDown({
           className="absolute inset-0 w-full h-full z-0"
           style={{ clipPath: "inset(0 0 0 0)" }}
         >
-          <div className="fixed top-0 max-w-[500px] 2xl:max-w-[600px] w-full h-screen transform-gpu">
+          <div className="fixed top-0 max-w-[500px] 2xl:max-w-[600px] w-full h-screen">
             <Image
               ref={imageRef}
               src={backgroundImage}
