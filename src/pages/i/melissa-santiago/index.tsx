@@ -417,7 +417,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
                 <GiftsTable
                   showCash
                   transfer={{
-                    bank: "bbva",
+                    bank: "citibanamex",
                     beneficiary: "Melissa Alvídrez & Santiago Mora",
                     cardNumber: "5204 1663 1331 1799",
                   }}
