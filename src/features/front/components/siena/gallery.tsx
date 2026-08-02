@@ -6,10 +6,15 @@ import Carousel from "@/features/front/components/Carousel";
 import { GalleryImage } from "@/types";
 import { cn } from "@heroui/theme";
 
-// Hacemos que width y height sean opcionales en el prop que recibimos
-type InputSlide = Omit<GalleryImage, "width" | "height"> & {
+// 🔥 1. Extendemos InputSlide para aceptar objectPosition
+export type InputSlide = Omit<GalleryImage, "width" | "height"> & {
   width?: number;
   height?: number;
+  /**
+   * Permite ajustar la posición de la miniatura antes de abrirla.
+   * Ej: "center top", "20% 50%", "right bottom"
+   */
+  objectPosition?: string;
 };
 
 type Props = {
@@ -17,6 +22,8 @@ type Props = {
   textClassName?: string;
   svgsColor?: string;
   slides?: InputSlide[];
+  // 🔥 2. Nueva prop para controlar la altura del carrusel (vista previa)
+  carouselHeight?: string | number | 'dynamic';
 };
 
 export default function Gallery({
@@ -24,6 +31,7 @@ export default function Gallery({
   textClassName = "",
   svgsColor,
   slides = [],
+  carouselHeight,
 }: Props) {
   // Estado para guardar las diapositivas ya con sus medidas calculadas
   const [processedSlides, setProcessedSlides] = useState<GalleryImage[]>([]);
@@ -37,8 +45,9 @@ export default function Gallery({
       const promises = slides.map((slide) => {
         return new Promise<GalleryImage>((resolve) => {
           // Si ya vienen las medidas (por si acaso), las respetamos
+          // (Mantuvimos el casteo o construcción correcta según tu GalleryImage type)
           if (slide.width && slide.height) {
-            resolve(slide as GalleryImage);
+            resolve(slide as unknown as GalleryImage);
             return;
           }
 
@@ -51,7 +60,7 @@ export default function Gallery({
               ...slide,
               width: img.naturalWidth,
               height: img.naturalHeight,
-            });
+            } as unknown as GalleryImage);
           };
 
           img.onerror = () => {
@@ -60,7 +69,7 @@ export default function Gallery({
               ...slide,
               width: 1200,
               height: 1600,
-            });
+            } as unknown as GalleryImage);
           };
         });
       });
@@ -115,12 +124,14 @@ export default function Gallery({
       </AnimatedEntrance>
 
       {/* Contenedor del Carrusel */}
-      <AnimatedEntrance classname="w-full relative z-10">
+      <AnimatedEntrance classname="w-full relative z-10 mt-8">
         {/* Solo renderizamos el Carousel cuando ya tenemos las medidas calculadas */}
         {processedSlides.length > 0 && (
           <Carousel
             slides={processedSlides}
             activeDotClassName={svgsColor ? `bg-[${svgsColor}]` : undefined}
+            height={carouselHeight} 
+            dynamicHeight={carouselHeight === 'dynamic'}
           />
         )}
       </AnimatedEntrance>

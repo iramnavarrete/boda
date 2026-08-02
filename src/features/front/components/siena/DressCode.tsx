@@ -11,7 +11,7 @@ export type ColorPalette = {
 export interface DressCodeSection {
   title: string;
   description: string;
-  restrictions: string;
+  restrictions?: string;
 }
 
 interface DressCodeProps {
@@ -19,7 +19,7 @@ interface DressCodeProps {
   text: string;
   womenConfig?: DressCodeSection;
   menConfig?: DressCodeSection;
-  forbiddenColors?: ColorPalette;
+  forbiddenColors?: ColorPalette | "none" | false;
   textClassName?: string;
   onlyText?: boolean;
   textRestrictions?: string[];
@@ -36,7 +36,10 @@ const DressCode: React.FC<DressCodeProps> = ({
   textRestrictions = [],
 }) => {
   // Lógica para distribuir los colores simétricamente
-  const getColorRows = (colors: ColorPalette) => {
+  const getColorRows = (colors: typeof forbiddenColors) => {
+    if(colors === "none" || colors === false) return [];{
+
+    }
     if (!colors || colors.length === 0) return [];
     if (colors.length <= 6) return [colors]; // Si son 6 o menos, 1 sola fila
 

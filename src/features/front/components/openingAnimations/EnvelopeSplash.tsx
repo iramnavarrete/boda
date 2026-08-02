@@ -15,14 +15,15 @@ interface EnvelopeSplashProps {
   sealConfig?: {
     initials?: string;
     sealColor?: string;
-    textColor?:string;
+    textColor?: string;
+    customSvg?: React.ReactNode;
   };
 }
 
 export default function EnvelopeSplash({
   className = "",
   onOpen,
-  sealConfig
+  sealConfig,
 }: EnvelopeSplashProps) {
   const [isSealVisible, setIsSealVisible] = useState(true);
   const [envolpeDivHidden, setEnvolpeDivHidden] = useState(false);
@@ -138,7 +139,12 @@ export default function EnvelopeSplash({
             : "none",
         }}
       >
-        <WaxSeal initials={sealConfig?.initials} textColor={sealConfig?.textColor} sealColor={sealConfig?.sealColor} />
+        <WaxSeal
+          initials={sealConfig?.initials}
+          textColor={sealConfig?.textColor}
+          sealColor={sealConfig?.sealColor}
+          customSvg={sealConfig?.customSvg}
+        />
       </div>
     </div>
   );

@@ -11,7 +11,11 @@ import Autoplay from "embla-carousel-autoplay";
 import { cn } from "@heroui/theme";
 import { useInView } from "framer-motion";
 
-const defaultSlides: GalleryImage[] = [
+export type CarouselSlide = GalleryImage & {
+  objectPosition?: string;
+};
+
+const defaultSlides: CarouselSlide[] = [
   {
     src: "/img/gallery/g1.jpg",
     alt: "Imagen de la galería 1",
@@ -103,17 +107,22 @@ function Arrow({
 export default function SimpleSlider({
   slides = defaultSlides,
   activeDotClassName = "",
+  height,
+  dynamicHeight = false,
 }: {
-  slides?: GalleryImage[];
+  slides?: CarouselSlide[];
   activeDotClassName?: string;
+  height?: string | number;
+  dynamicHeight?: boolean;
 }) {
-  // 🔥 LA SOLUCIÓN: Guardamos el Autoplay en un useRef para que React no lo mate en cada render
   const autoplayPlugin = useRef(
     Autoplay({
       delay: 2000,
+      // 🔥 Volvemos a true para que Embla no intente manejar esto por su cuenta.
+      // Nosotros tomaremos el control manual.
       stopOnInteraction: true,
       stopOnMouseEnter: true,
-      playOnInit: false, // Inicia pausado hasta que hagamos scroll
+      playOnInit: false,
     }),
   );
 
@@ -127,11 +136,22 @@ export default function SimpleSlider({
   const wrapperRef = useRef<HTMLDivElement>(null);
   const galleryRef = useRef<HTMLDivElement>(null);
 
-  // Hook para saber si el carrusel es visible
-  const isInView = useInView(wrapperRef, { amount: 0.1 });
+  const isInView = useInView(wrapperRef, { amount: 0.5 });
 
-  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
+  // 🔥 Control manual en las flechas: Resetea el tiempo y sigue reproduciendo
+  const scrollPrev = useCallback(() => {
+    if (!emblaApi) return;
+    emblaApi.plugins().autoplay?.reset();
+    emblaApi.plugins().autoplay?.play();
+    emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (!emblaApi) return;
+    emblaApi.plugins().autoplay?.reset();
+    emblaApi.plugins().autoplay?.play();
+    emblaApi.scrollNext();
+  }, [emblaApi]);
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
@@ -144,7 +164,25 @@ export default function SimpleSlider({
     emblaApi.on("select", onSelect);
   }, [emblaApi, onSelect]);
 
-  // CONTROL MAESTRO DE AUTOPLAY
+  // 🔥 CONTROL MANUAL DE ARRASTRE (DRAG)
+  useEffect(() => {
+    if (!emblaApi) return;
+    const autoplay = emblaApi.plugins().autoplay;
+    if (!autoplay) return;
+
+    // 1. Cuando el usuario toca la foto, paramos en seco el temporizador
+    emblaApi.on("pointerDown", () => {
+      autoplay.stop();
+    });
+
+    // 2. Cuando el usuario suelta la foto, reiniciamos el temporizador a 0 y lo iniciamos
+    emblaApi.on("pointerUp", () => {
+      autoplay.reset();
+      autoplay.play();
+    });
+  }, [emblaApi]);
+
+  // CONTROL MAESTRO DE VISIBILIDAD Y LIGHTBOX
   useEffect(() => {
     if (!emblaApi) return;
     const autoplay = emblaApi.plugins().autoplay;
@@ -168,9 +206,7 @@ export default function SimpleSlider({
       showHideOpacity: true,
     });
 
-    lightbox.on("beforeOpen", () => {
-      setIsLightboxOpen(true);
-    });
+    lightbox.on("beforeOpen", () => setIsLightboxOpen(true));
 
     lightbox.on("initialZoomInEnd", () => {
       if (wrapperRef.current) {
@@ -198,10 +234,14 @@ export default function SimpleSlider({
 
     lightbox.init();
 
-    return () => {
-      lightbox.destroy();
-    };
+    return () => lightbox.destroy();
   }, [emblaApi]);
+
+  const activeSlide = slides[selectedIndex];
+  const activeAspectRatio =
+    activeSlide && activeSlide.width && activeSlide.height
+      ? `${activeSlide.width} / ${activeSlide.height}`
+      : "2 / 3";
 
   return (
     <div className="relative py-12 w-11/12 mx-auto">
@@ -212,7 +252,8 @@ export default function SimpleSlider({
         >
           <div id="pswp-gallery-container" ref={galleryRef}>
             <div className="overflow-hidden" ref={emblaRef}>
-              <div className="flex">
+              <div className="flex items-start">
+                {" "}
                 {slides.map((slide, idx) => (
                   <div key={idx} className="flex-[0_0_100%] px-2">
                     <a
@@ -223,17 +264,26 @@ export default function SimpleSlider({
                       data-pswp-msrc={slide.thumb}
                       target="_blank"
                       rel="noreferrer"
-                      className="block w-full relative h-[70vh] overflow-hidden"
+                      className="block w-full relative overflow-hidden transition-all duration-500 ease-in-out rounded-xl"
+                      style={{
+                        height: dynamicHeight ? "auto" : height || "70vh",
+                        aspectRatio: dynamicHeight
+                          ? activeAspectRatio
+                          : undefined,
+                      }}
                     >
                       <Image
                         alt={slide.alt}
                         src={slide.thumb}
                         fill
                         sizes="(max-width: 768px) 100vw, 80vw"
-                        className="object-cover"
+                        className="object-cover transition-transform duration-500"
                         placeholder="blur"
                         blurDataURL={slide.thumb}
                         priority={idx === 0}
+                        style={{
+                          objectPosition: slide.objectPosition || "center",
+                        }}
                       />
                     </a>
                   </div>
@@ -255,8 +305,13 @@ export default function SimpleSlider({
             {slides.map((_, idx) => (
               <button
                 key={idx}
-                onClick={() => emblaApi?.scrollTo(idx)}
-                className={`w-1 h-1 rounded-full ${
+                onClick={() => {
+                  // 🔥 También reseteamos el tiempo si tocan un puntito
+                  emblaApi?.plugins().autoplay?.reset();
+                  emblaApi?.plugins().autoplay?.play();
+                  emblaApi?.scrollTo(idx);
+                }}
+                className={`w-1 h-1 rounded-full transition-colors duration-300 ${
                   idx === selectedIndex
                     ? cn("bg-primary", activeDotClassName)
                     : "bg-gray-400"

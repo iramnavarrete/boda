@@ -11,6 +11,7 @@ import AnimatedEntrance from "@/features/front/components/AnimatedEntrance";
 import { giftSequence } from "@/constants/animationSequences";
 import { cn } from "@heroui/theme";
 import { ArrowRight, ChevronDown, Copy, Check } from "lucide-react";
+import CitiBanamexIcon from "@/icons/cb-icon";
 
 type StoreGift = {
   type: "amazon" | "liverpool" | "other";
@@ -20,7 +21,7 @@ type StoreGift = {
 };
 
 type BankTransfer = {
-  bank: "bbva" | "banamex" | "santander" | "hsbc";
+  bank: "bbva" | "banamex" | "santander" | "hsbc" | "citibanamex";
   cardNumber: string;
   beneficiary: string;
 };
@@ -42,6 +43,7 @@ const STORE_ICONS: Record<string, React.ReactNode> = {
 // --- Iconos por banco ---
 const BANK_ICONS: Record<string, React.ReactNode> = {
   bbva: <BbvaIcon className="h-10 animated-gift" />,
+  citibanamex: <CitiBanamexIcon className="h-10 animated-gift" />,
   // banamex: <BanamexIcon className="h-10 animated-gift" />,
   // santander: <SantanderIcon className="h-10 animated-gift" />,
   // hsbc: <HsbcIcon className="h-10 animated-gift" />,
@@ -52,6 +54,7 @@ const BANK_LABELS: Record<string, string> = {
   banamex: "Banamex",
   santander: "Santander",
   hsbc: "HSBC",
+  citibanamex: "CitiBanamex",
 };
 
 const GiftsTable: FC<Props> = ({
