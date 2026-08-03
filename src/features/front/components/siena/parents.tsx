@@ -23,6 +23,7 @@ type Props = {
     heartActiveClassName?: string;
     showOnlyWeek?: boolean;
   };
+  customLastPhrase?: string;
 };
 
 export default function ParentsGodFathers({
@@ -36,6 +37,7 @@ export default function ParentsGodFathers({
     hearthClassName: "",
     heartActiveClassName: "",
   },
+  customLastPhrase
 }: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
 
@@ -64,7 +66,7 @@ export default function ParentsGodFathers({
     const t7 = invitationData?.padresNovio?.mama || "Mamá del novio";
     const t8 = invitationData?.padresNovio?.papa || "Papá del novio";
     const t9 =
-      "Nos complace invitarte a celebrar con nosotros este día tan especial";
+      customLastPhrase || "Nos complace invitarte a celebrar con nosotros este día tan especial";
 
     const d1 = 0;
     const d2 = d1 + getElegantTotalTime(t1, baseDuration);
