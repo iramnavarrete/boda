@@ -121,26 +121,20 @@ export default function Home({ invitationData }: InvitationPageProps) {
                   imagesConfig={[
                     {
                       src: "/img/melissa-santiago/gallery/g1.jpg",
-                      panStart: "65%",
-                      panEnd: "75%",
+                      panStart: "55%",
+                      panEnd: "65%",
                       titlePosition: "center",
                     },
                     {
                       src: "/img/melissa-santiago/gallery/g4.jpg",
-                      panStart: "40%",
-                      panEnd: "45%",
+                      panStart: "45%",
+                      panEnd: "35%",
                       titlePosition: "bottom",
                     },
                     {
                       src: "/img/melissa-santiago/gallery/g2.jpg",
-                      panStart: "75%",
+                      panStart: "68%",
                       panEnd: "80%",
-                      titlePosition: "bottom",
-                    },
-                    {
-                      src: "/img/melissa-santiago/gallery/g6.jpg",
-                      panStart: "45%",
-                      panEnd: "65%",
                       titlePosition: "bottom",
                     },
                     {
@@ -150,9 +144,15 @@ export default function Home({ invitationData }: InvitationPageProps) {
                       titlePosition: "bottom",
                     },
                     {
+                      src: "/img/melissa-santiago/gallery/g6.jpg",
+                      panStart: "62%",
+                      panEnd: "48%",
+                      titlePosition: "bottom",
+                    },
+                    {
                       src: "/img/melissa-santiago/gallery/g5.jpg",
-                      panStart: "10%",
-                      panEnd: "90%",
+                      panStart: "45%",
+                      panEnd: "55%",
                       titlePosition: "top",
                     },
                   ]}
@@ -174,6 +174,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
                     heartActiveClassName: "text-paper",
                     hearthClassName: "text-gold-800",
                   }}
+                  customLastPhrase="Queremos invitarte a ser testigo del inicio de nuestra mayor historia de amor: la unión de dos almas destinadas a estar juntas."
                 />
                 <CountDown
                   backgroundImage="/img/melissa-santiago/gallery/g7.jpg"
