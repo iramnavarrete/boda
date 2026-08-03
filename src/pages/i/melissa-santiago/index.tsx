@@ -100,6 +100,10 @@ export default function Home({ invitationData }: InvitationPageProps) {
           <div style={{ overflow: "hidden" }}>
             <div className="flex flex-col items-center overflow-hidden bg-texture">
               <DesktopSidebars />
+              <DesktopSidebars
+                flowersClassName="text-[#252a33]"
+                textClassName="text-[#252a33]"
+              />
 
               {/* Contenido Central (Secciones de la Invitación) */}
               <div className="max-w-[500px] 2xl:max-w-[600px] relative min-[500px]:border-x-1 border-primary overflow-hidden">

@@ -96,6 +96,7 @@ export default function CountDown({
               alt="Fondo de la invitación"
               fill
               priority
+              sizes="100vh"
               className={cn("object-cover", imageClassName)}
               style={{ objectPosition: panStart }}
             />
