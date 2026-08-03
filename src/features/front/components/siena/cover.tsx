@@ -15,9 +15,9 @@ import { useFamilyContext } from "../FamilyContext";
 type ImageConfig = {
   src: string;
   style?: { backgroundPosition?: string };
-  panStart?: string; // Ej: "0% 50%" (Izquierda)
-  panEnd?: string; // Ej: "100% 50%" (Derecha)
-  titlePosition?: "top" | "center" | "bottom"; // Controla dónde va el texto en ESTA foto
+  panStart?: string; // Ej: "50%" o "50% 50%" (Arranca al centro)
+  panEnd?: string; // Ej: "60%" o "60% 50%" (Termina al 60%)
+  titlePosition?: "top" | "center" | "bottom";
 };
 
 type Props = {
@@ -29,14 +29,44 @@ type Props = {
   textAlign?: "left" | "right" | "center";
   customTitleComponent?: React.ReactNode;
   slideDuration?: number;
-  musicButtonDelay?: number; // Controla el delay del botón de música
-  scrollIndicatorDelay?: number; // Controla el delay del indicador de scroll
+  musicButtonDelay?: number;
+  scrollIndicatorDelay?: number;
+};
+
+// 🔥 HELPER DE MAPEO REAL DE PORCENTAJES (0% a 100%)
+// Mapea el porcentaje de la imagen (donde 50% es el centro) hacia el desplazamiento Translate
+const parseRealPercentToTranslate = (posStr?: string) => {
+  if (!posStr) return "0%, 0%";
+
+  let str = posStr.toLowerCase().trim();
+
+  // Compatibilidad con palabras clave
+  if (str === "left") str = "0% 50%";
+  if (str === "right") str = "100% 50%";
+  if (str === "center") str = "50% 50%";
+
+  const clean = str.replace(/,/g, "").trim().split(/\s+/);
+
+  // Leemos X (si mandan "60%", X = 60)
+  let rawX = parseFloat(clean[0]);
+  if (isNaN(rawX)) rawX = 50;
+
+  // Leemos Y (por defecto 50%)
+  let rawY = clean[1] !== undefined ? parseFloat(clean[1]) : 50;
+  if (isNaN(rawY)) rawY = 50;
+
+  // Convertimos la posición relativa al centro (50%).
+  // Si rawX es 60%, desplaza a +10% del centro.
+  const offsetX = rawX - 50;
+  const offsetY = rawY - 50;
+
+  return `${offsetX}%, ${offsetY}%`;
 };
 
 export default function Cover({
   isSealVisible,
   imagesConfig = [
-    { src: "/img/cover1.webp", style: { backgroundPosition: "right" } },
+    { src: "/img/cover1.webp", panStart: "40%", panEnd: "60%" },
     { src: "/img/cover2.webp", style: { backgroundPosition: "60%" } },
     { src: "/img/cover3.webp", style: { backgroundPosition: "right" } },
   ],
@@ -54,7 +84,7 @@ export default function Cover({
   const { toggleAudio } = useMusicStore();
   const [index, setIndex] = useState(0);
   const [isTriggerInView, setIsTriggerInView] = useState(true);
-  const [scrollOpacity, setScrollOpacity] = useState(1); // 🔥 Estado para la opacidad progresiva
+  const [scrollOpacity, setScrollOpacity] = useState(1);
 
   const triggerRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
@@ -81,7 +111,6 @@ export default function Cover({
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY;
-      // Se desvanece por completo al bajar 150px
       const opacity = Math.max(0, 1 - scrollY / 200);
       setScrollOpacity(opacity);
     };
@@ -135,8 +164,6 @@ export default function Cover({
   }, [isSealVisible, imagesConfig.length, slideDuration]);
 
   const activeIndex = isSealVisible ? 0 : index;
-
-  // Leemos la posición deseada de la foto actual (por defecto 'top')
   const titlePos = imagesConfig[activeIndex]?.titlePosition || "top";
 
   return (
@@ -151,8 +178,8 @@ export default function Cover({
           animation-delay: 3.2s;
         }
 
-        .pan-transition {
-          transition: object-position var(--slide-duration) linear, opacity 1.5s ease-in-out;
+        .pan-transform-transition {
+          transition: transform var(--slide-duration) linear;
         }
       `}</style>
 
@@ -171,29 +198,52 @@ export default function Cover({
               const isViewing = !isSealVisible && activeIndex === i;
               const hasPan = Boolean(img.panStart && img.panEnd);
 
-              const currentPosition = hasPan
+              // Posición inicial tomando de panStart o backgroundPosition
+              const startPosStr = img.panStart
+                ? img.panStart
+                : img.style?.backgroundPosition || "50%";
+
+              const currentPosStr = hasPan
                 ? isViewing
                   ? img.panEnd
-                  : img.panStart
-                : img.style?.backgroundPosition || "center";
+                  : startPosStr
+                : startPosStr;
+
+              // Convertimos porcentajes reales ("50%", "60%") a desplazamieto de translate
+              const cleanTranslate = parseRealPercentToTranslate(currentPosStr);
+              const [offsetX, offsetY] = cleanTranslate
+                .split(",")
+                .map((s) => s.trim());
 
               return (
-                <Image
+                <div
                   key={img.src}
-                  src={img.src}
-                  alt={`Cover ${i + 1}`}
-                  fill
-                  priority
-                  sizes="100vh"
                   className={cn(
-                    "object-cover transform-gpu",
-                    hasPan
-                      ? "pan-transition"
-                      : "transition-opacity duration-[1500ms] ease-in-out",
-                    activeIndex === i ? "opacity-100" : "opacity-0",
+                    "absolute inset-0 w-full h-full overflow-hidden transition-opacity duration-[1500ms] ease-in-out",
+                    activeIndex === i ? "opacity-100 z-10" : "opacity-0 z-0",
                   )}
-                  style={{ objectPosition: currentPosition }}
-                />
+                >
+                  <Image
+                    src={img.src}
+                    alt={`Cover ${i + 1}`}
+                    width={1000}
+                    height={1000}
+                    priority={i === 0}
+                    sizes="100vh"
+                    quality={90}
+                    className={cn(
+                      "h-full w-auto max-w-none relative top-1/2 left-1/2 transform-gpu will-change-transform",
+                      hasPan ? "pan-transform-transition" : "",
+                    )}
+                    style={{
+                      // Usamos -50% para centrar la foto + el offset natural de tu porcentaje
+                      transform: `translate3d(calc(-50% - ${offsetX}), calc(-50% - ${offsetY}), 0)`,
+                      WebkitTransform: `translate3d(calc(-50% - ${offsetX}), calc(-50% - ${offsetY}), 0)`,
+                      backfaceVisibility: "hidden",
+                      WebkitBackfaceVisibility: "hidden",
+                    }}
+                  />
+                </div>
               );
             })}
           </div>
@@ -217,12 +267,10 @@ export default function Cover({
               <div
                 className={cn(
                   "relative flex flex-col w-full drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)] transition-all duration-[1500ms] ease-in-out transform-gpu",
-                  // Quitamos el bg-gradient móvil de aquí
                   customTitleComponent ? "py-12" : "pt-12",
                   textAlign === "right" && "items-end pr-6 text-right",
                   textAlign === "left" && "items-start pl-6 text-left",
                   textAlign === "center" && "items-center px-6 text-center",
-                  // AJUSTE DE POSICIONES
                   titlePos === "top" ? "translate-y-0" : "",
                   titlePos === "center" ? "translate-y-[40%]" : "",
                   titlePos === "bottom" ? "translate-y-[80%]" : "",
@@ -230,16 +278,11 @@ export default function Cover({
               >
                 {customTitleComponent ? (
                   !isSealVisible && (
-                    <div 
+                    <div
                       className={eventTitleClassName}
-                      style={{ opacity: scrollOpacity }} // 🔥 Aplicamos la opacidad aquí
+                      style={{ opacity: scrollOpacity }}
                     >
-                      {/* 🔥 2. WRAPPER CON GRADIENTE CIRCULAR SUTIL */}
                       <div className="relative inline-flex justify-center items-center">
-                        {/* 
-                          Este div crea un círculo perfecto detrás del logo. 
-                          Usa radial-gradient y escala con el tamaño del logo (w-[140%]) 
-                        */}
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 aspect-square min-w-[240px] w-[140%] max-w-[400px] bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.28)_0%,transparent_65%)] pointer-events-none -z-10" />
 
                         {customTitleComponent}
@@ -249,7 +292,7 @@ export default function Cover({
                 ) : (
                   <>
                     <p
-                      style={{ opacity: scrollOpacity }} // 🔥 Aplicamos opacidad al texto estándar también
+                      style={{ opacity: scrollOpacity }}
                       className={cn(
                         "font-newIconScript text-white text-4xl drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]",
                         eventTitleClassName,
@@ -257,14 +300,14 @@ export default function Cover({
                     >
                       {invitationData?.nombre}
                     </p>
-                    <p 
-                      style={{ opacity: scrollOpacity }} 
+                    <p
+                      style={{ opacity: scrollOpacity }}
                       className="font-nourdLight text-white text-lg mt-2"
                     >
                       NUESTRA BODA
                     </p>
-                    <p 
-                      style={{ opacity: scrollOpacity }} 
+                    <p
+                      style={{ opacity: scrollOpacity }}
                       className="font-nourdLight text-white text-md mt-1"
                     >
                       {invitationData &&
@@ -277,13 +320,11 @@ export default function Cover({
             </div>
           </div>
 
-          {/* Trigger para el IntersectionObserver */}
           <div
             ref={triggerRef}
             className="h-[60px] w-full absolute bottom-11 pointer-events-none"
           />
 
-          {/* BOTÓN DE MÚSICA ABAJO */}
           <div
             className={cn(
               "absolute bottom-11 right-5 transition-all duration-1000 ease-out transform-gpu pointer-events-auto",
@@ -298,7 +339,6 @@ export default function Cover({
             <Music iconClassName={musicIconClassName} />
           </div>
 
-          {/* INDICADOR DE SCROLL */}
           <div
             className={cn(
               "absolute bottom-11 left-0 right-0 w-full flex justify-center pointer-events-none transition-all duration-1000 ease-out",
@@ -340,7 +380,6 @@ export default function Cover({
         </div>
       </div>
 
-      {/* === BOTÓN FIJO DE MÚSICA EN TOP RIGHT (Aparece al hacer scroll) === */}
       <div
         className={cn(
           "fixed top-5 right-5 min-[500px]:right-[calc(50%-230px)] 2xl:right-[calc(50%-280px)] z-[51] transition-all duration-1000 ease-out transform-gpu",
