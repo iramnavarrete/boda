@@ -184,6 +184,7 @@ export default function Cover({
                   alt={`Cover ${i + 1}`}
                   fill
                   priority
+                  sizes="100vh"
                   className={cn(
                     "object-cover transform-gpu",
                     hasPan
@@ -300,7 +301,7 @@ export default function Cover({
           {/* INDICADOR DE SCROLL */}
           <div
             className={cn(
-              "absolute bottom-11 left-0 right-0 w-full flex justify-center pointer-events-none transition-all duration-1000 ease-out transform-gpu",
+              "absolute bottom-11 left-0 right-0 w-full flex justify-center pointer-events-none transition-all duration-1000 ease-out",
               isSealVisible
                 ? "opacity-0 translate-y-10"
                 : "opacity-100 translate-y-0",
