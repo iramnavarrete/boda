@@ -37,6 +37,8 @@ type Props = {
   receptionImage?: string;
   showFlowersBg?: boolean;
   gapBetweenElements?: number;
+  bothRestrictions?: string;
+  sectionsContainerClassName?: string;
 
   // Props para Hospedaje (Datos + Estilos Personalizables)
   accommodationConfig?: AccommodationConfig; // Si no se pasa, la sección no aparece
@@ -90,6 +92,8 @@ export default function CeremonyToast({
   timelineSubtitle,
   timelineStyles,
   timelineAccentColor = "#252a33",
+  bothRestrictions,
+  sectionsContainerClassName,
 }: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
 
@@ -246,6 +250,8 @@ export default function CeremonyToast({
               forbiddenColors={forbiddenColors}
               onlyText={onlyText}
               textRestrictions={textRestrictions}
+              bothRestrictions={bothRestrictions}
+              sectionsContainerClassName={sectionsContainerClassName}
             />
           </div>
         </div>
