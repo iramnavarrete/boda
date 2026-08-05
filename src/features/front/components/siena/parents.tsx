@@ -116,7 +116,7 @@ export default function ParentsGodFathers({
         )}
       >
         <div className="flex flex-col items-center justify-center w-full mt-4 mb-14">
-          <p
+          <div
             className={cn(
               "text-[9px] md:text-[10px] font-nourdMedium text-primary/70 uppercase tracking-[0.3em] mb-4 text-center",
               textClassName,
@@ -127,7 +127,7 @@ export default function ParentsGodFathers({
               text={seq.texts.t1}
               duration={seq.baseDuration}
             />
-          </p>
+          </div>
           <h2
             className={cn(
               "text-4xl md:text-5xl text-primary mb-4 text-center font-newIconScript drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]",
