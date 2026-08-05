@@ -22,6 +22,7 @@ import BanqueteIcon from "@/icons/timeline/banquete";
 import ValsIcon from "@/icons/timeline/vals";
 import BaileIcon from "@/icons/timeline/baile";
 import DespedidaIcon from "@/icons/timeline/despedida";
+import CocktailsIcon from "@/icons/timeline/cocktails";
 
 // Mapa de íconos disponibles vinculados a tus componentes
 const iconDictionary: Record<string, React.ElementType> = {
@@ -32,6 +33,7 @@ const iconDictionary: Record<string, React.ElementType> = {
   vals: ValsIcon,
   baile: BaileIcon,
   despedida: DespedidaIcon,
+  cocktails: CocktailsIcon
 };
 
 // ============================================================================
@@ -42,7 +44,7 @@ export type GraphicTimelineItem = {
   time: string;
   title: string;
   subtitle?: string;
-  iconKey: keyof typeof iconDictionary; // Valida que la key exista en el diccionario
+  iconKey: keyof typeof iconDictionary;
 };
 
 // Itinerario usando el diccionario
@@ -197,15 +199,15 @@ const GraphicTimelineItemComponent = ({
   accentColor: string;
 }) => {
   const isEven = index % 2 === 0;
-  console.log({ item });
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ margin: "0px 0px -25% 0px", once: true }}
+      // -20% significa que aparece apenas entra completamente a la pantalla (80% desde arriba)
+      viewport={{ margin: "0px 0px -20% 0px", once: true }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className="grid grid-cols-[1fr_auto_1fr] gap-2 sm:gap-6 min-h-[140px] w-full items-center relative z-10"
+      className="grid grid-cols-[1fr_auto_1fr] gap-2 sm:gap-6 min-h-[90px] sm:min-h-[100px] w-full items-center relative z-10"
     >
       {/* COLUMNA IZQUIERDA */}
       <div className="flex justify-end">
@@ -251,7 +253,8 @@ export default function GraphicTimeline({
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start center", "end center"],
+    // Alineamos la línea con el -20% del viewport de los items (100% - 20% = 80%)
+    offset: ["start 80%", "end 80%"],
   });
 
   const lockedProgress = useMotionValue(0);
@@ -267,14 +270,12 @@ export default function GraphicTimeline({
     restDelta: 0.001,
   });
 
-  console.log({ items });
-
-  const leadHeight = useMotionTemplate`calc(${smoothScaleY} * 100% + 140px)`;
+  const leadHeight = useMotionTemplate`calc(${smoothScaleY} * 100% + 100px)`;
 
   return (
     <div
       className={cn(
-        "w-full max-w-4xl mx-auto px-4 py-16 sm:py-24 relative z-10 text-primary",
+        "w-full max-w-4xl mx-auto px-4 pb-16 relative z-10 text-primary",
         styles?.container,
       )}
     >
@@ -301,7 +302,7 @@ export default function GraphicTimeline({
         {/* LÍNEA DE FONDO (TENUE) */}
         <motion.div
           className={cn(
-            "absolute left-1/2 top-0 w-[2px] -translate-x-1/2 opacity-20 origin-top",
+            "absolute top-0 w-[2px] left-[calc(50%-1px)] opacity-20 origin-top",
             styles?.line,
           )}
           style={{
@@ -314,7 +315,7 @@ export default function GraphicTimeline({
         {/* LÍNEA ANIMADA (PINTADA) */}
         <motion.div
           className={cn(
-            "absolute left-1/2 top-0 bottom-0 w-[2px] -translate-x-1/2 origin-top",
+            "absolute top-0 bottom-0 w-[2px] left-[calc(50%-1px)] origin-top",
             styles?.line,
           )}
           style={{
@@ -324,7 +325,7 @@ export default function GraphicTimeline({
         />
 
         {/* CONTENEDOR DE ITEMS */}
-        <div className="flex flex-col gap-8 sm:gap-12">
+        <div className="flex flex-col gap-4 sm:gap-8">
           {items.map((item, index) => (
             <GraphicTimelineItemComponent
               key={`${item.time}-${index}`}

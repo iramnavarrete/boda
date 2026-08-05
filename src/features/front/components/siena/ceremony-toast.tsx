@@ -15,9 +15,8 @@ import AccommodationSection, {
   AccommodationStyleConfig,
 } from "./AccomodationSection";
 import EditorialEvent from "./EditorialEvent";
-// 🔥 Importamos el nuevo componente y sus tipos
 import EditorialTimeline, {
-  TimelineItem,
+  GraphicTimelineItem,
   TimelineStyleConfig,
 } from "./EditorialTimeline";
 
@@ -43,8 +42,7 @@ type Props = {
   accommodationConfig?: AccommodationConfig; // Si no se pasa, la sección no aparece
   accommodationStyles?: AccommodationStyleConfig; // Objeto con ClassNames específicos
 
-  // 🔥 Props para el Itinerario (Línea del tiempo)
-  timelineItems?: TimelineItem[]; // Si no se pasa, la sección no aparece
+  timelineItems?: GraphicTimelineItem[]; // Si no se pasa, la sección no aparece
   timelineTitle?: string;
   timelineSubtitle?: string;
   timelineStyles?: TimelineStyleConfig;
@@ -87,7 +85,6 @@ export default function CeremonyToast({
   gapBetweenElements = 96,
   accommodationConfig,
   accommodationStyles,
-  // 🔥 Extraemos las props del itinerario (con tu color por defecto)
   timelineItems,
   timelineTitle,
   timelineSubtitle,
@@ -232,7 +229,7 @@ export default function CeremonyToast({
             accentColor={timelineAccentColor}
           />
         )}
-        
+
         {/* SECCIÓN DEL CÓDIGO DE VESTIMENTA */}
         <div
           className={cn(
