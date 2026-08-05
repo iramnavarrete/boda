@@ -1,7 +1,7 @@
-import TieIcon from "@/icons/tie-icon";
 import { cn } from "@heroui/theme";
 import AnimatedEntrance from "../AnimatedEntrance";
-import LadiesShoeIcon from "@/icons/ladies-shoe-icon";
+import TaconIcon from "@/icons/siena/tacon";
+import CorbataIcon from "@/icons/siena/corbata";
 
 export type ColorPalette = {
   hex: string;
@@ -23,6 +23,8 @@ interface DressCodeProps {
   textClassName?: string;
   onlyText?: boolean;
   textRestrictions?: string[];
+  bothRestrictions?: string;
+  sectionsContainerClassName?: string;
 }
 
 const DressCode: React.FC<DressCodeProps> = ({
@@ -34,12 +36,13 @@ const DressCode: React.FC<DressCodeProps> = ({
   textClassName,
   onlyText = false,
   textRestrictions = [],
+  bothRestrictions,
+  sectionsContainerClassName, // 🔥 Extraemos la propiedad
 }) => {
   // Lógica para distribuir los colores simétricamente
   const getColorRows = (colors: typeof forbiddenColors) => {
-    if(colors === "none" || colors === false) return [];{
-
-    }
+    // Corregido el error de sintaxis de las llaves vacías
+    if (colors === "none" || colors === false) return [];
     if (!colors || colors.length === 0) return [];
     if (colors.length <= 6) return [colors]; // Si son 6 o menos, 1 sola fila
 
@@ -73,6 +76,7 @@ const DressCode: React.FC<DressCodeProps> = ({
           <div className="w-8 h-px bg-[color-mix(in_srgb,currentColor_30%,transparent)]" />
         </div>
 
+
         {/* Texto de Descripción General */}
         <p
           className={cn(
@@ -83,6 +87,15 @@ const DressCode: React.FC<DressCodeProps> = ({
           {text}
         </p>
 
+        {bothRestrictions && (
+          <>
+            <div className="flex flex-col items-center text-center mb-14">
+              <span className="text-[10px] font-nourdMedium uppercase tracking-[0.1em] text-current opacity-90 bg-[color-mix(in_srgb,currentColor_10%,transparent)] px-5 py-2 rounded-md border border-[color-mix(in_srgb,currentColor_20%,transparent)]">
+                {bothRestrictions}
+              </span>
+            </div>
+          </>
+        )}
         {onlyText ? (
           /* MODO DE SÓLO TEXTO (Renderiza el array de restricciones sin gráficos) */
           <div className="flex flex-col items-center gap-3 w-full max-w-md mx-auto px-4 mb-10">
@@ -97,12 +110,17 @@ const DressCode: React.FC<DressCodeProps> = ({
           </div>
         ) : (
           /* MODO POR DEFECTO (Estilos, Mujeres, Hombres, Paleta de Colores) */
-          <div className="flex flex-col gap-16 w-full max-w-md mx-auto px-4 mb-16">
+          <div
+            className={cn(
+              "flex flex-col gap-16 w-full max-w-md mx-auto px-4 mb-16",
+              sectionsContainerClassName,
+            )}
+          >
             {/* Bloque Mujeres */}
             {womenConfig && (
               <div className="flex flex-col items-center text-center">
-                <LadiesShoeIcon
-                  className="text-current opacity-60 w-8 h-8 mb-4"
+                <TaconIcon
+                  className="text-current opacity-60 w-12 h-12 stroke-[0.4] stroke-current mb-4"
                   strokeWidth={1.2}
                 />
                 <h3 className="font-newIconScript text-3xl text-current mb-3">
@@ -162,6 +180,7 @@ const DressCode: React.FC<DressCodeProps> = ({
               </div>
             )}
 
+            {/* Separador entre mujeres y hombres */}
             <div className="w-full flex justify-center opacity-30">
               <div className="w-24 h-px bg-current"></div>
             </div>
@@ -169,8 +188,8 @@ const DressCode: React.FC<DressCodeProps> = ({
             {/* Bloque Hombres */}
             {menConfig && (
               <div className="flex flex-col items-center text-center">
-                <TieIcon
-                  className="text-current opacity-60 w-8 h-8 mb-4"
+                <CorbataIcon
+                  className="text-current opacity-60 w-12 h-12 mb-4 stroke-[0.6] stroke-current"
                   strokeWidth={1.2}
                 />
                 <h3 className="font-newIconScript text-3xl text-current mb-3">
