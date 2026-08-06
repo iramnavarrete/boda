@@ -1,8 +1,24 @@
+import CarroIcon from "@/icons/siena/carro";
+import RelojIcon from "@/icons/siena/reloj";
+import TazaIcon from "@/icons/siena/taza";
+import TelefonoIcon from "@/icons/siena/telefono";
+import UbicacionIcon from "@/icons/siena/ubicacion";
 import { cn } from "@heroui/theme";
-import { Phone } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import React from "react";
 
+// 🔥 1. DICCIONARIO DE ÍCONOS POR DEFECTO PARA AMENIDADES
+const defaultAmenityIcons = {
+  // wifi: Wifi,
+  parking: CarroIcon,
+  coffee: TazaIcon,
+  // pool: Waves,
+  // gym: Dumbbell,
+  // restaurant: Utensils,
+  location: UbicacionIcon,
+  clock: RelojIcon
+};
 
 export type RoomInfo = {
   title: string;
@@ -11,49 +27,43 @@ export type RoomInfo = {
 };
 
 export type AmenityInfo = {
-  icon: React.ElementType; // Recibe el componente del icono (ej. MapPin, Coffee)
+  icon: keyof typeof defaultAmenityIcons | React.ElementType | React.ReactNode;
   title: string;
-  desc: string; // 🔥 Aquí aceptaremos saltos de línea '\n'
+  desc: string;
 };
 
-// 1. Configuración de DATOS del hotel
+// Configuración de DATOS del hotel
 export type AccommodationConfig = {
   hotelName: string;
   location: string;
+  mapsLink?: string;
   reservationCode: string;
   rooms: RoomInfo[];
   phones: string[];
   amenities: AmenityInfo[];
 };
 
-// 2. Configuración de ESTILOS (ClassNames) para personalización total
+// Configuración de ESTILOS (ClassNames)
 export type AccommodationStyleConfig = {
-  // Contenedores
-  mainContainer?: string; // El Card completo (sombra, redondeado, borde principal)
-  headerContainer?: string; // Fondo de la cabecera (donde va el nombre)
-  roomsSectionContainer?: string; // Fondo de la zona de carrusel
-  amenitiesGridContainer?: string; // Fondo de la zona de amenidades
-  contactSectionContainer?: string; // Fondo de la zona de botones
-
-  // Textos Generales
-  labelTitle?: string; // "Hospedaje Sugerido" / "Ubicación"
-  mainTitle?: string; // "Highland Hotel"
-  subtitle?: string; // "Chihuahua" / Descripciones de amenidades
-
-  // Caja de Código
-  codeBoxContainer?: string; // Fondo y borde de la caja del código
-  codeLabel?: string; // "Código de reservación"
-  codeValue?: string; // El código en sí
-
-  // Tarjetas de Habitaciones
-  roomCard?: string; // Contenedor de la tarjeta individual
-  roomTitle?: string; // Título de la habitación
-  roomPrice?: string; // Precio de la habitación
-
-  // Botones/Enlaces
-  contactButton?: string; // Estilo del botón (borde, fondo, hover)
-  contactButtonIconColor?: string; // Color específico para el icono del teléfono
-  contactButtonTextColor?: string; // Color específico para el texto del teléfono
+  mainContainer?: string;
+  headerContainer?: string;
+  roomsSectionContainer?: string;
+  amenitiesGridContainer?: string;
+  contactSectionContainer?: string;
+  labelTitle?: string;
+  mainTitle?: string;
+  subtitle?: string;
+  codeBoxContainer?: string;
+  codeLabel?: string;
+  codeValue?: string;
+  roomCard?: string;
+  roomTitle?: string;
+  roomPrice?: string;
+  contactButton?: string;
+  contactButtonIconColor?: string;
+  contactButtonTextColor?: string;
+  mapsButton?: string;
+  mapsButtonTextColor?: string;
 };
 
 const AccommodationSection = ({
@@ -152,18 +162,14 @@ const AccommodationSection = ({
           )}
         >
           <div
-            className="flex overflow-x-auto gap-3 sm:gap-4 pb-2 snap-x snap-mandatory min-w-0"
+            className="flex overflow-x-auto gap-3 sm:gap-4 pb-2 snap-x snap-mandatory min-w-0 [&::-webkit-scrollbar]:hidden"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
-            <style>{`
-              .flex::-webkit-scrollbar { display: none; }
-            `}</style>
-
             {config.rooms.map((room, idx) => (
               <div
                 key={idx}
                 className={cn(
-                  "min-w-[75%] sm:min-w-[220px] snap-center rounded-xl overflow-hidden shadow-sm flex flex-col transform-gpu",
+                  "min-w-[75%] sm:min-w-[220px] snap-center rounded-xl overflow-hidden shadow-sm flex flex-col transform-gpu shrink-0",
                   "bg-white border border-accent/5",
                   styles?.roomCard,
                 )}
@@ -210,87 +216,185 @@ const AccommodationSection = ({
             styles?.amenitiesGridContainer,
           )}
         >
-          {config.amenities.map((item, idx) => (
-            <div
-              key={idx}
-              className="flex flex-col items-center text-center gap-1.5 sm:gap-2"
-            >
-              <item.icon
-                strokeWidth={1.5}
-                size={22}
-                className={cn("opacity-70", styles?.labelTitle)}
-              />
-              <div className="w-full">
-                <p
-                  className={cn(
-                    "font-nourdMedium uppercase tracking-widest mb-0.5 whitespace-nowrap",
-                    "text-[9px] sm:text-[10px] opacity-80",
-                    styles?.labelTitle,
-                  )}
-                >
-                  {item.title}
-                </p>
-                <p
-                  className={cn(
-                    "font-nourdLight leading-snug whitespace-pre-line",
-                    "text-[10px] sm:text-xs opacity-60",
-                    styles?.subtitle,
-                  )}
-                >
-                  {item.desc}
-                </p>
+          {config.amenities.map((item, idx) => {
+            // 🔥 Lógica inteligente de renderizado para el ícono
+            const renderIcon = () => {
+              const sharedClasses = cn("w-8 h-8 opacity-70 stroke-[0.6] stroke-current", item.icon === 'location' ? 'h-7 my-0.5' : '', styles?.labelTitle);
+
+              // 1. Si es un string válido ("wifi", "parking", etc)
+              if (typeof item.icon === "string") {
+                const DictIcon =
+                  defaultAmenityIcons[
+                    item.icon as keyof typeof defaultAmenityIcons
+                  ];
+                if (!DictIcon) return null;
+                return (
+                  <DictIcon
+                    className={sharedClasses}
+                  />
+                );
+              }
+
+              // 2. Si es un componente ya instanciado (ej. <MapPin className="text-red-500" />)
+              if (React.isValidElement(item.icon)) {
+                return (
+                  <span
+                    className={cn(
+                      "flex items-center justify-center [&>svg]:w-[22px] [&>svg]:h-[22px]",
+                      sharedClasses,
+                    )}
+                  >
+                    {item.icon}
+                  </span>
+                );
+              }
+
+              // 3. Si es la referencia al componente (ej. MapPin)
+              const CustomIcon = item.icon as React.ElementType;
+              return (
+                <CustomIcon
+                  strokeWidth={1.5}
+                  size={22}
+                  className={sharedClasses}
+                />
+              );
+            };
+
+            return (
+              <div
+                key={idx}
+                className="flex flex-col items-center text-center gap-1.5 sm:gap-2"
+              >
+                {renderIcon()}
+                <div className="w-full">
+                  <p
+                    className={cn(
+                      "font-nourdMedium uppercase tracking-widest mb-0.5 whitespace-nowrap",
+                      "text-[9px] sm:text-[10px] opacity-80",
+                      styles?.labelTitle,
+                    )}
+                  >
+                    {item.title}
+                  </p>
+                  <p
+                    className={cn(
+                      "font-nourdLight leading-snug whitespace-pre-line",
+                      "text-[10px] sm:text-xs opacity-60",
+                      styles?.subtitle,
+                    )}
+                  >
+                    {item.desc}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Botones de Contacto */}
         <div
           className={cn(
-            "p-5 sm:p-6 flex flex-col items-center text-center",
+            "p-5 sm:p-7 flex flex-col items-center text-center",
             "bg-accent text-primary",
             styles?.contactSectionContainer,
           )}
         >
           <p
             className={cn(
-              "font-nourdMedium uppercase tracking-widest mb-4 px-2",
+              "font-nourdMedium uppercase tracking-widest mb-6 px-2",
               "text-[9px] opacity-70",
               styles?.codeLabel,
             )}
           >
             Reserva directo con tarifa preferencial
           </p>
-          <div className="flex flex-col w-full gap-2 sm:gap-3">
-            {config.phones.map((phone, idx) => {
-              const telLink = `tel:+52${phone.replace(/\s+/g, "")}`;
-              return (
-                <a
-                  key={idx}
-                  href={telLink}
+
+          <div className="flex flex-col w-full gap-6">
+            {/* BLOQUE DE TELÉFONOS */}
+            <div className="flex flex-row items-center gap-4 sm:gap-6 w-full">
+              {/* Ícono a la izquierda */}
+              <div className="flex flex-col items-center justify-center w-12 sm:w-16 shrink-0 opacity-80">
+                <TelefonoIcon
                   className={cn(
-                    "flex items-center justify-center gap-2 w-full transition-all rounded-full transform-gpu",
-                    "py-2.5 sm:py-3 border",
-                    "border-primary/30 text-current hover:bg-primary hover:text-accent",
-                    styles?.contactButton,
+                    "w-10 h-10 stroke-current stroke-[0.4]",
+                    styles?.contactButtonIconColor,
                   )}
-                >
-                  <Phone
-                    size={14}
-                    className={cn(styles?.contactButtonIconColor)}
-                  />
-                  <span
-                    className={cn(
-                      "font-nourdMedium tracking-widest",
-                      "text-[11px] sm:text-sm",
-                      styles?.contactButtonTextColor,
-                    )}
-                  >
-                    {phone}
-                  </span>
-                </a>
-              );
-            })}
+                />
+              </div>
+
+              {/* Botones a la derecha */}
+              <div className="flex flex-col flex-1 gap-2.5">
+                {config.phones.map((phone, idx) => {
+                  const telLink = `tel:+52${phone.replace(/\s+/g, "")}`;
+                  return (
+                    <a
+                      key={idx}
+                      href={telLink}
+                      className={cn(
+                        "flex items-center justify-center w-full transition-all rounded-full transform-gpu",
+                        "py-3 border",
+                        "border-primary/30 text-current hover:bg-primary hover:text-accent",
+                        styles?.contactButton,
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "font-nourdMedium tracking-widest",
+                          "text-xs sm:text-sm",
+                          styles?.contactButtonTextColor,
+                        )}
+                      >
+                        {phone}
+                      </span>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* BLOQUE DE MAPS */}
+            {config.mapsLink && (
+              <>
+                {/* Línea divisoria elegante */}
+                <div className="w-full h-px bg-primary/10" />
+
+                <div className="flex flex-row items-center gap-4 sm:gap-6 w-full">
+                  {/* Ícono a la izquierda */}
+                  <div className="flex flex-col items-center justify-center w-12 sm:w-16 shrink-0 opacity-80">
+                    <UbicacionIcon
+                      className={cn(
+                        "w-10 h-10 stroke-current stroke-[0.7] overflow-visible",
+                        styles?.contactButtonIconColor,
+                      )}
+                    />
+                  </div>
+                  {/* Botón a la derecha con estilos dinámicos */}
+                  <div className="flex flex-col flex-1">
+                    <a
+                      href={config.mapsLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={cn(
+                        "flex items-center justify-center w-full transition-all rounded-full transform-gpu",
+                        "py-3 border border-primary",
+                        "bg-primary text-accent hover:opacity-90 shadow-sm",
+                        styles?.mapsButton,
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "font-nourdMedium tracking-widest text-current",
+                          "text-xs sm:text-sm",
+                          styles?.mapsButtonTextColor,
+                        )}
+                      >
+                        CÓMO LLEGAR
+                      </span>
+                    </a>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -1,17 +1,16 @@
 import AmazonIcon from "@/icons/amazon-icon";
-// import LiverpoolIcon from "@/icons/liverpool-icon";
-import BbvaIcon from "@/icons/bbva-icon";
-// import BanamexIcon from "@/icons/banamex-icon";
-// import SantanderIcon from "@/icons/santander-icon";
-// import HsbcIcon from "@/icons/hsbc-icon";
-import GiftIcon from "@/icons/gift-icon";
 import { animate, useInView, motion } from "framer-motion";
 import { FC, useEffect, useRef, useState } from "react";
 import AnimatedEntrance from "@/features/front/components/AnimatedEntrance";
 import { giftSequence } from "@/constants/animationSequences";
 import { cn } from "@heroui/theme";
 import { ArrowRight, ChevronDown, Copy, Check } from "lucide-react";
-import CitiBanamexIcon from "@/icons/cb-icon";
+import BbvaIcon from "@/icons/siena/banks/bbva";
+import CitiBanamexIcon from "@/icons/siena/banks/citibanamex";
+import RegaloIcon from "@/icons/siena/regalo";
+import SantanderIcon from "@/icons/siena/banks/santander";
+import HsbcIcon from "@/icons/siena/banks/hsbc";
+import NuIcon from "@/icons/siena/banks/nu";
 
 type StoreGift = {
   type: "amazon" | "liverpool" | "other";
@@ -21,7 +20,7 @@ type StoreGift = {
 };
 
 type BankTransfer = {
-  bank: "bbva" | "banamex" | "santander" | "hsbc" | "citibanamex";
+  bank: "bbva" | "santander" | "hsbc" | "citibanamex" | "nu";
   cardNumber: string;
   beneficiary: string;
 };
@@ -32,6 +31,9 @@ type Props = {
   stores?: StoreGift[];
   showCash?: boolean;
   transfer?: BankTransfer;
+  customTitle?: string;
+  titleClassName?: string;
+  customQuote?: string;
 };
 
 // --- Iconos por tienda ---
@@ -42,11 +44,15 @@ const STORE_ICONS: Record<string, React.ReactNode> = {
 
 // --- Iconos por banco ---
 const BANK_ICONS: Record<string, React.ReactNode> = {
-  bbva: <BbvaIcon className="h-10 animated-gift" />,
-  citibanamex: <CitiBanamexIcon className="h-10 animated-gift" />,
-  // banamex: <BanamexIcon className="h-10 animated-gift" />,
-  // santander: <SantanderIcon className="h-10 animated-gift" />,
-  // hsbc: <HsbcIcon className="h-10 animated-gift" />,
+  bbva: <BbvaIcon className="h-10 w-16 stroke-1 stroke-current" />,
+  citibanamex: (
+    <CitiBanamexIcon className="h-16 w-16 stroke-[0.5] stroke-current" />
+  ),
+  santander: (
+    <SantanderIcon className="h-16 w-16 stroke-[0.5] stroke-current" />
+  ),
+  hsbc: <HsbcIcon className="h-16 w-16 stroke-[0.5] stroke-current" />,
+  nu: <NuIcon className="h-16 w-16 stroke-[0.5] stroke-current" />,
 };
 
 const BANK_LABELS: Record<string, string> = {
@@ -63,6 +69,9 @@ const GiftsTable: FC<Props> = ({
   stores = [],
   showCash = false,
   transfer,
+  customTitle,
+  titleClassName = "",
+  customQuote,
 }) => {
   const [isCardInfoVisible, setIsCardInfoVisible] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
@@ -91,10 +100,9 @@ const GiftsTable: FC<Props> = ({
       }
     }
 
-    // 2. Fallback seguro (Funciona en iframes y webviews de redes sociales)
+    // Fallback seguro
     const textArea = document.createElement("textarea");
     textArea.value = text;
-    // Ocultar text area para evitar salto de scroll
     textArea.style.position = "fixed";
     textArea.style.left = "-999999px";
     textArea.style.top = "-999999px";
@@ -113,23 +121,35 @@ const GiftsTable: FC<Props> = ({
     document.body.removeChild(textArea);
   };
 
+  // 🔥 Animación base para los íconos (Efecto "Pop" con rebote)
+  const iconAnimationProps = {
+    initial: { opacity: 0, scale: 0.3, y: 20 },
+    whileInView: { opacity: 1, scale: 1, y: 0 },
+    viewport: { once: true, amount: 0.5 },
+  };
+
   return (
     <div
       className={cn(
-        "px-5 bg-primary w-full py-24 relative overflow-hidden",
+        "px-5 bg-primary w-full py-24 relative overflow-hidden transform-gpu",
         containerClassName,
       )}
     >
       <div className="flex flex-col gap-12 justify-center items-center relative z-10 text-accent">
-        <AnimatedEntrance classname="flex flex-col items-center w-full">
+        <AnimatedEntrance classname="flex flex-col items-center w-full will-change-transform">
           {/* Overline Editorial */}
           <p className="text-[10px] font-nourdMedium text-current/60 uppercase tracking-[0.4em] mb-4 text-center">
             — Detalles —
           </p>
 
           {/* Título Script */}
-          <p className="text-4xl md:text-6xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.03)] font-newIconScript text-current mb-6 text-center">
-            Mesa de regalos
+          <p
+            className={cn(
+              "text-4xl md:text-6xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.03)] font-newIconScript text-current mb-6 text-center",
+              titleClassName,
+            )}
+          >
+            {customTitle || "Mesa de regalos"}
           </p>
 
           {/* Divisor minimalista */}
@@ -141,13 +161,14 @@ const GiftsTable: FC<Props> = ({
 
           {/* Texto de introducción */}
           <p className="text-current/80 text-center leading-relaxed text-sm md:text-base font-nourdLight px-6 max-w-md italic">
-            &quot;Tu presencia es el mejor regalo, pero si deseas tener un
-            detalle con nosotros, puedes contribuir a hacer nuestra luna de miel
-            aún más especial.&quot;
+            &quot;
+            {customQuote ||
+              "Tu presencia es el mejor regalo, pero si deseas tener un detalle con nosotros, puedes contribuir a hacer nuestra luna de miel aún más especial."}
+            &quot;
           </p>
         </AnimatedEntrance>
 
-        <AnimatedEntrance classname="w-full">
+        <AnimatedEntrance classname="w-full will-change-transform">
           <div className="flex flex-col items-center gap-16 w-full mt-8">
             {/* --- TIENDAS ONLINE --- */}
             {stores.map((store, idx) => (
@@ -155,7 +176,17 @@ const GiftsTable: FC<Props> = ({
                 key={idx}
                 className="flex flex-col items-center text-center z-10 py-2"
               >
-                <motion.div ref={idx === 0 ? ref : undefined} className="mb-4">
+                <motion.div
+                  ref={idx === 0 ? ref : undefined}
+                  className="mb-4"
+                  {...iconAnimationProps}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 15,
+                    delay: idx * 0.15,
+                  }} // Animación en cascada
+                >
                   {store.type === "other"
                     ? store.icon
                     : STORE_ICONS[store.type]}
@@ -182,9 +213,18 @@ const GiftsTable: FC<Props> = ({
             {/* --- EFECTIVO --- */}
             {showCash && (
               <div className="flex flex-col items-center text-center z-10 py-2 text-current">
-                <div className="mb-4">
-                  <GiftIcon className="w-10 h-10 overflow-visible animated-gift" />
-                </div>
+                <motion.div
+                  className="mb-4"
+                  {...iconAnimationProps}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 15,
+                    delay: 0.1,
+                  }}
+                >
+                  <RegaloIcon className="w-20 h-20 stroke-[0.5] stroke-current -ml-2" />
+                </motion.div>
                 <p className="font-nourdMedium text-lg mb-2 tracking-widest uppercase text-[11px]">
                   Lluvia de Sobres
                 </p>
@@ -197,7 +237,18 @@ const GiftsTable: FC<Props> = ({
             {/* --- TRANSFERENCIA --- */}
             {transfer && (
               <div className="flex flex-col items-center text-center z-10 py-2 w-full">
-                <div className="mb-4">{BANK_ICONS[transfer.bank]}</div>
+                <motion.div
+                  className="mb-4"
+                  {...iconAnimationProps}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 15,
+                    delay: 0.2,
+                  }}
+                >
+                  {BANK_ICONS[transfer.bank]}
+                </motion.div>
 
                 <p className="font-nourdMedium text-lg mb-3 tracking-widest uppercase text-[11px]">
                   Transferencia
@@ -301,6 +352,6 @@ const GiftsTable: FC<Props> = ({
       </div>
     </div>
   );
-};;
+};
 
 export default GiftsTable;

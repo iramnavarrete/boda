@@ -294,11 +294,11 @@ export default function SimpleSlider({
 
           <Arrow
             onClick={scrollPrev}
-            className="absolute z-20 top-1/2 -translate-y-1/2 left-0 cursor-pointer"
+            className="absolute z-20 top-1/2 -translate-y-10 left-0 cursor-pointer"
           />
           <Arrow
             onClick={scrollNext}
-            className="absolute z-20 top-1/2 -translate-y-1/2 right-0 rotate-180 cursor-pointer"
+            className="absolute z-20 top-1/2 -translate-y-10 right-0 rotate-180 cursor-pointer"
           />
 
           <div className="flex justify-center gap-2 mt-8">

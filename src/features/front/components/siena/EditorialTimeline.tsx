@@ -7,52 +7,90 @@ import {
   useSpring,
   useMotionValue,
   useMotionValueEvent,
-  useMotionTemplate, // 🔥 Importamos useMotionTemplate
+  useMotionTemplate,
 } from "framer-motion";
 import { cn } from "@heroui/theme";
-import {
-  Church,
-  DoorOpen,
-  GlassWater,
-  Utensils,
-  Music,
-  PartyPopper,
-  Clock3,
-  LucideIcon,
-} from "lucide-react";
+import { Heart } from "lucide-react";
+
+// ============================================================================
+// 1. IMPORTACIÓN DE TUS ÍCONOS EXTERNOS
+// ============================================================================
+import CeremoniaIcon from "@/icons/timeline/ceremonia";
+import RecepcionIcon from "@/icons/timeline/recepcion";
+import RompehielosIcon from "@/icons/timeline/rompehielos";
+import BanqueteIcon from "@/icons/timeline/banquete";
+import ValsIcon from "@/icons/timeline/vals";
+import BaileIcon from "@/icons/timeline/baile";
+import DespedidaIcon from "@/icons/timeline/despedida";
+import CocktailsIcon from "@/icons/timeline/cocktails";
+
+// Mapa de íconos disponibles vinculados a tus componentes
+const iconDictionary: Record<string, React.ElementType> = {
+  ceremonia: CeremoniaIcon,
+  recepcion: RecepcionIcon,
+  rompehielos: RompehielosIcon,
+  banquete: BanqueteIcon,
+  vals: ValsIcon,
+  baile: BaileIcon,
+  despedida: DespedidaIcon,
+  cocktails: CocktailsIcon
+};
 
 // ============================================================================
 // TIPOS Y CONFIGURACIÓN POR DEFECTO
 // ============================================================================
 
-export type TimelineItem = {
+export type GraphicTimelineItem = {
   time: string;
   title: string;
-  icon?: React.ElementType | React.ReactElement;
+  subtitle?: string;
+  iconKey: keyof typeof iconDictionary;
 };
 
-const defaultIconMap: Record<string, LucideIcon> = {
-  ceremonia: Church,
-  recepcion: DoorOpen,
-  rompehielos: GlassWater,
-  banquete: Utensils,
-  vals: Music,
-  fiesta: PartyPopper,
-  fin: Clock3,
-};
-
-const defaultItinerary: TimelineItem[] = [
+// Itinerario usando el diccionario
+const defaultGraphicItinerary: GraphicTimelineItem[] = [
   {
-    time: "16:00",
-    title: "Ceremonia religiosa",
-    icon: defaultIconMap.ceremonia,
+    time: "15:00 H",
+    title: "Ceremonia",
+    subtitle: "Iglesia San José",
+    iconKey: "ceremonia",
   },
-  { time: "19:45", title: "Recepción", icon: defaultIconMap.recepcion },
-  { time: "20:00", title: "Rompehielos", icon: defaultIconMap.rompehielos },
-  { time: "21:15", title: "Banquete", icon: defaultIconMap.banquete },
-  { time: "21:45", title: "Vals", icon: defaultIconMap.vals },
-  { time: "22:00", title: "Inicio de fiesta", icon: defaultIconMap.fiesta },
-  { time: "02:00", title: "Fin del evento", icon: defaultIconMap.fin },
+  {
+    time: "16:00 H - 16:30 H",
+    title: "Rompehielos",
+    subtitle: "Jardines",
+    iconKey: "rompehielos",
+  },
+  {
+    time: "17:00 H",
+    title: "Recepción",
+    subtitle: "Jardín principal",
+    iconKey: "recepcion",
+  },
+  {
+    time: "18:00 H",
+    title: "Banquete de boda",
+    subtitle: "Pabellón principal",
+    iconKey: "banquete",
+  },
+  {
+    time: "20:00 H",
+    title: "El Vals",
+    subtitle: "Pista de baile",
+    iconKey: "vals",
+  },
+  {
+    time: "21:00 H",
+    title: "Inicia el Baile",
+    subtitle: "Pista de baile",
+    iconKey: "baile",
+  },
+  {
+    time: "00:00 H",
+    title: "Despedida",
+    subtitle: "¡Gracias por acompañarnos!",
+    iconKey: "despedida",
+  },
 ];
 
 export type TimelineStyleConfig = {
@@ -60,14 +98,14 @@ export type TimelineStyleConfig = {
   sectionTitle?: string;
   sectionSubtitle?: string;
   line?: string;
-  diamond?: string;
-  icon?: string;
+  heart?: string;
   timeClassName?: string;
   eventTitleClassName?: string;
+  eventSubtitleClassName?: string;
 };
 
 type Props = {
-  items?: TimelineItem[];
+  items?: GraphicTimelineItem[];
   title?: string;
   subtitle?: string;
   styles?: TimelineStyleConfig;
@@ -75,70 +113,126 @@ type Props = {
 };
 
 // ============================================================================
-// COMPONENTE INTERNO: Nodo del Itinerario
+// COMPONENTE INTERNO: Contenido de Texto e Ilustración
 // ============================================================================
 
-const EditorialTimelineItem = ({
+const TextContent = ({
   item,
+  align,
+  styles,
+}: {
+  item: GraphicTimelineItem;
+  align: "left" | "right";
+  styles?: TimelineStyleConfig;
+}) => (
+  <div
+    className={cn(
+      "flex flex-col gap-1 w-full",
+      align === "right" ? "items-end text-right" : "items-start text-left",
+    )}
+  >
+    <span
+      className={cn(
+        "text-sm sm:text-base font-nourdMedium text-primary/80 uppercase tracking-widest",
+        styles?.timeClassName,
+      )}
+    >
+      {item.time}
+    </span>
+    <span
+      className={cn(
+        "text-base sm:text-lg font-nourdMedium text-primary uppercase tracking-[0.15em] leading-tight mt-1",
+        styles?.eventTitleClassName,
+      )}
+    >
+      {item.title}
+    </span>
+    {item.subtitle && (
+      <span
+        className={cn(
+          "text-xs sm:text-sm font-nourdLight text-primary/70 mt-0.5",
+          styles?.eventSubtitleClassName,
+        )}
+      >
+        {item.subtitle}
+      </span>
+    )}
+  </div>
+);
+
+const IllustrationContent = ({
+  item,
+  accentColor,
+}: {
+  item: GraphicTimelineItem;
+  accentColor: string;
+}) => {
+  const IconComponent = iconDictionary[item.iconKey];
+
+  return (
+    <div
+      className="relative w-32 h-24 sm:w-32 sm:h-32 flex items-center py-2"
+      style={{ color: accentColor }}
+    >
+      {IconComponent ? (
+        <IconComponent className="w-full h-full opacity-90 drop-shadow-sm" />
+      ) : (
+        <div className="w-16 h-16 bg-primary/10 rounded-full" />
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
+// COMPONENTE INTERNO: Nodo del Itinerario Intercalado
+// ============================================================================
+
+const GraphicTimelineItemComponent = ({
+  item,
+  index,
   styles,
   accentColor,
 }: {
-  item: TimelineItem;
+  item: GraphicTimelineItem;
+  index: number;
   styles?: TimelineStyleConfig;
   accentColor: string;
 }) => {
-  const renderIcon = () => {
-    if (!item.icon) return null;
-    if (React.isValidElement(item.icon)) return item.icon;
-    const IconComponent = item.icon as React.ElementType;
-    return (
-      <IconComponent
-        className={cn("w-5 h-5 sm:w-6 sm:h-6 opacity-70", styles?.icon)}
-        strokeWidth={1}
-        style={{ color: accentColor || "currentColor" }}
-      />
-    );
-  };
+  const isEven = index % 2 === 0;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ margin: "0px 0px -50% 0px", once: true }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className="grid grid-cols-[1fr_auto_1fr] gap-4 sm:gap-8 min-h-[100px] w-full items-center relative z-10"
+      // -20% significa que aparece apenas entra completamente a la pantalla (80% desde arriba)
+      viewport={{ margin: "0px 0px -20% 0px", once: true }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className="grid grid-cols-[1fr_auto_1fr] gap-2 sm:gap-6 min-h-[90px] sm:min-h-[100px] w-full items-center relative z-10"
     >
-      {/* 1. HORA (Izquierda) */}
-      <div className="text-right flex flex-col justify-center">
-        <span
-          className={cn(
-            "text-3xl sm:text-4xl font-nourdLight text-primary tracking-widest",
-            styles?.timeClassName,
-          )}
-        >
-          {item.time}
-        </span>
+      {/* COLUMNA IZQUIERDA */}
+      <div className="flex justify-end">
+        {isEven ? (
+          <IllustrationContent item={item} accentColor={accentColor} />
+        ) : (
+          <TextContent item={item} align="right" styles={styles} />
+        )}
       </div>
 
-      {/* 2. DIAMANTE CENTRAL */}
+      {/* COLUMNA CENTRAL (CORAZÓN) */}
       <div className="relative flex flex-col items-center justify-center w-8">
-        <div
-          className={cn("w-2.5 h-2.5 rotate-45 bg-accent", styles?.diamond)}
-          style={{ backgroundColor: accentColor || "currentColor" }}
+        <Heart
+          className={cn("w-4 h-4 z-10 bg-transparent", styles?.heart)}
+          style={{ color: accentColor, fill: accentColor }}
         />
       </div>
 
-      {/* 3. ÍCONO Y TÍTULO (Derecha) */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 text-left">
-        {renderIcon()}
-        <span
-          className={cn(
-            "text-xs sm:text-sm font-nourdMedium text-primary uppercase tracking-[0.2em] leading-tight opacity-90",
-            styles?.eventTitleClassName,
-          )}
-        >
-          {item.title}
-        </span>
+      {/* COLUMNA DERECHA */}
+      <div className="flex justify-start">
+        {!isEven ? (
+          <IllustrationContent item={item} accentColor={accentColor} />
+        ) : (
+          <TextContent item={item} align="left" styles={styles} />
+        )}
       </div>
     </motion.div>
   );
@@ -148,18 +242,19 @@ const EditorialTimelineItem = ({
 // COMPONENTE PRINCIPAL (EXPORTADO)
 // ============================================================================
 
-export default function EditorialTimeline({
-  items = defaultItinerary,
-  title = "Itinerario",
-  subtitle = "Nuestro gran día",
+export default function GraphicTimeline({
+  items = defaultGraphicItinerary,
+  title = "Día a Día",
+  subtitle = "El Itinerario",
   styles,
-  accentColor = "#B64160",
+  accentColor = "#2c3e50",
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start center", "end center"],
+    // Alineamos la línea con el -20% del viewport de los items (100% - 20% = 80%)
+    offset: ["start 80%", "end 80%"],
   });
 
   const lockedProgress = useMotionValue(0);
@@ -175,21 +270,19 @@ export default function EditorialTimeline({
     restDelta: 0.001,
   });
 
-  // 🔥 MAGIA AQUÍ: Calculamos dinámicamente la altura de la línea tenue para que
-  // siempre vaya 120px (aprox. la distancia de un ícono) por delante de la pintada.
-  const leadHeight = useMotionTemplate`calc(${smoothScaleY} * 100% + 120px)`;
+  const leadHeight = useMotionTemplate`calc(${smoothScaleY} * 100% + 100px)`;
 
   return (
     <div
       className={cn(
-        "w-full max-w-3xl mx-auto px-5 py-16 sm:py-24 relative z-10 text-primary",
+        "w-full max-w-4xl mx-auto px-4 pb-16 relative z-10 text-primary",
         styles?.container,
       )}
     >
-      <div className="flex flex-col items-center text-center mb-16 sm:mb-24">
+      <div className="flex flex-col items-center text-center mb-12 sm:mb-20">
         <p
           className={cn(
-            "text-[9px] font-nourdMedium text-current opacity-60 uppercase tracking-[0.4em] mb-3",
+            "text-[10px] font-nourdMedium text-current opacity-60 uppercase tracking-[0.4em] mb-2",
             styles?.sectionSubtitle,
           )}
         >
@@ -205,37 +298,39 @@ export default function EditorialTimeline({
         </h2>
       </div>
 
-      <div ref={containerRef} className="relative w-full py-8">
-        {/* 🔥 LÍNEA DE FONDO (TENUE): Va por delante explorando el camino */}
+      <div ref={containerRef} className="relative w-full py-4">
+        {/* LÍNEA DE FONDO (TENUE) */}
         <motion.div
           className={cn(
-            "absolute left-1/2 top-0 w-[1px] -translate-x-1/2 opacity-30 origin-top",
+            "absolute top-0 w-[2px] left-[calc(50%-1px)] opacity-20 origin-top",
             styles?.line,
           )}
           style={{
-            backgroundColor: accentColor || "currentColor",
+            backgroundColor: accentColor,
             height: leadHeight,
-            maxHeight: "100%", // Evita que se salga del contenedor principal
+            maxHeight: "100%",
           }}
         />
 
-        {/* LÍNEA ANIMADA (PINTADA): Va detrás, conectando los diamantes */}
+        {/* LÍNEA ANIMADA (PINTADA) */}
         <motion.div
           className={cn(
-            "absolute left-1/2 top-0 bottom-0 w-[1px] -translate-x-1/2 origin-top",
+            "absolute top-0 bottom-0 w-[2px] left-[calc(50%-1px)] origin-top",
             styles?.line,
           )}
           style={{
-            backgroundColor: accentColor || "currentColor",
+            backgroundColor: accentColor,
             scaleY: smoothScaleY,
           }}
         />
 
-        <div className="flex flex-col gap-6 sm:gap-8">
+        {/* CONTENEDOR DE ITEMS */}
+        <div className="flex flex-col gap-4 sm:gap-8">
           {items.map((item, index) => (
-            <EditorialTimelineItem
+            <GraphicTimelineItemComponent
               key={`${item.time}-${index}`}
               item={item}
+              index={index}
               styles={styles}
               accentColor={accentColor}
             />

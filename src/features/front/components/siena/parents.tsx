@@ -116,7 +116,7 @@ export default function ParentsGodFathers({
         )}
       >
         <div className="flex flex-col items-center justify-center w-full mt-4 mb-14">
-          <p
+          <div
             className={cn(
               "text-[9px] md:text-[10px] font-nourdMedium text-primary/70 uppercase tracking-[0.3em] mb-4 text-center",
               textClassName,
@@ -127,7 +127,7 @@ export default function ParentsGodFathers({
               text={seq.texts.t1}
               duration={seq.baseDuration}
             />
-          </p>
+          </div>
           <h2
             className={cn(
               "text-4xl md:text-5xl text-primary mb-4 text-center font-newIconScript drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]",
@@ -168,7 +168,7 @@ export default function ParentsGodFathers({
                   duration={seq.baseDuration}
                 />
               </div>
-              <div className="font-nourdMedium text-xl text-current leading-relaxed">
+              <div className="font-newIconScript drop-shadow-2xl text-2xl text-current leading-relaxed">
                 <ElegantText
                   delay={seq.delays.d4}
                   text={seq.texts.t4}
@@ -190,7 +190,7 @@ export default function ParentsGodFathers({
                   duration={seq.baseDuration}
                 />
               </div>
-              <div className="font-nourdMedium text-xl text-current leading-relaxed">
+              <div className="font-newIconScript drop-shadow-2xl text-2xl text-current leading-relaxed">
                 <ElegantText
                   delay={seq.delays.d7}
                   text={seq.texts.t7}
@@ -206,7 +206,7 @@ export default function ParentsGodFathers({
           </div>
         </div>
 
-        <div className="font-nourdLight text-lg text-current/90 max-w-sm mx-auto px-4">
+        <div className="font-nourdLight text-base text-current/90 max-w-sm mx-auto px-4">
           <ElegantText
             delay={seq.delays.d9}
             text={seq.texts.t9}
