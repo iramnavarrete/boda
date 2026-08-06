@@ -33,6 +33,7 @@ type Props = {
   transfer?: BankTransfer;
   customTitle?: string;
   titleClassName?: string;
+  customQuote?: string;
 };
 
 // --- Iconos por tienda ---
@@ -70,6 +71,7 @@ const GiftsTable: FC<Props> = ({
   transfer,
   customTitle,
   titleClassName = "",
+  customQuote,
 }) => {
   const [isCardInfoVisible, setIsCardInfoVisible] = useState(false);
   const [copiedText, setCopiedText] = useState<string | null>(null);
@@ -159,9 +161,10 @@ const GiftsTable: FC<Props> = ({
 
           {/* Texto de introducción */}
           <p className="text-current/80 text-center leading-relaxed text-sm md:text-base font-nourdLight px-6 max-w-md italic">
-            &quot;Tu presencia es el mejor regalo, pero si deseas tener un
-            detalle con nosotros, puedes contribuir a hacer nuestra luna de miel
-            aún más especial.&quot;
+            &quot;
+            {customQuote ||
+              "Tu presencia es el mejor regalo, pero si deseas tener un detalle con nosotros, puedes contribuir a hacer nuestra luna de miel aún más especial."}
+            &quot;
           </p>
         </AnimatedEntrance>
 
