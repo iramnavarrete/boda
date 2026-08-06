@@ -226,8 +226,8 @@ const DressCode: React.FC<DressCodeProps> = ({
             {/* Restricciones Generales (Para Ambos) colocada antes de los bloques para dar contexto inicial */}
             {bothRestrictions && (
               <>
-                <div className="flex flex-col items-center text-center text-balance mt-12">
-                  <span className="font-nourdLight text-current px-3 py-2 italic">
+                <div className="flex flex-col items-center text-center text-balance mt-8 border border-[color-mix(in_srgb,currentColor_20%,transparent)] rounded-lg bg-[color-mix(in_srgb,currentColor_1%,transparent)]">
+                  <span className="font-nourdLight text-current px-3 py-4 italic">
                     &quot;{bothRestrictions}&quot;
                   </span>
                 </div>
