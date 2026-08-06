@@ -56,7 +56,7 @@ export default function CeremonyToast({
   innerContainerClassName = "",
   textClassName = "",
   svgsColor,
-  textDressCode = "Para nosotros es muy importante compartir este día tan especial con ustedes. Nos encantaría que nos acompañen luciendo su mejor atuendo, respetando la etiqueta sugerida para mantener la armonía de nuestra celebración.",
+  textDressCode,
   hasNoDinner = false,
   onlyText = false,
   textRestrictions = [],
@@ -98,7 +98,7 @@ export default function CeremonyToast({
   const invitationData = useInvitationStore((state) => state.invitationData);
 
   return (
-    <div className="w-full flex flex-col relative">
+    <div className="w-full flex flex-col relative transform-gpu">
       <div className="w-full relative z-20 -mt-11 pointer-events-none drop-shadow-[0_-24px_10px_rgba(0,0,0,0.10)]">
         <BeigeWaves
           className="w-full h-12 block"
@@ -110,6 +110,7 @@ export default function CeremonyToast({
       <div
         className={cn(
           "w-full relative text-medium bg-accent overflow-hidden",
+          "will-change-transform",
           containerClassName,
         )}
       >
