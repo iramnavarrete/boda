@@ -22,8 +22,8 @@ type Props = {
   textClassName?: string;
   svgsColor?: string;
   slides?: InputSlide[];
-  // 🔥 2. Nueva prop para controlar la altura del carrusel (vista previa)
-  carouselHeight?: string | number | 'dynamic';
+  carouselHeight?: string | number | "dynamic";
+  customText?: string;
 };
 
 export default function Gallery({
@@ -32,6 +32,7 @@ export default function Gallery({
   svgsColor,
   slides = [],
   carouselHeight,
+  customText,
 }: Props) {
   // Estado para guardar las diapositivas ya con sus medidas calculadas
   const [processedSlides, setProcessedSlides] = useState<GalleryImage[]>([]);
@@ -94,16 +95,19 @@ export default function Gallery({
         containerClassName,
       )}
     >
-      <AnimatedEntrance classname={cn("w-full flex flex-col items-center relative z-10", textClassName)}>
+      <AnimatedEntrance
+        classname={cn(
+          "w-full flex flex-col items-center relative z-10",
+          textClassName,
+        )}
+      >
         {/* Overline Editorial */}
         <p className="text-[10px] font-nourdMedium text-current opacity-40 uppercase tracking-[0.4em] mb-4 text-center">
           — Galería —
         </p>
 
         {/* Título Script */}
-        <p
-          className="text-4xl font-newIconScript text-current mb-6 drop-shadow-[1px_1px_1px_rgba(0,0,0,0.03)] text-center px-4"
-        >
+        <p className="text-4xl font-newIconScript text-current mb-6 drop-shadow-[1px_1px_1px_rgba(0,0,0,0.03)] text-center px-4">
           Nuestros recuerdos
         </p>
 
@@ -115,23 +119,24 @@ export default function Gallery({
         </div>
 
         {/* Texto poético con estilo refinado */}
-        <p
-          className="font-nourdLight text-sm text-current/80 leading-relaxed text-center px-8 mb-4 italic"
-        >
-          &quot;Detrás de cada instante congelado en el tiempo, vibra la dulce
-          nostalgia de un amor que florece y se guarda para siempre.&quot;
+        <p className="font-nourdLight text-sm text-current/80 leading-relaxed text-center px-8 italic">
+          &quot;
+          {customText
+            ? customText
+            : "Detrás de cada instante congelado en el tiempo, vibra la dulce nostalgia de un amor que florece y se guarda para siempre."}
+          &quot;
         </p>
       </AnimatedEntrance>
 
       {/* Contenedor del Carrusel */}
-      <AnimatedEntrance classname="w-full relative z-10 mt-8">
+      <AnimatedEntrance classname="w-full relative z-10">
         {/* Solo renderizamos el Carousel cuando ya tenemos las medidas calculadas */}
         {processedSlides.length > 0 && (
           <Carousel
             slides={processedSlides}
             activeDotClassName={svgsColor ? `bg-[${svgsColor}]` : undefined}
-            height={carouselHeight} 
-            dynamicHeight={carouselHeight === 'dynamic'}
+            height={carouselHeight}
+            dynamicHeight={carouselHeight === "dynamic"}
           />
         )}
       </AnimatedEntrance>
