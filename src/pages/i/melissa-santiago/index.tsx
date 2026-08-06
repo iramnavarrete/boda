@@ -99,7 +99,6 @@ export default function Home({ invitationData }: InvitationPageProps) {
 
           <div style={{ overflow: "hidden" }}>
             <div className="flex flex-col items-center overflow-hidden bg-texture">
-              <DesktopSidebars />
               <DesktopSidebars
                 flowersClassName="text-[#252a33]"
                 textClassName="text-[#252a33]"
@@ -174,7 +173,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
                     heartActiveClassName: "text-paper",
                     hearthClassName: "text-gold-800",
                   }}
-                  customLastPhrase="Queremos invitarte a ser testigo del inicio de nuestra mayor historia de amor: la unión de dos almas destinadas a estar juntas."
+                  customLastPhrase="Queremos compartir contigo el momento en que dos corazones, unidos por el amor de Dios, comienzan una vida para siempre."
                 />
                 <CountDown
                   backgroundImage="/img/melissa-santiago/gallery/g7.jpg"
@@ -188,7 +187,6 @@ export default function Home({ invitationData }: InvitationPageProps) {
                   wavesColor="#f9f7f2"
                   svgsColor="#252a33"
                   forbiddenColors="none"
-                  textDressCode="Formal clásico"
                   ceremonyImage="/img/templo/sagrado-corazon.png"
                   receptionImage="/img/salon/monjes.jpg"
                   showFlowersBg={false}
@@ -202,22 +200,28 @@ export default function Home({ invitationData }: InvitationPageProps) {
                     contactSectionContainer: "bg-paper text-[#252a33]",
                     contactButton:
                       "hover:bg-[#252a33] hover:text-paper border-[#252a33]",
+                    mapsButton:
+                      "bg-[#252a33] hover:bg-paper hover:text-[#252a33] text-paper border-[#252a33]",
                   }}
                   accommodationConfig={{
                     amenities: [
                       {
-                        icon: MapPin,
+                        icon: "location",
                         title: "Ubicación",
-                        desc: "Sobre Periféricon de la Juventud",
+                        desc: "Periférico de la Juventud",
                       },
                       {
-                        icon: Coffee,
+                        icon: "coffee",
                         title: "Desayuno Buffet",
                         desc: "Incluido",
                       },
-                      { icon: Car, title: "Estacionamiento", desc: "Gratuito" },
                       {
-                        icon: Clock,
+                        icon: "parking",
+                        title: "Estacionamiento",
+                        desc: "Gratuito",
+                      },
+                      {
+                        icon: "clock",
                         title: "Horarios",
                         desc: "Check-in 3 PM \n Check-out 1 PM",
                       },
@@ -225,7 +229,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
                     hotelName: "Highland",
                     location: "Perif. de la Juventud 3115, Puerta de Hierro",
                     phones: ["614 142 1764", "614 587 1500"],
-                    reservationCode: "Boda Itzel Melissa & Rubén Santiago",
+                    reservationCode: "Boda Melissa Alvídrez & Santiago Mora",
                     rooms: [
                       {
                         image: "/img/melissa-santiago/hotel/estandar.jpg",
@@ -243,30 +247,40 @@ export default function Home({ invitationData }: InvitationPageProps) {
                         price: "$1,840 MXN",
                       },
                     ],
+                    mapsLink:
+                      "https://maps.app.goo.gl/Z1kRyxDJEdMPdRWAA?g_st=ic",
                   }}
                   timelineItems={[
                     {
-                      time: "16:00",
+                      time: "4:00 PM",
                       title: "Ceremonia religiosa",
-                      icon: Church,
+                      iconKey: "ceremonia",
                     },
-                    { time: "19:45", title: "Recepción", icon: DoorOpen },
                     {
-                      time: "20:00",
+                      time: "7:45 PM",
+                      title: "Recepción",
+                      iconKey: "recepcion",
+                    },
+                    {
+                      time: "8:00 PM",
                       title: "Rompehielos",
-                      icon: GlassWater,
+                      iconKey: "cocktails",
                     },
-                    { time: "21:15", title: "Banquete", icon: Utensils },
-                    { time: "21:45", title: "Vals", icon: Music },
                     {
-                      time: "22:00",
+                      time: "9:15 PM",
+                      title: "Banquete",
+                      iconKey: "banquete",
+                    },
+                    { time: "9:45 PM", title: "Vals", iconKey: "vals" },
+                    {
+                      time: "10:00 PM",
                       title: "Desarrollo de la fiesta",
-                      icon: PartyPopper,
+                      iconKey: "baile",
                     },
                     {
-                      time: "02:00",
+                      time: "2:00 AM",
                       title: "Fin del evento",
-                      icon: Clock3,
+                      iconKey: "despedida",
                     },
                   ]}
                   timelineTitle="Itinerario"
@@ -279,19 +293,21 @@ export default function Home({ invitationData }: InvitationPageProps) {
                     sectionTitle: "text-[#252a33]",
                   }}
                   womenConfig={{
+                    subtitle: "Vestido largo de noche",
                     restrictions:
-                      "Les pedimos cordialmente que respeten el código de vestimenta impuesto por el salón.",
+                      "Con el fin de preservar el protagonismo de la novia, agradecemos a nuestras invitadas evitar vestidos en tonos blancos o colores muy claros.",
                     description:
-                      "Vestido largo de corte formal y elegancia atemporal. Siluetas clásicas y telas fluidas serán ideales para nuestra celebración.",
+                      "Vestido largo de etiqueta acompañado de calzado y accesorios acordes a una celebración formal. Favor de evitar vestidos cortos o casuales.",
                     title: "Damas",
                   }}
                   menConfig={{
-                    restrictions:
-                      "Les pedimos cordialmente que respeten el código de vestimenta impuesto por el salón.",
                     description:
-                      "Traje formal clásico en tonos sobrios. Un conjunto impecable con corbata o moño asegurará una presencia distinguida.",
+                      "Traje formal con camisa de vestir, corbata o moño y zapatos de vestir. Se sugiere evitar prendas de estilo casual o vaquero.",
                     title: "Caballeros",
+                    subtitle: "Traje formal completo",
                   }}
+                  bothRestrictions="Agradecemos su comprehensión y apoyo respetando el código de vestimenta requerido por el salón."
+                  sectionsContainerClassName="gap-12 mb-0 mt-10"
                 />
                 <Gallery
                   containerClassName="bg-paper"
@@ -301,30 +317,6 @@ export default function Home({ invitationData }: InvitationPageProps) {
                       alt: "Imagen de la galería 8",
                       thumb: "/img/melissa-santiago/gallery/thumbs/g8.jpg",
                       msrc: "/img/melissa-santiago/gallery/thumbs/g8.jpg",
-                    },
-                    {
-                      src: "/img/melissa-santiago/gallery/g9.jpg",
-                      alt: "Imagen de la galería 9",
-                      thumb: "/img/melissa-santiago/gallery/thumbs/g9.jpg",
-                      msrc: "/img/melissa-santiago/gallery/thumbs/g9.jpg",
-                    },
-                    {
-                      src: "/img/melissa-santiago/gallery/g10.jpg",
-                      alt: "Imagen de la galería 10",
-                      thumb: "/img/melissa-santiago/gallery/thumbs/g10.jpg",
-                      msrc: "/img/melissa-santiago/gallery/thumbs/g10.jpg",
-                    },
-                    {
-                      src: "/img/melissa-santiago/gallery/g11.jpg",
-                      alt: "Imagen de la galería 11",
-                      thumb: "/img/melissa-santiago/gallery/thumbs/g11.jpg",
-                      msrc: "/img/melissa-santiago/gallery/thumbs/g11.jpg",
-                    },
-                    {
-                      src: "/img/melissa-santiago/gallery/g12.jpg",
-                      alt: "Imagen de la galería 12",
-                      thumb: "/img/melissa-santiago/gallery/thumbs/g12.jpg",
-                      msrc: "/img/melissa-santiago/gallery/thumbs/g12.jpg",
                     },
                     {
                       src: "/img/melissa-santiago/gallery/g13.jpg",
@@ -345,22 +337,28 @@ export default function Home({ invitationData }: InvitationPageProps) {
                       msrc: "/img/melissa-santiago/gallery/thumbs/g15.jpg",
                     },
                     {
-                      src: "/img/melissa-santiago/gallery/g16.jpg",
-                      alt: "Imagen de la galería 16",
-                      thumb: "/img/melissa-santiago/gallery/thumbs/g16.jpg",
-                      msrc: "/img/melissa-santiago/gallery/thumbs/g16.jpg",
-                    },
-                    {
                       src: "/img/melissa-santiago/gallery/g17.jpg",
                       alt: "Imagen de la galería 17",
                       thumb: "/img/melissa-santiago/gallery/thumbs/g17.jpg",
                       msrc: "/img/melissa-santiago/gallery/thumbs/g17.jpg",
                     },
                     {
-                      src: "/img/melissa-santiago/gallery/g18.jpg",
-                      alt: "Imagen de la galería 18",
-                      thumb: "/img/melissa-santiago/gallery/thumbs/g18.jpg",
-                      msrc: "/img/melissa-santiago/gallery/thumbs/g18.jpg",
+                      src: "/img/melissa-santiago/gallery/g9.jpg",
+                      alt: "Imagen de la galería 9",
+                      thumb: "/img/melissa-santiago/gallery/thumbs/g9.jpg",
+                      msrc: "/img/melissa-santiago/gallery/thumbs/g9.jpg",
+                    },
+                    {
+                      src: "/img/melissa-santiago/gallery/g10.jpg",
+                      alt: "Imagen de la galería 10",
+                      thumb: "/img/melissa-santiago/gallery/thumbs/g10.jpg",
+                      msrc: "/img/melissa-santiago/gallery/thumbs/g10.jpg",
+                    },
+                    {
+                      src: "/img/melissa-santiago/gallery/g11.jpg",
+                      alt: "Imagen de la galería 11",
+                      thumb: "/img/melissa-santiago/gallery/thumbs/g11.jpg",
+                      msrc: "/img/melissa-santiago/gallery/thumbs/g11.jpg",
                     },
                     {
                       src: "/img/melissa-santiago/gallery/g19.jpg",
@@ -369,10 +367,10 @@ export default function Home({ invitationData }: InvitationPageProps) {
                       msrc: "/img/melissa-santiago/gallery/thumbs/g19.jpg",
                     },
                     {
-                      src: "/img/melissa-santiago/gallery/g20.jpg",
-                      alt: "Imagen de la galería 20",
-                      thumb: "/img/melissa-santiago/gallery/thumbs/g20.jpg",
-                      msrc: "/img/melissa-santiago/gallery/thumbs/g20.jpg",
+                      src: "/img/melissa-santiago/gallery/g12.jpg",
+                      alt: "Imagen de la galería 12",
+                      thumb: "/img/melissa-santiago/gallery/thumbs/g12.jpg",
+                      msrc: "/img/melissa-santiago/gallery/thumbs/g12.jpg",
                     },
                     {
                       src: "/img/melissa-santiago/gallery/g21.jpg",
@@ -399,6 +397,30 @@ export default function Home({ invitationData }: InvitationPageProps) {
                       msrc: "/img/melissa-santiago/gallery/thumbs/g24.jpg",
                     },
                     {
+                      src: "/img/melissa-santiago/gallery/g27.jpg",
+                      alt: "Imagen de la galería 27",
+                      thumb: "/img/melissa-santiago/gallery/thumbs/g27.jpg",
+                      msrc: "/img/melissa-santiago/gallery/thumbs/g27.jpg",
+                    },
+                    {
+                      src: "/img/melissa-santiago/gallery/g20.jpg",
+                      alt: "Imagen de la galería 20",
+                      thumb: "/img/melissa-santiago/gallery/thumbs/g20.jpg",
+                      msrc: "/img/melissa-santiago/gallery/thumbs/g20.jpg",
+                    },
+                    {
+                      src: "/img/melissa-santiago/gallery/g16.jpg",
+                      alt: "Imagen de la galería 16",
+                      thumb: "/img/melissa-santiago/gallery/thumbs/g16.jpg",
+                      msrc: "/img/melissa-santiago/gallery/thumbs/g16.jpg",
+                    },
+                    {
+                      src: "/img/melissa-santiago/gallery/g18.jpg",
+                      alt: "Imagen de la galería 18",
+                      thumb: "/img/melissa-santiago/gallery/thumbs/g18.jpg",
+                      msrc: "/img/melissa-santiago/gallery/thumbs/g18.jpg",
+                    },
+                    {
                       src: "/img/melissa-santiago/gallery/g25.jpg",
                       alt: "Imagen de la galería 25",
                       thumb: "/img/melissa-santiago/gallery/thumbs/g25.jpg",
@@ -410,14 +432,9 @@ export default function Home({ invitationData }: InvitationPageProps) {
                       thumb: "/img/melissa-santiago/gallery/thumbs/g26.jpg",
                       msrc: "/img/melissa-santiago/gallery/thumbs/g26.jpg",
                     },
-                    {
-                      src: "/img/melissa-santiago/gallery/g27.jpg",
-                      alt: "Imagen de la galería 27",
-                      thumb: "/img/melissa-santiago/gallery/thumbs/g27.jpg",
-                      msrc: "/img/melissa-santiago/gallery/thumbs/g27.jpg",
-                    },
                   ]}
                   carouselHeight="dynamic"
+                  customText="Hay momentos que el tiempo no podrá borrar, porque el amor los hace eternos."
                 />
                 <GiftsTable
                   showCash
@@ -427,6 +444,9 @@ export default function Home({ invitationData }: InvitationPageProps) {
                     cardNumber: "5204 1663 1331 1799",
                   }}
                   containerClassName="bg-[#252a33]"
+                  customTitle="Detalles para los novios"
+                  titleClassName="text-3xl"
+                  customQuote="Lo más importante para nosotros es contar con tu presencia. Si deseas expresar tu cariño con un detalle, a continuación encontrarás algunas opciones."
                 />
                 <Assistants containerClassName="bg-paper text-[#252a33]" />
                 <QrPhotos
