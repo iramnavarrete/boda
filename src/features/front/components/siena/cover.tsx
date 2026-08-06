@@ -67,8 +67,8 @@ export default function Cover({
   isSealVisible,
   imagesConfig = [
     { src: "/img/cover1.webp", panStart: "40%", panEnd: "60%" },
-    { src: "/img/cover2.webp", style: { backgroundPosition: "60%" } },
-    { src: "/img/cover3.webp", style: { backgroundPosition: "right" } },
+    { src: "/img/cover2.webp", panStart: "60%", panEnd: "40%" },
+    { src: "/img/cover3.webp", panStart: "40%", panEnd: "60%" },
   ],
   eventTitleClassName = "",
   musicIconClassName = "",
