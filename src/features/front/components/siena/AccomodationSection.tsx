@@ -325,7 +325,7 @@ const AccommodationSection = ({
               {/* Botones a la derecha */}
               <div className="flex flex-col flex-1 gap-2.5">
                 {config.phones.map((phone, idx) => {
-                  const telLink = `tel:+52${phone.replace(/\s+/g, "")}`;
+                  const telLink = `tel:${phone.replace(/\s+/g, "")}`;
                   return (
                     <a
                       key={idx}
