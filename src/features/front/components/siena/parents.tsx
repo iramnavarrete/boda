@@ -168,7 +168,7 @@ export default function ParentsGodFathers({
                   duration={seq.baseDuration}
                 />
               </div>
-              <div className="font-nourdMedium text-xl text-current leading-relaxed">
+              <div className="font-newIconScript drop-shadow-2xl text-2xl text-current leading-relaxed">
                 <ElegantText
                   delay={seq.delays.d4}
                   text={seq.texts.t4}
@@ -190,7 +190,7 @@ export default function ParentsGodFathers({
                   duration={seq.baseDuration}
                 />
               </div>
-              <div className="font-nourdMedium text-xl text-current leading-relaxed">
+              <div className="font-newIconScript drop-shadow-2xl text-2xl text-current leading-relaxed">
                 <ElegantText
                   delay={seq.delays.d7}
                   text={seq.texts.t7}
@@ -206,7 +206,7 @@ export default function ParentsGodFathers({
           </div>
         </div>
 
-        <div className="font-nourdLight text-lg text-current/90 max-w-sm mx-auto px-4">
+        <div className="font-nourdLight text-base text-current/90 max-w-sm mx-auto px-4">
           <ElegantText
             delay={seq.delays.d9}
             text={seq.texts.t9}
