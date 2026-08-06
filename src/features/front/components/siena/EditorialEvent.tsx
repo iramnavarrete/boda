@@ -112,20 +112,22 @@ const EditorialEvent: React.FC<EditorialEventProps> = ({
 
           <a
             className={cn(
-              "group flex items-center justify-center gap-2 text-[10px] font-nourdMedium uppercase tracking-[0.2em] transition-all rounded-full px-8 py-3.5",
+              "group flex items-center justify-center gap-2 text-[10px] font-nourdMedium uppercase tracking-[0.2em] transition-all rounded-full px-8 py-3.5 duration-400",
               isImageVariant
                 ? "bg-white text-black hover:bg-gray-100 hover:scale-105 shadow-[0_4px_14px_0_rgba(255,255,255,0.2)]"
-                : "border border-current hover:bg-current hover:text-accent",
+                : "border border-current hover:bg-current",
             )}
             href={link}
             target="_blank"
             rel="noopener noreferrer"
           >
-            Ver Mapa
+            <span className="text-current group-hover:text-accent">
+              Ver Mapa
+            </span>
             {!isImageVariant && (
               <ArrowRight
                 size={12}
-                className="opacity-70 group-hover:translate-x-1 transition-transform"
+                className="opacity-70 group-hover:translate-x-1 transition-transform text-current group-hover:text-accent"
               />
             )}
           </a>
