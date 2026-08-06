@@ -614,7 +614,7 @@ const Assistants: FC<Props> = ({
                                     }}
                                     className="w-full overflow-hidden"
                                   >
-                                    <div className="w-full flex flex-col items-center">
+                                    <div className="w-full flex flex-col items-center transform-gpu">
                                       <AnimatePresence initial={false}>
                                         {isAttending && (
                                           <motion.div
