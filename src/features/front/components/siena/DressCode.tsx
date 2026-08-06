@@ -1,5 +1,7 @@
+import TieIcon from "@/icons/tie-icon";
 import { cn } from "@heroui/theme";
 import AnimatedEntrance from "../AnimatedEntrance";
+import LadiesShoeIcon from "@/icons/ladies-shoe-icon";
 import TaconIcon from "@/icons/siena/tacon";
 import CorbataIcon from "@/icons/siena/corbata";
 
@@ -10,13 +12,14 @@ export type ColorPalette = {
 
 export interface DressCodeSection {
   title: string;
+  subtitle?: string;
   description: string;
   restrictions?: string;
 }
 
 interface DressCodeProps {
   title: string;
-  text: string;
+  text?: string;
   womenConfig?: DressCodeSection;
   menConfig?: DressCodeSection;
   forbiddenColors?: ColorPalette | "none" | false;
@@ -37,11 +40,10 @@ const DressCode: React.FC<DressCodeProps> = ({
   onlyText = false,
   textRestrictions = [],
   bothRestrictions,
-  sectionsContainerClassName, // 🔥 Extraemos la propiedad
+  sectionsContainerClassName,
 }) => {
   // Lógica para distribuir los colores simétricamente
   const getColorRows = (colors: typeof forbiddenColors) => {
-    // Corregido el error de sintaxis de las llaves vacías
     if (colors === "none" || colors === false) return [];
     if (!colors || colors.length === 0) return [];
     if (colors.length <= 6) return [colors]; // Si son 6 o menos, 1 sola fila
@@ -63,7 +65,7 @@ const DressCode: React.FC<DressCodeProps> = ({
       <AnimatedEntrance classname="w-full flex flex-col items-center">
         {/* Overline & Título Principal */}
         <p className="text-[10px] font-nourdMedium text-current opacity-70 uppercase tracking-[0.3em] mb-4 text-center">
-          — La etiqueta del evento —
+          — Etiqueta del evento —
         </p>
         <h2 className="text-3xl text-current mb-4 text-center font-newIconScript drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)]">
           {title}
@@ -76,33 +78,26 @@ const DressCode: React.FC<DressCodeProps> = ({
           <div className="w-8 h-px bg-[color-mix(in_srgb,currentColor_30%,transparent)]" />
         </div>
 
-
         {/* Texto de Descripción General */}
-        <p
-          className={cn(
-            "text-current opacity-90 font-nourdLight text-center max-w-md px-4 leading-relaxed",
-            onlyText ? "text-lg mb-8" : "text-base mb-14",
-          )}
-        >
-          {text}
-        </p>
-
-        {bothRestrictions && (
-          <>
-            <div className="flex flex-col items-center text-center mb-14">
-              <span className="text-[10px] font-nourdMedium uppercase tracking-[0.1em] text-current opacity-90 bg-[color-mix(in_srgb,currentColor_10%,transparent)] px-5 py-2 rounded-md border border-[color-mix(in_srgb,currentColor_20%,transparent)]">
-                {bothRestrictions}
-              </span>
-            </div>
-          </>
+        {text && (
+          <p
+            className={cn(
+              "text-current opacity-90 font-nourdLight text-center max-w-md px-4 leading-relaxed",
+              "[text-wrap:pretty]",
+              onlyText ? "text-lg mb-8" : "text-base mb-14",
+            )}
+          >
+            {text}
+          </p>
         )}
+
         {onlyText ? (
           /* MODO DE SÓLO TEXTO (Renderiza el array de restricciones sin gráficos) */
           <div className="flex flex-col items-center gap-3 w-full max-w-md mx-auto px-4 mb-10">
             {textRestrictions.map((restriction, index) => (
               <p
                 key={index}
-                className="font-nourdMedium uppercase tracking-widest text-current drop-shadow-sm text-center"
+                className="font-nourdMedium uppercase tracking-widest text-current drop-shadow-sm text-center [text-wrap:pretty]"
               >
                 {restriction}
               </p>
@@ -112,7 +107,7 @@ const DressCode: React.FC<DressCodeProps> = ({
           /* MODO POR DEFECTO (Estilos, Mujeres, Hombres, Paleta de Colores) */
           <div
             className={cn(
-              "flex flex-col gap-16 w-full max-w-md mx-auto px-4 mb-16",
+              "flex flex-col gap-16 w-full max-w-md mx-auto px-4 mb-16 text-balance",
               sectionsContainerClassName,
             )}
           >
@@ -123,14 +118,25 @@ const DressCode: React.FC<DressCodeProps> = ({
                   className="text-current opacity-60 w-12 h-12 stroke-[0.4] stroke-current mb-4"
                   strokeWidth={1.2}
                 />
-                <h3 className="font-newIconScript text-3xl text-current mb-3">
+                <h3
+                  className={cn(
+                    "font-newIconScript text-3xl text-current",
+                    womenConfig.subtitle ? "mb-1" : "mb-3",
+                  )}
+                >
                   {womenConfig.title}
                 </h3>
-                <p className="text-current opacity-80 text-sm leading-relaxed mb-5 font-nourdLight px-2">
+                {/* 🔥 Subtítulo Mujeres */}
+                {womenConfig.subtitle && (
+                  <p className="text-[12px] font-nourdMedium uppercase tracking-[0.2em] text-current opacity-70 mb-4">
+                    {womenConfig.subtitle}
+                  </p>
+                )}
+                <p className="text-current opacity-80 text-sm leading-relaxed mb-5 font-nourdLight px-2 [text-wrap:pretty] my-2">
                   {womenConfig.description}
                 </p>
                 {womenConfig.restrictions && (
-                  <span className="text-[10px] font-nourdMedium uppercase tracking-[0.1em] text-current opacity-90 bg-[color-mix(in_srgb,currentColor_10%,transparent)] px-5 py-2 rounded-md mb-6 border border-[color-mix(in_srgb,currentColor_20%,transparent)]">
+                  <span className="text-[9px] font-nourdMedium uppercase [text-wrap:pretty] tracking-[0.1em] text-current opacity-90 bg-[color-mix(in_srgb,currentColor_10%,transparent)] px-5 py-2 rounded-md mb-6 border border-[color-mix(in_srgb,currentColor_20%,transparent)]">
                     {womenConfig.restrictions}
                   </span>
                 )}
@@ -171,7 +177,7 @@ const DressCode: React.FC<DressCodeProps> = ({
                       ))}
                     </div>
 
-                    <p className="text-current opacity-60 text-[11px] italic font-serif mt-5 text-center px-4">
+                    <p className="text-current opacity-60 text-[11px] italic font-serif mt-5 text-center px-4 [text-wrap:pretty]">
                       *Tonalidades reservadas estrictamente para la novia y las
                       damas de honor.
                     </p>
@@ -192,10 +198,21 @@ const DressCode: React.FC<DressCodeProps> = ({
                   className="text-current opacity-60 w-12 h-12 mb-4 stroke-[0.6] stroke-current"
                   strokeWidth={1.2}
                 />
-                <h3 className="font-newIconScript text-3xl text-current mb-3">
+                <h3
+                  className={cn(
+                    "font-newIconScript text-3xl text-current",
+                    menConfig.subtitle ? "mb-1" : "mb-3",
+                  )}
+                >
                   {menConfig.title}
                 </h3>
-                <p className="text-current opacity-80 text-sm leading-relaxed mb-5 font-nourdLight px-2">
+                {/* 🔥 Subtítulo Hombres */}
+                {menConfig.subtitle && (
+                  <p className="text-[11px] font-nourdMedium uppercase tracking-[0.2em] text-current opacity-70 mb-4">
+                    {menConfig.subtitle}
+                  </p>
+                )}
+                <p className="text-current opacity-80 text-sm leading-relaxed mb-5 font-nourdLight px-2 [text-wrap:pretty] my-2">
                   {menConfig.description}
                 </p>
                 {menConfig.restrictions && (
@@ -204,6 +221,17 @@ const DressCode: React.FC<DressCodeProps> = ({
                   </span>
                 )}
               </div>
+            )}
+
+            {/* Restricciones Generales (Para Ambos) colocada antes de los bloques para dar contexto inicial */}
+            {bothRestrictions && (
+              <>
+                <div className="flex flex-col items-center text-center text-balance mt-12">
+                  <span className="font-nourdLight text-current px-3 py-2 italic">
+                    &quot;{bothRestrictions}&quot;
+                  </span>
+                </div>
+              </>
             )}
           </div>
         )}
