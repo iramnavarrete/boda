@@ -41,6 +41,8 @@ export default function Home({ invitationData }: InvitationPageProps) {
   const eventUrl = invitationData.eventUrl;
   const description = `Te invitamos a celebrar con nosotros este día tan especial, nos encantaría contar con tu presencia.`;
 
+  const faviconUrl = `/favicons/${invitationData.id}.ico`;
+
   return (
     <>
       <Head>
@@ -49,6 +51,9 @@ export default function Home({ invitationData }: InvitationPageProps) {
         </title>
         <meta name="description" content={description} />
         <link rel="canonical" href={eventUrl} />
+
+        <link rel="icon" type="image/x-icon" href={faviconUrl} />
+        <link rel="apple-touch-icon" href={faviconUrl} />
 
         <meta property="og:locale" content="es_MX" />
         <meta property="og:type" content="article" />
