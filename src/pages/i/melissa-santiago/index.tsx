@@ -25,19 +25,6 @@ import ParentsGodFathers from "@/features/front/components/siena/parents";
 import { FamilyProvider } from "@/features/front/components/FamilyContext";
 import MelissaSantiagoLogo from "@/icons/specificInvitation/MelissaSantiagoLogo";
 import MelissaSantiagoSealLogo from "@/icons/specificInvitation/MelissaSantiagoSealLogo";
-import {
-  Car,
-  Church,
-  Clock,
-  Clock3,
-  Coffee,
-  DoorOpen,
-  GlassWater,
-  MapPin,
-  Music,
-  PartyPopper,
-  Utensils,
-} from "lucide-react";
 
 interface InvitationPageProps {
   invitationData: Invitation & { eventUrl: string };
@@ -55,6 +42,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
   const coverImage = invitationData.imagenPortada;
   const eventUrl = invitationData.eventUrl;
   const description = `Te invitamos a celebrar con nosotros este día tan especial, nos encantaría contar con tu presencia.`;
+  const faviconUrl = `/favicons/${invitationData.id}.ico`;
 
   return (
     <>
@@ -64,6 +52,9 @@ export default function Home({ invitationData }: InvitationPageProps) {
         </title>
         <meta name="description" content={description} />
         <link rel="canonical" href={eventUrl} />
+
+        <link rel="icon" type="image/x-icon" href={faviconUrl} />
+        <link rel="apple-touch-icon" href={faviconUrl} />
 
         <meta property="og:locale" content="es_MX" />
         <meta property="og:type" content="article" />
