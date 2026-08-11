@@ -1,3 +1,4 @@
+import { cn } from "@heroui/theme";
 import { AnimatePresence, motion } from "framer-motion";
 import { PropsWithChildren } from "react";
 
@@ -5,6 +6,7 @@ export interface ModalProps {
   isOpen: boolean;
   onBackdropPress?: () => void;
   maxWidth?: string;
+  innerContainerClassName?: string;
 }
 
 const Modal: React.FC<PropsWithChildren<ModalProps>> = ({
@@ -12,6 +14,7 @@ const Modal: React.FC<PropsWithChildren<ModalProps>> = ({
   onBackdropPress,
   children,
   maxWidth = "max-w-lg",
+  innerContainerClassName = "",
 }) => {
   return (
     <AnimatePresence>
@@ -32,7 +35,10 @@ const Modal: React.FC<PropsWithChildren<ModalProps>> = ({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className={`bg-white rounded-2xl w-full ${maxWidth} shadow-2xl flex flex-col max-h-[95svh] overflow-hidden z-[5001]`}
+            className={cn(
+              `bg-white rounded-2xl w-full ${maxWidth} shadow-2xl flex flex-col max-h-[95svh] overflow-hidden z-[5001]`,
+              innerContainerClassName,
+            )}
             // Le avisamos al navegador qué propiedades van a cambiar para que las procese en la GPU
             style={{ willChange: "transform, opacity" }}
           >
