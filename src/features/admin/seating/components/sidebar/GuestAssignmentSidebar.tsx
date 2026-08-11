@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { X, Search, UserMinus, AlertTriangle } from "lucide-react";
+import { X, Search, UserMinus, AlertTriangle, Filter, SlidersHorizontal } from "lucide-react";
 import { DraggableFamily } from "./DraggableFamily";
 import { cn } from "@heroui/theme";
 import { useGuestAssignment } from "../../hooks/useGuestAssignment";
+import { useGuestTagFilter } from "../../hooks/useGuestTagFilter";
 import { SidebarStats } from "./SidebarStats";
 import { SidebarTabs } from "./SidebarTabs";
+import { GuestTagFilter } from "./GuestTagFilter";
 
 import {
   UnassignDeclinedPanel,
@@ -24,6 +26,8 @@ export default function GuestAssignmentSidebar({
     data: { type: "sidebar" },
   });
 
+  const { tagFilter, setTagFilter } = useGuestTagFilter();
+
   const {
     searchQuery,
     setSearchQuery,
@@ -32,7 +36,7 @@ export default function GuestAssignmentSidebar({
     stats,
     assignedGuestIds,
     filteredAndSortedFamilies,
-  } = useGuestAssignment();
+  } = useGuestAssignment(tagFilter);
 
   // Traemos los elements y la acción desde el store
   const unassignByCriteria = useSeatingStore(
@@ -51,10 +55,23 @@ export default function GuestAssignmentSidebar({
   const isOverCapacity = stats.guests.total > totalSeats;
   const missingSeats = stats.guests.total - totalSeats;
 
+  // Detectar si hay filtros activos
+  const hasActiveFilters = searchQuery !== "" || tagFilter !== "all" || filter !== "all";
+
+  // Total de personas en familias filtradas
+  const filteredGuestsTotal = filteredAndSortedFamilies.reduce(
+    (acc, f) => acc + f.guests.length,
+    0,
+  );
+
+  // Pluralización correcta
+  const familiesLabel = `${filteredAndSortedFamilies.length} ${filteredAndSortedFamilies.length === 1 ? "familia" : "familias"}`;
+  const personsLabel = `${filteredGuestsTotal} ${filteredGuestsTotal === 1 ? "persona" : "personas"}`;
+
   return (
     <div
       ref={setNodeRef}
-      className="flex flex-col h-full bg-white shrink-0 select-none w-[320px]"
+      className="flex flex-col h-full bg-white shrink-0 select-none w-[350px]"
     >
       <div className="p-4 pb-2 border-b border-[#EBE5DA] bg-[#FDFBF7] shrink-0">
         <div className="flex justify-between items-center mb-4">
@@ -121,6 +138,11 @@ export default function GuestAssignmentSidebar({
         </div>
 
         <SidebarTabs filter={filter} setFilter={setFilter} />
+
+        <GuestTagFilter
+          tagFilter={tagFilter}
+          setTagFilter={setTagFilter}
+        />
       </div>
 
       {showUnassignPanel && (
@@ -132,8 +154,27 @@ export default function GuestAssignmentSidebar({
         </div>
       )}
 
+      {/* INDICADOR DE FILTROS ACTIVOS */}
+      <div className="px-3 pt-2 pb-1 shrink-0">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {hasActiveFilters && (
+              <div className="flex items-center gap-1.5 text-[10px] text-[#C5A669]">
+                <SlidersHorizontal size={11} />
+                <span className="font-medium">Resultados filtrados</span>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-[#A8A29E]">
+              {familiesLabel} · {personsLabel}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* LISTADO DE FAMILIAS CON SCROLL FORZADO */}
-      <div className="p-3 overflow-y-scroll overflow-x-hidden flex-1 w-full pb-10 scrollbar-thin scrollbar-thumb-[#EBE5DA]">
+      <div className="px-3 pb-3 overflow-y-scroll overflow-x-hidden flex-1 w-full pt-1 scrollbar-thin scrollbar-thumb-[#EBE5DA]">
         {filteredAndSortedFamilies.length === 0 ? (
           <div className="py-10 flex flex-col items-center text-center text-[#A8A29E]">
             <Search size={24} className="opacity-30 mb-2" />
