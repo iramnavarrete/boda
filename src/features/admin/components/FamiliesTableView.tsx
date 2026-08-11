@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useDeferredValue } from "react";
 import {
   CheckSquare,
   Square,
@@ -175,18 +175,20 @@ FamilyRow.displayName = "FamilyRow";
 
 const FamiliesTableView: React.FC = () => {
   const {
-      selectedFamilies,
-      handleSelectFamily,
-      handleLockToggle,
-      finalFilteredFamilies,
-      handleEdit,
-      handleDeleteFamily,
-      whatsapp,
-    } = useWeddingAdminContext();
+    selectedFamilies,
+    handleSelectFamily,
+    handleLockToggle,
+    finalFilteredFamilies,
+    handleEdit,
+    handleDeleteFamily,
+    whatsapp,
+  } = useWeddingAdminContext();
   const { query } = useRouter();
   const isAnySelected = selectedFamilies.size > 0;
 
-  if (!Array.isArray(finalFilteredFamilies)) return null;
+  const familiasDiferidas = useDeferredValue(finalFilteredFamilies);
+
+  if (!Array.isArray(familiasDiferidas)) return null;
 
   return (
     <div className="w-full rounded-2xl bg-white border border-[#EBE5DA] shadow-sm overflow-hidden">
@@ -205,7 +207,7 @@ const FamiliesTableView: React.FC = () => {
             </tr>
           </thead>
           <tbody className="text-sm">
-            {finalFilteredFamilies.map((g) => (
+            {familiasDiferidas.map((g) => (
               <FamilyRow
                 key={g.id}
                 family={g}

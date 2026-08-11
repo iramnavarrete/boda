@@ -11,7 +11,7 @@ export default function Index() {
     return <Loader fullscreen />;
   }
   return (
-    <AdminLayout invitationId={invitationId}>
+    <AdminLayout invitationId={invitationId} mainClassName="min-h-0">
       <WeddingAdmin />
     </AdminLayout>
   );

@@ -30,7 +30,5 @@ export default function FamiliesGridView() {
     );
   }
 
-  return (
-    <FamiliesCards />
-  );
+  return <FamiliesCards families={finalFilteredFamilies} />;
 }
