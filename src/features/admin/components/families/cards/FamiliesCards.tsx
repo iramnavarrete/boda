@@ -7,14 +7,18 @@ import {
   Tag,
 } from "lucide-react";
 import { Family } from "@/types";
-import { memo } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import DashedSeparator from "../../DashedSeparator";
 import { cn } from "@heroui/theme";
 import { useRouter } from "next/router";
-import { FamilyActionButtons, FamilyLockButton } from "../../FamilyActionButtons";
+import {
+  FamilyActionButtons,
+  FamilyLockButton,
+} from "../../FamilyActionButtons";
 import PartialConfirmationBadge from "../../PartialConfirmationBadge";
 import { isPartialConfirmation } from "@/utils/family";
 import { useWeddingAdminContext } from "../../../context/WeddingAdminContext";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface FamilyCardProps {
   families: Family;
@@ -47,14 +51,13 @@ const FamilyCard = memo(
       <div
         onClick={() => (isAnySelected ? onSelectFamily(f.id) : onEdit(f))}
         className={cn(
-          "relative flex flex-col bg-white/90 rounded-2xl p-5 cursor-default transition-all duration-300 border-2 justify-between",
+          "relative flex flex-col bg-white/90 rounded-2xl p-5 cursor-default transition-all duration-300 border-2 justify-between h-full",
           isSelected
             ? "border-gold shadow-[0_8px_30px_-5px_rgba(197,166,105,0.3)] z-10"
             : "border-sand hover:border-gold/50 hover:shadow-lg hover:shadow-stone-200/50 md:hover:-translate-y-0.5",
         )}
       >
         {/* Header */}
-        {/* 1. w-full agregado aquí para que abarque de orilla a orilla */}
         <div className="flex w-full items-start mb-4 gap-4">
           {/* Checkbox */}
           <button
@@ -63,7 +66,7 @@ const FamilyCard = memo(
               onSelectFamily(f.id);
             }}
             className={cn(
-              "p-1 rounded-lg transition-all duration-200 shrink-0 mt-0.5", // shrink-0 evita aplastamientos
+              "p-1 rounded-lg transition-all duration-200 shrink-0 mt-0.5",
               isSelected
                 ? "text-gold bg-paper/30"
                 : "text-stone-400 hover:text-gold hover:bg-paper/30",
@@ -77,17 +80,15 @@ const FamilyCard = memo(
           </button>
 
           {/* Textos y Badges */}
-          {/* 2. min-w-0 permite que el texto largo se corte con "..." sin romper el grid */}
           <div className="flex flex-col w-full min-w-0 gap-1.5">
             <div className="flex justify-between items-start w-full gap-3">
-              {/* 3. Quitamos w-full para que justify-between haga su magia natural */}
               <h3 className="font-serif text-base font-bold text-charcoal leading-snug line-clamp-2">
                 {f.nombre}
               </h3>
 
               <span
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shrink-0", // shrink-0 garantiza que el badge no se haga chiquito
+                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shrink-0",
                   f.asistencia === null
                     ? "bg-paper/30 text-gold border-gold/20"
                     : f.asistencia === true && partial
@@ -121,8 +122,7 @@ const FamilyCard = memo(
                 <PartialConfirmationBadge family={f} />
               </div>
             ) : (
-              // Placeholder — ocupa el mismo espacio, no distrae
-              <span className="inline-flex items-center  max-w-fit gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-dashed border-[#DDD8D0] text-[#C8C2BA]">
+              <span className="inline-flex items-center max-w-fit gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-dashed border-[#DDD8D0] text-[#C8C2BA]">
                 Sin etiquetas
               </span>
             )}
@@ -132,7 +132,7 @@ const FamilyCard = memo(
         {/* Footer */}
         <fieldset
           disabled={isAnySelected}
-          className="disabled:opacity-30 disabled:pointer-events-none transition-all duration-500"
+          className="disabled:opacity-30 disabled:pointer-events-none transition-all duration-500 mt-auto"
         >
           <DashedSeparator className="m-0 mb-4" />
           <div className="flex justify-between items-center">
@@ -163,36 +163,103 @@ const FamilyCard = memo(
 
 FamilyCard.displayName = "FamilyCard";
 
-const FamiliesCards: React.FC = () => {
+interface FamiliesCardsProps {
+  families: Family[];
+}
+
+const FamiliesCards: React.FC<FamiliesCardsProps> = ({ families }) => {
   const {
     selectedFamilies,
     handleSelectFamily,
     handleLockToggle,
-    finalFilteredFamilies,
     handleEdit,
     handleDeleteFamily,
     whatsapp,
   } = useWeddingAdminContext();
+
   const { query } = useRouter();
   const isAnySelected = selectedFamilies.size > 0;
 
+  const parentRef = useRef<HTMLDivElement>(null);
+  const [columns, setColumns] = useState(1);
+
+  useEffect(() => {
+    const calculateColumns = () => {
+      const width = window.innerWidth;
+      if (width >= 1536) setColumns(4);
+      else if (width >= 1024) setColumns(3);
+      else if (width >= 768) setColumns(2);
+      else setColumns(1);
+    };
+
+    calculateColumns();
+    window.addEventListener("resize", calculateColumns);
+    return () => window.removeEventListener("resize", calculateColumns);
+  }, []);
+
+  const rowCount = Math.ceil(families.length / columns);
+
+  const rowVirtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 180,
+    overscan: 2,
+  });
+
+  const TOP_SAFE_MARGIN = 16;
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-2 select-none pb-20">
-      {finalFilteredFamilies.map((g) => (
-        <FamilyCard
-          key={g.id}
-          families={g}
-          isSelected={selectedFamilies.has(g.id)}
-          isAnySelected={isAnySelected}
-          invitationId={query.invitationId}
-          onSelectFamily={handleSelectFamily}
-          onEdit={handleEdit}
-          onDelete={handleDeleteFamily}
-          onSendWhatsApp={(g) => whatsapp.open(g, "initial")}
-          onSendReminder={(g) => whatsapp.open(g, "reminder")}
-          onLockToggle={handleLockToggle}
-        />
-      ))}
+    <div
+      ref={parentRef}
+      // AJUSTE RESPONSIVE DE ALTURA:
+      // En móvil (menor a md), restamos 360px por todo lo que se apila.
+      // En escritorio (md en adelante), restamos 240px porque la barra es horizontal.
+      // Usamos dvh (dynamic viewport height) en lugar de vh para compatibilidad móvil.
+      className="w-full h-[calc(100dvh-380px)] md:h-[calc(100dvh-320px)] lg:h-[calc(100dvh-205px)] overflow-y-auto scrollbar-thin scrollbar-thumb-[#EBE5DA] pr-2 -mr-2 pb-10"
+    >
+      <div
+        className="w-full relative"
+        style={{
+          height: `${rowVirtualizer.getTotalSize() + TOP_SAFE_MARGIN}px`,
+        }}
+      >
+        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+          const startIndex = virtualRow.index * columns;
+          const rowFamilies = families.slice(startIndex, startIndex + columns);
+
+          return (
+            <div
+              key={virtualRow.key}
+              className="absolute top-0 left-0 w-full flex gap-2"
+              style={{
+                height: `${virtualRow.size}px`,
+                transform: `translateY(${virtualRow.start + TOP_SAFE_MARGIN}px)`,
+              }}
+            >
+              {rowFamilies.map((g) => (
+                <div
+                  key={g.id}
+                  className="pb-2"
+                  style={{ width: `${100 / columns}%` }}
+                >
+                  <FamilyCard
+                    families={g}
+                    isSelected={selectedFamilies.has(g.id)}
+                    isAnySelected={isAnySelected}
+                    invitationId={query.invitationId}
+                    onSelectFamily={handleSelectFamily}
+                    onEdit={handleEdit}
+                    onDelete={handleDeleteFamily}
+                    onSendWhatsApp={(g) => whatsapp.open(g, "initial")}
+                    onSendReminder={(g) => whatsapp.open(g, "reminder")}
+                    onLockToggle={handleLockToggle}
+                  />
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

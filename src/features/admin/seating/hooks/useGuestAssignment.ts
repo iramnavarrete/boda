@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { useSeatingStore } from "../stores/useSeatingStore";
+import { TagFilterType } from "@/types";
 
 export type FilterType = "all" | "pending" | "assigned" | "action";
 
-export function useGuestAssignment() {
+export function useGuestAssignment(tagFilter: TagFilterType = "all") {
   const families = useSeatingStore((state) => state.families);
   const elements = useSeatingStore((state) => state.elements);
 
@@ -58,10 +59,19 @@ export function useGuestAssignment() {
   const filteredAndSortedFamilies = useMemo(() => {
     let filtered = families;
 
+    // Filtro por búsqueda
     if (searchQuery) {
       filtered = filtered.filter((f) =>
         f.name.toLowerCase().includes(searchQuery.toLowerCase()),
       );
+    }
+
+    // Filtro por etiqueta (novio, novia, ambos)
+    if (tagFilter !== "all") {
+      filtered = filtered.filter((f) => {
+        const etiqueta = f.rawFamily.etiqueta;
+        return etiqueta === tagFilter;
+      });
     }
 
     return filtered.filter((family) => {
@@ -95,7 +105,7 @@ export function useGuestAssignment() {
           return true;
       }
     });
-  }, [families, assignedGuestIds, filter, searchQuery]);
+  }, [families, assignedGuestIds, filter, searchQuery, tagFilter]);
 
   return {
     searchQuery,

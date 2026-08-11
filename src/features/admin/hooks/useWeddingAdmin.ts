@@ -47,20 +47,23 @@ export function useWeddingAdmin() {
     filteredFamilies,
   } = useFamiliesFilters(families);
 
-  // ── Filtros adicionales (Zustand — no necesitan estar aquí si los
-  //    componentes los leen directo del store, pero los exponemos para
-  //    pasarlos a los sub-componentes que aún los necesiten) ───────────────
+  // ── Filtros adicionales (Zustand — leen directo del store) ──────────────
   const whatsappFilter = useFamiliesFiltersStore((s) => s.whatsappFilter);
   const setWhatsappFilter = useFamiliesFiltersStore((s) => s.setWhatsappFilter);
+
   const tagFilter = useFamiliesFiltersStore((s) => s.tagFilter);
   const setTagFilter = useFamiliesFiltersStore((s) => s.setTagFilter);
+
+  // Filtro de Edición
+  const editionFilter = useFamiliesFiltersStore((s) => s.editionFilter);
+  const setEditionFilter = useFamiliesFiltersStore((s) => s.setEditionFilter);
+
   const viewMode = useFamiliesFiltersStore((s) => s.viewMode);
   const setViewMode = useFamiliesFiltersStore((s) => s.setViewMode);
 
   // ── Selección de familias ───────────────────────────────────────────────
   const selectedFamilies = useFamiliesSelectionStore((s) => s.selectedFamilies);
   const handleSelectFamily = useFamiliesSelectionStore((s) => s.selectFamily);
-  /** Versión cruda del store — requiere pasar el array de familias */
   const _selectAllFromStore = useFamiliesSelectionStore((s) => s.selectAll);
   const clearSelection = useFamiliesSelectionStore((s) => s.clearSelection);
   const removeFromSelection = useFamiliesSelectionStore(
@@ -100,16 +103,20 @@ export function useWeddingAdmin() {
       whatsapp: whatsappCounts,
       etiquetas: tagCounts,
       status: statusCounts,
+      edition: editionCounts,
     },
   } = useEventStats(filteredFamilies, {
-    filters: { whatsapp: whatsappFilter, tag: tagFilter },
+    filters: {
+      whatsapp: whatsappFilter,
+      tag: tagFilter,
+      edition: editionFilter, // 🔥 ¡AQUÍ ESTÁ LA CORRECCIÓN! Faltaba inyectar este filtro
+    },
   });
 
   // ── Stats del sidebar (derivadas de finalFilteredFamilies) ──────────────
   const stats = useFamiliesStats(finalFilteredFamilies);
 
   // ── Derivados: ¿hay filtro activo? ──────────────────────────────────────
-  // Memorizamos para no recalcular en cada render
   const isFilterActive = useMemo(
     () =>
       finalFilteredFamilies.length !== (families?.length ?? 0) ||
@@ -179,6 +186,8 @@ export function useWeddingAdmin() {
     setWhatsappFilter,
     tagFilter,
     setTagFilter,
+    editionFilter,
+    setEditionFilter,
     viewMode,
     setViewMode,
 
@@ -186,6 +195,7 @@ export function useWeddingAdmin() {
     statusCounts,
     whatsappCounts,
     tagCounts,
+    editionCounts,
 
     // Selección
     selectedFamilies,
@@ -229,7 +239,6 @@ export function useWeddingAdmin() {
     handleLockToggle,
     handleBulkUpdateLock,
     handleExportExcel: () => handleExportExcel(families),
-    /** Selecciona/deselecciona todas las familias filtradas */
     handleSelectAll: () => _selectAllFromStore(finalFilteredFamilies),
   } as const;
 }

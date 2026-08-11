@@ -2,6 +2,7 @@ import { BellRing, Info, Unlock, Check } from "lucide-react";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useState } from "react";
 import Modal from "@/features/shared/components/Modal";
+import DatePicker from "../../DatePicker";
 
 interface SendWhatsappModalProps {
   isOpen: boolean;
@@ -35,7 +36,11 @@ export default function SendWhatsappModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onBackdropPress={onClose}>
+    <Modal
+      isOpen={isOpen}
+      onBackdropPress={onClose}
+      innerContainerClassName="overflow-visible"
+    >
       <div className="p-8">
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
@@ -64,17 +69,12 @@ export default function SendWhatsappModal({
           límite de respuesta:
         </p>
 
-        {/* Fecha límite */}
+        {/* Fecha límite (Componente personalizado) */}
         <div className="mb-4">
           <label className="block text-[10px] font-bold text-[#C5A669] uppercase tracking-widest mb-2">
             Fecha Límite
           </label>
-          <input
-            type="date"
-            value={limitDate}
-            onChange={(e) => setLimitDate(e.target.value)}
-            className="w-full px-4 py-3 bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl text-[#2C2C29] focus:outline-none focus:ring-2 focus:ring-[#C5A669]/20 focus:border-[#C5A669] transition-all shadow-sm"
-          />
+          <DatePicker value={limitDate} onChange={setLimitDate} />
         </div>
 
         {/* Checkbox de bloqueo automático */}

@@ -33,6 +33,7 @@ export interface FilterCounts {
   whatsapp: { all: number; sent: number; not_sent: number; empty: number };
   etiquetas: { all: number; Novia: number; Novio: number; Ambos: number };
   status: FilterCountsStatus & { unopened?: number };
+  edition: { all: number; locked: number; unlocked: number };
 }
 
 interface UseEventStatsOptions {
@@ -40,6 +41,7 @@ interface UseEventStatsOptions {
   filters?: {
     whatsapp?: "all" | "sent" | "not_sent" | "empty" | string;
     tag?: "all" | "Novia" | "Novio" | "Ambos" | string;
+    edition?: "all" | "locked" | "unlocked" | string; // 🔥 Agregamos edition a las opciones
   };
 }
 
@@ -172,7 +174,16 @@ export const useEventStats = (
       const t = filters.tag || "all";
       const passTag = t === "all" || g.etiqueta === t;
 
-      return passWhatsapp && passTag;
+      // 🔥 Lógica del filtro de edición considerando boolean | undefined | null
+      const e = filters.edition || "all";
+      const passEdition =
+        e === "unlocked"
+          ? !!g.cambiosPermitidos // Truthy (true) significa desbloqueado
+          : e === "locked"
+            ? !g.cambiosPermitidos // Falsy (false, undefined, null) significa bloqueado
+            : true;
+
+      return passWhatsapp && passTag && passEdition; // 🔥 Retornamos los tres validadores cruzados
     });
   }, [families, filters]);
 
@@ -193,6 +204,11 @@ export const useEventStats = (
         Novia: filteredFamilies.filter((g) => g.etiqueta === "Novia").length,
         Novio: filteredFamilies.filter((g) => g.etiqueta === "Novio").length,
         Ambos: filteredFamilies.filter((g) => g.etiqueta === "Ambos").length,
+      },
+      edition: {
+        all: filteredFamilies.length,
+        unlocked: filteredFamilies.filter((g) => !!g.cambiosPermitidos).length,
+        locked: filteredFamilies.filter((g) => !g.cambiosPermitidos).length,
       },
       status: filteredFamilies.reduce(
         (acc, g) => {

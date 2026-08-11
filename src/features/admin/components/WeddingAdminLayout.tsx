@@ -8,7 +8,7 @@ export const WeddingAdminLayout = memo(function WeddingAdminLayout() {
   const { isFilterActive } = useWeddingAdminContext();
 
   return (
-    <div className="bg-[#F9F7F2] min-h-screen font-sans text-[#2C2C29]">
+    <div className="bg-[#F9F7F2] min-h-[calc(100svh-65px)] font-sans text-[#2C2C29] overflow-y-hidden">
       <section className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
         <div className="flex flex-col lg:flex-row gap-4 items-start mt-2.5">
           {/* Sidebar de estadísticas */}

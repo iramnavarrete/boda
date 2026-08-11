@@ -18,7 +18,9 @@ import {
   Tag,
   LucideIcon,
   FilterX,
-  Mail
+  Mail,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { cn } from "@heroui/theme";
 import TextureButton from "@/features/shared/components/TextureButton";
@@ -33,7 +35,7 @@ interface FilterOption {
   count: number;
   icon?: LucideIcon;
   iconColor?: string;
-  activeColorClass?: string; // 🔥 Nueva propiedad para personalizar el color del badge seleccionado
+  activeColorClass?: string; // Propiedad para personalizar el color del badge seleccionado
 }
 
 interface FilterDropdownProps<T extends string = string> {
@@ -46,14 +48,27 @@ interface FilterDropdownProps<T extends string = string> {
   fallbackColorClass?: string;
 }
 
-type DropdownType = "status" | "whatsapp" | "tag" | "options" | null;
+// Agregamos "edition" a los tipos de dropdown permitidos
+type DropdownType =
+  | "status"
+  | "whatsapp"
+  | "tag"
+  | "edition"
+  | "options"
+  | null;
 
 // ============================================================================
 // 2. CUSTOM HOOK: Lógica y Estados aislados
 // ============================================================================
 function useSearchAndFilterBar() {
   const context = useWeddingAdminContext();
-  const { setFilterStatus, setWhatsappFilter, setTagFilter } = context;
+  const {
+    setFilterStatus,
+    setWhatsappFilter,
+    setTagFilter,
+    setEditionFilter,
+  } = context;
+
   const [openDropdown, setOpenDropdown] = useState<DropdownType>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -69,17 +84,20 @@ function useSearchAndFilterBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Comprobamos si hay algún filtro activo (incluyendo el de edición)
   const hasActiveFilters =
     context.filterStatus !== "all" ||
     context.whatsappFilter !== "all" ||
-    context.tagFilter !== "all";
+    context.tagFilter !== "all" ||
+    context.editionFilter !== "all"; // 🔥 Validamos el nuevo filtro
 
   const clearFilters = useCallback(() => {
     setFilterStatus("all");
     setWhatsappFilter("all");
     setTagFilter("all");
+    setEditionFilter("all"); // 🔥 Limpiamos el nuevo filtro
     setOpenDropdown(null);
-  }, [setFilterStatus, setWhatsappFilter, setTagFilter]);
+  }, [setFilterStatus, setWhatsappFilter, setTagFilter, setEditionFilter]);
 
   const handleDropdownToggle = useCallback((dropdownName: DropdownType) => {
     setOpenDropdown((prev) => (prev === dropdownName ? null : dropdownName));
@@ -108,17 +126,18 @@ const FilterDropdown = <T extends string>({
   onToggle,
   fallbackColorClass = "bg-[#FDFBF7] border-[#C5A669] text-[#C5A669] ring-1 ring-[#C5A669]/20",
 }: FilterDropdownProps<T>) => {
-  const currentOption = options.find((o) => o.value === currentValue) || options[0];
+  const currentOption =
+    options.find((o) => o.value === currentValue) || options[0];
   const isActive = currentValue !== "all";
-  
+
   // Referencia para la detección de colisión
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // 🔥 DETECCIÓN DE COLISIÓN DINÁMICA CERO-RENDERS
+  // DETECCIÓN DE COLISIÓN DINÁMICA CERO-RENDERS
   useEffect(() => {
     if (isOpen && dropdownRef.current) {
       const el = dropdownRef.current;
-      
+
       // 1. Lo reiniciamos hacia la izquierda por defecto para poder medirlo bien
       el.classList.remove("right-0", "origin-top-right");
       el.classList.add("left-0", "origin-top-left");
@@ -136,7 +155,8 @@ const FilterDropdown = <T extends string>({
   }, [isOpen]);
 
   // Usamos el color propio de la opción o el fallback si no lo tiene
-  const appliedColorClass = currentOption.activeColorClass || fallbackColorClass;
+  const appliedColorClass =
+    currentOption.activeColorClass || fallbackColorClass;
 
   return (
     <div className="relative shrink-0 dropdown-container">
@@ -149,16 +169,22 @@ const FilterDropdown = <T extends string>({
           "flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-medium transition-all shadow-sm",
           isActive
             ? appliedColorClass
-            : "bg-white border-[#EBE5DA] text-[#5A5A5A] hover:bg-[#F9F7F2] hover:border-[#C5A669]/50"
+            : "bg-white border-[#EBE5DA] text-[#5A5A5A] hover:bg-[#F9F7F2] hover:border-[#C5A669]/50",
         )}
       >
         <span className="opacity-70">{label}:</span>
         <span className="font-bold">{currentOption.label}</span>
-        <ChevronDown size={12} className={cn("transition-transform opacity-50", isOpen && "rotate-180")} />
+        <ChevronDown
+          size={12}
+          className={cn(
+            "transition-transform opacity-50",
+            isOpen && "rotate-180",
+          )}
+        />
       </button>
 
       {isOpen && (
-        <div 
+        <div
           ref={dropdownRef}
           className="absolute top-full mt-1.5 w-[220px] sm:w-56 max-w-[calc(100vw-2rem)] bg-white/95 backdrop-blur-sm rounded-xl border border-[#C5A669]/30 shadow-xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200"
         >
@@ -171,18 +197,26 @@ const FilterDropdown = <T extends string>({
                   key={opt.value}
                   onClick={(e) => {
                     e.stopPropagation();
-                    onChange(opt.value as T); 
+                    onChange(opt.value as T);
                     onToggle();
                   }}
                   className={cn(
                     "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors text-left",
                     isSelected
                       ? "bg-[#F9F7F2] text-[#2C2C29] font-bold"
-                      : "text-[#5A5A5A] hover:bg-stone-50"
+                      : "text-[#5A5A5A] hover:bg-stone-50",
                   )}
                 >
                   <span className="flex items-center gap-2 truncate pr-2">
-                    {Icon && <Icon size={14} className={cn("shrink-0", opt.iconColor || "text-stone-400")} />}
+                    {Icon && (
+                      <Icon
+                        size={14}
+                        className={cn(
+                          "shrink-0",
+                          opt.iconColor || "text-stone-400",
+                        )}
+                      />
+                    )}
                     <span className="truncate">{opt.label}</span>
                   </span>
                   <span className="text-[10px] shrink-0 font-bold text-[#A8A29E] bg-white px-1.5 py-0.5 rounded border border-[#EBE5DA]">
@@ -201,7 +235,7 @@ const FilterDropdown = <T extends string>({
 const SearchInput = ({
   searchTerm,
   setSearchTerm,
-  filteredCount
+  filteredCount,
 }: {
   searchTerm: string;
   setSearchTerm: (val: string) => void;
@@ -228,13 +262,21 @@ const SearchInput = ({
   </div>
 );
 
-const ViewToggles = ({ viewMode, setViewMode }: { viewMode: string, setViewMode: (val: "table" | "grid") => void }) => (
+const ViewToggles = ({
+  viewMode,
+  setViewMode,
+}: {
+  viewMode: string;
+  setViewMode: (val: "table" | "grid") => void;
+}) => (
   <div className="hidden md:flex items-center bg-white border border-[#EBE5DA] rounded-xl p-1 shadow-sm h-full">
     <button
       onClick={() => setViewMode("grid")}
       className={cn(
         "p-2 rounded-lg transition-all flex items-center justify-center h-full",
-        viewMode === "grid" ? "bg-[#FDFBF7] text-[#C5A669] shadow-sm border border-[#EBE5DA]" : "text-[#A8A29E] hover:text-[#5A5A5A] border border-transparent"
+        viewMode === "grid"
+          ? "bg-[#FDFBF7] text-[#C5A669] shadow-sm border border-[#EBE5DA]"
+          : "text-[#A8A29E] hover:text-[#5A5A5A] border border-transparent",
       )}
       title="Vista de cuadrícula"
     >
@@ -244,7 +286,9 @@ const ViewToggles = ({ viewMode, setViewMode }: { viewMode: string, setViewMode:
       onClick={() => setViewMode("table")}
       className={cn(
         "p-2 rounded-lg transition-all flex items-center justify-center h-full",
-        viewMode === "table" ? "bg-[#FDFBF7] text-[#C5A669] shadow-sm border border-[#EBE5DA]" : "text-[#A8A29E] hover:text-[#5A5A5A] border border-transparent"
+        viewMode === "table"
+          ? "bg-[#FDFBF7] text-[#C5A669] shadow-sm border border-[#EBE5DA]"
+          : "text-[#A8A29E] hover:text-[#5A5A5A] border border-transparent",
       )}
       title="Vista de lista"
     >
@@ -257,7 +301,7 @@ const MoreOptionsDropdown = ({
   isOpen,
   onToggle,
   onImport,
-  onExport
+  onExport,
 }: {
   isOpen: boolean;
   onToggle: () => void;
@@ -272,7 +316,9 @@ const MoreOptionsDropdown = ({
       }}
       className={cn(
         "flex items-center justify-center px-3 py-0 h-full bg-white text-stone-custom border rounded-xl hover:bg-[#C5A669]/10 hover:text-[#C5A669] hover:border-[#C5A669]/50 transition-all shadow-sm",
-        isOpen ? "border-[#C5A669]/50 text-[#C5A669] bg-[#C5A669]/5" : "border-[#EBE5DA]"
+        isOpen
+          ? "border-[#C5A669]/50 text-[#C5A669] bg-[#C5A669]/5"
+          : "border-[#EBE5DA]",
       )}
       title="Más opciones"
     >
@@ -305,51 +351,203 @@ const MoreOptionsDropdown = ({
 // ============================================================================
 export default function SearchAndFilterBar() {
   const {
-    searchTerm, setSearchTerm, filterStatus, setFilterStatus, statusCounts,
-    whatsappFilter, setWhatsappFilter, whatsappCounts, tagFilter, setTagFilter, tagCounts,
-    viewMode, setViewMode, finalFilteredFamilies, selectedFamilies,
-    handleNewFamily, handleExportExcel, openImportModal,
-    openDropdown, handleDropdownToggle, hasActiveFilters, clearFilters, containerRef
+    searchTerm,
+    setSearchTerm,
+    filterStatus,
+    setFilterStatus,
+    statusCounts,
+    whatsappFilter,
+    setWhatsappFilter,
+    whatsappCounts,
+    tagFilter,
+    setTagFilter,
+    tagCounts,
+    editionFilter,
+    setEditionFilter,
+    editionCounts,
+    viewMode,
+    setViewMode,
+    finalFilteredFamilies,
+    selectedFamilies,
+    handleNewFamily,
+    handleExportExcel,
+    openImportModal,
+    openDropdown,
+    handleDropdownToggle,
+    hasActiveFilters,
+    clearFilters,
+    containerRef,
   } = useSearchAndFilterBar();
 
   const disabled = selectedFamilies.size > 0;
 
-  // 🔥 Opciones de configuración con colores específicos para la píldora activa
+  // Opciones de configuración con colores específicos para la píldora activa
   const statusOptions: FilterOption[] = [
-    { value: "all", label: "Todas", count: statusCounts?.all || 0, icon: LayoutList },
-    { value: "confirmed", label: "Completas", count: statusCounts?.confirmed || 0, icon: CheckCircle2, iconColor: "text-green-500", activeColorClass: "bg-green-50 border-green-200 text-green-700 ring-1 ring-green-100" },
-    { value: "partial", label: "Parciales", count: statusCounts?.partial || 0, icon: CheckCircle2, iconColor: "text-amber-500", activeColorClass: "bg-amber-50 border-amber-200 text-amber-700 ring-1 ring-amber-100" },
-    { value: "pending", label: "Pendientes", count: statusCounts?.pending || 0, icon: Clock, iconColor: "text-gold", activeColorClass: "bg-[#FDFBF7] border-[#C5A669] text-[#C5A669] ring-1 ring-[#C5A669]/20" },
-    { value: "unopened", label: "Sin Abrir", count: statusCounts?.unopened || 0, icon: Mail, iconColor: "text-stone-400", activeColorClass: "bg-stone-50 border-stone-200 text-stone-600 ring-1 ring-stone-200" },
-    { value: "rejected", label: "Rechazadas", count: statusCounts?.rejected || 0, icon: XCircle, iconColor: "text-red-500", activeColorClass: "bg-red-50 border-red-200 text-red-700 ring-1 ring-red-100" },
+    {
+      value: "all",
+      label: "Todas",
+      count: statusCounts?.all || 0,
+      icon: LayoutList,
+    },
+    {
+      value: "confirmed",
+      label: "Completas",
+      count: statusCounts?.confirmed || 0,
+      icon: CheckCircle2,
+      iconColor: "text-green-500",
+      activeColorClass:
+        "bg-green-50 border-green-200 text-green-700 ring-1 ring-green-100",
+    },
+    {
+      value: "partial",
+      label: "Parciales",
+      count: statusCounts?.partial || 0,
+      icon: CheckCircle2,
+      iconColor: "text-amber-500",
+      activeColorClass:
+        "bg-amber-50 border-amber-200 text-amber-700 ring-1 ring-amber-100",
+    },
+    {
+      value: "pending",
+      label: "Pendientes",
+      count: statusCounts?.pending || 0,
+      icon: Clock,
+      iconColor: "text-gold",
+      activeColorClass:
+        "bg-[#FDFBF7] border-[#C5A669] text-[#C5A669] ring-1 ring-[#C5A669]/20",
+    },
+    {
+      value: "unopened",
+      label: "Sin Abrir",
+      count: statusCounts?.unopened || 0,
+      icon: Mail,
+      iconColor: "text-stone-400",
+      activeColorClass:
+        "bg-stone-50 border-stone-200 text-stone-600 ring-1 ring-stone-200",
+    },
+    {
+      value: "rejected",
+      label: "Rechazadas",
+      count: statusCounts?.rejected || 0,
+      icon: XCircle,
+      iconColor: "text-red-500",
+      activeColorClass:
+        "bg-red-50 border-red-200 text-red-700 ring-1 ring-red-100",
+    },
   ];
 
   const whatsappOptions: FilterOption[] = [
-    { value: "all", label: "Todos", count: whatsappCounts?.all || 0, icon: LayoutList },
-    { value: "sent", label: "Enviados", count: whatsappCounts?.sent || 0, icon: Send, iconColor: "text-green-500", activeColorClass: "bg-green-50 border-green-200 text-green-700 ring-1 ring-green-100" },
-    { value: "not_sent", label: "Pendientes", count: whatsappCounts?.not_sent || 0, icon: MessageCircle, iconColor: "text-stone-400", activeColorClass: "bg-stone-50 border-stone-200 text-stone-600 ring-1 ring-stone-200" },
-    { value: "empty", label: "Sin Teléfono", count: whatsappCounts?.empty || 0, icon: XCircle, iconColor: "text-red-400", activeColorClass: "bg-red-50 border-red-200 text-red-700 ring-1 ring-red-100" },
+    {
+      value: "all",
+      label: "Todos",
+      count: whatsappCounts?.all || 0,
+      icon: LayoutList,
+    },
+    {
+      value: "sent",
+      label: "Enviados",
+      count: whatsappCounts?.sent || 0,
+      icon: Send,
+      iconColor: "text-green-500",
+      activeColorClass:
+        "bg-green-50 border-green-200 text-green-700 ring-1 ring-green-100",
+    },
+    {
+      value: "not_sent",
+      label: "Pendientes",
+      count: whatsappCounts?.not_sent || 0,
+      icon: MessageCircle,
+      iconColor: "text-stone-400",
+      activeColorClass:
+        "bg-stone-50 border-stone-200 text-stone-600 ring-1 ring-stone-200",
+    },
+    {
+      value: "empty",
+      label: "Sin Teléfono",
+      count: whatsappCounts?.empty || 0,
+      icon: XCircle,
+      iconColor: "text-red-400",
+      activeColorClass:
+        "bg-red-50 border-red-200 text-red-700 ring-1 ring-red-100",
+    },
   ];
 
   const tagOptions: FilterOption[] = [
-    { value: "all", label: "Todas", count: tagCounts?.all || 0, icon: LayoutList },
-    { value: "Novia", label: "Novia", count: tagCounts?.Novia || 0, icon: Tag, iconColor: "text-rose-400", activeColorClass: "bg-rose-50 border-rose-200 text-rose-700 ring-1 ring-rose-100" },
-    { value: "Novio", label: "Novio", count: tagCounts?.Novio || 0, icon: Tag, iconColor: "text-blue-400", activeColorClass: "bg-blue-50 border-blue-200 text-blue-700 ring-1 ring-blue-100" },
-    { value: "Ambos", label: "Ambos", count: tagCounts?.Ambos || 0, icon: Tag, iconColor: "text-purple-400", activeColorClass: "bg-purple-50 border-purple-200 text-purple-700 ring-1 ring-purple-100" },
+    {
+      value: "all",
+      label: "Todas",
+      count: tagCounts?.all || 0,
+      icon: LayoutList,
+    },
+    {
+      value: "Novia",
+      label: "Novia",
+      count: tagCounts?.Novia || 0,
+      icon: Tag,
+      iconColor: "text-rose-400",
+      activeColorClass:
+        "bg-rose-50 border-rose-200 text-rose-700 ring-1 ring-rose-100",
+    },
+    {
+      value: "Novio",
+      label: "Novio",
+      count: tagCounts?.Novio || 0,
+      icon: Tag,
+      iconColor: "text-blue-400",
+      activeColorClass:
+        "bg-blue-50 border-blue-200 text-blue-700 ring-1 ring-blue-100",
+    },
+    {
+      value: "Ambos",
+      label: "Ambos",
+      count: tagCounts?.Ambos || 0,
+      icon: Tag,
+      iconColor: "text-purple-400",
+      activeColorClass:
+        "bg-purple-50 border-purple-200 text-purple-700 ring-1 ring-purple-100",
+    },
+  ];
+
+  // 🔥 Nuevas opciones para el filtro de Edición
+  const editionOptions: FilterOption[] = [
+    {
+      value: "all",
+      label: "Todos",
+      count: editionCounts?.all || 0,
+      icon: LayoutList,
+    },
+    {
+      value: "locked",
+      label: "Bloqueada",
+      count: editionCounts?.locked || 0,
+      icon: Lock,
+      iconColor: "text-red-500",
+      activeColorClass:
+        "bg-red-50 border-red-200 text-red-700 ring-1 ring-red-100",
+    },
+    {
+      value: "unlocked",
+      label: "Desbloqueada",
+      count: editionCounts?.unlocked || 0,
+      icon: Unlock,
+      iconColor: "text-green-500",
+      activeColorClass:
+        "bg-green-50 border-green-200 text-green-700 ring-1 ring-green-100",
+    },
   ];
 
   return (
-    <div className="w-full font-sans mb-4" ref={containerRef}>
+    <div className="w-full font-sans mb-1" ref={containerRef}>
       <fieldset
         disabled={disabled}
         className="flex flex-col gap-3 transition-opacity disabled:opacity-60 disabled:pointer-events-none"
       >
         {/* FILA 1: BÚSQUEDA Y ACCIONES */}
         <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3">
-          <SearchInput 
-            searchTerm={searchTerm} 
-            setSearchTerm={setSearchTerm} 
-            filteredCount={finalFilteredFamilies.length} 
+          <SearchInput
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            filteredCount={finalFilteredFamilies.length}
           />
 
           <div className="flex gap-2 flex-row-reverse md:flex-row sm:gap-3 shrink-0 relative h-[46px]">
@@ -357,8 +555,14 @@ export default function SearchAndFilterBar() {
             <MoreOptionsDropdown
               isOpen={openDropdown === "options"}
               onToggle={() => handleDropdownToggle("options")}
-              onImport={() => { openImportModal(); handleDropdownToggle("options"); }}
-              onExport={() => { handleExportExcel(); handleDropdownToggle("options"); }}
+              onImport={() => {
+                openImportModal();
+                handleDropdownToggle("options");
+              }}
+              onExport={() => {
+                handleExportExcel();
+                handleDropdownToggle("options");
+              }}
             />
             <TextureButton
               icon={<Plus size={18} />}
@@ -397,6 +601,16 @@ export default function SearchAndFilterBar() {
             onChange={setTagFilter}
             isOpen={openDropdown === "tag"}
             onToggle={() => handleDropdownToggle("tag")}
+          />
+
+          {/* 🔥 Nuevo dropdown agregado para Edición */}
+          <FilterDropdown
+            label="Edición"
+            options={editionOptions}
+            currentValue={editionFilter}
+            onChange={setEditionFilter}
+            isOpen={openDropdown === "edition"}
+            onToggle={() => handleDropdownToggle("edition")}
           />
 
           {hasActiveFilters && (
