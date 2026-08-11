@@ -537,7 +537,7 @@ export default function SearchAndFilterBar() {
   ];
 
   return (
-    <div className="w-full font-sans mb-4" ref={containerRef}>
+    <div className="w-full font-sans mb-1" ref={containerRef}>
       <fieldset
         disabled={disabled}
         className="flex flex-col gap-3 transition-opacity disabled:opacity-60 disabled:pointer-events-none"

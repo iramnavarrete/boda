@@ -264,7 +264,7 @@ const FamiliesTableView: React.FC = () => {
   // ==========================================================================
 
   return (
-    <div className="w-full rounded-2xl bg-white border border-[#EBE5DA] shadow-sm overflow-hidden flex flex-col h-[calc(100dvh-360px)] md:h-[calc(100dvh-240px)]">
+    <div className="w-full rounded-2xl bg-white border border-[#EBE5DA] shadow-sm overflow-hidden flex flex-col h-[calc(100dvh-415px)] md:h-[calc(100dvh-315px)] lg:h-[calc(100dvh-210px)]">
       <div
         ref={parentRef}
         className="w-full h-full overflow-y-auto overflow-x-auto scrollbar-thin scrollbar-thumb-[#EBE5DA]"

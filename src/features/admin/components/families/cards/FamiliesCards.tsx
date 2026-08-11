@@ -215,7 +215,7 @@ const FamiliesCards: React.FC<FamiliesCardsProps> = ({ families }) => {
       // En móvil (menor a md), restamos 360px por todo lo que se apila.
       // En escritorio (md en adelante), restamos 240px porque la barra es horizontal.
       // Usamos dvh (dynamic viewport height) en lugar de vh para compatibilidad móvil.
-      className="w-full h-[calc(100dvh-390px)] md:h-[calc(100dvh-330px)] lg:h-[calc(100dvh-220px)] overflow-y-auto scrollbar-thin scrollbar-thumb-[#EBE5DA] pr-2 -mr-2 pb-10"
+      className="w-full h-[calc(100dvh-380px)] md:h-[calc(100dvh-320px)] lg:h-[calc(100dvh-205px)] overflow-y-auto scrollbar-thin scrollbar-thumb-[#EBE5DA] pr-2 -mr-2 pb-10"
     >
       <div
         className="w-full relative"
