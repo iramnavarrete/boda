@@ -1,4 +1,4 @@
-import React, { memo, useDeferredValue } from "react";
+import React, { memo, useRef } from "react";
 import {
   CheckSquare,
   Square,
@@ -6,6 +6,8 @@ import {
   CheckCircle2,
   XCircle,
   Tag,
+  SearchX,
+  Users,
 } from "lucide-react";
 import { Family } from "@/types";
 import { useRouter } from "next/router";
@@ -14,6 +16,7 @@ import PartialConfirmationBadge from "./PartialConfirmationBadge";
 import { isPartialConfirmation } from "@/utils/family";
 import { FamilyActionButtons, FamilyLockButton } from "./FamilyActionButtons";
 import { useWeddingAdminContext } from "../context/WeddingAdminContext";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface FamilyRowProps {
   family: Family;
@@ -175,6 +178,8 @@ FamilyRow.displayName = "FamilyRow";
 
 const FamiliesTableView: React.FC = () => {
   const {
+    families, // 🔥 Traemos el arreglo total de la base de datos
+    isLoadingFamilies, // 🔥 Traemos el estado de carga
     selectedFamilies,
     handleSelectFamily,
     handleLockToggle,
@@ -183,18 +188,89 @@ const FamiliesTableView: React.FC = () => {
     handleDeleteFamily,
     whatsapp,
   } = useWeddingAdminContext();
+
   const { query } = useRouter();
   const isAnySelected = selectedFamilies.size > 0;
 
-  const familiasDiferidas = useDeferredValue(finalFilteredFamilies);
+  const parentRef = useRef<HTMLDivElement>(null);
 
-  if (!Array.isArray(familiasDiferidas)) return null;
+  const rowVirtualizer = useVirtualizer({
+    count: finalFilteredFamilies.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 65,
+    overscan: 5,
+  });
+
+  const virtualRows = rowVirtualizer.getVirtualItems();
+  const paddingTop = virtualRows.length > 0 ? virtualRows[0]?.start || 0 : 0;
+  const paddingBottom =
+    virtualRows.length > 0
+      ? rowVirtualizer.getTotalSize() -
+        (virtualRows[virtualRows.length - 1]?.end || 0)
+      : 0;
+
+  // ==========================================================================
+  // ESTADOS VACÍOS (Loading, Base de datos vacía, Búsqueda vacía)
+  // ==========================================================================
+
+  // 1. Cargando datos iniciales
+  if (isLoadingFamilies) {
+    return (
+      <div className="w-full rounded-2xl bg-white border border-[#EBE5DA] shadow-sm flex items-center justify-center h-[calc(100dvh-360px)] md:h-[calc(100dvh-240px)]">
+        <div className="w-8 h-8 border-4 border-[#EBE5DA] border-t-[#C5A669] rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  // 2. Base de datos vacía (Aún no hay invitados creados)
+  if (!families || families.length === 0) {
+    return (
+      <div className="w-full rounded-2xl bg-white border border-[#EBE5DA] shadow-sm flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300 h-[calc(100dvh-360px)] md:h-[calc(100dvh-240px)]">
+        <div className="w-16 h-16 bg-[#FDFBF7] border border-[#EBE5DA] rounded-full flex items-center justify-center mb-4 shadow-sm text-[#C5A669]">
+          <Users size={32} />
+        </div>
+        <h3 className="text-xl font-serif font-bold text-[#2C2C29] mb-2">
+          Aún no tienes familias
+        </h3>
+        <p className="text-sm text-[#5A5A5A] max-w-sm leading-relaxed">
+          Comienza agregando a tus invitados haciendo clic en el botón{" "}
+          <b className="text-[#2C2C29]">&quot;+ Nueva Familia&quot;</b> en la parte
+          superior.
+        </p>
+      </div>
+    );
+  }
+
+  // 3. Hay invitados en la DB, pero los filtros no arrojan resultados
+  if (finalFilteredFamilies.length === 0) {
+    return (
+      <div className="w-full rounded-2xl bg-white border border-[#EBE5DA] shadow-sm flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300 h-[calc(100dvh-360px)] md:h-[calc(100dvh-240px)]">
+        <div className="w-16 h-16 bg-[#FDFBF7] border border-[#EBE5DA] rounded-full flex items-center justify-center mb-4 shadow-sm text-[#A8A29E]">
+          <SearchX size={32} />
+        </div>
+        <h3 className="text-xl font-serif font-bold text-[#2C2C29] mb-2">
+          No se encontraron resultados
+        </h3>
+        <p className="text-sm text-[#5A5A5A] max-w-sm leading-relaxed">
+          Ninguna familia coincide con tu búsqueda o filtros actuales. Intenta
+          limpiarlos para ver el listado completo.
+        </p>
+      </div>
+    );
+  }
+
+  // ==========================================================================
+  // RENDERIZADO DE LA TABLA
+  // ==========================================================================
 
   return (
-    <div className="w-full rounded-2xl bg-white border border-[#EBE5DA] shadow-sm overflow-hidden">
-      <div className="w-full overflow-x-auto hide-scrollbar">
-        <table className="w-full text-left border-collapse whitespace-nowrap overflow-hidden">
-          <thead>
+    <div className="w-full rounded-2xl bg-white border border-[#EBE5DA] shadow-sm overflow-hidden flex flex-col h-[calc(100dvh-360px)] md:h-[calc(100dvh-240px)]">
+      <div
+        ref={parentRef}
+        className="w-full h-full overflow-y-auto overflow-x-auto scrollbar-thin scrollbar-thumb-[#EBE5DA]"
+      >
+        <table className="w-full text-left border-collapse whitespace-nowrap min-w-max">
+          <thead className="sticky top-0 z-50 shadow-sm">
             <tr className="bg-[#FDFBF7] border-b border-[#EBE5DA] text-[10px] uppercase tracking-widest text-[#A8A29E] select-none">
               <th className="p-3 w-14 text-center" />
               <th className="p-3 font-bold text-[#5A5A5A]">Familia</th>
@@ -206,22 +282,38 @@ const FamiliesTableView: React.FC = () => {
               </th>
             </tr>
           </thead>
+
           <tbody className="text-sm">
-            {familiasDiferidas.map((g) => (
-              <FamilyRow
-                key={g.id}
-                family={g}
-                isSelected={selectedFamilies.has(g.id)}
-                isAnySelected={isAnySelected}
-                invitationId={query.invitationId}
-                onSelectFamily={handleSelectFamily}
-                onEdit={handleEdit}
-                onDelete={handleDeleteFamily}
-                onSendWhatsApp={(g) => whatsapp.open(g, "initial")}
-                onSendReminder={(g) => whatsapp.open(g, "reminder")}
-                onLockToggle={handleLockToggle}
-              />
-            ))}
+            {paddingTop > 0 && (
+              <tr>
+                <td style={{ height: `${paddingTop}px` }} colSpan={6} />
+              </tr>
+            )}
+
+            {virtualRows.map((virtualRow) => {
+              const g = finalFilteredFamilies[virtualRow.index];
+              return (
+                <FamilyRow
+                  key={g.id}
+                  family={g}
+                  isSelected={selectedFamilies.has(g.id)}
+                  isAnySelected={isAnySelected}
+                  invitationId={query.invitationId}
+                  onSelectFamily={handleSelectFamily}
+                  onEdit={handleEdit}
+                  onDelete={handleDeleteFamily}
+                  onSendWhatsApp={(g) => whatsapp.open(g, "initial")}
+                  onSendReminder={(g) => whatsapp.open(g, "reminder")}
+                  onLockToggle={handleLockToggle}
+                />
+              );
+            })}
+
+            {paddingBottom > 0 && (
+              <tr>
+                <td style={{ height: `${paddingBottom}px` }} colSpan={6} />
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
