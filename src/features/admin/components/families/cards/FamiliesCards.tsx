@@ -18,7 +18,7 @@ import {
 import PartialConfirmationBadge from "../../PartialConfirmationBadge";
 import { isPartialConfirmation } from "@/utils/family";
 import { useWeddingAdminContext } from "../../../context/WeddingAdminContext";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useVirtualizer, useWindowVirtualizer } from "@tanstack/react-virtual";
 
 interface FamilyCardProps {
   families: Family;
@@ -59,7 +59,6 @@ const FamilyCard = memo(
       >
         {/* Header */}
         <div className="flex w-full items-start mb-4 gap-4">
-          {/* Checkbox */}
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -79,7 +78,6 @@ const FamilyCard = memo(
             )}
           </button>
 
-          {/* Textos y Badges */}
           <div className="flex flex-col w-full min-w-0 gap-1.5">
             <div className="flex justify-between items-start w-full gap-3">
               <h3 className="font-serif text-base font-bold text-charcoal leading-snug line-clamp-2">
@@ -182,10 +180,12 @@ const FamiliesCards: React.FC<FamiliesCardsProps> = ({ families }) => {
 
   const parentRef = useRef<HTMLDivElement>(null);
   const [columns, setColumns] = useState(1);
+  const [isMobile, setIsMobile] = useState(true);
 
   useEffect(() => {
     const calculateColumns = () => {
       const width = window.innerWidth;
+      setIsMobile(width < 768);
       if (width >= 1536) setColumns(4);
       else if (width >= 1024) setColumns(3);
       else if (width >= 768) setColumns(2);
@@ -199,31 +199,53 @@ const FamiliesCards: React.FC<FamiliesCardsProps> = ({ families }) => {
 
   const rowCount = Math.ceil(families.length / columns);
 
-  const rowVirtualizer = useVirtualizer({
+  // 1. Virtualizador para ESCRITORIO (scroll interno)
+  const containerVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 180,
     overscan: 2,
+    enabled: !isMobile,
   });
 
+  // 2. Virtualizador para MÓVIL (scroll global de la ventana)
+  const windowVirtualizer = useWindowVirtualizer({
+    count: rowCount,
+    estimateSize: () => 180,
+    overscan: 2,
+    scrollMargin: parentRef.current ? parentRef.current.offsetTop : 0,
+    enabled: isMobile,
+  });
+
+  const activeVirtualizer = isMobile ? windowVirtualizer : containerVirtualizer;
   const TOP_SAFE_MARGIN = 16;
+
+  // 🔥 Función para calcular el desplazamiento Y eliminando el hueco en móvil
+  const getTransformY = (virtualRowStart: number) => {
+    if (isMobile) {
+      const margin = parentRef.current ? parentRef.current.offsetTop : 0;
+      return virtualRowStart - margin;
+    }
+    return virtualRowStart + TOP_SAFE_MARGIN;
+  };
 
   return (
     <div
       ref={parentRef}
-      // AJUSTE RESPONSIVE DE ALTURA:
-      // En móvil (menor a md), restamos 360px por todo lo que se apila.
-      // En escritorio (md en adelante), restamos 240px porque la barra es horizontal.
-      // Usamos dvh (dynamic viewport height) en lugar de vh para compatibilidad móvil.
-      className="w-full h-[calc(100dvh-380px)] md:h-[calc(100dvh-320px)] lg:h-[calc(100dvh-205px)] overflow-y-auto scrollbar-thin scrollbar-thumb-[#EBE5DA] pr-2 -mr-2 pb-10"
+      className={cn(
+        "w-full pr-2 -mr-2 pb-20 md:pb-10",
+        isMobile
+          ? "h-auto overflow-visible"
+          : "h-[calc(100dvh-380px)] md:h-[calc(100dvh-320px)] lg:h-[calc(100dvh-205px)] overflow-y-auto scrollbar-thin scrollbar-thumb-[#EBE5DA]",
+      )}
     >
       <div
         className="w-full relative"
         style={{
-          height: `${rowVirtualizer.getTotalSize() + TOP_SAFE_MARGIN}px`,
+          height: `${activeVirtualizer.getTotalSize()}px`,
         }}
       >
-        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+        {activeVirtualizer.getVirtualItems().map((virtualRow) => {
           const startIndex = virtualRow.index * columns;
           const rowFamilies = families.slice(startIndex, startIndex + columns);
 
@@ -233,7 +255,7 @@ const FamiliesCards: React.FC<FamiliesCardsProps> = ({ families }) => {
               className="absolute top-0 left-0 w-full flex gap-2"
               style={{
                 height: `${virtualRow.size}px`,
-                transform: `translateY(${virtualRow.start + TOP_SAFE_MARGIN}px)`,
+                transform: `translateY(${getTransformY(virtualRow.start)}px)`,
               }}
             >
               {rowFamilies.map((g) => (
