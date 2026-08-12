@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { useSeatingStore, FamilyElement } from "../../stores/useSeatingStore";
+import { useSeatingStore } from "../../stores/useSeatingStore";
 import {
   GripVertical,
   Users,
@@ -17,6 +17,7 @@ import {
   removeHighlightSeats,
 } from "../../utils/highlightHelper";
 import { DraggableGuest } from "./DraggableGuest";
+import { FamilyElement } from "@/types/seating";
 
 export function DraggableFamily({
   family,

@@ -20,15 +20,9 @@ import {
   LayoutTemplate,
   Users,
   Loader2,
-  Save,
-  GripVertical,
-  Sparkles,
+  Save
 } from "lucide-react";
-import {
-  ElementType,
-  FamilyElement,
-  useSeatingStore,
-} from "../../stores/useSeatingStore";
+import { useSeatingStore } from "../../stores/useSeatingStore";
 import { SeatingService } from "../../services/seatingService";
 import { useZoomStore } from "../../stores/useZoomStore";
 import GuestAssignmentSidebar from "../sidebar/GuestAssignmentSidebar";
@@ -40,33 +34,9 @@ import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
 import { useConfirmModal } from "@/features/admin/hooks/useConfirmModal";
 import ElementsPalette from "./ElementsPalette";
 import LayoutSetupModal from "../canvas/LayoutSetupModal";
-import { GuestSeat } from "@/types";
 import MobileFallback from "./MobileFallback";
-
-export type DragItemData =
-  | {
-      type: "palette_element";
-      elementType: ElementType;
-      width: number;
-      height: number;
-      seats: number;
-      label: string;
-    }
-  | {
-      type: "palette_layout";
-      elementType: "custom_layout";
-      width: number;
-      height: number;
-      seats: number;
-      label: string;
-    }
-  | { type: "element" }
-  | {
-      type: "guest";
-      guest: GuestSeat & { familyName?: string; index?: number };
-    }
-  | { type: "family"; family: FamilyElement }
-  | Record<string, unknown>;
+import { DragItemData } from "@/types/seating";
+import { DragOverlayContent } from "./DragOverlayContent";
 
 interface SeatingManagerProps {
   invitationId: string;
@@ -134,9 +104,7 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
         invitationId,
         async (rawFamilies) => {
           const formattedFamilies =
-            await SeatingService.formatFamiliesToFamiliesSeats(
-              rawFamilies,
-            );
+            await SeatingService.formatFamiliesToFamiliesSeats(rawFamilies);
 
           if (!useSeatingStore.getState().isInitialized) {
             initialize(dbElements, formattedFamilies);
@@ -547,81 +515,7 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
           </div>
 
           <DragOverlay dropAnimation={null}>
-            {activeDragItem?.type === "palette_element" &&
-            "label" in (activeDragItem.data || {}) ? (
-              <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-white border-2 border-[#C5A669] ring-2 ring-[#C5A669]/30 shadow-2xl pointer-events-none cursor-grabbing opacity-90">
-                <span className="text-sm font-semibold text-[#2C2C29]">
-                  {
-                    (
-                      activeDragItem.data as Extract<
-                        DragItemData,
-                        { type: "palette_element" }
-                      >
-                    ).label
-                  }
-                </span>
-                {(
-                  activeDragItem.data as Extract<
-                    DragItemData,
-                    { type: "palette_element" }
-                  >
-                ).seats > 0 && (
-                  <span className="text-[10px] font-bold text-[#C5A669] uppercase tracking-wider">
-                    {
-                      (
-                        activeDragItem.data as Extract<
-                          DragItemData,
-                          { type: "palette_element" }
-                        >
-                      ).seats
-                    }{" "}
-                    lugares
-                  </span>
-                )}
-              </div>
-            ) : activeDragItem?.type === "guest" &&
-              "guest" in (activeDragItem.data || {}) ? (
-              <div className="flex items-center gap-2 p-1.5 rounded-lg bg-white border border-[#C5A669] ring-2 ring-[#C5A669]/50 shadow-2xl scale-105 pointer-events-none cursor-grabbing text-xs">
-                <GripVertical size={12} className="text-[#C5A669]" />
-                <span className="flex-1 truncate font-medium text-[#2C2C29]">
-                  {(
-                    activeDragItem.data as Extract<
-                      DragItemData,
-                      { type: "guest" }
-                    >
-                  ).guest?.nombre || `Invitado`}
-                </span>
-              </div>
-            ) : activeDragItem?.type === "family" &&
-              "family" in (activeDragItem.data || {}) ? (
-              <div className="p-2 bg-white border border-[#C5A669] ring-2 ring-[#C5A669]/50 shadow-2xl rounded-lg scale-105 pointer-events-none flex items-center gap-2 cursor-grabbing min-w-[180px]">
-                <GripVertical size={14} className="text-[#C5A669]" />
-                <span className="font-serif text-[13px] font-semibold text-[#2C2C29]">
-                  {
-                    (
-                      activeDragItem.data as Extract<
-                        DragItemData,
-                        { type: "family" }
-                      >
-                    ).family?.name
-                  }
-                </span>
-              </div>
-            ) : activeDragItem?.type === "palette_layout" ? (
-              <div className="flex items-center gap-2 px-4 py-3 bg-[#FDFBF7] border-2 border-dashed border-[#C5A669] ring-4 ring-[#C5A669]/20 shadow-2xl rounded-xl scale-105 pointer-events-none cursor-grabbing opacity-90">
-                <div className="p-1.5 bg-amber-50 rounded-md text-[#C5A669]">
-                  <Sparkles size={16} />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-[#2C2C29]">
-                    Diseñador de Salón
-                  </span>
-                  <span className="text-[9px] uppercase font-bold tracking-wider text-amber-600">
-                    Crear distribución
-                  </span>
-                </div>
-              </div>
-            ) : null}
+            <DragOverlayContent activeDragItem={activeDragItem} />
           </DragOverlay>
         </DndContext>
 

@@ -17,11 +17,11 @@ import { GuestTagFilter } from "./GuestTagFilter";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 import {
-  UnassignDeclinedPanel,
-  UnassignOptions,
+  UnassignDeclinedPanel
 } from "./UnassignDeclinedPanel";
 import { useSeatingStore } from "../../stores/useSeatingStore";
 import Tooltip from "@/features/shared/components/Tooltip";
+import { UnassignOptions } from "@/types/seating";
 
 export default function GuestAssignmentSidebar({
   onClose,

@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { AlertCircle, Check } from "lucide-react";
 import { cn } from "@heroui/theme";
-
-export interface UnassignOptions {
-  includeNoDeadline: boolean;
-  includePendingNotExpired: boolean;
-  includePendingExpired: boolean;
-}
+import { UnassignOptions } from "@/types/seating";
 
 interface UnassignDeclinedPanelProps {
   onClose: () => void;

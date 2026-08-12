@@ -1,15 +1,14 @@
 import { useMemo, useState } from "react";
 import { useSeatingStore } from "../stores/useSeatingStore";
 import { TagFilterType } from "@/types";
-
-export type FilterType = "all" | "pending" | "assigned" | "action";
+import { SeatingFilterType } from "@/types/seating";
 
 export function useGuestAssignment(tagFilter: TagFilterType = "all") {
   const families = useSeatingStore((state) => state.families);
   const elements = useSeatingStore((state) => state.elements);
 
   const [searchQuery, setSearchQuery] = useState("");
-  const [filter, setFilter] = useState<FilterType>("all");
+  const [filter, setFilter] = useState<SeatingFilterType>("all");
 
   const assignedGuestIds = useMemo(() => {
     const ids = new Set<string>();

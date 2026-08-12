@@ -1,5 +1,5 @@
 import { useDraggable } from "@dnd-kit/core";
-import { useSeatingStore, FamilyElement } from "../../stores/useSeatingStore";
+import { useSeatingStore } from "../../stores/useSeatingStore";
 import { useSeatingModalContext } from "../SeatingModalContext";
 import {
   GripVertical,
@@ -15,6 +15,7 @@ import {
   removeHighlightSeats,
 } from "../../utils/highlightHelper";
 import { GuestSeat } from "@/types";
+import { FamilyElement } from "@/types/seating";
 
 export function DraggableGuest({
   guest,

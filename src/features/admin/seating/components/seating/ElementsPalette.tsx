@@ -1,12 +1,9 @@
 "use client";
 
-import React, {
-  ForwardRefExoticComponent,
-  RefAttributes,
+import {
   useState,
 } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { ElementType } from "../../stores/useSeatingStore";
 import {
   Circle,
   Square,
@@ -24,21 +21,10 @@ import {
   X,
   ChevronDown,
   ChevronRight,
-  LucideProps,
   LayoutGrid,
   Sparkles,
 } from "lucide-react";
-
-export interface PaletteItemType {
-  type: ElementType | "custom_layout";
-  label: string;
-  seats: number;
-  width: number;
-  height: number;
-  icon: ForwardRefExoticComponent<
-    Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>
-  >;
-}
+import { PaletteItemType } from "@/types/seating";
 
 const ELEMENTS: { category: string; items: PaletteItemType[] }[] = [
   {
