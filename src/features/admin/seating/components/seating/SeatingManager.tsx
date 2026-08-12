@@ -37,6 +37,8 @@ import LayoutSetupModal from "../canvas/LayoutSetupModal";
 import MobileFallback from "./MobileFallback";
 import { DragItemData } from "@/types/seating";
 import { DragOverlayContent } from "./DragOverlayContent";
+import { createPortal } from "react-dom";
+import { removeHighlightSeats } from "../../utils/highlightHelper";
 
 interface SeatingManagerProps {
   invitationId: string;
@@ -228,16 +230,24 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     return rectIntersection(args);
   };
 
-  const handleDragStart = (event: DragStartEvent) => {
+const handleDragStart = (event: DragStartEvent) => {
+  const currentData = event.active.data.current as DragItemData | undefined;
+
+  if (currentData) {
     setActiveDragItem({
       id: String(event.active.id),
-      type: event.active.data.current?.type,
-      data: event.active.data.current as DragItemData,
+      type: currentData.type,
+      data: currentData,
     });
-  };
+  }
+};
 
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveDragItem(null);
+    removeHighlightSeats(
+      "guest",
+      String(event.active.id).replace("guest-", ""),
+    );
     const { active, over } = event;
 
     if (active.data.current?.type === "palette_layout") {
@@ -514,9 +524,15 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
             </aside>
           </div>
 
-          <DragOverlay dropAnimation={null}>
-            <DragOverlayContent activeDragItem={activeDragItem} />
-          </DragOverlay>
+          {typeof window !== "undefined" &&
+            createPortal(
+              <DragOverlay dropAnimation={null}>
+                {activeDragItem ? (
+                  <DragOverlayContent activeDragItem={activeDragItem} />
+                ) : null}
+              </DragOverlay>,
+              document.body,
+            )}
         </DndContext>
 
         {toastMsg && (
