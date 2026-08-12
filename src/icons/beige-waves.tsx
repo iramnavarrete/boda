@@ -1,6 +1,3 @@
-import { cn } from "@heroui/theme";
-
-// Tipado estricto sin "any"
 interface BeigeWavesProps extends React.SVGProps<SVGSVGElement> {
   color?: string;
   flipY?: boolean; // 🔥 Nueva propiedad para voltearlo nativamente

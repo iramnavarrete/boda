@@ -69,7 +69,8 @@ const QrPhotos: FC<Props> = ({containerClassName = '', btnClassName = '', urlPho
               target="_blank"
               rel="noopener noreferrer"
               className={cn(
-                "flex items-center gap-2 text-[10px] font-nourdMedium uppercase tracking-[0.2em] border-b border-[color-mix(in_srgb,currentColor_20%,transparent)] pb-1 hover:border-current transition-all"
+                "flex items-center gap-2 text-[10px] font-nourdMedium uppercase tracking-[0.2em] border-b border-[color-mix(in_srgb,currentColor_20%,transparent)] pb-1 hover:border-current transition-all",
+                btnClassName
               )}
             >
               Abrir álbum
