@@ -5,7 +5,7 @@ import { useSeatingStore } from "../../stores/useSeatingStore";
 import { useZoomStore } from "../../stores/useZoomStore";
 import TableElement from "./TableElement";
 import { ZoomIn, ZoomOut, Maximize2, Trash2 } from "lucide-react";
-import { useDroppable } from "@dnd-kit/core";
+import { useDroppable, useDndContext } from "@dnd-kit/core";
 import { ConfirmModalState } from "@/types";
 
 interface SeatingCanvasProps {
@@ -46,6 +46,10 @@ export default function SeatingCanvas({
     height: 0,
   });
 
+  // Escuchamos el estado global de dnd-kit para saber si hay un elemento arrastrándose
+  const { active } = useDndContext();
+  const isDraggingAny = Boolean(active);
+
   const { setNodeRef: setDroppableCanvasRef } = useDroppable({
     id: "canvas",
     data: { type: "canvas" },
@@ -59,18 +63,14 @@ export default function SeatingCanvas({
       const currentZoom = useZoomStore.getState().zoom;
       if (currentZoom === newZoom) return;
 
-      // Si no mandan coordenadas (ej. se presionaron los botones + o -), usa el centro exacto del div
       const targetX = mouseX ?? container.clientWidth / 2;
       const targetY = mouseY ?? container.clientHeight / 2;
 
-      // 1. Calculamos la coordenada en el plano 1x gigante
       const pointX = (container.scrollLeft + targetX) / currentZoom;
       const pointY = (container.scrollTop + targetY) / currentZoom;
 
-      // 2. Setemos el Zoom en React
       setZoom(newZoom);
 
-      // 3. ✨ SÍNCRONO: Asignamos el scroll instantáneamente.
       container.scrollLeft = pointX * newZoom - targetX;
       container.scrollTop = pointY * newZoom - targetY;
     },
@@ -139,11 +139,9 @@ export default function SeatingCanvas({
 
         const rect = container.getBoundingClientRect();
 
-        // Sacamos la coordenada exacta de dónde está el puntero
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
 
-        // Le mandamos las coordenadas a nuestra función unificada
         handleZoomTarget(newZoom, mouseX, mouseY);
       }
     };
@@ -283,7 +281,9 @@ export default function SeatingCanvas({
 
       <div
         ref={containerRef}
-        className="relative flex-1 h-full w-full overflow-auto bg-[#F9F7F2] scrollbar-thin scrollbar-thumb-[#EBE5DA]"
+        className={`relative flex-1 h-full w-full overflow-auto bg-[#F9F7F2] scrollbar-thin scrollbar-thumb-[#EBE5DA] ${
+          isSelecting ? "is-selecting-active" : ""
+        } ${isDraggingAny ? "is-dragging-active" : ""}`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
