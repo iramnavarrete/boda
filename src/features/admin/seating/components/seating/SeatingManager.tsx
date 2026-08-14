@@ -28,7 +28,7 @@ import { useZoomStore } from "../../stores/useZoomStore";
 import GuestAssignmentSidebar from "../sidebar/GuestAssignmentSidebar";
 import { useEventPermissions } from "@/features/admin/hooks/useEventPermissions";
 import SeatingCanvas from "../canvas/SeatingCanvas";
-import { ExportPlanButton } from "../canvas/ExportPlanButton";
+import { ExportPlanModal } from "../canvas/ExportPlanModal";
 import { FamiliesService } from "@/services/familiesService";
 import { SeatingModalContext } from "../SeatingModalContext";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
@@ -40,6 +40,8 @@ import { DragItemData } from "@/types/seating";
 import { DragOverlayContent } from "./DragOverlayContent";
 import { createPortal } from "react-dom";
 import { removeHighlightSeats } from "../../utils/highlightHelper";
+import { useInvitationStore } from "@/features/front/stores/invitationStore";
+import { getEventTypeName } from "@/utils/formatters";
 
 interface SeatingManagerProps {
   invitationId: string;
@@ -70,6 +72,16 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
   } = useSeatingStore();
 
   const { zoom } = useZoomStore();
+  const invitationData = useInvitationStore((state) => state.invitationData);
+
+  /**
+   * Título formateado para los exports: "Boda Josué y Yneth"
+   * (igual formato que el Header del admin).
+   */
+  const invitationTitle =
+    invitationData?.tipo && invitationData?.nombre
+      ? `${getEventTypeName(invitationData.tipo)} ${invitationData.nombre}`
+      : invitationId;
 
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
@@ -561,7 +573,7 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
               </button>
             </div>
 
-            <ExportPlanButton invitationName={invitationId} />
+            <ExportPlanModal invitationTitle={invitationTitle} />
 
             <SeatingCanvas openConfirmModal={openConfirmModal} />
           </div>

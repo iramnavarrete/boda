@@ -49,6 +49,9 @@ const ROUND_TYPES: ReadonlySet<ElementType> = new Set([
   "cocktail_table",
 ]);
 
+/** Radio de borde (px) para mesas/áreas no redondas, igual al editor (rounded-xl). */
+const SHAPE_RADIUS = 12;
+
 /**
  * Dibuja un elemento del plano (mesa o área) en el contexto.
  * El origen (0,0) está en la esquina superior izquierda del elemento.
@@ -91,13 +94,24 @@ function drawShape(
   isTable: boolean,
 ) {
   const isRound = ROUND_TYPES.has(type);
+  const isHalfMoon = type === "half_moon_table";
 
   ctx.beginPath();
   if (isRound) {
+    // Mesas redondas / cocteleras: círculo completo
     const r = Math.min(w, h) / 2;
     ctx.arc(w / 2, h / 2, r, 0, Math.PI * 2);
+  } else if (isHalfMoon) {
+    // Media luna: borde inferior recto, arco semicircular arriba
+    // (mismo path que TableShape.tsx → renderHalfMoonSvg)
+    const r = w / 2;
+    ctx.moveTo(0, h);
+    ctx.lineTo(w, h);
+    // sweep counterclockwise para ir por arriba
+    ctx.arc(r, h, r, 0, Math.PI, true);
   } else {
-    ctx.rect(0, 0, w, h);
+    // Cuadradas, rectangulares, head_table, áreas: rounded-xl
+    drawRoundedRect(ctx, 0, 0, w, h, SHAPE_RADIUS);
   }
   ctx.closePath();
 
@@ -115,6 +129,47 @@ function drawShape(
   }
   ctx.stroke();
   ctx.setLineDash([]);
+}
+
+/**
+ * Rectángulo con esquinas redondeadas. Usa `ctx.roundRect()` si está
+ * disponible (Chrome 99+, Safari 16+, Firefox 113+); si no, hace
+ * fallback a un path manual.
+ */
+function drawRoundedRect(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+) {
+  type WithRoundRect = CanvasRenderingContext2D & {
+    roundRect?: (
+      x: number,
+      y: number,
+      w: number,
+      h: number,
+      radii: number | number[],
+    ) => void;
+  };
+  const c = ctx as WithRoundRect;
+  if (typeof c.roundRect === "function") {
+    c.roundRect(x, y, w, h, r);
+    return;
+  }
+  // Fallback: path manual con curvas cuadráticas
+  const radius = Math.min(r, w / 2, h / 2);
+  ctx.moveTo(x + radius, y);
+  ctx.lineTo(x + w - radius, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+  ctx.lineTo(x + w, y + h - radius);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+  ctx.lineTo(x + radius, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+  ctx.lineTo(x, y + radius);
+  ctx.quadraticCurveTo(x, y, x + radius, y);
+  ctx.closePath();
 }
 
 function drawLabel(

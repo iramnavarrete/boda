@@ -2,11 +2,27 @@ import { saveAs } from "file-saver";
 import { SeatingElement, FamilyElement } from "@/types/seating";
 import { buildGuestIndex } from "./planDrawing";
 import { capturePlanCanvas, CapturedPlan } from "./planCapture";
+import {
+  CARD_W,
+  CARD_GAP_X,
+  CARD_GAP_Y,
+  COLS_PER_SIDE,
+  computeRowHeights,
+  drawCardGrid,
+} from "./planCards";
+import { BRAND_MUTED, BRAND_TAG, BRAND_URL, loadBrandIcon } from "./planBrand";
 
 export interface ImageExportOptions {
-  invitationName: string;
+  /** Título formateado del evento (ej: "Boda Josué y Yneth"). */
+  invitationTitle: string;
   elements: SeatingElement[];
   families: FamilyElement[];
+  /**
+   * Si es true, incluye la cuadrícula de tarjetas a los lados del plano.
+   * Si es false, exporta únicamente el plano (centrado, ajustado al
+   * contenido) con la marca de agua al pie.
+   */
+  includeDistribution?: boolean;
   /**
    * (Deprecado) Se conserva por compatibilidad con la firma del hook.
    * El plano se renderiza a tamaño natural (zoom=1) en el canvas de
@@ -15,46 +31,31 @@ export interface ImageExportOptions {
   zoom?: number;
 }
 
-const ACCENT = "#C5A669";
 const ACCENT_DARK = "#A08040";
 const PAGE_BG = "#FFFFFF";
-const CARD_BG = "#FFFFFF";
-const CARD_BORDER = "#C5A669";
 const TEXT_DARK = "#2C2C29";
-const TEXT_MUTED = "#5A5A5A";
-const TEXT_FAINT = "#A8A29E";
-const EMPTY_SEAT = "#EBECEF";
-const EMPTY_BORDER = "#A8AEBA";
 
-/**
- * Factor de escala global del canvas final. 2x = calidad de impresión
- * (≈ 300 DPI), archivo de ~5-10 MB para un plano típico.
- */
+/** Factor de escala global del canvas final. 2x ≈ 300 DPI. */
 const RENDER_SCALE = 2;
 
 const TITLE_H = 200;
 const PADDING = 50;
-const CARD_W = 460;
-const CARD_GAP_X = 24;
-const CARD_GAP_Y = 24;
-const CARD_PAD = 22;
-const SEAT_CIRCLE_D = 26;
-const SEAT_ROW_H = 40;
-
-const COLS_PER_SIDE = 4;
+const WATERMARK_H = 80;
 
 /**
- * Render del plano + tarjetas a alta resolución.
+ * Render del plano (con o sin tarjetas) a alta resolución.
  *
- * El canvas final se crea a `TOTAL_W * RENDER_SCALE` y se le aplica
- * `ctx.scale(RENDER_SCALE)`, así todo el código de dibujo sigue usando
- * coords del "mundo" pero el PNG final tiene el doble de pixeles.
+ * - Modo "con distribución": título + plano + tarjetas laterales (igual
+ *   que antes).
+ * - Modo "solo plano": título + plano centrado, ajustado al contenido,
+ *   con marca de agua al pie.
  *
- * El plano se captura a 2.5x (en planCapture) y luego se dibuja en el
- * canvas final, así el resultado es un downscale (no upscale) → nítido.
+ * En ambos casos se agrega una marca de agua con el logo de la marca y
+ * la URL del sitio.
  */
 export async function exportPlanToImage(opts: ImageExportOptions) {
-  const { invitationName, elements, families } = opts;
+  const { invitationTitle, elements, families } = opts;
+  const includeDistribution = opts.includeDistribution ?? true;
 
   // 1) Renderizar el plano a alta resolución (2.5x por defecto)
   const captured = await capturePlanCanvas(elements, families, {
@@ -62,21 +63,89 @@ export async function exportPlanToImage(opts: ImageExportOptions) {
     pixelRatio: 2.5,
   });
 
-  // 2) Render del layout final (título + plano capturado + tarjetas)
+  // 2) Cargar el logo de la marca para la marca de agua
+  const brandIcon = await loadBrandIcon();
+
+  // 3) Render del layout final
   const layoutBytes = await renderLayout(
-    invitationName,
+    invitationTitle,
     captured,
+    brandIcon,
     elements,
     families,
+    includeDistribution,
   );
 
-  const fileName = `plano-mesas-${slugify(invitationName)}.png`;
-  saveAs(new Blob([layoutBytes], { type: "image/png" }), fileName);
+  const fileName = `plano-mesas-${slugify(invitationTitle)}.png`;
+  saveAs(new Blob([layoutBytes.slice()], { type: "image/png" }), fileName);
 }
 
 async function renderLayout(
-  invitationName: string,
+  invitationTitle: string,
   planCapture: CapturedPlan,
+  brandIcon: HTMLImageElement,
+  elements: SeatingElement[],
+  families: FamilyElement[],
+  includeDistribution: boolean,
+): Promise<Uint8Array> {
+  if (!includeDistribution) {
+    return renderPlanOnly(invitationTitle, planCapture, brandIcon);
+  }
+  return renderWithDistribution(
+    invitationTitle,
+    planCapture,
+    brandIcon,
+    elements,
+    families,
+  );
+}
+
+// =====================================================================
+// MODO: Solo plano (con marca de agua)
+// =====================================================================
+
+async function renderPlanOnly(
+  invitationTitle: string,
+  planCapture: CapturedPlan,
+  brandIcon: HTMLImageElement,
+): Promise<Uint8Array> {
+  // Tamaño objetivo del plano dentro del lienzo
+  const TARGET_PLAN_W = 2400;
+  const planAspect = planCapture.width / planCapture.height;
+  const planW = TARGET_PLAN_W;
+  const planH = planW / planAspect;
+
+  // Lienzo total: padding + título + plan + padding + marca de agua
+  const TOTAL_W = planW + PADDING * 2;
+  const TOTAL_H = TITLE_H + PADDING + planH + PADDING + WATERMARK_H;
+
+  return renderToCanvas(TOTAL_W, TOTAL_H, async (ctx) => {
+    // Fondo blanco
+    ctx.fillStyle = PAGE_BG;
+    ctx.fillRect(0, 0, TOTAL_W, TOTAL_H);
+
+    // Título
+    drawTitle(ctx, TOTAL_W, TITLE_H, invitationTitle);
+
+    // Plano centrado
+    const planImg = await loadImage(planCapture.dataUrl);
+    const planX = PADDING;
+    const planY = TITLE_H + PADDING;
+    ctx.drawImage(planImg, planX, planY, planW, planH);
+
+    // Marca de agua al pie
+    drawWatermark(ctx, TOTAL_W, TOTAL_H, brandIcon);
+  });
+}
+
+// =====================================================================
+// MODO: Con distribución (layout completo)
+// =====================================================================
+
+async function renderWithDistribution(
+  invitationTitle: string,
+  planCapture: CapturedPlan,
+  brandIcon: HTMLImageElement,
   elements: SeatingElement[],
   families: FamilyElement[],
 ): Promise<Uint8Array> {
@@ -126,33 +195,9 @@ async function renderLayout(
     }
   }
 
-  // Calcular altura de cada tarjeta
-  function cardHeightFor(table: SeatingElement): number {
-    const rowsInCard = Math.ceil(table.seats / 2);
-    return 30 + 38 + 16 + rowsInCard * SEAT_ROW_H + 22;
-  }
-
-  function computeRowHeights(tablesList: SeatingElement[]): number[] {
-    if (tablesList.length === 0) return [];
-    const perCol = Math.ceil(tablesList.length / COLS_PER_SIDE);
-    const rowHeights: number[] = [];
-    for (let r = 0; r < perCol; r++) {
-      let maxH = 0;
-      for (let c = 0; c < COLS_PER_SIDE; c++) {
-        const idx = r * COLS_PER_SIDE + c;
-        if (idx < tablesList.length) {
-          const h = cardHeightFor(tablesList[idx]);
-          if (h > maxH) maxH = h;
-        }
-      }
-      rowHeights.push(maxH);
-    }
-    return rowHeights;
-  }
-
-  const leftRowHeights = computeRowHeights(leftTables);
-  const rightRowHeights = computeRowHeights(rightTables);
-  const bottomRowHeights = computeRowHeights(bottomTables);
+  const leftRowHeights = computeRowHeights(leftTables, COLS_PER_SIDE);
+  const rightRowHeights = computeRowHeights(rightTables, COLS_PER_SIDE);
+  const bottomRowHeights = computeRowHeights(bottomTables, COLS_PER_SIDE);
 
   function totalStackHeight(rowHeights: number[]): number {
     return (
@@ -168,12 +213,9 @@ async function renderLayout(
   const bottomTotalH = totalStackHeight(bottomRowHeights);
 
   // Dimensiones del canvas (en coords del "mundo")
-  const sideCardW =
-    COLS_PER_SIDE * CARD_W + (COLS_PER_SIDE - 1) * CARD_GAP_X;
+  const sideCardW = COLS_PER_SIDE * CARD_W + (COLS_PER_SIDE - 1) * CARD_GAP_X;
   const sideAreaW = sideCardW + PADDING * 2;
 
-  // El plano capturado tiene su aspect ratio. Lo escalamos para que su
-  // altura sea igual a la altura de las tarjetas laterales.
   const planAspect = planCapture.width / planCapture.height;
   const planAreaH = sideTotalH;
   const planW = planAspect * planAreaH;
@@ -186,72 +228,96 @@ async function renderLayout(
     TITLE_H +
     Math.max(planAreaH, bottomTotalH) +
     PADDING * 2 +
-    (bottomTables.length > 0 ? bottomTotalH + 80 : 0);
+    (bottomTables.length > 0 ? bottomTotalH + 80 : 0) +
+    WATERMARK_H;
 
-  // Crear canvas a ALTA RESOLUCIÓN (mundo * RENDER_SCALE)
+  return renderToCanvas(TOTAL_W, TOTAL_H, async (ctx) => {
+    // Fondo blanco
+    ctx.fillStyle = PAGE_BG;
+    ctx.fillRect(0, 0, TOTAL_W, TOTAL_H);
+
+    // Título
+    drawTitle(ctx, TOTAL_W, TITLE_H, invitationTitle);
+
+    // Plano
+    const planImg = await loadImage(planCapture.dataUrl);
+    const planX = sideAreaW + centerGap / 2;
+    const planY = TITLE_H + PADDING;
+    ctx.drawImage(planImg, planX, planY, planW, planH);
+
+    // Tarjetas laterales
+    drawCardGrid(
+      ctx,
+      leftTables,
+      PADDING,
+      TITLE_H + PADDING,
+      leftRowHeights,
+      COLS_PER_SIDE,
+      guestIndex,
+      false,
+    );
+    drawCardGrid(
+      ctx,
+      rightTables,
+      TOTAL_W - PADDING - sideCardW,
+      TITLE_H + PADDING,
+      rightRowHeights,
+      COLS_PER_SIDE,
+      guestIndex,
+      false,
+    );
+
+    // Tarjetas inferiores (centradas)
+    if (bottomTables.length > 0) {
+      const fullRowW =
+        COLS_PER_SIDE * CARD_W + (COLS_PER_SIDE - 1) * CARD_GAP_X;
+      const bottomStartX = (TOTAL_W - fullRowW) / 2;
+      const bottomStartY = TITLE_H + PADDING + sideTotalH + 80;
+
+      drawCardGrid(
+        ctx,
+        bottomTables,
+        bottomStartX,
+        bottomStartY,
+        bottomRowHeights,
+        COLS_PER_SIDE,
+        guestIndex,
+        true,
+      );
+    }
+
+    // Marca de agua al pie
+    drawWatermark(ctx, TOTAL_W, TOTAL_H, brandIcon);
+  });
+}
+
+// =====================================================================
+// Helpers comunes
+// =====================================================================
+
+/**
+ * Crea un canvas a alta resolución (mundo * RENDER_SCALE) y ejecuta
+ * la función de dibujo. Devuelve los bytes PNG.
+ */
+async function renderToCanvas(
+  worldW: number,
+  worldH: number,
+  draw: (ctx: CanvasRenderingContext2D) => void | Promise<void>,
+): Promise<Uint8Array> {
   const canvas = document.createElement("canvas");
-  canvas.width = Math.round(TOTAL_W * RENDER_SCALE);
-  canvas.height = Math.round(TOTAL_H * RENDER_SCALE);
+  canvas.width = Math.round(worldW * RENDER_SCALE);
+  canvas.height = Math.round(worldH * RENDER_SCALE);
 
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("No se pudo crear el contexto de canvas 2D.");
-
-  // Aplicar escala: el resto del código sigue usando coords del mundo
   ctx.scale(RENDER_SCALE, RENDER_SCALE);
 
-  // Fondo blanco
-  ctx.fillStyle = PAGE_BG;
-  ctx.fillRect(0, 0, TOTAL_W, TOTAL_H);
+  await draw(ctx);
 
-  // Título
-  drawTitle(ctx, TOTAL_W, TITLE_H, invitationName);
+  return canvasToBytes(canvas);
+}
 
-  // Dibujar la imagen del plano capturado
-  const planImg = await loadImage(planCapture.dataUrl);
-  const planX = sideAreaW + centerGap / 2;
-  const planY = TITLE_H + PADDING;
-  ctx.drawImage(planImg, planX, planY, planW, planH);
-
-  // Tarjetas laterales
-  drawCardGrid(
-    ctx,
-    leftTables,
-    PADDING,
-    TITLE_H + PADDING,
-    leftRowHeights,
-    guestIndex,
-    false,
-  );
-  // Right: alineado al borde derecho con PADDING de margen
-  // (antes: TOTAL_W - PADDING - sideAreaW + PADDING, que daba 50px de offset)
-  drawCardGrid(
-    ctx,
-    rightTables,
-    TOTAL_W - PADDING - sideCardW,
-    TITLE_H + PADDING,
-    rightRowHeights,
-    guestIndex,
-    false,
-  );
-
-  // Tarjetas inferiores (centradas)
-  if (bottomTables.length > 0) {
-    const fullRowW = COLS_PER_SIDE * CARD_W + (COLS_PER_SIDE - 1) * CARD_GAP_X;
-    const bottomStartX = (TOTAL_W - fullRowW) / 2;
-    const bottomStartY = TITLE_H + PADDING + sideTotalH + 80;
-
-    drawCardGrid(
-      ctx,
-      bottomTables,
-      bottomStartX,
-      bottomStartY,
-      bottomRowHeights,
-      guestIndex,
-      true,
-    );
-  }
-
-  // Convertir a PNG
+function canvasToBytes(canvas: HTMLCanvasElement): Uint8Array {
   const dataUrl = canvas.toDataURL("image/png");
   const base64 = dataUrl.split(",")[1];
   const binary = atob(base64);
@@ -260,6 +326,66 @@ async function renderLayout(
     bytes[i] = binary.charCodeAt(i);
   }
   return bytes;
+}
+
+function drawTitle(
+  ctx: CanvasRenderingContext2D,
+  canvasW: number,
+  titleH: number,
+  invitationTitle: string,
+) {
+  ctx.fillStyle = TEXT_DARK;
+  ctx.font = "bold 90px Georgia, serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(invitationTitle.toUpperCase(), canvasW / 2, titleH * 0.42);
+
+  ctx.fillStyle = ACCENT_DARK;
+  ctx.font = "500 28px sans-serif";
+  ctx.fillText("DISTRIBUCIÓN DE MESAS", canvasW / 2, titleH * 0.78);
+}
+
+/**
+ * Marca de agua centrada al pie:
+ *   "Generado con" [LOGO] URL
+ */
+function drawWatermark(
+  ctx: CanvasRenderingContext2D,
+  totalW: number,
+  totalH: number,
+  brandIcon: HTMLImageElement,
+) {
+  // Tamaño del logo en el lienzo (mantener aspecto)
+  const logoH = 44;
+  const logoAspect = brandIcon.naturalWidth / brandIcon.naturalHeight;
+  const logoW = logoH * logoAspect;
+  const gap = 14;
+
+  // Tipografía
+  ctx.font = "500 20px sans-serif";
+  ctx.fillStyle = BRAND_MUTED;
+  ctx.textBaseline = "middle";
+
+  // Calcular anchos de texto
+  const tagW = ctx.measureText(BRAND_TAG).width;
+  const urlW = ctx.measureText(BRAND_URL).width;
+
+  // Bloque total: tag + gap + logo + gap + url
+  const blockW = tagW + gap + logoW + gap + urlW;
+  let cursorX = (totalW - blockW) / 2;
+  const centerY = totalH - WATERMARK_H / 2;
+
+  // Texto "Generado con..."
+  ctx.textAlign = "left";
+  ctx.fillText(BRAND_TAG, cursorX, centerY);
+  cursorX += tagW + gap;
+
+  // Logo
+  ctx.drawImage(brandIcon, cursorX, centerY - logoH / 2, logoW, logoH);
+  cursorX += logoW + gap;
+
+  // URL
+  ctx.fillText(BRAND_URL, cursorX, centerY);
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -271,182 +397,18 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-function drawTitle(
-  ctx: CanvasRenderingContext2D,
-  canvasW: number,
-  titleH: number,
-  invitationName: string,
-) {
-  ctx.fillStyle = TEXT_DARK;
-  ctx.font = "bold 90px Georgia, serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(invitationName.toUpperCase(), canvasW / 2, titleH * 0.42);
-
-  ctx.fillStyle = ACCENT_DARK;
-  ctx.font = "500 28px sans-serif";
-  ctx.fillText("DISTRIBUCIÓN DE MESAS", canvasW / 2, titleH * 0.78);
-}
-
-function drawCardGrid(
-  ctx: CanvasRenderingContext2D,
-  tables: SeatingElement[],
-  startX: number,
-  startY: number,
-  rowHeights: number[],
-  guestIndex: Map<string, { family: FamilyElement; guest: FamilyElement["guests"][number] }>,
-  centerIncompleteRows: boolean,
-) {
-  if (tables.length === 0) return;
-
-  const perRow = COLS_PER_SIDE;
-  const fullRowW = perRow * CARD_W + (perRow - 1) * CARD_GAP_X;
-  let curY = startY;
-
-  for (let r = 0; r < rowHeights.length; r++) {
-    const rowH = rowHeights[r];
-    const startIdx = r * perRow;
-    const endIdx = Math.min(startIdx + perRow, tables.length);
-    const cardsInRow = endIdx - startIdx;
-
-    let rowStartX = startX;
-    if (centerIncompleteRows && cardsInRow < perRow) {
-      const totalW = cardsInRow * CARD_W + (cardsInRow - 1) * CARD_GAP_X;
-      rowStartX = startX + (fullRowW - totalW) / 2;
-    }
-
-    for (let c = 0; c < cardsInRow; c++) {
-      const idx = startIdx + c;
-      const table = tables[idx];
-      const x = rowStartX + c * (CARD_W + CARD_GAP_X);
-      const y = curY;
-      const tableH = cardHeightForTable(table);
-      drawTableCard(ctx, table, x, y, CARD_W, rowH, guestIndex, tableH);
-    }
-
-    curY += rowH + CARD_GAP_Y;
-  }
-}
-
-function cardHeightForTable(table: SeatingElement): number {
-  const rowsInCard = Math.ceil(table.seats / 2);
-  return 30 + 38 + 16 + rowsInCard * SEAT_ROW_H + 22;
-}
-
-function drawTableCard(
-  ctx: CanvasRenderingContext2D,
-  table: SeatingElement,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  guestIndex: Map<string, { family: FamilyElement; guest: FamilyElement["guests"][number] }>,
-  contentH: number,
-) {
-  ctx.fillStyle = CARD_BG;
-  roundRect(ctx, x, y, w, h, 14);
-  ctx.fill();
-
-  ctx.strokeStyle = CARD_BORDER;
-  ctx.lineWidth = 2.5;
-  roundRect(ctx, x, y, w, h, 14);
-  ctx.stroke();
-
-  ctx.fillStyle = TEXT_DARK;
-  ctx.font = "bold 26px Georgia, serif";
-  ctx.textAlign = "left";
-  ctx.textBaseline = "alphabetic";
-  ctx.fillText(table.alias, x + CARD_PAD, y + 42);
-
-  const seatsStartY = y + 30 + 38 + 6;
-  const innerW = w - CARD_PAD * 2;
-  const colGap = 24;
-  const colW = (innerW - colGap) / 2;
-  const half = Math.ceil(table.seats / 2);
-
-  for (let i = 0; i < table.seats; i++) {
-    const isLeft = i < half;
-    const rowIdx = isLeft ? i : i - half;
-    const colIdx = isLeft ? 0 : 1;
-
-    const rowY = seatsStartY + rowIdx * SEAT_ROW_H;
-    if (rowY + SEAT_ROW_H > y + contentH - 8) break;
-
-    const colX = x + CARD_PAD + colIdx * (colW + colGap);
-    const circleX = colX + SEAT_CIRCLE_D / 2;
-    const textX = colX + SEAT_CIRCLE_D + 10;
-    const circleY = rowY + SEAT_ROW_H / 2;
-
-    const guestId = table.assignedSeats[i];
-    const info = guestId ? guestIndex.get(guestId) : undefined;
-
-    const bg = info ? info.family.colorBg : EMPTY_SEAT;
-    const border = info ? info.family.colorBorder : EMPTY_BORDER;
-    ctx.beginPath();
-    ctx.arc(circleX, circleY, SEAT_CIRCLE_D / 2, 0, Math.PI * 2);
-    ctx.fillStyle = bg;
-    ctx.fill();
-    ctx.strokeStyle = border;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    ctx.fillStyle = info ? TEXT_DARK : TEXT_FAINT;
-    ctx.font = "bold 12px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(String(i + 1), circleX, circleY);
-
-    ctx.fillStyle = info ? TEXT_DARK : TEXT_FAINT;
-    ctx.font = info ? "14px sans-serif" : "italic 13px sans-serif";
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-    const label = info ? info.family.name : "Disponible";
-    const maxTextW = colW - SEAT_CIRCLE_D - 10;
-    const truncated = truncateText(ctx, label, maxTextW);
-    ctx.fillText(truncated, textX, circleY);
-  }
-}
-
-function truncateText(
-  ctx: CanvasRenderingContext2D,
-  text: string,
-  maxWidth: number,
-): string {
-  if (ctx.measureText(text).width <= maxWidth) return text;
-  let truncated = text;
-  while (truncated.length > 0 && ctx.measureText(truncated + "…").width > maxWidth) {
-    truncated = truncated.slice(0, -1);
-  }
-  return truncated + "…";
-}
-
-function roundRect(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  w: number,
-  h: number,
-  r: number,
-) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
-
 function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "")
-    .slice(0, 60) || "invitacion";
+  return (
+    s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "")
+      .slice(0, 60) || "invitacion"
+  );
 }
+
+// Re-export COLS_PER_SIDE para que esté accesible desde aquí
+// (viene de planCards.ts)
+export { COLS_PER_SIDE };
