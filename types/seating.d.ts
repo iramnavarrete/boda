@@ -35,7 +35,10 @@ export type DragItemData =
       seats: number;
       label: string;
     }
-  | { type: "element" }
+  | {
+      type: "element";
+      element: SeatingElement;
+    }
   | {
       type: "guest";
       guest: GuestSeat & { familyName?: string; index?: number };
@@ -91,4 +94,17 @@ export interface LayoutConfig {
   startingIndex: number;
   centerX: number;
   centerY: number;
+}
+
+export interface TableShapeProps {
+  type: ElementType;
+  width: number;
+  height: number;
+  seatsCount?: number;
+  alias?: string;
+  assignedSeatsCount?: number;
+  renderSeatItem?: (
+    seatIndex: number,
+    coords: { x: number; y: number },
+  ) => React.ReactNode;
 }

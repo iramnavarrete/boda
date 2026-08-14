@@ -20,7 +20,7 @@ import {
   LayoutTemplate,
   Users,
   Loader2,
-  Save
+  Save,
 } from "lucide-react";
 import { useSeatingStore } from "../../stores/useSeatingStore";
 import { SeatingService } from "../../services/seatingService";
@@ -230,17 +230,17 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     return rectIntersection(args);
   };
 
-const handleDragStart = (event: DragStartEvent) => {
-  const currentData = event.active.data.current as DragItemData | undefined;
+  const handleDragStart = (event: DragStartEvent) => {
+    const currentData = event.active.data.current as DragItemData | undefined;
 
-  if (currentData) {
-    setActiveDragItem({
-      id: String(event.active.id),
-      type: currentData.type,
-      data: currentData,
-    });
-  }
-};
+    if (currentData) {
+      setActiveDragItem({
+        id: String(event.active.id),
+        type: currentData.type,
+        data: currentData,
+      });
+    }
+  };
 
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveDragItem(null);
@@ -437,6 +437,12 @@ const handleDragStart = (event: DragStartEvent) => {
           collisionDetection={customCollisionDetection}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          onDragCancel={(event) =>
+            removeHighlightSeats(
+              "guest",
+              String(event.active.id).replace("guest-", ""),
+            )
+          }
         >
           <div
             className="flex flex-row shrink-0 transition-all duration-300"
