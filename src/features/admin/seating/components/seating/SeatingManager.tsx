@@ -28,6 +28,7 @@ import { useZoomStore } from "../../stores/useZoomStore";
 import GuestAssignmentSidebar from "../sidebar/GuestAssignmentSidebar";
 import { useEventPermissions } from "@/features/admin/hooks/useEventPermissions";
 import SeatingCanvas from "../canvas/SeatingCanvas";
+import { ExportPlanButton } from "../canvas/ExportPlanButton";
 import { FamiliesService } from "@/services/familiesService";
 import { SeatingModalContext } from "../SeatingModalContext";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
@@ -559,6 +560,8 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
                     : "Cambios Guardados"}
               </button>
             </div>
+
+            <ExportPlanButton invitationName={invitationId} />
 
             <SeatingCanvas openConfirmModal={openConfirmModal} />
           </div>
