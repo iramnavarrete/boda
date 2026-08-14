@@ -1,6 +1,6 @@
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
-import { SeatingElement, FamilyElement } from "../stores/useSeatingStore";
+import { SeatingElement, FamilyElement } from "@/types/seating";
 import { Family, GuestSeat } from "@/types";
 import { invitationsCollectionName } from "@/services/invitationsService";
 import { getFamilyColorByIndex } from "@/utils/familyColors";

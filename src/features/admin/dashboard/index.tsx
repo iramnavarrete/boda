@@ -13,7 +13,7 @@ import RecentActivityCard from "./components/RecentActivityCard";
 import MessagesCard from "./components/MessagesCard";
 import CountdownCard from "./components/CountdownCard";
 import { getEventTypeName } from "@/utils/formatters";
-import { SeatingElement } from "../seating/stores/useSeatingStore";
+import { SeatingElement } from "@/types/seating";
 import { SeatingService } from "../seating/services/seatingService";
 import { useEventStats } from "../hooks/useEventStats";
 import UnifiedStatsCard from "./components/UnifiedStatsCard";

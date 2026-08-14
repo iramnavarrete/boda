@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import {
   X,
@@ -16,12 +16,43 @@ import { SidebarTabs } from "./SidebarTabs";
 import { GuestTagFilter } from "./GuestTagFilter";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
-import {
-  UnassignDeclinedPanel
-} from "./UnassignDeclinedPanel";
+import { UnassignDeclinedPanel } from "./UnassignDeclinedPanel";
 import { useSeatingStore } from "../../stores/useSeatingStore";
 import Tooltip from "@/features/shared/components/Tooltip";
 import { UnassignOptions } from "@/types/seating";
+
+const DECLINED_STATUSES = new Set(["declined", "declinado", "rechazado"]);
+
+type IndicatorColor = "green" | "orange" | "yellow";
+
+/**
+ * Verde: todos los invitados están asignados Y ninguno es declined.
+ * Naranja: hay invitados pendientes por sentar, O todos están asignados
+ *          pero al menos uno es declined (ocupa un slot que podría liberarse).
+ * Amarillo: nadie asignado, nadie declined, todo pendiente.
+ */
+function getIndicatorColor(
+  assignedCount: number,
+  declinedCount: number,
+  totalGuests: number,
+): IndicatorColor {
+  if (totalGuests === 0) return "yellow";
+
+  // Caso ideal: todos sentados y ninguno declinó.
+  if (assignedCount === totalGuests && declinedCount === 0) return "green";
+
+  // Cualquier otra situación requiere atención:
+  // - faltan asientos por asignar
+  // - o ya todos asignados pero hay declined (slots que podrían liberarse)
+  if (assignedCount > 0 || declinedCount > 0) return "orange";
+  return "yellow";
+}
+
+const INDICATOR_CLASS: Record<IndicatorColor, string> = {
+  green: "bg-emerald-400",
+  orange: "bg-orange-400",
+  yellow: "bg-yellow-400",
+};
 
 export default function GuestAssignmentSidebar({
   onClose,
@@ -42,7 +73,7 @@ export default function GuestAssignmentSidebar({
     setFilter,
     stats,
     assignedGuestIds,
-    filteredAndSortedFamilies,
+    familiesWithCounts,
   } = useGuestAssignment(tagFilter);
 
   const unassignByCriteria = useSeatingStore(
@@ -57,19 +88,22 @@ export default function GuestAssignmentSidebar({
     setShowUnassignPanel(false);
   };
 
-  const totalSeats = elements.reduce((acc, el) => acc + (el.seats || 0), 0);
+  const totalSeats = useMemo(
+    () => elements.reduce((acc, el) => acc + (el.seats || 0), 0),
+    [elements],
+  );
   const isOverCapacity = stats.guests.total > totalSeats;
   const missingSeats = stats.guests.total - totalSeats;
 
   const hasActiveFilters =
     searchQuery !== "" || tagFilter !== "all" || filter !== "all";
 
-  const filteredGuestsTotal = filteredAndSortedFamilies.reduce(
-    (acc, f) => acc + f.guests.length,
+  const filteredGuestsTotal = familiesWithCounts.reduce(
+    (acc, f) => acc + f.family.guests.length,
     0,
   );
 
-  const familiesLabel = `${filteredAndSortedFamilies.length} ${filteredAndSortedFamilies.length === 1 ? "familia" : "familias"}`;
+  const familiesLabel = `${familiesWithCounts.length} ${familiesWithCounts.length === 1 ? "familia" : "familias"}`;
   const personsLabel = `${filteredGuestsTotal} ${filteredGuestsTotal === 1 ? "persona" : "personas"}`;
 
   // ============================================================================
@@ -78,10 +112,10 @@ export default function GuestAssignmentSidebar({
   const parentRef = useRef<HTMLDivElement>(null);
 
   const rowVirtualizer = useVirtualizer({
-    count: filteredAndSortedFamilies.length,
+    count: familiesWithCounts.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 35, // Estimación inicial (se ajustará dinámicamente)
-    overscan: 4, // Renderizamos algunas extras para que el Drag & Drop fluya
+    estimateSize: () => 35,
+    overscan: 4,
   });
 
   return (
@@ -192,7 +226,7 @@ export default function GuestAssignmentSidebar({
         ref={parentRef}
         className="px-3 pb-3 overflow-y-scroll overflow-x-hidden flex-1 w-full pt-1 scrollbar-thin scrollbar-thumb-[#EBE5DA]"
       >
-        {filteredAndSortedFamilies.length === 0 ? (
+        {familiesWithCounts.length === 0 ? (
           <div className="py-10 flex flex-col items-center text-center text-[#A8A29E]">
             <Search size={24} className="opacity-30 mb-2" />
             <span className="text-xs font-medium text-[#5A5A5A]">
@@ -205,57 +239,41 @@ export default function GuestAssignmentSidebar({
         ) : (
           <div
             className="w-full relative"
-            style={{ height: `${rowVirtualizer.getTotalSize()}px` }} // Altura total fantasma
+            style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
           >
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-              // Recuperamos la familia usando el index de la fila virtual
-              const family = filteredAndSortedFamilies[virtualRow.index];
-
-              // 1. Contamos asignados
-              const assignedCount = family.guests.filter((g) =>
-                assignedGuestIds.has(g.id),
-              ).length;
-
-              // 2. Contamos declinados
-              const declinedCount = family.guests.filter((g) => {
-                const status = (g.estatus || "").toLowerCase();
-                return ["declinado", "rechazado", "declined"].includes(status);
-              }).length;
-
+              const { family, assignedCount, declinedCount } =
+                familiesWithCounts[virtualRow.index];
               const totalGuests = family.guests.length;
 
-              // 3. Lógica de Simbología de Colores
-              let indicatorColor = "bg-yellow-400";
-
-              if (
-                declinedCount > 0 ||
-                (assignedCount > 0 && assignedCount < totalGuests)
-              ) {
-                indicatorColor = "bg-orange-400";
-              } else if (assignedCount === totalGuests && totalGuests > 0) {
-                indicatorColor = "bg-emerald-400";
-              }
+              const indicatorColor = getIndicatorColor(
+                assignedCount,
+                declinedCount,
+                totalGuests,
+              );
 
               return (
                 <div
                   key={virtualRow.key}
-                  data-index={virtualRow.index} // 🔥 Permite identificar el elemento para medirlo
-                  ref={rowVirtualizer.measureElement} // 🔥 Mide dinámicamente el DOM real del componente
+                  data-index={virtualRow.index}
+                  ref={rowVirtualizer.measureElement}
                   className="absolute top-0 left-0 w-full"
                   style={{
-                    transform: `translateY(${virtualRow.start}px)`
+                    transform: `translateY(${virtualRow.start}px)`,
                   }}
                 >
                   <div className="relative w-full h-full">
                     <div
                       className={cn(
                         "absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl z-10 pointer-events-none transition-colors opacity-90",
-                        indicatorColor,
+                        INDICATOR_CLASS[indicatorColor],
                       )}
                     />
                     <DraggableFamily
                       family={family}
                       isFirstElement={virtualRow.index === 0}
+                      assignedCount={assignedCount}
+                      declinedCount={declinedCount}
                     />
                   </div>
                 </div>

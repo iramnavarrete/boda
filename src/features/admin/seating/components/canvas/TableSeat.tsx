@@ -8,6 +8,7 @@ import {
   highlightSeats,
   removeHighlightSeats,
 } from "../../utils/highlightHelper";
+import { useGuestLookupMap } from "../../hooks/useGuestLookupMap";
 
 interface TableSeatProps {
   x: number;
@@ -21,6 +22,21 @@ interface TableSeatProps {
   colorBorder?: string;
   tableId?: string;
   guestId?: string;
+}
+
+const STATUS_BADGE_COLOR: Record<string, string> = {
+  confirmed: "bg-green-500",
+  declined: "bg-red-500",
+};
+
+function StatusBadge({ status }: { status?: GuestStatus }) {
+  if (!status) return null;
+  const color = STATUS_BADGE_COLOR[status] ?? "bg-amber-500";
+  return (
+    <div
+      className={`absolute -top-1 -right-1 w-3.5 h-3.5 ${color} rounded-full border-2 border-white flex items-center justify-center shadow-sm`}
+    />
+  );
 }
 
 export function TableSeat({
@@ -39,30 +55,25 @@ export function TableSeat({
   const removeGuestFromTable = useSeatingStore(
     (state) => state.removeGuestFromTable,
   );
-  const families = useSeatingStore((state) => state.families);
+  const guestMap = useGuestLookupMap();
   const { triggerSeatRemoval } = useSeatingModalContext();
 
-  // Buscar la familia y el invitado correspondientes
-  const family = guestId
-    ? families.find((f) => f.guests.some((g) => g.id === guestId))
-    : undefined;
-
-  const guest = guestId
-    ? family?.guests.find((g) => g.id === guestId)
+  // Lookup O(1) en lugar de buscar en families
+  const guestInfo = guestId ? guestMap.get(guestId) : undefined;
+  const family = guestInfo
+    ? { id: guestInfo.familyId, name: guestInfo.familyName }
     : undefined;
 
   const canDrag = Boolean(isAssigned && guestId);
-  const guestIndex =
-    family && guestId ? family.guests.findIndex((g) => g.id === guestId) : -1;
+  const guestIndex = guestInfo?.index ?? -1;
 
-  // Integración Draggable para asientos asignados
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `guest-${guestId}`,
     data: {
       type: "guest",
       guest: {
         id: guestId || "",
-        nombre: guestName || guest?.nombre || "",
+        nombre: guestName || guestInfo?.nombre || "",
         estatus: status || "pending",
         familyName: family?.name || guestName || "Invitado",
         index: guestIndex >= 0 ? guestIndex : 0,
@@ -71,25 +82,6 @@ export function TableSeat({
     disabled: !canDrag,
   });
 
-  const getStatusBadge = () => {
-    if (!isAssigned) return null;
-    switch (status) {
-      case "confirmed":
-        return (
-          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm" />
-        );
-      case "declined":
-        return (
-          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm" />
-        );
-      default: // pending
-        return (
-          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-500 rounded-full border-2 border-white flex items-center justify-center shadow-sm" />
-        );
-    }
-  };
-
-  // 🔥 listeners, attributes y ref asignados directamente al círculo interior con touch-none
   const innerContent = (
     <div
       ref={setNodeRef}
@@ -109,7 +101,7 @@ export function TableSeat({
       >
         {seatNumber}
       </span>
-      {getStatusBadge()}
+      <StatusBadge status={status} />
     </div>
   );
 

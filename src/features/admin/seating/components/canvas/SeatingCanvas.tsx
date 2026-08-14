@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useSeatingStore } from "../../stores/useSeatingStore";
 import { useZoomStore } from "../../stores/useZoomStore";
 import TableElement from "./TableElement";
 import { ZoomIn, ZoomOut, Maximize2, Trash2 } from "lucide-react";
 import { useDroppable, useDndContext } from "@dnd-kit/core";
 import { ConfirmModalState } from "@/types";
+import { useCanvasZoom } from "../../hooks/useCanvasZoom";
+import { useCanvasSelectionBox } from "../../hooks/useCanvasSelectionBox";
 
 interface SeatingCanvasProps {
   openConfirmModal: (config: Omit<ConfirmModalState, "isLoading">) => void;
@@ -32,21 +34,9 @@ export default function SeatingCanvas({
   const isInitialized = useSeatingStore((state) => state.isInitialized);
 
   const zoom = useZoomStore((state) => state.zoom);
-  const setZoom = useZoomStore((state) => state.setZoom);
-
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
 
-  const [isSelecting, setIsSelecting] = useState(false);
-  const [selectionStart, setSelectionStart] = useState({ x: 0, y: 0 });
-  const [selectionBox, setSelectionBox] = useState({
-    left: 0,
-    top: 0,
-    width: 0,
-    height: 0,
-  });
-
-  // Escuchamos el estado global de dnd-kit para saber si hay un elemento arrastrándose
   const { active } = useDndContext();
   const isDraggingAny = Boolean(active);
 
@@ -55,181 +45,22 @@ export default function SeatingCanvas({
     data: { type: "canvas" },
   });
 
-  const handleZoomTarget = useCallback(
-    (newZoom: number, mouseX?: number, mouseY?: number) => {
-      const container = containerRef.current;
-      if (!container) return;
+  const { handleZoomTarget, fitToScreen } = useCanvasZoom(containerRef);
+  const {
+    isSelecting,
+    selectionBox,
+    handlePointerDown,
+    handlePointerMove,
+    handlePointerUp,
+  } = useCanvasSelectionBox(canvasAreaRef);
 
-      const currentZoom = useZoomStore.getState().zoom;
-      if (currentZoom === newZoom) return;
-
-      const targetX = mouseX ?? container.clientWidth / 2;
-      const targetY = mouseY ?? container.clientHeight / 2;
-
-      const pointX = (container.scrollLeft + targetX) / currentZoom;
-      const pointY = (container.scrollTop + targetY) / currentZoom;
-
-      setZoom(newZoom);
-
-      container.scrollLeft = pointX * newZoom - targetX;
-      container.scrollTop = pointY * newZoom - targetY;
-    },
-    [setZoom],
-  );
-
-  const fitToScreen = useCallback(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    if (elements.length === 0) {
-      setZoom(1);
-      container.scrollLeft = 2000 - container.clientWidth / 2;
-      container.scrollTop = 2000 - container.clientHeight / 2;
-      return;
-    }
-
-    let minX = Infinity,
-      maxX = -Infinity;
-    let minY = Infinity,
-      maxY = -Infinity;
-
-    elements.forEach((el) => {
-      if (el.x < minX) minX = el.x;
-      if (el.x + el.width > maxX) maxX = el.x + el.width;
-      if (el.y < minY) minY = el.y;
-      if (el.y + el.height > maxY) maxY = el.y + el.height;
-    });
-
-    const contentWidth = maxX - minX;
-    const contentHeight = maxY - minY;
-    const padding = 60;
-
-    const availableWidth = container.clientWidth - padding * 2;
-    const availableHeight = container.clientHeight - padding * 2;
-
-    let newZoom = Math.min(
-      availableWidth / contentWidth,
-      availableHeight / contentHeight,
-    );
-    newZoom = Math.min(Math.max(newZoom, 0.4), 1.8);
-    setZoom(newZoom);
-
-    setTimeout(() => {
-      const contentCenterX = minX + contentWidth / 2;
-      const contentCenterY = minY + contentHeight / 2;
-
-      container.scrollLeft =
-        contentCenterX * newZoom - container.clientWidth / 2;
-      container.scrollTop =
-        contentCenterY * newZoom - container.clientHeight / 2;
-    }, 10);
-  }, [elements, setZoom]);
-
+  // Initial fit-to-screen cuando se inicializa el plano
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleWheel = (e: WheelEvent) => {
-      if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-
-        const currentZoom = useZoomStore.getState().zoom;
-        const factor = e.deltaY < 0 ? 1.1 : 0.9;
-        const newZoom = Math.min(Math.max(currentZoom * factor, 0.3), 2);
-
-        const rect = container.getBoundingClientRect();
-
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        handleZoomTarget(newZoom, mouseX, mouseY);
-      }
-    };
-
-    container.addEventListener("wheel", handleWheel, { passive: false });
-    return () => container.removeEventListener("wheel", handleWheel);
-  }, [handleZoomTarget]);
-
-  useEffect(() => {
-    if (isInitialized && elements.length > 0) {
-      fitToScreen();
-    } else if (containerRef.current) {
-      const container = containerRef.current;
-      container.scrollLeft = 2000 * zoom - container.clientWidth / 2;
-      container.scrollTop = 2000 * zoom - container.clientHeight / 2;
-    }
-  }, [isInitialized]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    const target = e.target as HTMLElement;
-
-    const isBackground =
-      !target.closest(".table-element-card") &&
-      !target.closest(".settings-popover") &&
-      !target.closest(".zoom-controls") &&
-      !target.closest(".multi-delete-popover");
-
-    if (!isBackground || e.button !== 0) return;
-
-    const rect = canvasAreaRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const startX = (e.clientX - rect.left) / zoom;
-    const startY = (e.clientY - rect.top) / zoom;
-
-    setIsSelecting(true);
-    setSelectionStart({ x: startX, y: startY });
-    setSelectionBox({ left: startX, top: startY, width: 0, height: 0 });
-    setSelectedElementIds([]);
-    setSelectedElementId(null);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isSelecting) return;
-
-    const rect = canvasAreaRef.current?.getBoundingClientRect();
-    if (!rect) return;
-
-    const currentX = (e.clientX - rect.left) / zoom;
-    const currentY = (e.clientY - rect.top) / zoom;
-
-    const left = Math.min(selectionStart.x, currentX);
-    const top = Math.min(selectionStart.y, currentY);
-    const width = Math.abs(selectionStart.x - currentX);
-    const height = Math.abs(selectionStart.y - currentY);
-
-    setSelectionBox({ left, top, width, height });
-
-    const intersectedIds: string[] = [];
-    elements.forEach((el) => {
-      const elRight = el.x + el.width;
-      const elBottom = el.y + el.height;
-      const boxRight = left + width;
-      const boxBottom = top + height;
-
-      const overlaps = !(
-        el.x > boxRight ||
-        elRight < left ||
-        el.y > boxBottom ||
-        elBottom < top
-      );
-
-      if (overlaps) {
-        intersectedIds.push(el.id);
-      }
-    });
-
-    setSelectedElementIds(intersectedIds);
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest(".multi-delete-popover")) {
-      setIsSelecting(false);
-      return;
-    }
-    setIsSelecting(false);
-  };
+    if (!isInitialized) return;
+    fitToScreen();
+    // Intencionalmente solo se ejecuta al inicializar para no interferir con el zoom manual
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInitialized]);
 
   const handleBulkDelete = (e: React.MouseEvent) => {
     e.stopPropagation();

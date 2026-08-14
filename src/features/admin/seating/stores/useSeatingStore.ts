@@ -136,13 +136,23 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
 
   updateFamilies: (newFamilies) =>
     set((state) => {
-      const cleanedElements = state.elements.map((el) => ({
-        ...el,
-        assignedSeats: groupSeatsByFamily(el.assignedSeats, newFamilies),
-      }));
-
-      const elementsChanged =
-        JSON.stringify(state.elements) !== JSON.stringify(cleanedElements);
+      // Reconstruimos los assignedSeats purgando fantasmas contra las nuevas familias.
+      // Comparamos referencia + longitud para evitar el costoso JSON.stringify anterior.
+      let elementsChanged = false;
+      const cleanedElements = state.elements.map((el) => {
+        const next = groupSeatsByFamily(el.assignedSeats, newFamilies);
+        if (next.length !== el.assignedSeats.length) {
+          elementsChanged = true;
+        } else {
+          for (let i = 0; i < next.length; i++) {
+            if (next[i] !== el.assignedSeats[i]) {
+              elementsChanged = true;
+              break;
+            }
+          }
+        }
+        return { ...el, assignedSeats: next };
+      });
 
       return {
         families: newFamilies,

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -93,20 +93,27 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     data: DragItemData | null;
   } | null>(null);
 
-  // CARGA INICIAL
+  // ============================================================================
+  // CARGA INICIAL + SUSCRIPCIÓN REALTIME
+  // ============================================================================
   useEffect(() => {
     if (!isAdminOrHost || !invitationId) return;
 
+    let cancelled = false;
     let unsubscribe = () => {};
 
     async function initRealtime() {
       const dbElements = await SeatingService.getPlan(invitationId);
+
+      if (cancelled) return;
 
       unsubscribe = FamiliesService.subscribeToFamilies(
         invitationId,
         async (rawFamilies) => {
           const formattedFamilies =
             await SeatingService.formatFamiliesToFamiliesSeats(rawFamilies);
+
+          if (cancelled) return;
 
           if (!useSeatingStore.getState().isInitialized) {
             initialize(dbElements, formattedFamilies);
@@ -116,6 +123,7 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
           }
         },
         (error) => {
+          if (cancelled) return;
           console.error("Error en la suscripción de invitados:", error);
           showToast("Error al sincronizar invitados en tiempo real.");
         },
@@ -123,87 +131,109 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     }
 
     initRealtime();
-    return () => unsubscribe();
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, [invitationId, isAdminOrHost, initialize, showToast]);
 
-  const triggerSeatRemoval = (familyId: string, guestId: string) => {
-    const family = families.find((f) => f.id === familyId);
-    if (!family) return;
+  // ============================================================================
+  // HANDLERS DE CONFIRMACIÓN (memoizados para no romper el contexto de hijos)
+  // ============================================================================
+  const triggerSeatRemoval = useCallback(
+    (familyId: string, guestId: string) => {
+      const family = families.find((f) => f.id === familyId);
+      if (!family) return;
 
-    if (family.guests.length === 1) {
+      if (family.guests.length === 1) {
+        openConfirmModal({
+          isOpen: true,
+          showConfirmToast: false,
+          title: "⚠️ Eliminar último asiento",
+          message: `Estás por eliminar el último asiento disponible para "${family.name}". Esta acción eliminará por completo a la familia del sistema de invitados de forma permanente.\n\nRecuerda que si lo deseas, puedes volver a crear esta familia más adelante desde el panel de Invitados principales.\n\n¿Deseas continuar?`,
+          isDanger: true,
+          action: async () => {
+            await executeDeleteFamily(invitationId, familyId);
+            showToast(`Familia "${family.name}" eliminada correctamente.`);
+          },
+        });
+        return;
+      }
+
+      let title = "Eliminar asiento declinado";
+      let message = `¿Deseas eliminar este asiento declinado de forma permanente y liberar el lugar en el plano?\n\n💡 Nota: No te preocupes, si este invitado cambia de opinión, podrás agregar nuevos asientos a "${family.name}" más adelante usando el botón de "+" en el listado de invitados.`;
+      const isDanger = true;
+
+      if (family.deadline && family.allowChanges) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const [year, month, day] = family.deadline.split("-").map(Number);
+        const deadlineDate = new Date(year, month - 1, day);
+        deadlineDate.setHours(0, 0, 0, 0);
+        title = "⚠️ Fecha límite no superada";
+        message = `La fecha límite de confirmación para este invitado AÚN NO HA PASADO. El invitado podría cambiar de opinión y confirmar su asistencia.\n\nSi eliminas este asiento, reducirás su número total de invitados permitidos en el sistema.\n\n¿Estás completamente seguro de que deseas eliminar este asiento?\n\n💡 Nota: Si continúas, podrás revertir esto agregando un asiento extra manualmente a "${family.name}" en el futuro.`;
+      } else if (family.allowChanges) {
+        title = "⚠️ Sin fecha límite";
+        message = `Este invitado no tiene fecha límite de confirmación asignada. Podría cambiar su estado de asistencia.\n\n¿Estás seguro de que deseas eliminar este asiento y reducir el número de invitados de esta familia?\n\n💡 Nota: Podrás agregar nuevos asientos a "${family.name}" más adelante si lo requieres.`;
+      }
+
       openConfirmModal({
-        isOpen: true,
         showConfirmToast: false,
-        title: "⚠️ Eliminar último asiento",
-        message: `Estás por eliminar el último asiento disponible para "${family.name}". Esta acción eliminará por completo a la familia del sistema de invitados de forma permanente.\n\nRecuerda que si lo deseas, puedes volver a crear esta familia más adelante desde el panel de Invitados principales.\n\n¿Deseas continuar?`,
+        isOpen: true,
+        title,
+        message,
+        isDanger,
+        action: async () => {
+          await executeRemoveSeat(invitationId, familyId, guestId);
+          showToast("Invitado eliminado correctamente");
+        },
+      });
+    },
+    [
+      families,
+      openConfirmModal,
+      invitationId,
+      executeDeleteFamily,
+      executeRemoveSeat,
+      showToast,
+    ],
+  );
+
+  const triggerFamilyRemoval = useCallback(
+    (familyId: string) => {
+      const family = families.find((f) => f.id === familyId);
+      if (!family) return;
+
+      openConfirmModal({
+        showConfirmToast: false,
+        isOpen: true,
+        title: `Eliminar grupo familiar`,
+        message: `¿Estás seguro de que deseas eliminar a la familia "${family.name}" junto con todos sus (${family.guests.length}) asientos del sistema de forma permanente?`,
         isDanger: true,
         action: async () => {
           await executeDeleteFamily(invitationId, familyId);
           showToast(`Familia "${family.name}" eliminada correctamente.`);
         },
       });
-      return;
-    }
+    },
+    [families, openConfirmModal, invitationId, executeDeleteFamily, showToast],
+  );
 
-    let title = "Eliminar asiento declinado";
-    let message = `¿Deseas eliminar este asiento declinado de forma permanente y liberar el lugar en el plano?\n\n💡 Nota: No te preocupes, si este invitado cambia de opinión, podrás agregar nuevos asientos a "${family.name}" más adelante usando el botón de "+" en el listado de invitados.`;
-    const isDanger = true;
+  const triggerAddSeat = useCallback(
+    async (familyId: string) => {
+      try {
+        await executeAddSeatToFamily(invitationId, familyId);
+        showToast("Asiento agregado exitosamente.");
+      } catch (err) {
+        console.log(err, "ERROR AL AGREGAR");
+        showToast("No se pudo agregar el asiento.");
+      }
+    },
+    [executeAddSeatToFamily, invitationId, showToast],
+  );
 
-    if (family.deadline && family.allowChanges) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const [year, month, day] = family.deadline.split("-").map(Number);
-      const deadlineDate = new Date(year, month - 1, day);
-      deadlineDate.setHours(0, 0, 0, 0);
-      title = "⚠️ Fecha límite no superada";
-      message = `La fecha límite de confirmación para este invitado AÚN NO HA PASADO. El invitado podría cambiar de opinión y confirmar su asistencia.\n\nSi eliminas este asiento, reducirás su número total de invitados permitidos en el sistema.\n\n¿Estás completamente seguro de que deseas eliminar este asiento?\n\n💡 Nota: Si continúas, podrás revertir esto agregando un asiento extra manualmente a "${family.name}" en el futuro.`;
-    } else if (family.allowChanges) {
-      title = "⚠️ Sin fecha límite";
-      message = `Este invitado no tiene fecha límite de confirmación asignada. Podría cambiar su estado de asistencia.\n\n¿Estás seguro de que deseas eliminar este asiento y reducir el número de invitados de esta familia?\n\n💡 Nota: Podrás agregar nuevos asientos a "${family.name}" más adelante si lo requieres.`;
-    }
-
-    openConfirmModal({
-      showConfirmToast: false,
-      isOpen: true,
-      title,
-      message,
-      isDanger,
-      action: async () => {
-        await executeRemoveSeat(invitationId, familyId, guestId);
-        showToast("Invitado eliminado correctamente");
-      },
-    });
-  };
-
-  const triggerFamilyRemoval = (familyId: string) => {
-    const family = families.find((f) => f.id === familyId);
-    if (!family) return;
-
-    openConfirmModal({
-      showConfirmToast: false,
-      isOpen: true,
-      title: `Eliminar grupo familiar`,
-      message: `¿Estás seguro de que deseas eliminar a la familia "${family.name}" junto con todos sus (${family.guests.length}) asientos del sistema de forma permanente?`,
-      isDanger: true,
-      action: async () => {
-        await executeDeleteFamily(invitationId, familyId);
-        showToast(`Familia "${family.name}" eliminada correctamente.`);
-      },
-    });
-  };
-
-  const triggerAddSeat = async (familyId: string) => {
-    try {
-      await executeAddSeatToFamily(invitationId, familyId);
-      showToast("Asiento agregado exitosamente.");
-    } catch (err) {
-      console.log(err, "ERROR AL AGREGAR");
-      showToast("No se pudo agregar el asiento.");
-    }
-  };
-
-  const handleGlobalSave = async () => {
+  const handleGlobalSave = useCallback(async () => {
     if (!invitationId || !hasUnsavedChanges) return;
     setIsSaving(true);
     try {
@@ -216,9 +246,13 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [invitationId, hasUnsavedChanges, elements, markSaved, showToast]);
 
-  const customCollisionDetection: CollisionDetection = (args) => {
+  // ============================================================================
+  // DRAG & DROP
+  // ============================================================================
+  // Memoizado: si cambia la referencia de esta función, dnd-kit puede invalidar caches.
+  const customCollisionDetection = useCallback<CollisionDetection>((args) => {
     const pointerCollisions = pointerWithin(args);
     if (pointerCollisions.length > 0) {
       const tableCollision = pointerCollisions.find((c) =>
@@ -228,11 +262,10 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       return pointerCollisions;
     }
     return rectIntersection(args);
-  };
+  }, []);
 
-  const handleDragStart = (event: DragStartEvent) => {
+  const handleDragStart = useCallback((event: DragStartEvent) => {
     const currentData = event.active.data.current as DragItemData | undefined;
-
     if (currentData) {
       setActiveDragItem({
         id: String(event.active.id),
@@ -240,163 +273,188 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
         data: currentData,
       });
     }
-  };
+  }, []);
 
-  const handleDragEnd = (event: DragEndEvent) => {
-    setActiveDragItem(null);
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      setActiveDragItem(null);
+      removeHighlightSeats(
+        "guest",
+        String(event.active.id).replace("guest-", ""),
+      );
+      const { active, over } = event;
+
+      if (active.data.current?.type === "palette_layout") {
+        if (over?.id === "palette-area" || over?.id === "guests-area") {
+          showToast("Arrastra la plantilla hacia el área del plano.");
+          return;
+        }
+
+        const canvasEl = document.querySelector(".canvas-droppable-area");
+        let dropX = 800;
+        let dropY = 500;
+
+        if (canvasEl && active.rect.current.translated) {
+          const rect = canvasEl.getBoundingClientRect();
+          dropX = (active.rect.current.translated.left - rect.left) / zoom;
+          dropY = (active.rect.current.translated.top - rect.top) / zoom;
+        }
+
+        setLayoutSetup({ isOpen: true, dropX, dropY });
+        return;
+      }
+
+      if (active.data.current?.type === "palette_element") {
+        if (over?.id === "palette-area" || over?.id === "guests-area") {
+          showToast("Arrastra el elemento hacia el área del plano.");
+          return;
+        }
+
+        const d = active.data.current as Extract<
+          DragItemData,
+          { type: "palette_element" }
+        >;
+        const isTable = d.seats > 0;
+        const tablesCount = elements.filter((e) => e.seats > 0).length + 1;
+        const alias = isTable ? `Mesa ${tablesCount}` : d.label;
+
+        const canvasEl = document.querySelector(".canvas-droppable-area");
+        let dropX = 400;
+        let dropY = 300;
+
+        if (canvasEl && active.rect.current.translated) {
+          const rect = canvasEl.getBoundingClientRect();
+          dropX = (active.rect.current.translated.left - rect.left) / zoom;
+          dropY = (active.rect.current.translated.top - rect.top) / zoom;
+        }
+
+        addElement(
+          {
+            id: `${d.elementType}-${Date.now()}`,
+            type: d.elementType,
+            x: Math.max(0, dropX),
+            y: Math.max(0, dropY),
+            width: d.width,
+            height: d.height,
+            seats: d.seats,
+          },
+          alias,
+        );
+        return;
+      }
+
+      if (active.data.current?.type === "element") {
+        if (over?.id === "palette-area" || over?.id === "guests-area") {
+          showToast("No puedes mover el elemento fuera del plano.");
+          return;
+        }
+
+        const delta = event.delta;
+        if (delta.x !== 0 || delta.y !== 0) {
+          const id = String(active.id).replace("element-", "");
+
+          const currentSelectedIds =
+            useSeatingStore.getState().selectedElementIds;
+          if (currentSelectedIds.length > 1 && currentSelectedIds.includes(id)) {
+            updateMultipleElementPositions(
+              currentSelectedIds,
+              delta.x / zoom,
+              delta.y / zoom,
+            );
+          } else {
+            const element = useSeatingStore
+              .getState()
+              .elements.find((e) => e.id === id);
+            if (element) {
+              updateElementPosition(
+                id,
+                element.x + delta.x / zoom,
+                element.y + delta.y / zoom,
+              );
+            }
+          }
+        }
+        return;
+      }
+
+      if (over?.data.current?.type === "table") {
+        const tableId = String(over.id).replace("table-", "");
+        const activeType = active.data.current?.type;
+        const table = elements.find((e) => e.id === tableId);
+        if (!table) return;
+
+        if (table.seats === 0) {
+          if (activeType === "guest" || activeType === "family")
+            showToast(
+              "No puedes asignar invitados a elementos que no sean mesas.",
+            );
+          return;
+        }
+
+        if (activeType === "guest") {
+          const availableSeats =
+            table.seats - table.assignedSeats.filter(Boolean).length;
+
+          if (availableSeats <= 0) {
+            showToast("No se pudo asignar. La mesa ya está llena.");
+            return;
+          }
+          assignGuestToTable(tableId, String(active.id).replace("guest-", ""));
+        } else if (activeType === "family") {
+          const familyId = String(active.id).replace("family-", "");
+          const family = useSeatingStore
+            .getState()
+            .families.find((f) => f.id === familyId);
+
+          if (family) {
+            const guestIds = family.guests.map((g) => g.id);
+
+            const occupiedByOthers = table.assignedSeats.filter(
+              (id) => !!id && !guestIds.includes(id),
+            ).length;
+
+            const actualAvailableSeats = table.seats - occupiedByOthers;
+
+            if (actualAvailableSeats <= 0) {
+              showToast("No se pudo asignar a la familia. La mesa está llena.");
+              return;
+            }
+
+            if (family.guests.length > actualAvailableSeats) {
+              showToast(
+                `Solo se asignaron ${actualAvailableSeats} lugares porque la mesa se llenó.`,
+              );
+            }
+
+            assignFamilyToTable(tableId, familyId);
+          }
+        }
+      }
+    },
+    [
+      addElement,
+      assignFamilyToTable,
+      assignGuestToTable,
+      elements,
+      showToast,
+      updateElementPosition,
+      updateMultipleElementPositions,
+      zoom,
+    ],
+  );
+
+  const handleDragCancel = useCallback((event: { active: { id: string | number } }) => {
     removeHighlightSeats(
       "guest",
       String(event.active.id).replace("guest-", ""),
     );
-    const { active, over } = event;
+  }, []);
 
-    if (active.data.current?.type === "palette_layout") {
-      if (over?.id === "palette-area" || over?.id === "guests-area") {
-        showToast("Arrastra la plantilla hacia el área del plano.");
-        return;
-      }
-
-      const canvasEl = document.querySelector(".canvas-droppable-area");
-      let dropX = 800;
-      let dropY = 500;
-
-      if (canvasEl && active.rect.current.translated) {
-        const rect = canvasEl.getBoundingClientRect();
-        dropX = (active.rect.current.translated.left - rect.left) / zoom;
-        dropY = (active.rect.current.translated.top - rect.top) / zoom;
-      }
-
-      setLayoutSetup({ isOpen: true, dropX, dropY });
-      return;
-    }
-
-    if (active.data.current?.type === "palette_element") {
-      if (over?.id === "palette-area" || over?.id === "guests-area") {
-        showToast("Arrastra el elemento hacia el área del plano.");
-        return;
-      }
-
-      const d = active.data.current as Extract<
-        DragItemData,
-        { type: "palette_element" }
-      >;
-      const isTable = d.seats > 0;
-      const tablesCount = elements.filter((e) => e.seats > 0).length + 1;
-      const alias = isTable ? `Mesa ${tablesCount}` : d.label;
-
-      const canvasEl = document.querySelector(".canvas-droppable-area");
-      let dropX = 400;
-      let dropY = 300;
-
-      if (canvasEl && active.rect.current.translated) {
-        const rect = canvasEl.getBoundingClientRect();
-        dropX = (active.rect.current.translated.left - rect.left) / zoom;
-        dropY = (active.rect.current.translated.top - rect.top) / zoom;
-      }
-
-      addElement(
-        {
-          id: `${d.elementType}-${Date.now()}`,
-          type: d.elementType,
-          x: Math.max(0, dropX),
-          y: Math.max(0, dropY),
-          width: d.width,
-          height: d.height,
-          seats: d.seats,
-        },
-        alias,
-      );
-      return;
-    }
-
-    if (active.data.current?.type === "element") {
-      if (over?.id === "palette-area" || over?.id === "guests-area") {
-        showToast("No puedes mover el elemento fuera del plano.");
-        return;
-      }
-
-      const delta = event.delta;
-      if (delta.x !== 0 || delta.y !== 0) {
-        const id = String(active.id).replace("element-", "");
-
-        const currentSelectedIds =
-          useSeatingStore.getState().selectedElementIds;
-        if (currentSelectedIds.length > 1 && currentSelectedIds.includes(id)) {
-          updateMultipleElementPositions(
-            currentSelectedIds,
-            delta.x / zoom,
-            delta.y / zoom,
-          );
-        } else {
-          const element = useSeatingStore
-            .getState()
-            .elements.find((e) => e.id === id);
-          if (element) {
-            updateElementPosition(
-              id,
-              element.x + delta.x / zoom,
-              element.y + delta.y / zoom,
-            );
-          }
-        }
-      }
-      return;
-    }
-
-    if (over?.data.current?.type === "table") {
-      const tableId = String(over.id).replace("table-", "");
-      const activeType = active.data.current?.type;
-      const table = elements.find((e) => e.id === tableId);
-      if (!table) return;
-
-      if (table.seats === 0) {
-        if (activeType === "guest" || activeType === "family")
-          showToast(
-            "No puedes asignar invitados a elementos que no sean mesas.",
-          );
-        return;
-      }
-
-      if (activeType === "guest") {
-        const availableSeats =
-          table.seats - table.assignedSeats.filter(Boolean).length;
-
-        if (availableSeats <= 0) {
-          showToast("No se pudo asignar. La mesa ya está llena.");
-          return;
-        }
-        assignGuestToTable(tableId, String(active.id).replace("guest-", ""));
-      } else if (activeType === "family") {
-        const familyId = String(active.id).replace("family-", "");
-        const family = useSeatingStore
-          .getState()
-          .families.find((f) => f.id === familyId);
-
-        if (family) {
-          const guestIds = family.guests.map((g) => g.id);
-
-          const occupiedByOthers = table.assignedSeats.filter(
-            (id) => !!id && !guestIds.includes(id),
-          ).length;
-
-          const actualAvailableSeats = table.seats - occupiedByOthers;
-
-          if (actualAvailableSeats <= 0) {
-            showToast("No se pudo asignar a la familia. La mesa está llena.");
-            return;
-          }
-
-          if (family.guests.length > actualAvailableSeats) {
-            showToast(
-              `Solo se asignaron ${actualAvailableSeats} lugares porque la mesa se llenó.`,
-            );
-          }
-
-          assignFamilyToTable(tableId, familyId);
-        }
-      }
-    }
-  };
+  // El modal context value solo cambia si las funciones cambian (memoizadas arriba)
+  const modalContextValue = useMemo(
+    () => ({ triggerSeatRemoval, triggerFamilyRemoval, triggerAddSeat }),
+    [triggerSeatRemoval, triggerFamilyRemoval, triggerAddSeat],
+  );
 
   if (!isAdminOrHost) {
     return (
@@ -424,9 +482,7 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
   }
 
   return (
-    <SeatingModalContext.Provider
-      value={{ triggerSeatRemoval, triggerFamilyRemoval, triggerAddSeat }}
-    >
+    <SeatingModalContext.Provider value={modalContextValue}>
       <MobileFallback />
       <div
         className="hidden lg:flex flex-row w-full overflow-hidden relative select-none"
@@ -437,12 +493,7 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
           collisionDetection={customCollisionDetection}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
-          onDragCancel={(event) =>
-            removeHighlightSeats(
-              "guest",
-              String(event.active.id).replace("guest-", ""),
-            )
-          }
+          onDragCancel={handleDragCancel}
         >
           <div
             className="flex flex-row shrink-0 transition-all duration-300"

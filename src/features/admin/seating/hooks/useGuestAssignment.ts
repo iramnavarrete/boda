@@ -1,7 +1,18 @@
 import { useMemo, useState } from "react";
 import { useSeatingStore } from "../stores/useSeatingStore";
 import { TagFilterType } from "@/types";
-import { SeatingFilterType } from "@/types/seating";
+import { SeatingFilterType, FamilyElement } from "@/types/seating";
+
+const DECLINED_STATUSES = new Set(["declined", "declinado", "rechazado"]);
+
+export interface FamilyWithCounts {
+  family: FamilyElement;
+  assignedCount: number;
+  declinedCount: number;
+  totalGuests: number;
+  /** Prioridad de ordenamiento para el filtro "all": 0 atención, 1 pendiente, 2 asignado. */
+  sortPriority?: number;
+}
 
 export function useGuestAssignment(tagFilter: TagFilterType = "all") {
   const families = useSeatingStore((state) => state.families);
@@ -12,11 +23,13 @@ export function useGuestAssignment(tagFilter: TagFilterType = "all") {
 
   const assignedGuestIds = useMemo(() => {
     const ids = new Set<string>();
-    elements.forEach((el) => {
-      el.assignedSeats.forEach((id) => {
-        if (id && id !== "") ids.add(id);
-      });
-    });
+    for (const el of elements) {
+      const seats = el.assignedSeats;
+      for (let i = 0; i < seats.length; i++) {
+        const id = seats[i];
+        if (id) ids.add(id);
+      }
+    }
     return ids;
   }, [elements]);
 
@@ -24,22 +37,24 @@ export function useGuestAssignment(tagFilter: TagFilterType = "all") {
     let totalGuests = 0;
     let assignedGuests = 0;
 
-    families.forEach((f) => {
+    for (const f of families) {
       totalGuests += f.guests.length;
-      f.guests.forEach((g) => {
+      for (const g of f.guests) {
         if (assignedGuestIds.has(g.id)) assignedGuests++;
-      });
-    });
+      }
+    }
 
     let totalSeats = 0;
     let occupiedSeats = 0;
 
-    elements.forEach((el) => {
+    for (const el of elements) {
       if (el.seats && el.seats > 0) {
         totalSeats += el.seats;
-        occupiedSeats += el.assignedSeats.filter((s) => s && s !== "").length;
+        for (const s of el.assignedSeats) {
+          if (s) occupiedSeats++;
+        }
       }
-    });
+    }
 
     return {
       guests: {
@@ -55,55 +70,84 @@ export function useGuestAssignment(tagFilter: TagFilterType = "all") {
     };
   }, [families, assignedGuestIds, elements]);
 
-  const filteredAndSortedFamilies = useMemo(() => {
-    let filtered = families;
+  // Una sola pasada: calcula assignedCount + declinedCount por familia y filtra.
+  const familiesWithCounts = useMemo<FamilyWithCounts[]>(() => {
+    const search = searchQuery.toLowerCase();
+    const result: FamilyWithCounts[] = [];
 
-    // Filtro por búsqueda
-    if (searchQuery) {
-      filtered = filtered.filter((f) =>
-        f.name.toLowerCase().includes(searchQuery.toLowerCase()),
-      );
-    }
+    for (const f of families) {
+      // Filtro por búsqueda
+      if (search && !f.name.toLowerCase().includes(search)) continue;
 
-    // Filtro por etiqueta (novio, novia, ambos)
-    if (tagFilter !== "all") {
-      filtered = filtered.filter((f) => {
-        const etiqueta = f.rawFamily.etiqueta;
-        return etiqueta === tagFilter;
-      });
-    }
+      // Filtro por etiqueta (novio, novia, ambos)
+      if (tagFilter !== "all" && f.rawFamily.etiqueta !== tagFilter) continue;
 
-    return filtered.filter((family) => {
-      const totalGuests = family.guests.length;
-      if (totalGuests === 0) return false;
+      const guests = f.guests;
+      const totalGuests = guests.length;
+      if (totalGuests === 0) continue;
 
-      const assignedCount = family.guests.filter((g) =>
-        assignedGuestIds.has(g.id),
-      ).length;
+      let assignedCount = 0;
+      let declinedCount = 0;
+      for (const g of guests) {
+        if (assignedGuestIds.has(g.id)) assignedCount++;
+        if (DECLINED_STATUSES.has((g.estatus || "").toLowerCase())) {
+          declinedCount++;
+        }
+      }
 
-      const declinedCount = family.guests.filter((g) => {
-        const status = (g.estatus || "").toLowerCase();
-        return ["declinado", "rechazado", "declined"].includes(status);
-      }).length;
-
-      // Evaluamos los 3 estados exactos de los colores:
-      const isGreen = assignedCount === totalGuests; // 100% asignados
+      // Lógica de filtro por color.
+      // Verde: todos asignados Y ninguno declined.
+      // Naranja: faltan asientos por asignar, O todos asignados pero
+      //          al menos uno es declined (requiere liberar slot).
+      // Amarillo: nadie asignado, nadie declined — todo pendiente.
+      const isGreen =
+        assignedCount === totalGuests && declinedCount === 0;
       const isOrange =
-        declinedCount > 0 || (assignedCount > 0 && assignedCount < totalGuests); // A medias o declinados
-      const isYellow = assignedCount === 0 && declinedCount === 0; // Frescos, nadie sentado
+        !isGreen && (assignedCount > 0 || declinedCount > 0);
+      const isYellow = assignedCount === 0 && declinedCount === 0;
+
+      // Prioridad: 0 = atención, 1 = pendiente, 2 = asignado.
+      // Se usa solo en el filtro "all" para reordenar la lista.
+      let sortPriority: number | undefined = undefined;
 
       switch (filter) {
         case "assigned":
-          return isGreen; // Solo los verdes
+          if (!isGreen) continue;
+          break;
         case "pending":
-          return isYellow; // Solo los amarillos
-        case "action": // Antes llamado "declined"
-          return isOrange; // Solo los naranjas
+          if (!isYellow) continue;
+          break;
+        case "action":
+          if (!isOrange) continue;
+          break;
         case "all":
         default:
-          return true;
+          if (isOrange) sortPriority = 0;
+          else if (isYellow) sortPriority = 1;
+          else if (isGreen) sortPriority = 2;
+          break;
       }
-    });
+
+      result.push({
+        family: f,
+        assignedCount,
+        declinedCount,
+        totalGuests,
+        sortPriority,
+      });
+    }
+
+    // En el filtro "all", reordenamos por prioridad (atención → pendiente → asignado).
+    // El orden original dentro de cada grupo se conserva (sort estable).
+    if (filter === "all") {
+      result.sort((a, b) => {
+        const ap = a.sortPriority ?? 99;
+        const bp = b.sortPriority ?? 99;
+        return ap - bp;
+      });
+    }
+
+    return result;
   }, [families, assignedGuestIds, filter, searchQuery, tagFilter]);
 
   return {
@@ -113,6 +157,6 @@ export function useGuestAssignment(tagFilter: TagFilterType = "all") {
     setFilter,
     stats,
     assignedGuestIds,
-    filteredAndSortedFamilies,
+    familiesWithCounts,
   };
 }

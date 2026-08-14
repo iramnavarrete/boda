@@ -16,24 +16,45 @@ import {
 } from "../../utils/highlightHelper";
 import { GuestSeat } from "@/types";
 import { FamilyElement } from "@/types/seating";
+import { memo, useCallback } from "react";
 
-export function DraggableGuest({
-  guest,
-  family,
-  isAssigned,
-  tableId,
-  tableAlias,
-  seatNumber,
-}: {
+interface DraggableGuestProps {
   guest: GuestSeat;
   family: FamilyElement;
   isAssigned: boolean;
   tableId?: string;
   tableAlias?: string;
   seatNumber?: number;
-}) {
+}
+
+const STATUS_ICON: Record<string, React.ElementType> = {
+  confirmed: CheckCircle2,
+  declined: XCircle,
+};
+
+function StatusIcon({ status }: { status?: string }) {
+  const Icon = STATUS_ICON[status || ""] ?? Clock;
+  const color =
+    status === "confirmed"
+      ? "text-green-500"
+      : status === "declined"
+        ? "text-red-400"
+        : "text-amber-500";
+  return <Icon size={12} className={color} />;
+}
+
+function DraggableGuestBase({
+  guest,
+  family,
+  isAssigned,
+  tableId,
+  tableAlias,
+  seatNumber,
+}: DraggableGuestProps) {
   const { triggerSeatRemoval } = useSeatingModalContext();
-  const removeGuestFromTable = useSeatingStore((state) => state.removeGuestFromTable);
+  const removeGuestFromTable = useSeatingStore(
+    (state) => state.removeGuestFromTable,
+  );
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `guest-${guest.id}`,
@@ -51,16 +72,18 @@ export function DraggableGuest({
   const guestIndex = family.guests.findIndex((g) => g.id === guest.id);
   const displayName = guest.nombre || `${family.name} #${guestIndex + 1}`;
 
-  const StatusIcon = () => {
-    switch (guest.estatus) {
-      case "confirmed":
-        return <CheckCircle2 size={12} className="text-green-500" />;
-      case "declined":
-        return <XCircle size={12} className="text-red-400" />;
-      default:
-        return <Clock size={12} className="text-amber-500" />;
-    }
-  };
+  const handleRemove = useCallback(() => {
+    if (tableId) removeGuestFromTable(tableId, guest.id);
+  }, [tableId, guest.id, removeGuestFromTable]);
+
+  const handleDelete = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (guest.estatus === "confirmed") return;
+      triggerSeatRemoval(family.id, guest.id);
+    },
+    [guest.estatus, family.id, guest.id, triggerSeatRemoval],
+  );
 
   return (
     <div
@@ -82,7 +105,7 @@ export function DraggableGuest({
           />
 
           <div className="flex items-center gap-1.5 min-w-0">
-            {StatusIcon()}
+            <StatusIcon status={guest.estatus} />
             <div
               className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0"
               style={{ backgroundColor: family.colorBg }}
@@ -99,7 +122,7 @@ export function DraggableGuest({
           {isAssigned && tableId && (
             <Tooltip position="top" align="right" text="Desasignar">
               <button
-                onClick={() => removeGuestFromTable(tableId, guest.id)}
+                onClick={handleRemove}
                 className="p-1 bg-white border border-[#EBE5DA] shadow-sm hover:bg-red-50 rounded text-red-400 hover:text-red-600"
               >
                 <RotateCcw size={10} />
@@ -116,11 +139,7 @@ export function DraggableGuest({
             }
           >
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (guest.estatus === "confirmed") return;
-                triggerSeatRemoval(family.id, guest.id);
-              }}
+              onClick={handleDelete}
               disabled={guest.estatus === "confirmed"}
               className={`p-1 bg-white border border-[#EBE5DA] shadow-sm hover:bg-red-50 rounded ml-0.5 transition-colors ${
                 guest.estatus === "confirmed"
@@ -142,3 +161,5 @@ export function DraggableGuest({
     </div>
   );
 }
+
+export const DraggableGuest = memo(DraggableGuestBase);
