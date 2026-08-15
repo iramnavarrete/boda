@@ -20,11 +20,8 @@ import { DraggableGuest } from "./DraggableGuest";
 import { FamilyElement } from "@/types/seating";
 import { useAssignedSeatsMap } from "../../hooks/useAssignedSeatsMap";
 
-const DECLINED_STATUSES = new Set(["declined", "declinado", "rechazado"]);
-
 interface DraggableFamilyProps {
   family: FamilyElement;
-  isFirstElement: boolean;
   /** Pre-calculado por el padre para evitar loops en cada item. */
   assignedCount: number;
   /** Pre-calculado por el padre. */
@@ -33,7 +30,6 @@ interface DraggableFamilyProps {
 
 function DraggableFamilyBase({
   family,
-  isFirstElement,
   assignedCount,
   declinedCount,
 }: DraggableFamilyProps) {
@@ -54,13 +50,10 @@ function DraggableFamilyBase({
     disabled: allAssigned,
   });
 
-  const handleToggleExpand = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation();
-      setIsExpanded((v) => !v);
-    },
-    [],
-  );
+  const handleToggleExpand = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsExpanded((v) => !v);
+  }, []);
 
   return (
     <div className="mb-3 bg-[#FDFBF7] rounded-lg border border-[#EBE5DA] flex flex-col min-h-0 select-none">
@@ -94,11 +87,7 @@ function DraggableFamilyBase({
             className={`absolute right-full top-0 bottom-0 flex items-center gap-1 pr-1.5 pl-8 bg-gradient-to-r opacity-0 group-hover/fam:opacity-100 transition-opacity pointer-events-none group-hover/fam:pointer-events-auto z-10 ${allAssigned ? "from-transparent via-white to-white" : "from-transparent via-[#F9F7F2] to-[#F9F7F2]"}`}
           >
             {assignedCount > 0 && (
-              <Tooltip
-                text="Desasignar familia"
-                position={isFirstElement ? "bottom" : "top"}
-                align="right"
-              >
+              <Tooltip text="Desasignar familia" position="top" align="right">
                 <button
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => {
@@ -111,11 +100,7 @@ function DraggableFamilyBase({
                 </button>
               </Tooltip>
             )}
-            <Tooltip
-              text="Eliminar familia"
-              position={isFirstElement ? "bottom" : "top"}
-              align="right"
-            >
+            <Tooltip text="Eliminar familia" position="top" align="right">
               <button
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
@@ -132,7 +117,7 @@ function DraggableFamilyBase({
           {declinedCount > 0 && (
             <Tooltip
               text={`${declinedCount} invitado${declinedCount > 1 ? "s" : ""} declinado${declinedCount > 1 ? "s" : ""}`}
-              position={isFirstElement ? "bottom" : "top"}
+              position="top"
               align="right"
             >
               <div className="flex items-center gap-1 px-1.5 py-0.5 bg-red-50/80 rounded border border-red-100 cursor-default">
@@ -146,15 +131,13 @@ function DraggableFamilyBase({
 
           <Tooltip
             text={
-              allAssigned
-                ? assignedCount === family.guests.length
+              assignedCount === 0
+                ? "Sin asignar"
+                : assignedCount === family.guests.length
                   ? "Todos asignados"
-                  : "Todos resueltos"
-                : assignedCount > 0
-                  ? `Faltan ${family.guests.length - assignedCount - declinedCount} por sentar`
-                  : "Sin asignar"
+                  : `${assignedCount}/${family.guests.length} personas asignadas`
             }
-            position={isFirstElement ? "bottom" : "top"}
+            position="top"
             align="right"
           >
             <div className="flex items-center gap-1 px-1.5 py-0.5 bg-[#F9F7F2] rounded border border-[#EBE5DA] cursor-help">

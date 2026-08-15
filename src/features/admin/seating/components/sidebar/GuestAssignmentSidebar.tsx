@@ -8,9 +8,13 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { DraggableFamily } from "./DraggableFamily";
+import { DraggableGuestListItem } from "./DraggableGuestListItem";
+import { ViewModeToggle, ViewMode } from "./ViewModeToggle";
 import { cn } from "@heroui/theme";
 import { useGuestAssignment } from "../../hooks/useGuestAssignment";
+import { useGuestView } from "../../hooks/useGuestView";
 import { useGuestTagFilter } from "../../hooks/useGuestTagFilter";
+import { useAssignedSeatsMap } from "../../hooks/useAssignedSeatsMap";
 import { SidebarStats } from "./SidebarStats";
 import { SidebarTabs } from "./SidebarTabs";
 import { GuestTagFilter } from "./GuestTagFilter";
@@ -65,6 +69,7 @@ export default function GuestAssignmentSidebar({
   });
 
   const { tagFilter, setTagFilter } = useGuestTagFilter();
+  const [viewMode, setViewMode] = useState<ViewMode>("family");
 
   const {
     searchQuery,
@@ -75,6 +80,10 @@ export default function GuestAssignmentSidebar({
     assignedGuestIds,
     familiesWithCounts,
   } = useGuestAssignment(tagFilter);
+
+  const guestItems = useGuestView({ searchQuery, filter, tagFilter });
+
+  const assignedSeatsMap = useAssignedSeatsMap();
 
   const unassignByCriteria = useSeatingStore(
     (state) => state.unassignByCriteria,
@@ -103,8 +112,33 @@ export default function GuestAssignmentSidebar({
     0,
   );
 
-  const familiesLabel = `${familiesWithCounts.length} ${familiesWithCounts.length === 1 ? "familia" : "familias"}`;
-  const personsLabel = `${filteredGuestsTotal} ${filteredGuestsTotal === 1 ? "persona" : "personas"}`;
+  // Etiquetas dinámicas según el modo de vista
+  const isGuestView = viewMode === "guest";
+  const listLength = isGuestView
+    ? guestItems.length
+    : familiesWithCounts.length;
+
+  // En la vista por personas, las "familias" son las familias únicas
+  // representadas en los items filtrados.
+  const uniqueFamiliesInItems = useMemo(() => {
+    if (!isGuestView) return familiesWithCounts.length;
+    const set = new Set<string>();
+    for (const it of guestItems) set.add(it.family.id);
+    return set.size;
+  }, [isGuestView, guestItems, familiesWithCounts.length]);
+
+  const familiesLabel = `${uniqueFamiliesInItems} ${
+    uniqueFamiliesInItems === 1 ? "familia" : "familias"
+  }`;
+  // Personas: en vista "personas" son los items; en vista "familias" es
+  // la suma de todos los invitados de las familias mostradas.
+  const personsCount = isGuestView ? guestItems.length : filteredGuestsTotal;
+  const personsLabel = `${personsCount} ${
+    personsCount === 1 ? "persona" : "personas"
+  }`;
+  const searchPlaceholder = isGuestView
+    ? "Buscar persona o familia..."
+    : "Buscar familia...";
 
   // ============================================================================
   // CONFIGURACIÓN DE VIRTUALIZACIÓN PARA LA BARRA LATERAL
@@ -112,9 +146,11 @@ export default function GuestAssignmentSidebar({
   const parentRef = useRef<HTMLDivElement>(null);
 
   const rowVirtualizer = useVirtualizer({
-    count: familiesWithCounts.length,
+    count: listLength,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 35,
+    // Estimación distinta por modo: las tarjetas de familia son más altas
+    // que los items planos de invitado.
+    estimateSize: () => (isGuestView ? 56 : 35),
     overscan: 4,
   });
 
@@ -159,6 +195,8 @@ export default function GuestAssignmentSidebar({
 
         <SidebarStats stats={stats} />
 
+        <ViewModeToggle value={viewMode} onChange={setViewMode} />
+
         <div className="flex gap-2 mb-3">
           <div className="relative flex-1">
             <Search
@@ -167,7 +205,7 @@ export default function GuestAssignmentSidebar({
             />
             <input
               type="text"
-              placeholder="Buscar familia..."
+              placeholder={searchPlaceholder}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-8 pr-3 py-2 bg-white border border-[#EBE5DA] rounded-lg text-xs font-medium text-[#2C2C29] focus:outline-none focus:border-[#C5A669] focus:ring-1 focus:ring-[#C5A669]/20 transition-all placeholder:text-[#A8A29E] placeholder:font-normal shadow-sm"
@@ -221,12 +259,12 @@ export default function GuestAssignmentSidebar({
         </div>
       </div>
 
-      {/* LISTADO DE FAMILIAS VIRTUALIZADO (CON MEDIDOR DINÁMICO DE ALTURA) */}
+      {/* LISTADO VIRTUALIZADO (CON MEDIDOR DINÁMICO DE ALTURA) */}
       <div
         ref={parentRef}
         className="px-3 pb-3 overflow-y-scroll overflow-x-hidden flex-1 w-full pt-1 scrollbar-thin scrollbar-thumb-[#EBE5DA]"
       >
-        {familiesWithCounts.length === 0 ? (
+        {listLength === 0 ? (
           <div className="py-10 flex flex-col items-center text-center text-[#A8A29E]">
             <Search size={24} className="opacity-30 mb-2" />
             <span className="text-xs font-medium text-[#5A5A5A]">
@@ -242,6 +280,35 @@ export default function GuestAssignmentSidebar({
             style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
           >
             {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+              if (isGuestView) {
+                // ========== VISTA POR INVITADOS ==========
+                const item = guestItems[virtualRow.index];
+                return (
+                  <div
+                    key={virtualRow.key}
+                    data-index={virtualRow.index}
+                    ref={rowVirtualizer.measureElement}
+                    className="absolute top-0 left-0 w-full pb-1.5"
+                    style={{
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                  >
+                    <DraggableGuestListItem
+                      guest={item.guest}
+                      family={item.family}
+                      guestIndex={item.guestIndex}
+                      isAssigned={item.isAssigned}
+                      assigned={
+                        item.guest.id
+                          ? assignedSeatsMap.get(item.guest.id)
+                          : undefined
+                      }
+                    />
+                  </div>
+                );
+              }
+
+              // ========== VISTA POR FAMILIAS (default) ==========
               const { family, assignedCount, declinedCount } =
                 familiesWithCounts[virtualRow.index];
               const totalGuests = family.guests.length;
@@ -271,7 +338,6 @@ export default function GuestAssignmentSidebar({
                     />
                     <DraggableFamily
                       family={family}
-                      isFirstElement={virtualRow.index === 0}
                       assignedCount={assignedCount}
                       declinedCount={declinedCount}
                     />

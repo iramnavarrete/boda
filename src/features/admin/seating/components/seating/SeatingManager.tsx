@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -8,7 +8,6 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
-  DragOverlay,
   pointerWithin,
   rectIntersection,
   CollisionDetection,
@@ -37,8 +36,7 @@ import ElementsPalette from "./ElementsPalette";
 import LayoutSetupModal from "../canvas/LayoutSetupModal";
 import MobileFallback from "./MobileFallback";
 import { DragItemData } from "@/types/seating";
-import { DragOverlayContent } from "./DragOverlayContent";
-import { createPortal } from "react-dom";
+import { CursorCenteredDragOverlay } from "./CursorCenteredDragOverlay";
 import { removeHighlightSeats } from "../../utils/highlightHelper";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import { getEventTypeName } from "@/utils/formatters";
@@ -104,7 +102,26 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     id: string;
     type: string | undefined;
     data: DragItemData | null;
+    /**
+     * Posición del cursor al iniciar el drag (de `event.activatorEvent`).
+     * Se pasa al `CursorCenteredDragOverlay` para que el primer frame
+     * del overlay quede exactamente bajo el puntero, sin un frame
+     * "saltando" desde (0,0).
+     */
+    initialCursor?: { x: number; y: number };
   } | null>(null);
+
+  /**
+   * Ref con la posición REAL del cursor en coordenadas de pantalla,
+   * actualizada por `CursorCenteredDragOverlay` en cada `pointermove`.
+   *
+   * Se usa en `handleDragEnd` para calcular `dropX/dropY` sin depender
+   * de `event.delta` de dnd-kit (que NO equivale al movimiento del cursor
+   * cuando no se usa `DragOverlay`: internamente dnd-kit le resta el
+   * `nodeRectDelta` y le suma `scrollAdjustment`, lo que produce
+   * posiciones de drop incorrectas).
+   */
+  const cursorPosRef = useRef<{ x: number; y: number } | null>(null);
 
   // ============================================================================
   // CARGA INICIAL + SUSCRIPCIÓN REALTIME
@@ -268,34 +285,81 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
   const customCollisionDetection = useCallback<CollisionDetection>((args) => {
     const pointerCollisions = pointerWithin(args);
     if (pointerCollisions.length > 0) {
-      const tableCollision = pointerCollisions.find((c) =>
-        String(c.id).startsWith("table-"),
-      );
-      if (tableCollision) return [tableCollision];
-      return pointerCollisions;
+      // Para elementos del canvas (no palette), excluimos las drop zones
+      // del sidebar. Sin esto, al acercar el cursor al sidebar dnd-kit
+      // snap-ea el elemento hacia esa zona y se ve un "brinco" feo
+      // hacia el top del canvas. La eliminación se hace por separado
+      // vía el componente `DeleteZone` (que SÍ es drop zone válida).
+      const isCanvasElement = args.active?.data.current?.type === "element";
+      const validCollisions = isCanvasElement
+        ? pointerCollisions.filter(
+            (c) => c.id !== "palette-area" && c.id !== "guests-area",
+          )
+        : pointerCollisions;
+
+      if (validCollisions.length > 0) {
+        const tableCollision = validCollisions.find((c) =>
+          String(c.id).startsWith("table-"),
+        );
+        if (tableCollision) return [tableCollision];
+        return validCollisions;
+      }
     }
     return rectIntersection(args);
   }, []);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const currentData = event.active.data.current as DragItemData | undefined;
+
+    // Captura la posición del cursor al inicio del drag desde el activator event.
+    // Esto evita que el overlay aparezca en (0,0) durante el primer frame.
+    const activator = event.activatorEvent as PointerEvent | MouseEvent | undefined;
+    const initialCursor =
+      activator && typeof activator.clientX === "number" && typeof activator.clientY === "number"
+        ? { x: activator.clientX, y: activator.clientY }
+        : undefined;
+
     if (currentData) {
       setActiveDragItem({
         id: String(event.active.id),
         type: currentData.type,
         data: currentData,
+        initialCursor,
       });
+    }
+    // Cursor global "grabbing" en todo el documento mientras dure el drag.
+    if (typeof document !== "undefined") {
+      document.body.classList.add("is-dragging-active");
     }
   }, []);
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       setActiveDragItem(null);
+      // Quita el cursor "grabbing" global al terminar el drag.
+      if (typeof document !== "undefined") {
+        document.body.classList.remove("is-dragging-active");
+      }
       removeHighlightSeats(
         "guest",
         String(event.active.id).replace("guest-", ""),
       );
       const { active, over } = event;
+
+      // Posición REAL del cursor al soltar (en coordenadas de pantalla).
+      // La obtenemos del ref que mantiene `CursorCenteredDragOverlay`
+      // sincronizado vía `pointermove`, en lugar de calcularla con
+      // `activator.clientX/Y + event.delta`.
+      //
+      // ¿Por qué no usar `event.delta`?
+      //   Cuando NO se usa el `DragOverlay` de dnd-kit, internamente
+      //   dnd-kit calcula `event.delta = modifiedTranslate + scrollAdjustment`
+      //   donde `modifiedTranslate = translate - nodeRectDelta`. Esto
+      //   produce valores que NO equivalen al movimiento real del cursor
+      //   (puede incluir ajustes de scroll y deltas del rect del nodo
+      //   activo medido por el navegador), causando drops en posiciones
+      //   incorrectas (típicamente desplazados verticalmente).
+      const cursorAtEnd = cursorPosRef.current;
 
       if (active.data.current?.type === "palette_layout") {
         if (over?.id === "palette-area" || over?.id === "guests-area") {
@@ -307,10 +371,12 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
         let dropX = 800;
         let dropY = 500;
 
-        if (canvasEl && active.rect.current.translated) {
+        if (canvasEl && cursorAtEnd) {
           const rect = canvasEl.getBoundingClientRect();
-          dropX = (active.rect.current.translated.left - rect.left) / zoom;
-          dropY = (active.rect.current.translated.top - rect.top) / zoom;
+          // El card de "Crear distribución" está centrado en el cursor,
+          // así que usamos la posición del cursor como origen.
+          dropX = (cursorAtEnd.x - rect.left) / zoom;
+          dropY = (cursorAtEnd.y - rect.top) / zoom;
         }
 
         setLayoutSetup({ isOpen: true, dropX, dropY });
@@ -335,10 +401,14 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
         let dropX = 400;
         let dropY = 300;
 
-        if (canvasEl && active.rect.current.translated) {
+        if (canvasEl && cursorAtEnd) {
           const rect = canvasEl.getBoundingClientRect();
-          dropX = (active.rect.current.translated.left - rect.left) / zoom;
-          dropY = (active.rect.current.translated.top - rect.top) / zoom;
+          // El overlay (mesa/pista/etc.) está centrado en el cursor,
+          // así que el elemento se coloca con su CENTRO en el cursor.
+          // Sin este offset, el elemento aparecería desplazado porque
+          // el item del sidebar es mucho más pequeño que el overlay.
+          dropX = (cursorAtEnd.x - d.width / 2 - rect.left) / zoom;
+          dropY = (cursorAtEnd.y - d.height / 2 - rect.top) / zoom;
         }
 
         addElement(
@@ -457,6 +527,11 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
   );
 
   const handleDragCancel = useCallback((event: { active: { id: string | number } }) => {
+    // Limpia el cursor "grabbing" global si el drag se cancela.
+    if (typeof document !== "undefined") {
+      document.body.classList.remove("is-dragging-active");
+    }
+    setActiveDragItem(null);
     removeHighlightSeats(
       "guest",
       String(event.active.id).replace("guest-", ""),
@@ -596,15 +671,13 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
             </aside>
           </div>
 
-          {typeof window !== "undefined" &&
-            createPortal(
-              <DragOverlay dropAnimation={null}>
-                {activeDragItem ? (
-                  <DragOverlayContent activeDragItem={activeDragItem} />
-                ) : null}
-              </DragOverlay>,
-              document.body,
-            )}
+          {typeof window !== "undefined" && (
+            <CursorCenteredDragOverlay
+              key={activeDragItem?.id ?? "no-drag"}
+              activeDragItem={activeDragItem}
+              cursorPosRef={cursorPosRef}
+            />
+          )}
         </DndContext>
 
         {toastMsg && (

@@ -441,6 +441,16 @@ html {
   pointer-events: none !important;
 }
 
+/* Cursor global "grabbing" mientras se arrastra (sidebar → canvas).
+ * Necesario porque durante el drag el cursor puede pasar por encima de
+ * elementos que tienen su propio cursor (botones, inputs, etc.) y el
+ * del elemento fuente se pierde. La clase se aplica en document.body
+ * desde los handlers onDragStart/onDragEnd del DndContext. */
+body.is-dragging-active,
+body.is-dragging-active * {
+  cursor: grabbing !important;
+}
+
 /* Ocultar cualquier tooltip que intente abrirse al pasar volando sobre otras mesas/sillas */
 .is-dragging-active .tooltip-content,
 .is-dragging-active .group\/tooltip:hover .tooltip-content,
