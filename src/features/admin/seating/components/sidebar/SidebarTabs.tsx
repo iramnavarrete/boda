@@ -1,14 +1,14 @@
+import { SeatingFilterType } from "@/types/seating";
 import { cn } from "@heroui/theme";
-import { FilterType } from "../../hooks/useGuestAssignment";
 import { LayoutGrid, Clock, AlertCircle, CheckCircle } from "lucide-react";
 
 interface SidebarTabsProps {
-  filter: FilterType;
-  setFilter: (val: FilterType) => void;
+  filter: SeatingFilterType;
+  setFilter: (val: SeatingFilterType) => void;
 }
 
 export function SidebarTabs({ filter, setFilter }: SidebarTabsProps) {
-  const tabs: { value: FilterType; label: string; color: string; Icon: React.ElementType }[] = [
+  const tabs: { value: SeatingFilterType; label: string; color: string; Icon: React.ElementType }[] = [
     { value: "all", label: "Todos", color: "text-[#A8A29E]", Icon: LayoutGrid },
     { value: "pending", label: "Pendientes", color: "text-yellow-500", Icon: Clock },
     { value: "action", label: "Atención", color: "text-orange-500", Icon: AlertCircle },

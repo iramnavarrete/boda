@@ -1,7 +1,5 @@
-import TieIcon from "@/icons/tie-icon";
 import { cn } from "@heroui/theme";
 import AnimatedEntrance from "../AnimatedEntrance";
-import LadiesShoeIcon from "@/icons/ladies-shoe-icon";
 import TaconIcon from "@/icons/siena/tacon";
 import CorbataIcon from "@/icons/siena/corbata";
 

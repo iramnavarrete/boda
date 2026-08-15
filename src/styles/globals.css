@@ -215,6 +215,19 @@ html {
   color: white !important;
 }
 
+/* Anula completamente el highlight (efecto dorado/scale) mientras se arrastra algo */
+.is-dragging-active .seat-wrapper[data-highlighted="true"]>div>.seat-inner {
+  background-color: initial !important;
+  border-color: initial !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Anula los eventos de puntero en los wrappers de los asientos mientras se arrastra */
+.is-dragging-active .seat-wrapper {
+  pointer-events: none !important;
+}
+
 /* ==========================================================================
    OPTIMIZACIONES NATIVAS PARA PLANO DE DISTRIBUCIÓN DE MESAS (SEATING CHART)
    ========================================================================== */
@@ -419,4 +432,38 @@ html {
 
 .table-element-card[data-type="half_moon_table"] .element-capacity {
   color: #60a5fa;
+}
+
+/* Cuando hay un arrastre activo en el lienzo: */
+.is-dragging-active .tooltip-container,
+.is-dragging-active .table-seat,
+.is-dragging-active .group\/tooltip {
+  pointer-events: none !important;
+}
+
+/* Cursor global "grabbing" mientras se arrastra (sidebar → canvas).
+ * Necesario porque durante el drag el cursor puede pasar por encima de
+ * elementos que tienen su propio cursor (botones, inputs, etc.) y el
+ * del elemento fuente se pierde. La clase se aplica en document.body
+ * desde los handlers onDragStart/onDragEnd del DndContext. */
+body.is-dragging-active,
+body.is-dragging-active * {
+  cursor: grabbing !important;
+}
+
+/* Ocultar cualquier tooltip que intente abrirse al pasar volando sobre otras mesas/sillas */
+.is-dragging-active .tooltip-content,
+.is-dragging-active .group\/tooltip:hover .tooltip-content,
+.is-dragging-active .group\/tooltip:hover>div {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  display: none !important;
+  pointer-events: none !important;
+}
+
+/* Evitar que las demás mesas/sillas reaccionen con animaciones de hover al pasarles por encima */
+.is-dragging-active .table-element-card:hover .table-element-inner,
+.is-dragging-active .table-seat:hover {
+  transform: none !important;
+  box-shadow: none !important;
 }

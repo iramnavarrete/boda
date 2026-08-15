@@ -1,6 +1,6 @@
-import { useMemo, useState } from "react";
+import { useState, useCallback, memo } from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { useSeatingStore, FamilyElement } from "../../stores/useSeatingStore";
+import { useSeatingStore } from "../../stores/useSeatingStore";
 import {
   GripVertical,
   Users,
@@ -17,36 +17,33 @@ import {
   removeHighlightSeats,
 } from "../../utils/highlightHelper";
 import { DraggableGuest } from "./DraggableGuest";
+import { FamilyElement } from "@/types/seating";
+import { useAssignedSeatsMap } from "../../hooks/useAssignedSeatsMap";
 
-export function DraggableFamily({
-  family,
-  isFirstElement,
-}: {
+interface DraggableFamilyProps {
   family: FamilyElement;
-  isFirstElement: boolean;
-}) {
-  const elements = useSeatingStore((state) => state.elements);
+  /** Pre-calculado por el padre para evitar loops en cada item. */
+  assignedCount: number;
+  /** Pre-calculado por el padre. */
+  declinedCount: number;
+}
+
+function DraggableFamilyBase({
+  family,
+  assignedCount,
+  declinedCount,
+}: DraggableFamilyProps) {
   const removeFamilyFromTable = useSeatingStore(
     (state) => state.removeFamilyFromTable,
   );
   const { triggerFamilyRemoval } = useSeatingModalContext();
   const [isExpanded, setIsExpanded] = useState(false);
+  const assignedMap = useAssignedSeatsMap();
 
-  const assignedCount = useMemo(
-    () =>
-      family.guests.filter((g) =>
-        elements.some((el) => el.assignedSeats.includes(g.id)),
-      ).length,
-    [family, elements],
-  );
-  const allAssigned = assignedCount === family.guests.length;
-
-  const declinedCount = useMemo(() => {
-    return family.guests.filter((g) => {
-      const status = (g.estatus || "").toLowerCase();
-      return ["declined", "declinado", "rechazado"].includes(status);
-    }).length;
-  }, [family.guests]);
+  // Para deshabilitar el drag: la familia está "completa" cuando no quedan
+  // invitados pendientes (asignados o declined cuentan como resueltos).
+  const allAssigned = assignedCount + declinedCount >= family.guests.length;
+  const hasDeclined = declinedCount > 0;
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `family-${family.id}`,
@@ -54,84 +51,56 @@ export function DraggableFamily({
     disabled: allAssigned,
   });
 
+  const handleToggleExpand = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsExpanded((v) => !v);
+  }, []);
+
   return (
-    <div className="mb-3 bg-[#FDFBF7] rounded-lg border border-[#EBE5DA] flex flex-col min-h-0 select-none">
+    <div className="mb-1.5 bg-[#FDFBF7] rounded-lg border border-[#EBE5DA] flex flex-col min-h-0 select-none">
       <div
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        className={`rounded-lg p-2 bg-white border-b border-[#EBE5DA] flex items-center gap-1.5 transition-colors group/fam shrink-0 ${allAssigned ? "opacity-80 cursor-default" : "hover:bg-[#F9F7F2] cursor-grab active:cursor-grabbing"}`}
+        className={`select-none relative flex items-center justify-between gap-1.5 p-2 rounded-lg border text-xs transition-colors group/fam ${
+          allAssigned
+            ? "bg-[#FDFBF7] border-[#EBE5DA] opacity-80 cursor-default"
+            : hasDeclined
+              ? "bg-red-50/40 border-red-100 cursor-grab active:cursor-grabbing aria-pressed:cursor-grabbing hover:border-[#F43F5E]"
+              : "bg-white border-[#EBE5DA] cursor-grab active:cursor-grabbing aria-pressed:cursor-grabbing hover:border-[#C5A669]"
+        }`}
         style={{ opacity: isDragging ? 0.3 : 1 }}
         onMouseEnter={() => highlightSeats("family", family.id)}
         onMouseLeave={() => removeHighlightSeats("family", family.id)}
       >
-        <div
-          className={`flex items-center ${allAssigned ? "opacity-0" : "text-[#A8A29E]"}`}
-        >
-          <GripVertical size={14} />
-        </div>
-        <div
-          className="w-3 h-3 rounded-full border border-black/10 shrink-0"
-          style={{ backgroundColor: family.colorBg }}
-        />
-
-        {/* CONTENEDOR DEL NOMBRE */}
-        <div className="flex-1 pr-1 min-w-0">
-          <span className="font-serif text-[13px] font-semibold text-[#2C2C29] leading-tight break-words block">
+        {/* Izquierda: grip + color dot + nombre */}
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <GripVertical
+            size={12}
+            className={allAssigned ? "opacity-0" : "text-[#EBE5DA]"}
+          />
+          <div
+            className="w-2.5 h-2.5 rounded-full border border-black/10 shrink-0"
+            style={{ backgroundColor: family.colorBg }}
+          />
+          <span
+            className={`truncate font-serif text-[13px] font-semibold ${
+              hasDeclined ? "text-[#A8A29E]" : "text-[#2C2C29]"
+            }`}
+          >
             {family.name}
           </span>
         </div>
 
-        {/* CONTENEDOR DE BADGES Y ACCIONES */}
-        <div className="relative flex items-center gap-1.5 shrink-0">
-          {/* 🔥 BOTONES FLOTANTES: Fondo degradado dinámico según si es draggable o no */}
-          <div
-            className={`absolute right-full top-0 bottom-0 flex items-center gap-1 pr-1.5 pl-8 bg-gradient-to-r opacity-0 group-hover/fam:opacity-100 transition-opacity pointer-events-none group-hover/fam:pointer-events-auto z-10 ${allAssigned ? "from-transparent via-white to-white" : "from-transparent via-[#F9F7F2] to-[#F9F7F2]"}`}
-          >
-            {assignedCount > 0 && (
-              <Tooltip
-                text="Desasignar familia"
-                position={isFirstElement ? "bottom" : "top"}
-                align="right"
-              >
-                <button
-                  onPointerDown={(e) => e.stopPropagation()}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeFamilyFromTable(family.id);
-                  }}
-                  className={`p-1 shadow-sm border border-[#EBE5DA] hover:bg-red-50 text-red-400 hover:text-red-600 rounded transition-colors ${allAssigned ? "bg-white" : "bg-[#F9F7F2]"}`}
-                >
-                  <RotateCcw size={10} />
-                </button>
-              </Tooltip>
-            )}
-            <Tooltip
-              text="Eliminar familia"
-              position={isFirstElement ? "bottom" : "top"}
-              align="right"
-            >
-              <button
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  triggerFamilyRemoval(family.id);
-                }}
-                className={`p-1 shadow-sm border border-[#EBE5DA] hover:bg-red-50 text-red-400 hover:text-red-600 rounded transition-colors ${allAssigned ? "bg-white" : "bg-[#F9F7F2]"}`}
-              >
-                <Trash2 size={10} />
-              </button>
-            </Tooltip>
-          </div>
-
-          {/* PÍLDORA DECLINADOS SEPARADA */}
-          {declinedCount > 0 && (
+        {/* Derecha: badges de estado + actions + chevron */}
+        <div className="flex items-center gap-1 shrink-0">
+          {hasDeclined && (
             <Tooltip
               text={`${declinedCount} invitado${declinedCount > 1 ? "s" : ""} declinado${declinedCount > 1 ? "s" : ""}`}
-              position={isFirstElement ? "bottom" : "top"}
+              position="top"
               align="right"
             >
-              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-red-50/80 rounded border border-red-100 cursor-default">
+              <div className="flex items-center gap-1 px-1.5 py-0.5 bg-red-50/80 rounded-md border border-red-100 cursor-default">
                 <XCircle size={10} className="text-red-400" />
                 <span className="text-[9px] font-bold text-red-500">
                   {declinedCount}
@@ -140,19 +109,18 @@ export function DraggableFamily({
             </Tooltip>
           )}
 
-          {/* PÍLDORA ASIGNADOS SEPARADA */}
           <Tooltip
             text={
-              allAssigned
-                ? "Todos asignados"
-                : assignedCount > 0
-                  ? `Faltan ${family.guests.length - assignedCount} por sentar`
-                  : "Sin asignar"
+              assignedCount === 0
+                ? "Sin asignar"
+                : assignedCount === family.guests.length
+                  ? "Todos asignados"
+                  : `${assignedCount} de ${family.guests.length} personas asignadas`
             }
-            position={isFirstElement ? "bottom" : "top"}
+            position="top"
             align="right"
           >
-            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-[#F9F7F2] rounded border border-[#EBE5DA] cursor-help">
+            <div className="flex items-center gap-1 px-1.5 py-0.5 bg-[#F9F7F2] rounded-md border border-[#EBE5DA] cursor-help">
               <Users
                 size={10}
                 className={
@@ -169,13 +137,40 @@ export function DraggableFamily({
             </div>
           </Tooltip>
 
+          <div className="flex items-center gap-1 max-w-0 opacity-0 overflow-hidden transition-all duration-200 group-hover/fam:max-w-[120px] group-hover/fam:opacity-100 shrink-0 bg-white/80 rounded pl-1">
+            {assignedCount > 0 && (
+              <Tooltip text="Desasignar familia" position="top" align="right">
+                <button
+                  onPointerDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeFamilyFromTable(family.id);
+                  }}
+                  className="p-1 bg-white border border-[#EBE5DA] shadow-sm hover:bg-red-50 rounded text-red-400 hover:text-red-600 transition-colors"
+                >
+                  <RotateCcw size={10} />
+                </button>
+              </Tooltip>
+            )}
+            <Tooltip text="Eliminar familia" position="top" align="right">
+              <button
+                onPointerDown={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  triggerFamilyRemoval(family.id);
+                }}
+                className="p-1 bg-white border border-[#EBE5DA] shadow-sm hover:bg-red-50 rounded ml-0.5 text-red-500 hover:text-red-700 transition-colors"
+              >
+                <Trash2 size={10} />
+              </button>
+            </Tooltip>
+          </div>
+
           <button
             onPointerDown={(e) => e.stopPropagation()}
-            onClick={(e) => {
-              e.stopPropagation();
-              setIsExpanded(!isExpanded);
-            }}
+            onClick={handleToggleExpand}
             className="p-0.5 text-[#A8A29E] hover:text-[#C5A669] hover:bg-[#EBE5DA] rounded transition-colors"
+            aria-label={isExpanded ? "Contraer familia" : "Expandir familia"}
           >
             {isExpanded ? (
               <ChevronDown size={14} />
@@ -188,37 +183,26 @@ export function DraggableFamily({
 
       {isExpanded && (
         <div
-          className={`p-1.5 space-y-1 ${isDragging ? "hidden" : "block"} bg-white rounded-lg`}
+          className={`flex flex-col gap-1 px-2 pt-1.5 pb-2 ${isDragging ? "hidden" : "flex"}`}
         >
           {family.guests.map((guest) => {
-            const table = elements.find((el) =>
-              el.assignedSeats.includes(guest.id),
-            );
-            const seatNumber = table
-              ? table.assignedSeats.indexOf(guest.id) + 1
-              : undefined;
+            const assigned = guest.id ? assignedMap.get(guest.id) : undefined;
             return (
               <DraggableGuest
                 key={guest.id}
                 guest={guest}
                 family={family}
-                isAssigned={!!table}
-                tableId={table?.id}
-                tableAlias={table?.alias}
-                seatNumber={seatNumber}
+                isAssigned={!!assigned}
+                tableId={assigned?.tableId}
+                tableAlias={assigned?.tableAlias}
+                seatNumber={assigned?.seatNumber}
               />
             );
           })}
-          {/* 🔥 Botón interactivo para añadir un asiento rápido al grupo */}
-          {/* <button
-            onClick={() => triggerAddSeat(family.id)}
-            className="w-full flex items-center justify-center gap-1.5 py-1.5 mt-1 border border-dashed border-[#EBE5DA] text-[#A8A29E] hover:text-[#C5A669] hover:border-[#C5A669] hover:bg-[#FDFBF7] rounded-md text-[10px] font-bold uppercase tracking-wider transition-all"
-          >
-            <UserPlus size={11} />
-            Agregar Asiento
-          </button> */}
         </div>
       )}
     </div>
   );
 }
+
+export const DraggableFamily = memo(DraggableFamilyBase);

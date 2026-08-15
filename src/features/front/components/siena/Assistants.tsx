@@ -726,6 +726,7 @@ const Assistants: FC<Props> = ({
                                         disabled={isDisabled}
                                         className={cn(
                                           "flex items-center gap-2 text-xs font-nourdMedium uppercase tracking-[0.2em] border-b border-current pb-1 mt-2 hover:opacity-70 transition-all disabled:opacity-30 disabled:cursor-not-allowed",
+                                          sendFormBtnClassName
                                         )}
                                       >
                                         Enviar Respuesta

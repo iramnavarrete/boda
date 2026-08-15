@@ -1,13 +1,4 @@
-import { SeatingElement } from "../stores/useSeatingStore";
-
-interface LayoutConfig {
-  totalTables: number;
-  seatsPerTable: number;
-  includeDanceFloor: boolean;
-  startingIndex: number;
-  centerX: number;
-  centerY: number;
-}
+import { LayoutConfig, SeatingElement } from "@/types/seating";
 
 export const generateCustomLayout = ({
   totalTables,

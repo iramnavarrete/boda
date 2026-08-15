@@ -1,53 +1,12 @@
 import { FamiliesService } from "@/services/familiesService";
-import { Family, GuestSeat } from "@/types";
 import { create } from "zustand";
 import { SeatingService } from "../services/seatingService";
 import { removeHighlightSeats } from "../utils/highlightHelper";
-
-export type ElementType =
-  | "round_table"
-  | "rectangular_table"
-  | "square_table"
-  | "half_moon_table"
-  | "cocktail_table"
-  | "head_table"
-  | "dance_floor"
-  | "stage"
-  | "dj_booth"
-  | "cake_area"
-  | "gift_table"
-  | "drink_bar"
-  | "buffet"
-  | "candy_bar";
-
-export interface SeatingElement {
-  id: string;
-  type: ElementType;
-  alias: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  seats: number;
-  assignedSeats: string[];
-}
-
-export interface FamilyElement {
-  id: string;
-  name: string;
-  deadline: string | null;
-  colorBg: string;
-  colorBorder: string;
-  guests: GuestSeat[];
-  allowChanges: boolean;
-  rawFamily: Family;
-}
-
-export interface UnassignOptions {
-  includeNoDeadline: boolean;
-  includePendingNotExpired: boolean;
-  includePendingExpired: boolean;
-}
+import {
+  FamilyElement,
+  SeatingElement,
+  UnassignOptions,
+} from "@/types/seating";
 
 export interface SeatingStore {
   elements: SeatingElement[];
@@ -177,13 +136,23 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
 
   updateFamilies: (newFamilies) =>
     set((state) => {
-      const cleanedElements = state.elements.map((el) => ({
-        ...el,
-        assignedSeats: groupSeatsByFamily(el.assignedSeats, newFamilies),
-      }));
-
-      const elementsChanged =
-        JSON.stringify(state.elements) !== JSON.stringify(cleanedElements);
+      // Reconstruimos los assignedSeats purgando fantasmas contra las nuevas familias.
+      // Comparamos referencia + longitud para evitar el costoso JSON.stringify anterior.
+      let elementsChanged = false;
+      const cleanedElements = state.elements.map((el) => {
+        const next = groupSeatsByFamily(el.assignedSeats, newFamilies);
+        if (next.length !== el.assignedSeats.length) {
+          elementsChanged = true;
+        } else {
+          for (let i = 0; i < next.length; i++) {
+            if (next[i] !== el.assignedSeats[i]) {
+              elementsChanged = true;
+              break;
+            }
+          }
+        }
+        return { ...el, assignedSeats: next };
+      });
 
       return {
         families: newFamilies,

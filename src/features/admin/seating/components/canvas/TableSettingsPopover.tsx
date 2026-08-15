@@ -1,12 +1,11 @@
-import React, { useState } from "react";
-import {
-  SeatingElement,
-  useSeatingStore,
-} from "../../stores/useSeatingStore";
+import React, { useState, useMemo } from "react";
+import { useSeatingStore } from "../../stores/useSeatingStore";
+import { SeatingElement } from "@/types/seating";
 import { useSeatingModalContext } from "../SeatingModalContext";
 import { Trash2, Users, RotateCcw, } from "lucide-react";
 import Tooltip from "@/features/shared/components/Tooltip";
 import { GuestStatus } from "@/types";
+import { useGuestLookupMap } from "../../hooks/useGuestLookupMap";
 
 interface SeatGuestInfo {
   id: string;
@@ -131,19 +130,57 @@ export function TableSettingsPopover({
   const updateElementSeats = useSeatingStore((state) => state.updateElementSeats);
   const updateElementAlias = useSeatingStore((state) => state.updateElementAlias);
   const removeElement = useSeatingStore((state) => state.removeElement);
-  const families = useSeatingStore((state) => state.families);
   const showToast = useSeatingStore((state) => state.showToast);
+  const guestMap = useGuestLookupMap();
   const [numberValue, setNumberValue] = useState(
     element.alias.replace(/\D/g, ""),
   );
 
-  // Obtenemos el total de invitados que realmente existen (sin contar fantasmas)
-  const validAssignedCount = isTable
-    ? element.assignedSeats.filter((seatId) => {
-        if (!seatId || seatId === "") return false;
-        return families.some((f) => f.guests.some((g) => g.id === seatId));
-      }).length
-    : 0;
+  // Recorremos los asientos UNA sola vez contra el Map O(1) compartido.
+  const { allSeats, validAssignedCount } = useMemo(() => {
+    if (!isTable) {
+      return { allSeats: [] as SeatItemData[], validAssignedCount: 0 };
+    }
+
+    const seats: SeatItemData[] = [];
+    let valid = 0;
+
+    for (let i = 0; i < element.seats; i++) {
+      const guestId = element.assignedSeats[i];
+      if (!guestId) {
+        seats.push({ seatNumber: i + 1, isAssigned: false });
+        continue;
+      }
+
+      const info = guestMap.get(guestId);
+      if (!info) {
+        // Fantasma: ID huérfano, lo mostramos como libre
+        seats.push({ seatNumber: i + 1, isAssigned: false });
+        continue;
+      }
+
+      valid++;
+      const guestInfo: SeatGuestInfo = {
+        id: info.id,
+        name: info.nombre,
+        status: info.estatus as GuestStatus,
+        familyId: info.familyId,
+        familyName: info.familyName,
+        colorBg: info.colorBg,
+        colorBorder: info.colorBorder,
+        index: info.index,
+      };
+
+      seats.push({
+        seatNumber: i + 1,
+        isAssigned: true,
+        guestId: info.id,
+        guest: guestInfo,
+      });
+    }
+
+    return { allSeats: seats, validAssignedCount: valid };
+  }, [element.seats, element.assignedSeats, guestMap, isTable]);
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = parseInt(e.target.value);
@@ -160,41 +197,6 @@ export function TableSettingsPopover({
     }
     updateElementSeats(element.id, newValue);
   };
-
-  const allSeats: SeatItemData[] = Array.from(
-    { length: element.seats },
-    (_, i) => {
-      const guestId = element.assignedSeats[i];
-      if (!guestId) return { seatNumber: i + 1, isAssigned: false };
-
-      let guestInfo: SeatGuestInfo | null = null;
-      for (const f of families) {
-        const g = f.guests.map(el => ({id: el.id, name: el.nombre, status: el.estatus })).find((gu) => gu.id === guestId);
-        if (g) {
-          guestInfo = {
-            ...g,
-            familyId: f.id,
-            familyName: f.name,
-            colorBg: f.colorBg,
-            colorBorder: f.colorBorder,
-            index: f.guests.findIndex((gu) => gu.id === guestId),
-          };
-          break;
-        }
-      }
-
-      // Si se encontró un ID en la silla, pero NO pertenece a un invitado real (fantasma),
-      // lo forzamos a mostrarse libre.
-      const isAssigned = !!guestInfo;
-
-      return {
-        seatNumber: i + 1,
-        isAssigned,
-        guestId: isAssigned ? guestId : undefined,
-        guest: guestInfo,
-      };
-    },
-  );
 
   return (
     <div

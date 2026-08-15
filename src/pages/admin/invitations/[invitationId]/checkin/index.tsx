@@ -10,7 +10,7 @@ import Loader from "@/features/front/components/Loader";
 import AdminLayout from "@/features/shared/layouts/admin";
 import { useRouter } from "next/router";
 import { cn } from "@heroui/theme";
-import { SeatingElement } from "@/features/admin/seating/stores/useSeatingStore";
+import { SeatingElement } from "@/types/seating";
 import { SeatingService } from "@/features/admin/seating/services/seatingService";
 import CheckInConfirmModal from "@/features/admin/checkin/CheckInConfirmModal";
 import CheckInDirectory from "@/features/admin/checkin/CheckInDirectory";

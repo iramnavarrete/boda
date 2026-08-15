@@ -1,5 +1,5 @@
 import { Family, FilterCounts as FilterCountsStatus } from "@/types";
-import { SeatingElement } from "../seating/stores/useSeatingStore";
+import { SeatingElement } from "@/types/seating";
 import { useMemo } from "react";
 
 export interface EventStats {

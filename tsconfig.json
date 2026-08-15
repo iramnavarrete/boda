@@ -17,15 +17,10 @@
     "jsx": "react-jsx",
     "incremental": true,
     "paths": {
-      "@/public/*" : [
-        "./public/*"
-      ],
-      "@/*": [
-        "./src/*"
-      ],
-      "@/types": [
-        "./types/types.d.ts"
-      ]
+      "@/public/*": ["./public/*"],
+      "@/*": ["./src/*"],
+      "@/types": ["./types/types.d.ts"],
+      "@/types/*": ["./src/types/*", "./types/*"]
     },
     "target": "ES2017"
   },

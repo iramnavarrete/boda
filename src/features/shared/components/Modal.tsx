@@ -25,7 +25,7 @@ const Modal: React.FC<PropsWithChildren<ModalProps>> = ({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           onClick={() => onBackdropPress?.()}
-          className="fixed inset-0 bg-stone-900/60 z-[5000] flex items-center justify-center p-4"
+          className="fixed inset-0 bg-stone-900/60 z-[10000] flex items-center justify-center p-4"
           // Forzamos aceleración por hardware en el fondo oscuro
           style={{ WebkitTransform: "translateZ(0)" }}
         >
@@ -36,7 +36,7 @@ const Modal: React.FC<PropsWithChildren<ModalProps>> = ({
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className={cn(
-              `bg-white rounded-2xl w-full ${maxWidth} shadow-2xl flex flex-col max-h-[95svh] overflow-hidden z-[5001]`,
+              `bg-white rounded-2xl w-full ${maxWidth} shadow-2xl flex flex-col max-h-[95svh] overflow-hidden z-[10001]`,
               innerContainerClassName,
             )}
             // Le avisamos al navegador qué propiedades van a cambiar para que las procese en la GPU
