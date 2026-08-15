@@ -160,7 +160,7 @@ export default function GuestAssignmentSidebar({
       className="flex flex-col h-full bg-white shrink-0 select-none w-[350px]"
     >
       {/* HEADER DE LA BARRA LATERAL */}
-      <div className="p-4 pb-2 border-b border-[#EBE5DA] bg-[#FDFBF7] shrink-0">
+      <div className="p-4 pb-2 border-b border-[#EBE5DA] bg-white shrink-0">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <h2 className="font-serif text-[17px] font-bold text-[#2C2C29] mr-1">
