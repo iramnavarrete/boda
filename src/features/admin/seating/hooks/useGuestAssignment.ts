@@ -10,8 +10,6 @@ export interface FamilyWithCounts {
   assignedCount: number;
   declinedCount: number;
   totalGuests: number;
-  /** Prioridad de ordenamiento para el filtro "all": 0 atención, 1 pendiente, 2 asignado. */
-  sortPriority?: number;
 }
 
 export function useGuestAssignment(tagFilter: TagFilterType = "all") {
@@ -100,15 +98,9 @@ export function useGuestAssignment(tagFilter: TagFilterType = "all") {
       // Naranja: faltan asientos por asignar, O todos asignados pero
       //          al menos uno es declined (requiere liberar slot).
       // Amarillo: nadie asignado, nadie declined — todo pendiente.
-      const isGreen =
-        assignedCount === totalGuests && declinedCount === 0;
-      const isOrange =
-        !isGreen && (assignedCount > 0 || declinedCount > 0);
+      const isGreen = assignedCount === totalGuests && declinedCount === 0;
+      const isOrange = !isGreen && (assignedCount > 0 || declinedCount > 0);
       const isYellow = assignedCount === 0 && declinedCount === 0;
-
-      // Prioridad: 0 = atención, 1 = pendiente, 2 = asignado.
-      // Se usa solo en el filtro "all" para reordenar la lista.
-      let sortPriority: number | undefined = undefined;
 
       switch (filter) {
         case "assigned":
@@ -122,9 +114,6 @@ export function useGuestAssignment(tagFilter: TagFilterType = "all") {
           break;
         case "all":
         default:
-          if (isOrange) sortPriority = 0;
-          else if (isYellow) sortPriority = 1;
-          else if (isGreen) sortPriority = 2;
           break;
       }
 
@@ -133,17 +122,6 @@ export function useGuestAssignment(tagFilter: TagFilterType = "all") {
         assignedCount,
         declinedCount,
         totalGuests,
-        sortPriority,
-      });
-    }
-
-    // En el filtro "all", reordenamos por prioridad (atención → pendiente → asignado).
-    // El orden original dentro de cada grupo se conserva (sort estable).
-    if (filter === "all") {
-      result.sort((a, b) => {
-        const ap = a.sortPriority ?? 99;
-        const bp = b.sortPriority ?? 99;
-        return ap - bp;
       });
     }
 

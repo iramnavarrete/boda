@@ -83,18 +83,16 @@ function DraggableGuestBase({
 
   return (
     <div
-      className={`select-none relative flex flex-col gap-1.5 p-1.5 rounded-md border text-xs transition-colors group/guest ${isAssigned ? "bg-transparent border-transparent opacity-70 cursor-default" : guest.estatus === "declined" ? "bg-red-50/50 border-red-100 opacity-60" : "bg-white border border-[#EBE5DA] cursor-grab hover:border-[#C5A669]"}`}
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className={`select-none relative flex flex-col gap-1.5 p-1.5 rounded-md border text-xs transition-colors group/guest ${isAssigned ? "bg-[#FDFBF7] border-[#EBE5DA] opacity-70 cursor-default" : guest.estatus === "declined" ? "bg-red-50/50 border-red-100 opacity-60 cursor-grab active:cursor-grabbing aria-pressed:cursor-grabbing hover:border-[#F43F5E]" : "bg-white border border-[#EBE5DA] cursor-grab active:cursor-grabbing aria-pressed:cursor-grabbing hover:border-[#C5A669]"}`}
       style={{ opacity: isDragging ? 0.3 : 1 }}
       onMouseEnter={() => highlightSeats("guest", guest.id)}
       onMouseLeave={() => removeHighlightSeats("guest", guest.id)}
     >
       <div className="flex items-center justify-between w-full">
-        <div
-          ref={setNodeRef}
-          {...attributes}
-          {...listeners}
-          className="flex items-center gap-1.5 flex-1 min-w-0 cursor-grab"
-        >
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
           <GripVertical
             size={12}
             className={isAssigned ? "opacity-0" : "text-[#EBE5DA]"}
@@ -122,6 +120,7 @@ function DraggableGuestBase({
               text="Desasignar"
             >
               <button
+                onPointerDown={(e) => e.stopPropagation()}
                 onClick={handleRemove}
                 title="Desasignar invitado de la mesa"
                 aria-label="Desasignar invitado de la mesa"
@@ -141,6 +140,7 @@ function DraggableGuestBase({
             }
           >
             <button
+              onPointerDown={(e) => e.stopPropagation()}
               onClick={handleDelete}
               disabled={guest.estatus === "confirmed"}
               title={

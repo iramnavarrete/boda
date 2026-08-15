@@ -1,10 +1,7 @@
 import { useMemo } from "react";
 import { useSeatingStore } from "../stores/useSeatingStore";
 import { TagFilterType } from "@/types";
-import {
-  SeatingFilterType,
-  FamilyElement,
-} from "@/types/seating";
+import { SeatingFilterType, FamilyElement } from "@/types/seating";
 import { GuestSeat } from "@/types";
 import { useAssignedSeatsMap } from "./useAssignedSeatsMap";
 
@@ -23,8 +20,6 @@ export interface GuestListItem {
   guestIndex: number;
   isAssigned: boolean;
   isDeclined: boolean;
-  /** Solo se usa en el filtro "all" para reordenar. */
-  sortPriority?: number;
 }
 
 interface UseGuestViewArgs {
@@ -96,30 +91,16 @@ export function useGuestView({
             break;
         }
 
-        // Prioridad solo se usa en "all"
-        let sortPriority: number | undefined;
-        if (filter === "all") {
-          if (isDeclined) sortPriority = 0;
-          else if (!isAssigned) sortPriority = 1;
-          else sortPriority = 2;
-        }
-
         result.push({
           family: f,
           guest,
           guestIndex: i,
           isAssigned,
           isDeclined,
-          sortPriority,
         });
       }
-    }
-
-    if (filter === "all") {
-      result.sort((a, b) => (a.sortPriority ?? 99) - (b.sortPriority ?? 99));
     }
 
     return result;
   }, [families, assignedSeatsMap, filter, searchQuery, tagFilter]);
 }
-

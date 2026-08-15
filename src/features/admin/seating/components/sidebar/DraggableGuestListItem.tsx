@@ -95,7 +95,7 @@ function DraggableGuestListItemBase({
       className={cn(
         "select-none relative flex flex-col gap-1.5 p-2 rounded-lg border text-xs transition-colors group/guest",
         isAssigned
-          ? "bg-transparent border-transparent opacity-70 cursor-default"
+          ? "bg-[#FDFBF7] border-[#EBE5DA] opacity-70 cursor-default"
           : isDeclined
             ? "bg-red-50/40 border-red-100 opacity-60 cursor-grab active:cursor-grabbing aria-pressed:cursor-grabbing hover:border-[#F43F5E]"
             : "bg-white border-[#EBE5DA] cursor-grab active:cursor-grabbing aria-pressed:cursor-grabbing hover:border-[#C5A669]",
