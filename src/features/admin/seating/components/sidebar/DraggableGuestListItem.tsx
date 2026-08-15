@@ -149,7 +149,7 @@ function DraggableGuestListItemBase({
           </div>
         </Tooltip>
 
-        <div className="flex items-center gap-1 opacity-0 group-hover/guest:opacity-100 transition-opacity shrink-0 bg-white/80 rounded pl-1">
+        <div className="flex items-center gap-1 max-w-0 opacity-0 overflow-hidden transition-all duration-200 group-hover/guest:max-w-[120px] group-hover/guest:opacity-100 shrink-0 bg-white/80 rounded pl-1">
           {isAssigned && assigned?.tableId && (
             <Tooltip
               position={tooltipPos}

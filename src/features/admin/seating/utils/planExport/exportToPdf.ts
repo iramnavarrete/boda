@@ -424,18 +424,25 @@ function drawFooter(
   const iconH = 12; // pt
   const iconAspect = brandIconImage.width / brandIconImage.height;
   const iconW = iconH * iconAspect;
+  const sideMargin = 20;
 
-  // Bloque centrado: "Generado con..." + logo + URL
+  // Calcular anchos de texto
   const tagW = fontRegular.widthOfTextAtSize(BRAND_TAG, size);
-  const urlW = fontRegular.widthOfTextAtSize(BRAND_URL, size);
   const gap = 6;
-  const blockW = tagW + gap + iconW + gap + urlW;
-  const blockStartX = (pageW - blockW) / 2;
   const blockCenterY = yText + size / 2;
 
-  let cursorX = blockStartX;
+  // URL alineada a la izquierda
+  page.drawText(BRAND_URL, {
+    x: sideMargin,
+    y: yText,
+    size,
+    font: fontRegular,
+    color: FOOTER_GRAY,
+  });
 
-  // Texto "Generado con..."
+  // "Generado con..." + logo centrado
+  const centerBlockW = tagW + gap + iconW;
+  let cursorX = (pageW - centerBlockW) / 2;
   page.drawText(BRAND_TAG, {
     x: cursorX,
     y: yText,
@@ -444,30 +451,18 @@ function drawFooter(
     color: FOOTER_GRAY,
   });
   cursorX += tagW + gap;
-
-  // Logo
   page.drawImage(brandIconImage, {
     x: cursorX,
     y: blockCenterY - iconH / 2,
     width: iconW,
     height: iconH,
   });
-  cursorX += iconW + gap;
-
-  // URL
-  page.drawText(BRAND_URL, {
-    x: cursorX,
-    y: yText,
-    size,
-    font: fontRegular,
-    color: FOOTER_GRAY,
-  });
 
   // Info de página (alineado a la derecha)
   const pageInfo = `Página ${pageNum} de ${totalPages}`;
   const pageInfoW = fontItalic.widthOfTextAtSize(pageInfo, size);
   page.drawText(pageInfo, {
-    x: pageW - pageInfoW - 20,
+    x: pageW - pageInfoW - sideMargin,
     y: yText,
     size,
     font: fontItalic,

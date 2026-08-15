@@ -10,7 +10,7 @@ import {
   computeRowHeights,
   drawCardGrid,
 } from "./planCards";
-import { BRAND_MUTED, BRAND_TAG, BRAND_URL, loadBrandIcon } from "./planBrand";
+import { BRAND_MUTED, BRAND_TAG, loadBrandIcon } from "./planBrand";
 
 export interface ImageExportOptions {
   /** Título formateado del evento (ej: "Boda Josué y Yneth"). */
@@ -368,24 +368,18 @@ function drawWatermark(
 
   // Calcular anchos de texto
   const tagW = ctx.measureText(BRAND_TAG).width;
-  const urlW = ctx.measureText(BRAND_URL).width;
 
-  // Bloque total: tag + gap + logo + gap + url
-  const blockW = tagW + gap + logoW + gap + urlW;
-  let cursorX = (totalW - blockW) / 2;
+  // Bloque central: tag + gap + logo
+  const centerBlockW = tagW + gap + logoW;
   const centerY = totalH - WATERMARK_H / 2;
 
-  // Texto "Generado con..."
   ctx.textAlign = "left";
+
+  // "Generado con..." + logo centrado
+  let cursorX = (totalW - centerBlockW) / 2;
   ctx.fillText(BRAND_TAG, cursorX, centerY);
   cursorX += tagW + gap;
-
-  // Logo
   ctx.drawImage(brandIcon, cursorX, centerY - logoH / 2, logoW, logoH);
-  cursorX += logoW + gap;
-
-  // URL
-  ctx.fillText(BRAND_URL, cursorX, centerY);
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
