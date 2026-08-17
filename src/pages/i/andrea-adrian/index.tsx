@@ -249,12 +249,12 @@ export default function Home({ invitationData }: InvitationPageProps) {
                   inactiveConfirmBtnClassName="bg-transparent text-stone-400 border-stone-300"
                   activeDeclineBtnClassName="bg-transparent text-[#5b0012] border-[#5b0012]"
                   inactiveDeclineBtnClassName="bg-transparent text-stone-400 border-stone-300"
-                  sendFormBtnClassName="text-[#5b0012] border-[#5b0012] bg-gold/5 border"
+                  sendFormBtnClassName="text-[#5b0012] border-[#5b0012]"
                   sealImage="/img/andrea-adrian/sello-guinda.png"
                 />
                 <QrPhotos
                   urlPhotos="https://photos.app.goo.gl/CvX5tzkMZpkL1Hv36"
-                  btnClassName="text-[#5b0012] bg-accent"
+                  btnClassName="text-accent"
                   containerClassName="bg-[#5b0012]"
                 />
                 <Footer
