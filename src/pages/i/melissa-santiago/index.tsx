@@ -297,7 +297,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
                     title: "Caballeros",
                     subtitle: "Traje formal completo",
                   }}
-                  bothRestrictions="Agradecemos su comprehensión y apoyo respetando el código de vestimenta requerido por el salón."
+                  bothRestrictions="Agradecemos su comprensión y apoyo respetando el código de vestimenta requerido por el salón."
                   sectionsContainerClassName="gap-12 mb-0 mt-10"
                 />
                 <Gallery
@@ -436,6 +436,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
                   }}
                   containerClassName="bg-[#252a33]"
                   customTitle="Detalles para los novios"
+                  customPreTitle="Obsequios"
                   titleClassName="text-3xl"
                   customQuote="Lo más importante para nosotros es contar con tu presencia. Si deseas expresar tu cariño con un detalle, a continuación encontrarás algunas opciones."
                 />
@@ -449,7 +450,15 @@ export default function Home({ invitationData }: InvitationPageProps) {
                   textClassName="text-[#252a33]"
                   svgsColor="#676a70"
                 />
-                <AudioController musicPath="/music/baby-im-yours.mp3#t=5" />
+                <AudioController
+                  musicPath="/music/baby-im-yours-2.mp3"
+                  fadeMs={1000}
+                  mediaMetadata={{
+                    title: "Nuestra boda",
+                    artist: "Melissa & Santiago",
+                    album: "JN Invitaciones",
+                  }}
+                />
               </div>
             </div>
           </div>
