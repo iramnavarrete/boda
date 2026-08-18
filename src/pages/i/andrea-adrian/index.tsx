@@ -50,7 +50,7 @@ export default function Home({ invitationData }: InvitationPageProps) {
         </title>
         <meta name="description" content={description} />
         <link rel="canonical" href={eventUrl} />
-        
+
         <link rel="icon" type="image/x-icon" href={faviconUrl} />
         <link rel="apple-touch-icon" href={faviconUrl} />
 
@@ -262,7 +262,14 @@ export default function Home({ invitationData }: InvitationPageProps) {
                   containerClassName="bg-gold/5"
                   svgsColor="#5b0012"
                 />
-                <AudioController musicPath="/music/exist-for-love.mp3" />
+                <AudioController
+                  musicPath="/music/exist-for-love.mp3"
+                  mediaMetadata={{
+                    title: "Nuestra boda",
+                    artist: "Andrea & Adrian",
+                    album: "JN Invitaciones",
+                  }}
+                />
               </div>
             </div>
           </div>

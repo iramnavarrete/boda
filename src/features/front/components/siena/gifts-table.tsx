@@ -7,10 +7,10 @@ import { cn } from "@heroui/theme";
 import { ArrowRight, ChevronDown, Copy, Check } from "lucide-react";
 import BbvaIcon from "@/icons/siena/banks/bbva";
 import CitiBanamexIcon from "@/icons/siena/banks/citibanamex";
-import RegaloIcon from "@/icons/siena/regalo";
 import SantanderIcon from "@/icons/siena/banks/santander";
 import HsbcIcon from "@/icons/siena/banks/hsbc";
 import NuIcon from "@/icons/siena/banks/nu";
+import LluviaSobres from "@/icons/siena/lluvia-sobres";
 
 type StoreGift = {
   type: "amazon" | "liverpool" | "other";
@@ -32,6 +32,7 @@ type Props = {
   showCash?: boolean;
   transfer?: BankTransfer;
   customTitle?: string;
+  customPreTitle?: string;
   titleClassName?: string;
   customQuote?: string;
 };
@@ -70,6 +71,7 @@ const GiftsTable: FC<Props> = ({
   showCash = false,
   transfer,
   customTitle,
+  customPreTitle,
   titleClassName = "",
   customQuote,
 }) => {
@@ -139,7 +141,7 @@ const GiftsTable: FC<Props> = ({
         <AnimatedEntrance classname="flex flex-col items-center w-full will-change-transform">
           {/* Overline Editorial */}
           <p className="text-[10px] font-nourdMedium text-current/60 uppercase tracking-[0.4em] mb-4 text-center">
-            — Detalles —
+            — {customPreTitle || "Detalles"} —
           </p>
 
           {/* Título Script */}
@@ -223,7 +225,7 @@ const GiftsTable: FC<Props> = ({
                     delay: 0.1,
                   }}
                 >
-                  <RegaloIcon className="w-20 h-20 stroke-[0.5] stroke-current -ml-2" />
+                  <LluviaSobres className="w-20 h-20 stroke-[0.5] stroke-current -ml-2 -rotate-6" />
                 </motion.div>
                 <p className="font-nourdMedium text-lg mb-2 tracking-widest uppercase text-[11px]">
                   Lluvia de Sobres
