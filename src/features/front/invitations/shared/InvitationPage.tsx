@@ -62,11 +62,17 @@ export default function InvitationPage({
     extraHead,
     accommodation,
     timeline,
+    metaDescription
   } = config;
 
   return (
     <>
-      <InvitationMeta invitationData={invitationData}>{extraHead}</InvitationMeta>
+      <InvitationMeta
+        invitationData={invitationData}
+        description={metaDescription}
+      >
+        {extraHead}
+      </InvitationMeta>
 
       <InvitationFrame
         invitationData={invitationData}

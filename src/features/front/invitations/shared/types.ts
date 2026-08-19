@@ -115,6 +115,14 @@ export interface InvitationConfig {
   accommodation?: AccommodationSectionConfig;
   timeline?: TimelineSectionConfig;
 
+  /**
+   * Descripción para los meta tags (description, og:description,
+   * twitter:description). Si se omite o se pasa explícitamente
+   * `null`/`undefined`, NO se renderizan los meta description
+   * (útil para invitaciones que no quieren descripción pública).
+   */
+  metaDescription?: string;
+
   /** Permite inyectar nodos extra (raro, pero útil para overrides). */
   extraHead?: ReactNode;
 }
