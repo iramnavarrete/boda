@@ -147,7 +147,7 @@ const GiftsTable: FC<Props> = ({
           {/* Título Script */}
           <p
             className={cn(
-              "text-4xl md:text-6xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.03)] font-newIconScript text-current mb-6 text-center",
+              "text-4xl md:text-4xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.03)] font-newIconScript text-current mb-6 text-center",
               titleClassName,
             )}
           >

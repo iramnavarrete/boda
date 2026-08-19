@@ -121,7 +121,12 @@ const EditorialEvent: React.FC<EditorialEventProps> = ({
             target="_blank"
             rel="noopener noreferrer"
           >
-            <span className="text-current group-hover:text-accent">
+            <span
+              className={cn(
+                "text-current",
+                !isImageVariant ? "group-hover:text-accent" : "",
+              )}
+            >
               Ver Mapa
             </span>
             {!isImageVariant && (
