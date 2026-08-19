@@ -10,6 +10,7 @@ const DEFAULT_FAMILY: FamilyFormData = {
   notaInvitado: null,
   cambiosPermitidos: true,
   notaAnfitrion: null,
+  ninosPermitidos: false,
 };
 
 interface FamilyFormState {

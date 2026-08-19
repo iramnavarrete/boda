@@ -459,12 +459,12 @@ const Assistants: FC<Props> = ({
                       )}
 
                       {familyData.ninosPermitidos === false && (
-                        <div className="w-full flex justify-center mb-8 px-2">
+                        <div className="w-full flex justify-center mb-8 px-0.5">
                           <div className="bg-[color-mix(in_srgb,currentColor_3%,transparent)] border border-[color-mix(in_srgb,currentColor_15%,transparent)] px-5 py-4 rounded-xl flex flex-col items-center text-center w-full">
                             <span className="text-[9px] font-bold uppercase tracking-[0.25em] mb-1.5 opacity-60">
                               Evento Solo Adultos
                             </span>
-                            <span className="text-[13px] font-serif italic leading-relaxed opacity-80">
+                            <span className="text-[12px] font-serif italic leading-relaxed opacity-80">
                               &quot;Agradecemos de corazón tu comprensión al
                               respetar nuestro deseo de tener una boda solo para
                               adultos.&quot;
@@ -619,16 +619,31 @@ const Assistants: FC<Props> = ({
                                         {isAttending && (
                                           <motion.div
                                             key="confirmados-stepper"
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{
-                                              opacity: 1,
-                                              height: "auto",
+                                            initial={{
+                                              gridTemplateRows: "0fr",
+                                              opacity: 0,
                                             }}
-                                            exit={{ opacity: 0, height: 0 }}
-                                            transition={{ duration: 0.3 }}
-                                            className="w-full overflow-hidden"
+                                            animate={{
+                                              gridTemplateRows: "1fr",
+                                              opacity: 1,
+                                            }}
+                                            exit={{
+                                              gridTemplateRows: "0fr",
+                                              opacity: 0,
+                                            }}
+                                            transition={{
+                                              duration: 0.4,
+                                              ease: "easeInOut",
+                                            }}
+                                            style={{ display: "grid" }}
                                           >
-                                            <div className="w-full flex flex-col items-center mb-10">
+                                            <div
+                                              style={{
+                                                overflow: "hidden",
+                                                minHeight: 0,
+                                              }}
+                                            >
+                                              <div className="w-full flex flex-col items-center mb-10">
                                               <p className="text-[10px] font-bold opacity-60 uppercase tracking-[0.2em] mb-6 text-center mt-2">
                                                 Número de pases
                                               </p>
@@ -690,6 +705,7 @@ const Assistants: FC<Props> = ({
                                                   {familyData.invitados} pases
                                                 </p>
                                               )}
+                                            </div>
                                             </div>
                                           </motion.div>
                                         )}
