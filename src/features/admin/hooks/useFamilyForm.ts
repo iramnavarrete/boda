@@ -26,6 +26,7 @@ export function useFamilyForm() {
           ...family,
           telefono: contactInfo?.telefono || "",
           cambiosPermitidos: !!family.cambiosPermitidos,
+          ninosPermitidos: family.ninosPermitidos ?? false,
         };
         storeOpenForEdit(family, familyFormData);
       } else {
