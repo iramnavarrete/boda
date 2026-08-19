@@ -66,9 +66,9 @@ const parseRealPercentToTranslate = (posStr?: string) => {
 export default function Cover({
   isSealVisible,
   imagesConfig = [
-    { src: "/img/cover1.webp", panStart: "40%", panEnd: "60%" },
-    { src: "/img/cover2.webp", panStart: "60%", panEnd: "40%" },
-    { src: "/img/cover3.webp", panStart: "40%", panEnd: "60%" },
+    { src: "/img/cover1.webp", panStart: "45%", panEnd: "55%" },
+    { src: "/img/cover2.webp", panStart: "55%", panEnd: "45%" },
+    { src: "/img/cover3.webp", panStart: "45%", panEnd: "55%" },
   ],
   eventTitleClassName = "",
   musicIconClassName = "",

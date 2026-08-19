@@ -9,6 +9,7 @@ import {
 } from "@/constants/animationSequences";
 import { useInvitationStore } from "../../stores/invitationStore";
 import { cn } from "@heroui/theme";
+import type { ReactNode } from "react";
 import DressCode, { ColorPalette, DressCodeSection } from "./DressCode";
 import AccommodationSection, {
   AccommodationConfig,
@@ -43,12 +44,24 @@ type Props = {
   // Props para Hospedaje (Datos + Estilos Personalizables)
   accommodationConfig?: AccommodationConfig; // Si no se pasa, la sección no aparece
   accommodationStyles?: AccommodationStyleConfig; // Objeto con ClassNames específicos
+  /**
+   * Slot opcional para inyectar un sub-componente de hospedaje ya construido
+   * desde fuera (ej: `AccommodationSection` del módulo de invitaciones).
+   * Si se pasa, **tiene prioridad** sobre `accommodationConfig/Styles`.
+   */
+  accommodationSlot?: ReactNode;
 
   timelineItems?: GraphicTimelineItem[]; // Si no se pasa, la sección no aparece
   timelineTitle?: string;
   timelineSubtitle?: string;
   timelineStyles?: TimelineStyleConfig;
   timelineAccentColor?: string;
+  /**
+   * Slot opcional para inyectar un sub-componente de timeline ya construido
+   * desde fuera (ej: `TimelineSection` del módulo de invitaciones).
+   * Si se pasa, **tiene prioridad** sobre `timelineItems/Titles/...`.
+   */
+  timelineSlot?: ReactNode;
 };
 
 export default function CeremonyToast({
@@ -94,6 +107,8 @@ export default function CeremonyToast({
   timelineAccentColor = "#252a33",
   bothRestrictions,
   sectionsContainerClassName,
+  accommodationSlot,
+  timelineSlot,
 }: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
 
@@ -175,12 +190,16 @@ export default function CeremonyToast({
               typeEvent="Fiesta"
             />
 
-            {/* SECCIÓN: HOSPEDAJE */}
-            {accommodationConfig && (
-              <AccommodationSection
-                config={accommodationConfig}
-                styles={accommodationStyles}
-              />
+            {/* SECCIÓN: HOSPEDAJE (slot externo tiene prioridad) */}
+            {accommodationSlot ? (
+              accommodationSlot
+            ) : (
+              accommodationConfig && (
+                <AccommodationSection
+                  config={accommodationConfig}
+                  styles={accommodationStyles}
+                />
+              )
             )}
 
             {/* NOTA IMPORTANTE (Opcional) */}
@@ -225,14 +244,20 @@ export default function CeremonyToast({
           </div>
         </div>
 
-        {timelineItems && timelineItems.length > 0 && (
-          <EditorialTimeline
-            items={timelineItems}
-            title={timelineTitle}
-            subtitle={timelineSubtitle}
-            styles={timelineStyles}
-            accentColor={timelineAccentColor}
-          />
+        {/* SECCIÓN TIMELINE / ITINERARIO (slot externo tiene prioridad) */}
+        {timelineSlot ? (
+          timelineSlot
+        ) : (
+          timelineItems &&
+          timelineItems.length > 0 && (
+            <EditorialTimeline
+              items={timelineItems}
+              title={timelineTitle}
+              subtitle={timelineSubtitle}
+              styles={timelineStyles}
+              accentColor={timelineAccentColor}
+            />
+          )
         )}
 
         {/* SECCIÓN DEL CÓDIGO DE VESTIMENTA */}
