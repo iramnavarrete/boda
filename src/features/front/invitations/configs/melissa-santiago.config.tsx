@@ -8,6 +8,9 @@ import type { InvitationConfig } from "../shared/types";
 const melissaSantiagoConfig: InvitationConfig = {
   slug: "melissa-santiago",
 
+  // Sin meta description (oculta description/og:description/twitter:description)
+  metaDescription: "",
+
   sealConfig: {
     customSvg: (
       <MelissaSantiagoSealLogo className="text-white h-10 w-10 -translate-x-[2px]" />

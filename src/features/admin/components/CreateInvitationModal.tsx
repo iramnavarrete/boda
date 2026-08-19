@@ -8,6 +8,9 @@ import {
   Save,
   Heart,
   Palette,
+  MessageCircle,
+  BellRing,
+  Info,
 } from "lucide-react";
 import Modal from "@/features/shared/components/Modal";
 import { EventType, Invitation, Modify } from "@/types";
@@ -68,6 +71,8 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
         },
       },
     },
+    mensajeInicial: "",
+    mensajeRecordatorio: "",
   };
 
   const [formData, setFormData] = useState<FormDataState>(initialState);
@@ -97,6 +102,8 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
         configuracionVisual:
           invitationToEdit.configuracionVisual ||
           initialState.configuracionVisual,
+        mensajeInicial: invitationToEdit.mensajeInicial || "",
+        mensajeRecordatorio: invitationToEdit.mensajeRecordatorio || "",
       });
     } else if (!isOpen) {
       setFormData(initialState);
@@ -123,6 +130,8 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
         ceremonia: formData.ceremonia,
         recepcion: formData.recepcion,
         configuracionVisual: formData.configuracionVisual,
+        mensajeInicial: formData.mensajeInicial || "",
+        mensajeRecordatorio: formData.mensajeRecordatorio || "",
       };
 
       if (invitationToEdit?.id) {
@@ -812,6 +821,91 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
                       }
                     />
                   </div>
+                </div>
+              </section>
+
+              {/* MENSAJES DE WHATSAPP */}
+              <section className="space-y-5 bg-white p-6 rounded-[20px] border border-sand-200 shadow-sm">
+                <div className="flex items-start justify-between gap-3 border-b border-sand-200 pb-3">
+                  <h4 className="font-serif text-gold-500 text-lg flex items-center gap-2">
+                    <MessageCircle size={18} /> Mensajes de WhatsApp
+                  </h4>
+                  <div className="relative group/tooltip flex items-center justify-center cursor-help shrink-0 p-1">
+                    <Info
+                      size={18}
+                      className="text-gold-500 hover:text-[#B39358] transition-colors"
+                    />
+                    <div className="absolute top-full right-0 mt-2 w-72 p-4 bg-white border border-sand-200 shadow-[0_10px_40px_-10px_rgba(44,44,41,0.2)] rounded-2xl text-xs text-[#5A5A5A] opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 pointer-events-none">
+                      <p className="leading-relaxed mb-2">
+                        Si dejas el campo vacío, se usa el mensaje por defecto
+                        del sistema. Puedes usar las siguientes variables, que
+                        se reemplazan al enviar:
+                      </p>
+                      <ul className="space-y-1 font-mono text-[11px] text-charcoal-800">
+                        <li>
+                          <b>{"{nombreFamilia}"}</b> — nombre de la familia
+                        </li>
+                        <li>
+                          <b>{"{numInvitados}"}</b> — solo el número de
+                          cupos
+                        </li>
+                        <li>
+                          <b>{"{totalLugares}"}</b> — 1 lugar / N lugares
+                          (auto)
+                        </li>
+                        <li>
+                          <b>{"{link}"}</b> — URL de la invitación
+                        </li>
+                        <li>
+                          <b>{"{fechaLimite}"}</b> — fecha límite
+                          formateada
+                        </li>
+                      </ul>
+                      <p className="leading-relaxed mt-2">
+                        Para <b>negritas</b> en WhatsApp usa{" "}
+                        <code className="bg-sand-100 px-1 rounded">*texto*</code>
+                        .
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-xs text-[#5A5A5A] leading-relaxed">
+                  Personaliza el mensaje inicial y de recordatorio que se envía
+                  por WhatsApp a cada familia. Déjalo vacío para usar el
+                  mensaje por defecto.
+                </p>
+
+                {/* Mensaje inicial */}
+                <div>
+                  <label className="text-[10px] font-bold text-[#5A5A5A] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                    <MessageCircle size={12} /> Mensaje Inicial
+                  </label>
+                  <textarea
+                    rows={6}
+                    placeholder="Ej: ¡Hola {nombreFamilia}! Les enviamos..."
+                    className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-[#FDFBF7] focus:border-gold-500 outline-none transition-all shadow-sm text-sm resize-y leading-relaxed"
+                    value={formData.mensajeInicial}
+                    onChange={(e) =>
+                      handleChange("mensajeInicial", e.target.value)
+                    }
+                  />
+                </div>
+
+                {/* Mensaje recordatorio */}
+                <div>
+                  <label className="text-[10px] font-bold text-[#5A5A5A] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                    <BellRing size={12} /> Mensaje de Recordatorio
+                  </label>
+                  <textarea
+                    rows={6}
+                    placeholder="Ej: ✨ Queridos {nombreFamilia}, aún no hemos..."
+                    className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-[#FDFBF7] focus:border-gold-500 outline-none transition-all shadow-sm text-sm resize-y leading-relaxed"
+                    value={formData.mensajeRecordatorio}
+                    onChange={(e) =>
+                      handleChange("mensajeRecordatorio", e.target.value)
+                    }
+                  />
                 </div>
               </section>
             </div>

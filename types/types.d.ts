@@ -117,6 +117,13 @@ export interface Invitation {
   ceremonia: EventLocation;
   fechaISO?: string;
   configuracionVisual?: ConfiguracionVisual;
+  /**
+   * Mensajes custom de WhatsApp para esta invitación. Si se definen,
+   * reemplazan al mensaje por defecto. Aceptan variables que se
+   * sustituyen al enviar (ver `replaceWhatsappVariables`).
+   */
+  mensajeInicial?: string;
+  mensajeRecordatorio?: string;
 }
 
 // Tipo auxiliar para las escalas de color completas (50-950)
