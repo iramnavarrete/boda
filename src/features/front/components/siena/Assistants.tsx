@@ -129,7 +129,7 @@ const TicketCard: FC<StateCardProps> = ({
           <p className="text-[9px] font-bold uppercase tracking-[0.3em] mb-4 border border-current opacity-50 px-5 py-1.5 rounded-full bg-white shadow-sm">
             ✦ Pase de Acceso ✦
           </p>
-          <p className="font-serif text-3xl text-center leading-tight mb-2">
+          <p className="font-serif text-2xl text-center leading-tight mb-2">
             {invitationData?.nombre || "Nuestra Boda"}
           </p>
           <p className="text-[9px] text-current opacity-70 uppercase tracking-[0.2em] text-center">
@@ -143,11 +143,11 @@ const TicketCard: FC<StateCardProps> = ({
           <div className="absolute -right-4 w-8 h-8 bg-accent rounded-full shadow-inner border-l border-[#EBE5DA]" />
         </div>
 
-        <div className="pt-6 pb-6 px-8 flex flex-col items-center">
+        <div className="pt-6 pb-6 px-4 flex flex-col items-center">
           <p className="text-[9px] font-bold text-current opacity-50 uppercase tracking-[0.25em] mb-3">
             Invitado
           </p>
-          <p className="text-3xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.05)] font-newIconScript text-center mb-4">
+          <p className="text-2xl md:text-3xl drop-shadow-[1px_1px_1px_rgba(0,0,0,0.05)] font-newIconScript text-center mb-4">
             {familyData.nombre}
           </p>
           <p className="text-[10px] font-bold text-current opacity-50 uppercase tracking-[0.15em] flex items-center justify-center gap-2">
