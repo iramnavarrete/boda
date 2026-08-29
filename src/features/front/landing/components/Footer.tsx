@@ -95,7 +95,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <a
-                  href={`https://wa.me/+526142537718?text=${encodeURIComponent("Hola me comunico para saber màs información sobre las invitaciones digitales.")}`}
+                  href={`https://wa.me/+526148750265?text=${encodeURIComponent("Hola me comunico para saber màs información sobre las invitaciones digitales.")}`}
                   target="_blank"
                   className="hover:text-gold transition-colors"
                 >
