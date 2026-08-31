@@ -33,11 +33,13 @@ import { SeatingModalContext } from "../SeatingModalContext";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
 import { useConfirmModal } from "@/features/admin/hooks/useConfirmModal";
 import ElementsPalette from "./ElementsPalette";
+import ElementSidebar from "../sidebar/ElementSidebar";
 import LayoutSetupModal from "../canvas/LayoutSetupModal";
 import MobileFallback from "./MobileFallback";
 import { DragItemData } from "@/types/seating";
 import { CursorCenteredDragOverlay } from "./CursorCenteredDragOverlay";
 import { removeHighlightSeats } from "../../utils/highlightHelper";
+import { getDefaultTableAlias } from "../../utils/tableAlias";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import { getEventTypeName } from "@/utils/formatters";
 
@@ -67,6 +69,8 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     executeRemoveSeat,
     executeDeleteFamily,
     executeAddSeatToFamily,
+    selectedElementId,
+    setSelectedElementId,
   } = useSeatingStore();
 
   const { zoom } = useZoomStore();
@@ -166,6 +170,18 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       unsubscribe();
     };
   }, [invitationId, isAdminOrHost, initialize, showToast]);
+
+  // ============================================================================
+  // AUTO-OPEN DEL SIDEBAR IZQUIERDO AL SELECCIONAR UN ELEMENTO
+  // Si el usuario cierra el sidebar con la X y luego hace click en un
+  // elemento del plano, el sidebar se vuelve a abrir automáticamente
+  // para mostrar las propiedades del elemento seleccionado.
+  // ============================================================================
+  useEffect(() => {
+    if (selectedElementId) {
+      setLeftOpen(true);
+    }
+  }, [selectedElementId]);
 
   // ============================================================================
   // HANDLERS DE CONFIRMACIÓN (memoizados para no romper el contexto de hijos)
@@ -394,8 +410,7 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
           { type: "palette_element" }
         >;
         const isTable = d.seats > 0;
-        const tablesCount = elements.filter((e) => e.seats > 0).length + 1;
-        const alias = isTable ? `Mesa ${tablesCount}` : d.label;
+        const alias = isTable ? getDefaultTableAlias(elements) : d.label;
 
         const canvasEl = document.querySelector(".canvas-droppable-area");
         let dropX = 400;
@@ -588,7 +603,7 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
             style={{ width: leftOpen ? "auto" : "0" }}
           >
             <aside
-              className="shrink-0 bg-[#FDFBF7] border-r border-[#EBE5DA] overflow-hidden flex flex-col h-full"
+              className="shrink-0 w-72 bg-[#FDFBF7] border-r border-[#EBE5DA] overflow-hidden flex flex-col h-full"
               style={{
                 transform: leftOpen ? "translateX(0)" : "translateX(-100%)",
                 transition: "transform 0.3s ease",
@@ -596,7 +611,14 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
                 zIndex: leftOpen ? "auto" : -1,
               }}
             >
-              <ElementsPalette onClose={() => setLeftOpen(false)} />
+              {selectedElementId ? (
+                <ElementSidebar
+                  onBack={() => setSelectedElementId(null)}
+                  onCloseSidebar={() => setLeftOpen(false)}
+                />
+              ) : (
+                <ElementsPalette onClose={() => setLeftOpen(false)} />
+              )}
             </aside>
           </div>
 

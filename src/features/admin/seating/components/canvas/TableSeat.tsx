@@ -145,7 +145,8 @@ export function TableSeat({
             e.stopPropagation();
             if (tableId && guestId) removeGuestFromTable(tableId, guestId);
           }}
-          className="p-1 hover:bg-red-50 text-red-400 hover:text-red-600 rounded transition-colors shrink-0"
+          title="Desasignar invitado"
+          className="p-1 hover:bg-red-50 text-amber-500 hover:text-amber-700 rounded transition-colors shrink-0"
         >
           <RotateCcw size={12} />
         </button>
@@ -155,6 +156,7 @@ export function TableSeat({
               e.stopPropagation();
               triggerSeatRemoval(family.id, guestId);
             }}
+            title="Eliminar invitado"
             className="p-1 hover:bg-red-50 text-red-500 hover:text-red-700 rounded transition-colors shrink-0 ml-0.5"
           >
             <Trash2 size={12} />

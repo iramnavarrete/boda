@@ -356,6 +356,16 @@ html {
   box-shadow: 0 0 0 2px rgba(197, 166, 105, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
+/* Áreas seleccionadas: el borde dorado se ve igual de prominente
+   que el de las mesas (3px sólido, no 2px punteado).
+   Las áreas usan la clase `.area-shape` (no `.table-element-inner`). */
+.table-element-card[data-is-area="true"][data-selected="true"] .area-shape {
+  border-color: #C5A669 !important;
+  border-width: 3px !important;
+  border-style: solid !important;
+  box-shadow: 0 0 0 2px rgba(197, 166, 105, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
 /* Tipografía y estilos de Alias y Capacidad */
 .table-element-card .element-alias {
   display: block;
@@ -466,4 +476,205 @@ body.is-dragging-active * {
 .is-dragging-active .table-seat:hover {
   transform: none !important;
   box-shadow: none !important;
+}
+
+/* =========================================================================
+   BORDES — mesas continuas, TODO LO DEMÁS punteado
+   ========================================================================= */
+
+/* Por defecto, todo lo que no sea mesa tiene borde punteado
+   (áreas, servicios, utilidades, espacios especiales) */
+.table-element-card[data-is-area="true"] .table-element-inner,
+.table-element-card[data-is-utility="true"] .table-element-inner,
+.table-element-card[data-is-area="true"] .area-shape {
+  border-style: dashed !important;
+}
+
+/* Mesas (round/rectangular/square/half_moon/cocktail/head/sweethearts)
+   conservan el borde sólido */
+.table-element-card[data-is-table="true"][data-type="sweethearts_table"] .sweethearts-table {
+  border-style: solid !important;
+}
+
+/* =========================================================================
+   MESA DE NOVIOS — 2 sillas decorativas ARRIBA de la mesa
+   Las sillas se renderizan como elementos JSX (ver TableShape.tsx)
+   usando los iconos ChessQueen y ChessKing de lucide-react.
+   Aquí solo queda el estilo de la mesa y de la tipografía.
+   ========================================================================= */
+
+.sweethearts-wrapper {
+  /* Padding invisible para que las sillas AFUERA no se corten */
+  position: relative;
+}
+
+/* Mesa: fondo degradado, esquinas redondeadas grandes */
+.sweethearts-table {
+  background: linear-gradient(135deg, #FCE7F3 0%, #FEF3C7 100%);
+  border: 3px solid #C5A669;
+  border-radius: 1.25rem;
+  box-shadow:
+    0 0 0 1px rgba(197, 166, 105, 0.3),
+    0 8px 24px -8px rgba(190, 24, 93, 0.25);
+  position: relative;
+}
+
+/* Tipografía especial para la mesa de novios */
+.table-element-card[data-type="sweethearts_table"] .element-alias {
+  font-family: "Playfair Display", "Georgia", serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: #8B5A8C !important;
+  font-weight: 700;
+}
+
+.table-element-card[data-type="sweethearts_table"] .element-capacity {
+  color: #C5A669 !important;
+  font-weight: 700;
+}
+
+/* =========================================================================
+   LOUNGE — item especial con sillonsitos y bancos
+   CSS puro dibuja los muebles; los TableSeat son los ocupantes funcionales
+   ========================================================================= */
+
+.lounge-inner {
+  background: linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%);
+  border: 2px dashed #A78BFA;
+  border-radius: 1rem;
+  position: relative;
+  z-index: 2;
+}
+
+/* Sofá horizontal (parte inferior) — gradient de color + esquinas suaves */
+.lounge-inner::before {
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 4px;
+  height: 22px;
+  background: linear-gradient(180deg, #C4B5FD 0%, #A78BFA 100%);
+  border-radius: 11px 11px 8px 8px;
+  box-shadow: inset 0 -3px 0 rgba(0,0,0,0.15);
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Sillón vertical izquierdo */
+.lounge-inner > .lounge-armchair-left,
+.lounge-armchair-left {
+  position: absolute;
+  left: 4px;
+  top: 12%;
+  bottom: 32%;
+  width: 22px;
+  background: linear-gradient(90deg, #C4B5FD 0%, #A78BFA 100%);
+  border-radius: 8px;
+  box-shadow: inset -2px 0 0 rgba(0,0,0,0.15);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Sillón vertical derecho */
+.lounge-armchair-right {
+  position: absolute;
+  right: 4px;
+  top: 12%;
+  bottom: 32%;
+  width: 22px;
+  background: linear-gradient(270deg, #C4B5FD 0%, #A78BFA 100%);
+  border-radius: 8px;
+  box-shadow: inset 2px 0 0 rgba(0,0,0,0.15);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Los 2 bancos circulares se dibujan con gradientes radiales */
+.lounge-inner > .lounge-stool-1,
+.lounge-inner > .lounge-stool-2 {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #DDD6FE 0%, #A78BFA 100%);
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.3);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.lounge-stool-1 { left: 8%; top: 30%; }
+.lounge-stool-2 { right: 8%; top: 30%; }
+
+/* =========================================================================
+   ELEMENTOS ESTRUCTURALES — siempre al fondo del plano
+   ========================================================================= */
+
+/* Estructurales SIEMPRE al fondo, sin importar hover/select. */
+.table-element-card[data-is-structural="true"] {
+  z-index: 1 !important;
+}
+
+/* Cuando el usuario hace hover sobre un estructural, sube solo un nivel
+   (queda por debajo de mesas con z-50 del hover general). */
+.table-element-card[data-is-structural="true"]:hover {
+  z-index: 2 !important;
+}
+
+/* Los elementos estructurales NO tienen border-style dashed del área. */
+.table-element-card[data-is-structural="true"] .structural-shape {
+  cursor: grab;
+  transition: filter 0.15s ease;
+}
+
+.table-element-card[data-is-structural="true"]:active .structural-shape {
+  cursor: grabbing;
+}
+
+/* Hover sobre estructurales: leve brillo dorado para confirmar selección */
+.table-element-card[data-is-structural="true"][data-single-selected="true"] .structural-shape {
+  filter: drop-shadow(0 0 6px rgba(197, 166, 105, 0.5));
+}
+
+/* =========================================================================
+   ELEMENTOS DE UTILIDAD (texto, línea, zona)
+   ========================================================================= */
+
+.table-element-card[data-is-utility="true"] {
+  background: transparent;
+}
+
+/* Solo text_label y line_divider sin border (zona lo necesita) */
+.table-element-card[data-type="text_label"] .area-shape,
+.table-element-card[data-type="line_divider"] .area-shape,
+.table-element-card[data-type="text_label"] .table-element-inner,
+.table-element-card[data-type="line_divider"] .table-element-inner {
+  border: none !important;
+}
+
+/* Línea divisoria: cursor horizontal de resize */
+.table-element-card[data-type="line_divider"] {
+  cursor: ew-resize;
+}
+
+/* Texto: cursor de edición */
+.table-element-card[data-type="text_label"] {
+  cursor: grab;
+}
+
+/* =========================================================================
+   ROTACIÓN — soporte general
+   ========================================================================= */
+
+.table-element-card {
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+.table-element-card:not([data-is-structural="true"]):not([data-is-utility="true"]) {
+  cursor: grab;
+}
+
+.table-element-card:not([data-is-structural="true"]):not([data-is-utility="true"]):active {
+  cursor: grabbing;
 }

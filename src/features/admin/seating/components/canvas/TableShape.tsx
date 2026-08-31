@@ -1,19 +1,16 @@
 import React from "react";
-import { ElementType } from "@/types/seating";
+import { ChessKing, ChessQueen } from "lucide-react";
+import { ElementType, TableShapeProps } from "@/types/seating";
 
-export interface TableShapeProps {
-  type: ElementType;
-  width: number;
-  height: number;
-  seatsCount?: number;
-  alias?: string;
-  assignedSeatsCount?: number;
-  renderSeatItem?: (
-    seatIndex: number,
-    coords: { x: number; y: number },
-  ) => React.ReactNode;
-}
-
+/**
+ * Renderiza la forma de las MESAS (incluyendo la mesa de novios).
+ *
+ * Para áreas y elementos NO estructurales, ver `AreaShape`.
+ * Para elementos estructurales, ver `StructuralElementShape`.
+ *
+ * La forma exterior y la posición de las sillas dependen de `type`.
+ * El alias se centra en la mesa y la capacidad se muestra debajo.
+ */
 export function TableShape({
   type,
   width,
@@ -22,12 +19,18 @@ export function TableShape({
   alias,
   assignedSeatsCount = 0,
   renderSeatItem,
+  seatPosition = "top",
 }: TableShapeProps) {
   const isTable = seatsCount > 0;
   const isHalfMoon = type === "half_moon_table";
+  const isSweethearts = type === "sweethearts_table";
+  const isLounge = type === "lounge";
 
   const renderSeats = () => {
-    if (!isTable) return null;
+    if (!isTable || isSweethearts || isLounge) {
+      // Para sweethearts y lounge las sillas se renderizan aparte
+      return null;
+    }
     const seats = [];
 
     for (let i = 0; i < seatsCount; i++) {
@@ -113,6 +116,144 @@ export function TableShape({
       </svg>
     );
   };
+
+  // ───────────────────────────────────────────────────────────
+  // LOUNGE: item especial con sillonsitos y bancos circulares
+  // Layout fijo: sofá horizontal (6) + 2 sillones verticales (2) + 2 bancos (2) = 10
+  // Los muebles se dibujan con CSS puro, los asientos son TableSeat funcionales
+  // ───────────────────────────────────────────────────────────
+  if (isLounge) {
+    return (
+      <div
+        className="relative w-full h-full"
+        style={{ overflow: "visible" }}
+      >
+        {/* Asientos funcionales posicionados sobre el layout */}
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ overflow: "visible" }}
+        >
+          {renderSeatItem &&
+            (() => {
+              // Posiciones fijas del lounge:
+              //  - Sofá horizontal abajo (capacidad 6)
+              //  - Sillón vertical izquierdo (capacidad 2)
+              //  - Sillón vertical derecho (capacidad 2)
+              //  - 2 bancos circulares (1 cada uno, capacidad 1)
+              // El layout está en el CSS (.lounge-*) — estas posiciones
+              // corresponden a los centros de los asientos en el mueble.
+              const seatPositions: { x: number; y: number }[] = [
+                // Sofá horizontal (6 asientos en línea)
+                { x: width * 0.20, y: height - 18 },
+                { x: width * 0.32, y: height - 18 },
+                { x: width * 0.44, y: height - 18 },
+                { x: width * 0.56, y: height - 18 },
+                { x: width * 0.68, y: height - 18 },
+                { x: width * 0.80, y: height - 18 },
+                // Sillón vertical izquierdo (2 asientos)
+                { x: 18, y: height * 0.35 },
+                { x: 18, y: height * 0.65 },
+                // Sillón vertical derecho (2 asientos)
+                { x: width - 18, y: height * 0.35 },
+                { x: width - 18, y: height * 0.65 },
+              ];
+
+              // Solo renderizamos hasta seatsCount
+              return seatPositions
+                .slice(0, seatsCount)
+                .map((pos, idx) => renderSeatItem(idx, pos));
+            })()}
+        </div>
+
+        <div className="table-element-inner lounge-inner w-full h-full flex items-center justify-center relative">
+          <span className="block font-serif truncate w-full element-alias px-4">
+            {alias}
+          </span>
+          {seatsCount > 0 && (
+            <span className="absolute bottom-1 right-2 text-[9px] font-bold tracking-widest uppercase text-[#5A5A5A] opacity-60">
+              {assignedSeatsCount}/{seatsCount}
+            </span>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // MESA DE NOVIOS: mesa con 2 sillas decorativas ARRIBA
+  // Las sillas son decorativas (no asignables) y se renderizan como
+  // elementos JSX para poder usar iconos de lucide-react
+  // (ChessQueen para la novia, ChessKing para el novio).
+  // ───────────────────────────────────────────────────────────
+  if (isSweethearts) {
+    // Para la mesa de novios, las sillas decorativas pueden ir arriba
+    // o abajo según `seatPosition` (default "top").
+    // "top"    → top negativo, las sillas sobresalen por encima de la mesa
+    // "bottom" → top = height + 6, las sillas sobresalen por debajo
+    const chairTop = seatPosition === "bottom" ? height + 6 : -54;
+
+    return (
+      <div
+        className="relative w-full h-full sweethearts-wrapper"
+        style={{ overflow: "visible" }}
+      >
+        {/* Silla decorativa IZQUIERDA — Novia (ChessQueen) */}
+        <div
+          className="absolute flex items-center justify-center rounded-full shadow-md pointer-events-none"
+          style={{
+            top: chairTop,
+            left: "calc(50% - 52px)",
+            width: 48,
+            height: 48,
+            backgroundColor: "#FCE7F3",
+            border: "2.5px solid #F472B6",
+            zIndex: 3,
+          }}
+          aria-hidden
+        >
+          <ChessQueen
+            size={28}
+            strokeWidth={2}
+            color="#BE185D"
+          />
+        </div>
+
+        {/* Silla decorativa DERECHA — Novio (ChessKing) */}
+        <div
+          className="absolute flex items-center justify-center rounded-full shadow-md pointer-events-none"
+          style={{
+            top: chairTop,
+            right: "calc(50% - 52px)",
+            width: 48,
+            height: 48,
+            backgroundColor: "#FEF3C7",
+            border: "2.5px solid #C5A669",
+            zIndex: 3,
+          }}
+          aria-hidden
+        >
+          <ChessKing
+            size={28}
+            strokeWidth={2}
+            color="#A78B5C"
+          />
+        </div>
+
+        <div className="table-element-inner sweethearts-table w-full h-full flex items-center justify-center relative">
+          <div className="text-center px-4 w-full">
+            {alias && (
+              <span className="block font-serif text-[1.05rem] element-alias">
+                {alias}
+              </span>
+            )}
+            <span className="block text-[9px] font-bold tracking-widest uppercase mt-0.5 element-capacity opacity-70">
+              Mesa de los Novios
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-full" style={{ overflow: "visible" }}>

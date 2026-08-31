@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useEffect, useMemo } from "react";
 import { useSeatingStore } from "../../stores/useSeatingStore";
 import { useZoomStore } from "../../stores/useZoomStore";
 import TableElement from "./TableElement";
@@ -9,6 +9,7 @@ import { useDroppable, useDndContext } from "@dnd-kit/core";
 import { ConfirmModalState } from "@/types";
 import { useCanvasZoom } from "../../hooks/useCanvasZoom";
 import { useCanvasSelectionBox } from "../../hooks/useCanvasSelectionBox";
+import { getElementLayer } from "@/types/seating";
 
 interface SeatingCanvasProps {
   openConfirmModal: (config: Omit<ConfirmModalState, "isLoading">) => void;
@@ -20,12 +21,6 @@ export default function SeatingCanvas({
   const elements = useSeatingStore((state) => state.elements);
   const selectedElementIds = useSeatingStore(
     (state) => state.selectedElementIds,
-  );
-  const setSelectedElementIds = useSeatingStore(
-    (state) => state.setSelectedElementIds,
-  );
-  const setSelectedElementId = useSeatingStore(
-    (state) => state.setSelectedElementId,
   );
   const removeMultipleElements = useSeatingStore(
     (state) => state.removeMultipleElements,
@@ -39,6 +34,25 @@ export default function SeatingCanvas({
 
   const { active } = useDndContext();
   const isDraggingAny = Boolean(active);
+
+  // Ordena los elementos por layer para que los estructurales siempre
+  // queden al fondo del DOM (y por lo tanto detrás de mesas/áreas).
+  // Orden de layer: structural → utility → service → furniture → area → table
+  const sortedElements = useMemo(() => {
+    const order: Record<string, number> = {
+      structural: 0,
+      utility: 1,
+      service: 2,
+      furniture: 3,
+      area: 4,
+      table: 5,
+    };
+    return [...elements].sort((a, b) => {
+      const la = order[getElementLayer(a.type)] ?? 99;
+      const lb = order[getElementLayer(b.type)] ?? 99;
+      return la - lb;
+    });
+  }, [elements]);
 
   const { setNodeRef: setDroppableCanvasRef } = useDroppable({
     id: "canvas",
@@ -165,7 +179,7 @@ export default function SeatingCanvas({
             }}
           >
             <div ref={setDroppableCanvasRef} className="absolute inset-0">
-              {elements.map((el) => (
+              {sortedElements.map((el) => (
                 <TableElement key={el.id} element={el} />
               ))}
 
