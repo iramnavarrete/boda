@@ -350,20 +350,31 @@ html {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
 
-/* Estado Seleccionado */
+/* Estado Seleccionado
+   ----------------------------------------------------------------
+   - Mesas (.table-element-inner): cambian border-color y agregan
+     box-shadow + un anillo exterior de 1px (box-shadow inset simula
+     el grosor que tenía el borde sólido de selección, sin alterar
+     el border-width real → no se mueve el inner content).
+   - Áreas (.area-shape): idem + cambio de border-style a solid.
+     NO se modifica border-width para que los íconos
+     (top-2 left-2 etc.) no se desplacen al activar la selección.
+   - Lounge_table (.lounge-wrapper): misma lógica que las áreas. */
 .table-element-card[data-selected="true"] .table-element-inner {
   border-color: #C5A669 !important;
-  box-shadow: 0 0 0 2px rgba(197, 166, 105, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 0 0 1px #C5A669, 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Áreas seleccionadas: el borde dorado se ve igual de prominente
-   que el de las mesas (3px sólido, no 2px punteado).
-   Las áreas usan la clase `.area-shape` (no `.table-element-inner`). */
 .table-element-card[data-is-area="true"][data-selected="true"] .area-shape {
   border-color: #C5A669 !important;
-  border-width: 3px !important;
   border-style: solid !important;
-  box-shadow: 0 0 0 2px rgba(197, 166, 105, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 0 0 1px #C5A669, 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.table-element-card[data-type="lounge_table"][data-selected="true"] .lounge-wrapper {
+  border-color: #C5A669 !important;
+  border-style: solid !important;
+  box-shadow: 0 0 0 1px #C5A669, 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 /* Tipografía y estilos de Alias y Capacidad */

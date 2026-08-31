@@ -410,7 +410,9 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
           { type: "palette_element" }
         >;
         const isTable = d.seats > 0;
-        const alias = isTable ? getDefaultTableAlias(elements) : d.label;
+        const alias = isTable
+          ? getDefaultTableAlias(elements, d.elementType)
+          : d.label;
 
         const canvasEl = document.querySelector(".canvas-droppable-area");
         let dropX = 400;

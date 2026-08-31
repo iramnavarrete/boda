@@ -24,11 +24,11 @@ export function TableShape({
   const isTable = seatsCount > 0;
   const isHalfMoon = type === "half_moon_table";
   const isSweethearts = type === "sweethearts_table";
-  const isLounge = type === "lounge";
+  const isLoungeTable = type === "lounge_table";
 
   const renderSeats = () => {
-    if (!isTable || isSweethearts || isLounge) {
-      // Para sweethearts y lounge las sillas se renderizan aparte
+    if (!isTable || isSweethearts || isLoungeTable) {
+      // Para sweethearts y lounge_table las sillas se renderizan aparte
       return null;
     }
     const seats = [];
@@ -118,63 +118,257 @@ export function TableShape({
   };
 
   // ───────────────────────────────────────────────────────────
-  // LOUNGE: item especial con sillonsitos y bancos circulares
-  // Layout fijo: sofá horizontal (6) + 2 sillones verticales (2) + 2 bancos (2) = 10
-  // Los muebles se dibujan con CSS puro, los asientos son TableSeat funcionales
+  // LOUNGE_TABLE: mesa tipo sala de estar.
+  //  - Contenedor gris tenue con borde punteado y esquinas
+  //    redondeadas (el "tapete" del lounge).
+  //  - Mesa central con el SVG del Sofa + alias.
+  //  - Sillón (píldora horizontal) arriba con 2 plazas adentro.
+  //  - Bancas laterales (verticales) a izquierda/derecha con 2-3 plazas.
+  //  - Poufs individuales abajo de la mesa.
+  //  - TODOS los asientos son TableSeat de 28px (mismo tamaño que
+  //    las mesas regulares) → tooltip, drag y status funcionan
+  //    idéntico.
+  //  - Los muebles son divs simples con `pointer-events-none`, los
+  //    TableSeats adentro tienen `pointer-events-auto` (reciben
+  //    los eventos de tooltip, drag, etc.).
   // ───────────────────────────────────────────────────────────
-  if (isLounge) {
+  if (isLoungeTable) {
+    const padding = 12;
+
+    // Todos los asientos del lounge son del mismo tamaño que los
+    // de las mesas regulares (28px). Hay espacio de sobra en el
+    // sillón (144x64) y en las bancas (48x144).
+
+    // Dimensiones de los muebles
+    const sofaW = 144;
+    const sofaH = 64;
+    const benchW = 48;
+    const benchH = 144;
+    const stoolSize = 28; // poufs = mismo tamaño que los asientos
+    const stoolGap = 12;
+
+    // Distribución perimetral:
+    //  N=1           → 1 pouf
+    //  N=2           → 2 sillón
+    //  N=3           → 2 sillón + 1 pouf
+    //  N=4           → 2 sillón + 2 banca izq
+    //  N=5           → 2 sillón + 3 banca izq
+    //  N=6           → 2 sillón + 2 izq + 2 der
+    //  N=7           → 2 sillón + 3 izq + 2 der
+    //  N=8 (default) → 2 sillón + 3 izq + 3 der
+    //  N>8           → 2 sillón + 3 izq + 3 der + (N-8) poufs
+    const layout = (() => {
+      let topSofa = 0;
+      let leftBench = 0;
+      let rightBench = 0;
+      let bottomStools = 0;
+
+      if (seatsCount === 1) bottomStools = 1;
+      else if (seatsCount === 2) topSofa = 2;
+      else if (seatsCount === 3) {
+        topSofa = 2;
+        bottomStools = 1;
+      } else if (seatsCount === 4) {
+        topSofa = 2;
+        leftBench = 2;
+      } else if (seatsCount === 5) {
+        topSofa = 2;
+        leftBench = 3;
+      } else if (seatsCount === 6) {
+        topSofa = 2;
+        leftBench = 2;
+        rightBench = 2;
+      } else if (seatsCount === 7) {
+        topSofa = 2;
+        leftBench = 3;
+        rightBench = 2;
+      } else if (seatsCount === 8) {
+        topSofa = 2;
+        leftBench = 3;
+        rightBench = 3;
+      } else if (seatsCount > 8) {
+        topSofa = 2;
+        leftBench = 3;
+        rightBench = 3;
+        bottomStools = seatsCount - 8;
+      }
+      return { topSofa, leftBench, rightBench, bottomStools };
+    })();
+
+    const centerX = width / 2;
+    const centerY = height / 2;
+
+    // Coordenadas de los muebles
+    const sofaX = centerX - sofaW / 2;
+    const sofaY = padding;
+
+    const benchInset = 28;
+    const leftBenchX = padding + benchInset;
+    const leftBenchY = centerY - benchH / 2;
+
+    const rightBenchX = width - padding - benchW - benchInset;
+    const rightBenchY = centerY - benchH / 2;
+
+    // Poufs debajo de la mesa central
+    const tableBottomEdge = centerY + 48;
+    const stoolY = tableBottomEdge + 12;
+
+    const getStoolXs = (count: number) => {
+      const totalW = count * stoolSize + (count - 1) * stoolGap;
+      const startX = centerX - totalW / 2;
+      return Array.from(
+        { length: count },
+        (_, i) => startX + i * (stoolSize + stoolGap),
+      );
+    };
+    const bottomStoolXs = getStoolXs(layout.bottomStools);
+
+    // Numeración de plazas (orden: sillón → banca izq → banca der → poufs)
+    let seatIdx = 0;
+    const sofaSeats = Array.from({ length: layout.topSofa }, () => seatIdx++);
+    const leftSeats = Array.from({ length: layout.leftBench }, () => seatIdx++);
+    const rightSeats = Array.from(
+      { length: layout.rightBench },
+      () => seatIdx++,
+    );
+    const bottomSeats = Array.from(
+      { length: layout.bottomStools },
+      () => seatIdx++,
+    );
+
+    // Posiciones de los 2 asientos del sillón (centrados horizontalmente
+    // con 16px de gap, y un poco más abajo del centro vertical para
+    // mejor presentación — se asientan sobre la base del sofá en
+    // lugar de quedar flotando en la mitad).
+    // Sillón: 144x64, 2 seats de 28px → total 72, padding 36 a cada lado
+    // Centros en x: 50 y 94. Centro vertical: 32 (+ offset 4 = 36)
+    const sofaSeatPositions = [
+      { x: sofaW / 2 - 22, y: sofaH / 2 + 4 }, // asiento 1
+      { x: sofaW / 2 + 22, y: sofaH / 2 + 4 }, // asiento 2
+    ];
+
     return (
       <div
-        className="relative w-full h-full"
+        className="lounge-wrapper relative w-full h-full bg-slate-50/70 border-2 border-dashed border-slate-300 rounded-3xl shadow-sm"
         style={{ overflow: "visible" }}
       >
-        {/* Asientos funcionales posicionados sobre el layout */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ overflow: "visible" }}
-        >
-          {renderSeatItem &&
-            (() => {
-              // Posiciones fijas del lounge:
-              //  - Sofá horizontal abajo (capacidad 6)
-              //  - Sillón vertical izquierdo (capacidad 2)
-              //  - Sillón vertical derecho (capacidad 2)
-              //  - 2 bancos circulares (1 cada uno, capacidad 1)
-              // El layout está en el CSS (.lounge-*) — estas posiciones
-              // corresponden a los centros de los asientos en el mueble.
-              const seatPositions: { x: number; y: number }[] = [
-                // Sofá horizontal (6 asientos en línea)
-                { x: width * 0.20, y: height - 18 },
-                { x: width * 0.32, y: height - 18 },
-                { x: width * 0.44, y: height - 18 },
-                { x: width * 0.56, y: height - 18 },
-                { x: width * 0.68, y: height - 18 },
-                { x: width * 0.80, y: height - 18 },
-                // Sillón vertical izquierdo (2 asientos)
-                { x: 18, y: height * 0.35 },
-                { x: 18, y: height * 0.65 },
-                // Sillón vertical derecho (2 asientos)
-                { x: width - 18, y: height * 0.35 },
-                { x: width - 18, y: height * 0.65 },
-              ];
-
-              // Solo renderizamos hasta seatsCount
-              return seatPositions
-                .slice(0, seatsCount)
-                .map((pos, idx) => renderSeatItem(idx, pos));
-            })()}
+        {/* ── MESA CENTRAL — sin ícono, con alias + count ── */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="flex flex-col items-center justify-center w-48 h-24 bg-gradient-to-br from-[#FAF8F5] to-[#EBE5DA] border-2 border-[#D7C9B2] rounded-[1rem] shadow-sm backdrop-blur-sm">
+            {alias && (
+              <span className="font-serif text-[13px] font-bold text-[#7A6740] tracking-wide">
+                {alias || "Lounge"}
+              </span>
+            )}
+            {isTable && (
+              <span
+                className="block text-[11px] font-bold tracking-widest uppercase mt-0.5 element-capacity"
+                style={{ color: "#8B7250" }}
+              >
+                {assignedSeatsCount}/{seatsCount}
+              </span>
+            )}
+          </div>
         </div>
 
-        <div className="table-element-inner lounge-inner w-full h-full flex items-center justify-center relative">
-          <span className="block font-serif truncate w-full element-alias px-4">
-            {alias}
-          </span>
-          {seatsCount > 0 && (
-            <span className="absolute bottom-1 right-2 text-[9px] font-bold tracking-widest uppercase text-[#5A5A5A] opacity-60">
-              {assignedSeatsCount}/{seatsCount}
-            </span>
-          )}
-        </div>
+        {/* ── SILLÓN (Superior) — solo el SVG decorativo (sin óvalo
+            detrás). El SVG ya dibuja el sofá completo con sus paths
+            (cojines + respaldo). `pointer-events-none` para no
+            bloquear los TableSeats que están ENCIMA con z-20. ── */}
+        {layout.topSofa > 0 && (
+          <div
+            className="absolute"
+            style={{ left: sofaX, top: sofaY, width: sofaW, height: sofaH }}
+          >
+            <svg
+              viewBox="0 0 144 64"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              className="absolute inset-0 w-full h-full pointer-events-none"
+            >
+              <path
+                d="M 72 16 L 24 16 A 8 8 0 0 0 16 24 L 16 48 A 8 8 0 0 0 24 56 L 72 56 Z"
+                fill="#FFFFFF"
+                stroke="#D1D5DB"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M 72 16 L 120 16 A 8 8 0 0 1 128 24 L 128 48 A 8 8 0 0 1 120 56 L 72 56 Z"
+                fill="#FFFFFF"
+                stroke="#D1D5DB"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M 16 56 A 6 6 0 0 1 4 56 L 4 24 A 20 20 0 0 1 24 4 L 120 4 A 20 20 0 0 1 140 24 L 140 56 A 6 6 0 0 1 128 56 L 128 24 A 8 8 0 0 0 120 16 L 24 16 A 8 8 0 0 0 16 24 Z"
+                fill="#F3F4F6"
+                stroke="#D1D5DB"
+                strokeWidth="2"
+                strokeLinejoin="round"
+              />
+            </svg>
+            {/* TableSeats: absolute, z-20, capturan pointer events */}
+            {renderSeatItem &&
+              sofaSeats.map((seatId, i) =>
+                renderSeatItem(seatId, {
+                  ...sofaSeatPositions[i],
+                }),
+              )}
+          </div>
+        )}
+
+        {/* ── BANCA IZQUIERDA ── */}
+        {layout.leftBench > 0 && (
+          <div
+            className="absolute bg-white border-2 border-gray-300 rounded-xl shadow-md pointer-events-none"
+            style={{
+              left: leftBenchX,
+              top: leftBenchY,
+              width: benchW,
+              height: benchH,
+            }}
+          >
+            {renderSeatItem &&
+              leftSeats.map((seatId, i) => {
+                const spacing = benchH / (layout.leftBench + 1);
+                return renderSeatItem(seatId, {
+                  x: benchW / 2,
+                  y: spacing * (i + 1),
+                });
+              })}
+          </div>
+        )}
+
+        {/* ── BANCA DERECHA ── */}
+        {layout.rightBench > 0 && (
+          <div
+            className="absolute bg-white border-2 border-gray-300 rounded-xl shadow-md pointer-events-none"
+            style={{
+              left: rightBenchX,
+              top: rightBenchY,
+              width: benchW,
+              height: benchH,
+            }}
+          >
+            {renderSeatItem &&
+              rightSeats.map((seatId, i) => {
+                const spacing = benchH / (layout.rightBench + 1);
+                return renderSeatItem(seatId, {
+                  x: benchW / 2,
+                  y: spacing * (i + 1),
+                });
+              })}
+          </div>
+        )}
+
+        {/* ── POUFS INDIVIDUALES (Debajo de la mesa) ── */}
+        {bottomStoolXs.map((x, i) =>
+          renderSeatItem?.(bottomSeats[i], {
+            x: x + stoolSize / 2,
+            y: stoolY + stoolSize / 2,
+          }),
+        )}
       </div>
     );
   }
@@ -211,11 +405,7 @@ export function TableShape({
           }}
           aria-hidden
         >
-          <ChessQueen
-            size={28}
-            strokeWidth={2}
-            color="#BE185D"
-          />
+          <ChessQueen size={28} strokeWidth={2} color="#BE185D" />
         </div>
 
         {/* Silla decorativa DERECHA — Novio (ChessKing) */}
@@ -232,11 +422,7 @@ export function TableShape({
           }}
           aria-hidden
         >
-          <ChessKing
-            size={28}
-            strokeWidth={2}
-            color="#A78B5C"
-          />
+          <ChessKing size={28} strokeWidth={2} color="#A78B5C" />
         </div>
 
         <div className="table-element-inner sweethearts-table w-full h-full flex items-center justify-center relative">

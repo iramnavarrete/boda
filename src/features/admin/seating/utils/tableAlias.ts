@@ -1,4 +1,4 @@
-import { SeatingElement } from "@/types/seating";
+import { ElementType, SeatingElement } from "@/types/seating";
 
 /**
  * Patrón aceptado para el alias de una mesa autogenerada.
@@ -7,6 +7,13 @@ import { SeatingElement } from "@/types/seating";
  * contengan un número (p.ej. "Mesa de los novios" o "Mesa VIP 3").
  */
 const TABLE_ALIAS_PATTERN = /^Mesa (\d+)$/;
+
+/**
+ * Patrón aceptado para el alias de un lounge autogenerado.
+ * Misma lógica que TABLE_ALIAS_PATTERN pero para el contador
+ * independiente de lounges.
+ */
+const LOUNGE_ALIAS_PATTERN = /^Lounge (\d+)$/;
 
 /**
  * Devuelve el siguiente número entero de mesa a usar como default al
@@ -26,6 +33,7 @@ export function getNextTableNumber(elements: SeatingElement[]): number {
   for (const el of elements) {
     // Solo mesas (seats > 0) cuentan. Las áreas/estructuras/etc. se ignoran.
     if (!el.seats || el.seats <= 0) continue;
+    if (el.type === "lounge_table") continue; // los lounges usan su propio contador
     if (!el.alias) continue;
 
     const match = el.alias.match(TABLE_ALIAS_PATTERN);
@@ -40,9 +48,39 @@ export function getNextTableNumber(elements: SeatingElement[]): number {
 }
 
 /**
- * Devuelve el alias por defecto para una mesa nueva, basado en el
- * siguiente número disponible en el plano.
+ * Devuelve el siguiente número entero de lounge a usar como default al
+ * crear un nuevo lounge_table. Usa el mismo patrón "Lounge N" y
+ * cuenta solo los elementos de tipo `lounge_table`.
  */
-export function getDefaultTableAlias(elements: SeatingElement[]): string {
+export function getNextLoungeNumber(elements: SeatingElement[]): number {
+  let max = 0;
+  for (const el of elements) {
+    if (el.type !== "lounge_table") continue;
+    if (!el.alias) continue;
+
+    const match = el.alias.match(LOUNGE_ALIAS_PATTERN);
+    if (!match) continue;
+
+    const n = parseInt(match[1], 10);
+    if (Number.isFinite(n) && n > max) {
+      max = n;
+    }
+  }
+  return max + 1;
+}
+
+/**
+ * Devuelve el alias por defecto para una mesa nueva, basado en el
+ * tipo de elemento:
+ *  - lounge_table → "Lounge N" (contador independiente)
+ *  - otras mesas  → "Mesa N" (contador de mesas regulares)
+ */
+export function getDefaultTableAlias(
+  elements: SeatingElement[],
+  type: ElementType,
+): string {
+  if (type === "lounge_table") {
+    return `Lounge ${getNextLoungeNumber(elements)}`;
+  }
   return `Mesa ${getNextTableNumber(elements)}`;
 }

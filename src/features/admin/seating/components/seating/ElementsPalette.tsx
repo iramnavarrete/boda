@@ -127,6 +127,14 @@ const ELEMENTS: { category: string; items: PaletteItemType[] }[] = [
         height: 100,
         icon: ChessQueen,
       },
+      {
+        type: "lounge_table",
+        label: "Lounge",
+        seats: 8,
+        width: 420,
+        height: 320,
+        icon: Sofa,
+      },
     ],
   },
   {

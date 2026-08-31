@@ -30,6 +30,7 @@ export type ElementType =
   | "cocktail_table"
   | "head_table"
   | "sweethearts_table"
+  | "lounge_table"
   // ─── Estructurales (siempre al fondo) ───────────────────
   | "wall"
   | "door"
@@ -96,7 +97,8 @@ export function getElementLayer(type: ElementType): ElementLayer {
     type === "half_moon_table" ||
     type === "cocktail_table" ||
     type === "head_table" ||
-    type === "sweethearts_table"
+    type === "sweethearts_table" ||
+    type === "lounge_table"
   ) {
     return "table";
   }

@@ -76,7 +76,8 @@ export function ElementShape({
     type === "half_moon_table" ||
     type === "cocktail_table" ||
     type === "head_table" ||
-    type === "sweethearts_table"
+    type === "sweethearts_table" ||
+    type === "lounge_table"
   ) {
     return (
       <TableShape

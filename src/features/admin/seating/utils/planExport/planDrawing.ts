@@ -29,6 +29,7 @@ const TYPE_COLORS: Record<
   cocktail_table: { fill: "#DBEAFE", stroke: "#60A5FA", text: "#1E40AF" },
   head_table: { fill: "#FEF3C7", stroke: "#F59E0B", text: "#B45309" },
   sweethearts_table: { fill: "#FCE7F3", stroke: "#C5A669", text: "#8B5A8C" },
+  lounge_table: { fill: "#F5F3FF", stroke: "#A78BFA", text: "#5B21B6" },
   // ─── Estructurales ──────────────────────────────────────
   wall: { fill: "#EBE5DA", stroke: "#5A5A5A", text: "#2C2C29" },
   door: { fill: "#FDFBF7", stroke: "#A78B5C", text: "#7A6740" },
@@ -62,7 +63,11 @@ const TYPE_COLORS: Record<
   // ─── Utilidades ─────────────────────────────────────────
   text_label: { fill: "transparent", stroke: "transparent", text: "#2C2C29" },
   line_divider: { fill: "transparent", stroke: "#C5A669", text: "#8B7340" },
-  zone_shape: { fill: "rgba(197,166,105,0.06)", stroke: "#C5A669", text: "#5A5A5A" },
+  zone_shape: {
+    fill: "rgba(197,166,105,0.06)",
+    stroke: "#C5A669",
+    text: "#5A5A5A",
+  },
 };
 
 const STATUS_COLORS = {
@@ -145,8 +150,8 @@ export function drawElement(
 
   // Asientos funcionales
   if (isTable && el.type !== "sweethearts_table") {
-    if (el.type === "lounge") {
-      drawLoungeSeats(dc, el, families);
+    if (el.type === "lounge_table") {
+      drawLoungeTableSeats(dc, el, families);
     } else {
       drawSeats(dc, el, families);
     }
@@ -168,7 +173,11 @@ function drawSweetheartsLabel(
   ctx.textBaseline = "middle";
   const aliasSize = Math.max(11, Math.min(18, el.width / 12));
   ctx.font = `italic bold ${aliasSize}px Georgia, serif`;
-  ctx.fillText(el.alias || "Mesa de los Novios", el.width / 2, el.height / 2 - 6);
+  ctx.fillText(
+    el.alias || "Mesa de los Novios",
+    el.width / 2,
+    el.height / 2 - 6,
+  );
 
   ctx.fillStyle = "#C5A669";
   ctx.font = "bold 9px sans-serif";
@@ -187,9 +196,25 @@ function drawSweetheartsChairs(
   const cy = el.height / 2;
 
   // Silla izquierda (novia) - AFUERA
-  drawSweetheartChair(ctx, -chairSize - 6, cy - chairSize / 2, chairSize, "#FCE7F3", "#F472B6", "#BE185D");
+  drawSweetheartChair(
+    ctx,
+    -chairSize - 6,
+    cy - chairSize / 2,
+    chairSize,
+    "#FCE7F3",
+    "#F472B6",
+    "#BE185D",
+  );
   // Silla derecha (novio) - AFUERA
-  drawSweetheartChair(ctx, el.width + 6, cy - chairSize / 2, chairSize, "#FEF3C7", "#C5A669", "#A78B5C");
+  drawSweetheartChair(
+    ctx,
+    el.width + 6,
+    cy - chairSize / 2,
+    chairSize,
+    "#FEF3C7",
+    "#C5A669",
+    "#A78B5C",
+  );
 }
 
 function drawSweetheartChair(
@@ -219,39 +244,196 @@ function drawSweetheartChair(
 }
 
 /**
- * Asientos del lounge: posiciones fijas según el layout interno.
- * Mismas posiciones que en TableShape.tsx para mantener consistencia.
+ * Asientos del lounge_table (mismo algoritmo y geometría que
+ * TableShape.tsx):
+ *  - Sillón (píldora horizontal) arriba con 2 plazas
+ *  - Bancas laterales (verticales) con 2-3 plazas cada una
+ *  - Poufs individuales debajo de la mesa
+ *  - Todos los asientos son TableSeat de 28px
  */
-function drawLoungeSeats(
+function drawLoungeTableSeats(
   dc: DrawContext,
   el: SeatingElement,
   _families: FamilyElement[],
 ) {
   const { ctx } = dc;
-  const positions: { x: number; y: number }[] = [
-    { x: el.width * 0.20, y: el.height - 18 },
-    { x: el.width * 0.32, y: el.height - 18 },
-    { x: el.width * 0.44, y: el.height - 18 },
-    { x: el.width * 0.56, y: el.height - 18 },
-    { x: el.width * 0.68, y: el.height - 18 },
-    { x: el.width * 0.80, y: el.height - 18 },
-    { x: 18, y: el.height * 0.35 },
-    { x: 18, y: el.height * 0.65 },
-    { x: el.width - 18, y: el.height * 0.35 },
-    { x: el.width - 18, y: el.height * 0.65 },
-  ];
+  const w = el.width;
+  const h = el.height;
 
-  // Círculos simples para los asientos del lounge (sin info de guest)
-  for (let i = 0; i < el.seats && i < positions.length; i++) {
-    const { x, y } = positions[i];
-    ctx.beginPath();
-    ctx.arc(x, y, 12, 0, Math.PI * 2);
-    ctx.fillStyle = "#A78BFA";
-    ctx.fill();
-    ctx.strokeStyle = "#7C3AED";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+  const padding = 12;
+  const sofaW = 144;
+  const sofaH = 64;
+  const benchW = 48;
+  const benchH = 144;
+  const stoolSize = 28;
+  const seatSize = 28;
+  const seatRadius = seatSize / 2;
+
+  // Mismo algoritmo de distribución que TableShape.tsx
+  let topSofa = 0;
+  let leftBench = 0;
+  let rightBench = 0;
+  let bottomStools = 0;
+
+  if (el.seats === 1) bottomStools = 1;
+  else if (el.seats === 2) topSofa = 2;
+  else if (el.seats === 3) {
+    topSofa = 2;
+    bottomStools = 1;
+  } else if (el.seats === 4) {
+    topSofa = 2;
+    leftBench = 2;
+  } else if (el.seats === 5) {
+    topSofa = 2;
+    leftBench = 3;
+  } else if (el.seats === 6) {
+    topSofa = 2;
+    leftBench = 2;
+    rightBench = 2;
+  } else if (el.seats === 7) {
+    topSofa = 2;
+    leftBench = 3;
+    rightBench = 2;
+  } else if (el.seats === 8) {
+    topSofa = 2;
+    leftBench = 3;
+    rightBench = 3;
+  } else if (el.seats > 8) {
+    topSofa = 2;
+    leftBench = 3;
+    rightBench = 3;
+    bottomStools = el.seats - 8;
   }
+
+  const centerX = w / 2;
+  const centerY = h / 2;
+
+  const sofaX = centerX - sofaW / 2;
+  const sofaY = padding;
+
+  const benchInset = 28;
+  const leftBenchX = padding + benchInset;
+  const leftBenchY = centerY - benchH / 2;
+
+  const rightBenchX = w - padding - benchW - benchInset;
+  const rightBenchY = centerY - benchH / 2;
+
+  const tableBottomEdge = centerY + 48;
+  const stoolY = tableBottomEdge + 12;
+  const stoolGap = 12;
+
+  const getStoolXs = (count: number) => {
+    const totalW = count * stoolSize + (count - 1) * stoolGap;
+    const startX = centerX - totalW / 2;
+    return Array.from(
+      { length: count },
+      (_, i) => startX + i * (stoolSize + stoolGap),
+    );
+  };
+  const bottomStoolXs = getStoolXs(bottomStools);
+
+  // ── Dibujar Sillón (píldora blanca con borde) ──
+  if (topSofa > 0) {
+    ctx.save();
+    // Píldora completa (border-radius = sofaH/2)
+    ctx.beginPath();
+    const r = sofaH / 2;
+    ctx.moveTo(sofaX + r, sofaY);
+    ctx.lineTo(sofaX + sofaW - r, sofaY);
+    ctx.arc(sofaX + sofaW - r, sofaY + r, r, -Math.PI / 2, Math.PI / 2);
+    ctx.lineTo(sofaX + r, sofaY + sofaH);
+    ctx.arc(sofaX + r, sofaY + r, r, Math.PI / 2, Math.PI * 1.5);
+    ctx.closePath();
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+    ctx.strokeStyle = "#D1D5DB";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+
+    // 2 plazas (centradas con 16px de gap, +4px hacia abajo para
+    // mejor presentación — mismo offset que TableShape.tsx)
+    for (let i = 0; i < topSofa; i++) {
+      const cx = sofaX + sofaW / 2 + (i === 0 ? -22 : 22);
+      const cy = sofaY + sofaH / 2 + 4;
+      ctx.beginPath();
+      ctx.arc(cx, cy, seatRadius, 0, Math.PI * 2);
+      ctx.fillStyle = "#E5E7EB";
+      ctx.fill();
+      ctx.strokeStyle = "#9CA3AF";
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+  }
+
+  // ── Dibujar Banca Izquierda ──
+  if (leftBench > 0) {
+    ctx.save();
+    ctx.beginPath();
+    drawRoundedRect(ctx, leftBenchX, leftBenchY, benchW, benchH, 12);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+    ctx.strokeStyle = "#D1D5DB";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+
+    const spacing = benchH / (leftBench + 1);
+    for (let i = 0; i < leftBench; i++) {
+      const cx = leftBenchX + benchW / 2;
+      const cy = leftBenchY + spacing * (i + 1);
+      ctx.beginPath();
+      ctx.arc(cx, cy, seatRadius, 0, Math.PI * 2);
+      ctx.fillStyle = "#E5E7EB";
+      ctx.fill();
+      ctx.strokeStyle = "#9CA3AF";
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+  }
+
+  // ── Dibujar Banca Derecha ──
+  if (rightBench > 0) {
+    ctx.save();
+    ctx.beginPath();
+    drawRoundedRect(ctx, rightBenchX, rightBenchY, benchW, benchH, 12);
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+    ctx.strokeStyle = "#D1D5DB";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.restore();
+
+    const spacing = benchH / (rightBench + 1);
+    for (let i = 0; i < rightBench; i++) {
+      const cx = rightBenchX + benchW / 2;
+      const cy = rightBenchY + spacing * (i + 1);
+      ctx.beginPath();
+      ctx.arc(cx, cy, seatRadius, 0, Math.PI * 2);
+      ctx.fillStyle = "#E5E7EB";
+      ctx.fill();
+      ctx.strokeStyle = "#9CA3AF";
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+    }
+  }
+
+  // ── Dibujar Poufs (individuales debajo de la mesa) ──
+  bottomStoolXs.forEach((x) => {
+    ctx.beginPath();
+    ctx.arc(
+      x + stoolSize / 2,
+      stoolY + stoolSize / 2,
+      stoolSize / 2,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fillStyle = "#FFFFFF";
+    ctx.fill();
+    ctx.strokeStyle = "#D1D5DB";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  });
 }
 
 /**
@@ -268,7 +450,13 @@ function drawSweetheartsSeats(
   const margin = Math.max(8, el.width * 0.06);
 
   const seatsData = [
-    { x: margin, color: "#E11D48", bg: "#FCE7F3", border: "#F472B6", label: "N" },
+    {
+      x: margin,
+      color: "#E11D48",
+      bg: "#FCE7F3",
+      border: "#F472B6",
+      label: "N",
+    },
     {
       x: el.width - margin - seatSize,
       color: "#A78B5C",
@@ -281,7 +469,13 @@ function drawSweetheartsSeats(
   for (const seat of seatsData) {
     const cy = el.height / 2 - seatSize / 2;
     ctx.beginPath();
-    ctx.arc(seat.x + seatSize / 2, cy + seatSize / 2, seatSize / 2, 0, Math.PI * 2);
+    ctx.arc(
+      seat.x + seatSize / 2,
+      cy + seatSize / 2,
+      seatSize / 2,
+      0,
+      Math.PI * 2,
+    );
     ctx.fillStyle = seat.bg;
     ctx.fill();
     ctx.strokeStyle = seat.border;
@@ -387,6 +581,33 @@ function drawShape(
   }
   if (type === "aisle") {
     drawAisle(ctx, w, h, colors);
+    return;
+  }
+
+  if (type === "lounge_table") {
+    // 1. Fondo de la zona Lounge
+    drawRoundedRect(ctx, 0, 0, w, h, 24);
+    ctx.fillStyle = colors.fill;
+    ctx.fill();
+    ctx.strokeStyle = colors.stroke;
+    ctx.setLineDash([6, 4]);
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 2. Mesa Central
+    const tableW = Math.min(w * 0.6, 224);
+    const tableH = Math.min(h * 0.4, 128);
+    const tableX = (w - tableW) / 2;
+    const tableY = (h - tableH) / 2;
+
+    ctx.beginPath();
+    drawRoundedRect(ctx, tableX, tableY, tableW, tableH, 24);
+    ctx.fillStyle = "#FAF8F5"; // Fondo crema/madera
+    ctx.fill();
+    ctx.strokeStyle = "#D7C9B2";
+    ctx.lineWidth = 2;
+    ctx.stroke();
     return;
   }
 
@@ -764,8 +985,7 @@ export function computeSeatPositions(
       const pos = i % seatsPerEdge;
       const offsetXY = spacing * (pos + 1);
       if (edge === 0) positions.push({ x: offsetXY, y: -offset });
-      else if (edge === 1)
-        positions.push({ x: width + offset, y: offsetXY });
+      else if (edge === 1) positions.push({ x: width + offset, y: offsetXY });
       else if (edge === 2) positions.push({ x: offsetXY, y: height + offset });
       else positions.push({ x: -offset, y: offsetXY });
     }
@@ -792,11 +1012,16 @@ export function computeSeatPositions(
   return positions;
 }
 
-export function buildGuestIndex(families: FamilyElement[]): Map<
+export function buildGuestIndex(
+  families: FamilyElement[],
+): Map<
   string,
   { family: FamilyElement; guest: FamilyElement["guests"][number] }
 > {
-  const map = new Map<string, { family: FamilyElement; guest: FamilyElement["guests"][number] }>();
+  const map = new Map<
+    string,
+    { family: FamilyElement; guest: FamilyElement["guests"][number] }
+  >();
   for (const f of families) {
     for (const g of f.guests) {
       if (g.id) map.set(g.id, { family: f, guest: g });

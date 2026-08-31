@@ -55,6 +55,16 @@ const AXIS_LOCKED_TYPES: Record<string, "x" | "y"> = {
  */
 const SEAT_PADDING = 48;
 
+/**
+ * Padding para `lounge_table`. Los asientos del lounge (sillón,
+ * bancas, poufs) ya están DENTRO del bounding box del elemento
+ * (a diferencia de las mesas regulares donde los asientos se
+ * distribuyen AFUERA del borde). Por eso este padding es 0: agregar
+ * padding extra solo agrandaría el bounding box sin necesidad
+ * visual, y haría que el resize se sienta "suelto".
+ */
+const LOUNGE_SEAT_PADDING = 0;
+
 function TableElement({ element }: { element: SeatingElement }) {
   const isSingleSelected = useSeatingStore(
     (state) => state.selectedElementId === element.id,
@@ -77,6 +87,12 @@ function TableElement({ element }: { element: SeatingElement }) {
   const isStructural = STRUCTURAL_TYPES.has(element.type);
   const isUtility = UTILITY_TYPES.has(element.type);
   const layer = getElementLayer(element.type);
+
+  // Padding del bounding box: 0 para lounge_table (sus asientos
+  // viven DENTRO del elemento), 48 para el resto de las mesas
+  // (cuyos asientos se distribuyen AFUERA del borde).
+  const seatPadding =
+    element.type === "lounge_table" ? LOUNGE_SEAT_PADDING : SEAT_PADDING;
 
   // Resize: TODOS los elementos (mesas, áreas, utilidades, estructurales) tienen resize
   const allowResize = true;
@@ -241,8 +257,8 @@ function TableElement({ element }: { element: SeatingElement }) {
   const HANDLE_OFFSET = 70; // separación pronunciada del elemento
   const HANDLE_SIZE = 28; // w-7 h-7
   const ROTATION_SNAP = 15;
-  const cardWidth = element.width + (isTable ? SEAT_PADDING * 2 : 0);
-  const elementTopY = isTable ? SEAT_PADDING : 0;
+  const cardWidth = element.width + (isTable ? seatPadding * 2 : 0);
+  const elementTopY = isTable ? seatPadding : 0;
   // x: centro horizontal de la card (que coincide con el centro
   //    del elemento gracias al padding simétrico de SEAT_PADDING).
   // y: HANDLE_OFFSET arriba del borde superior del elemento.
@@ -342,10 +358,10 @@ function TableElement({ element }: { element: SeatingElement }) {
         // que el área clickable/draggeable/redimensionable incluya
         // los asientos. Para el resto de elementos, comportamiento
         // idéntico al anterior (padding = 0).
-        left: element.x - (isTable ? SEAT_PADDING : 0),
-        top: element.y - (isTable ? SEAT_PADDING : 0),
-        width: element.width + (isTable ? SEAT_PADDING * 2 : 0),
-        height: element.height + (isTable ? SEAT_PADDING * 2 : 0),
+        left: element.x - (isTable ? seatPadding : 0),
+        top: element.y - (isTable ? seatPadding : 0),
+        width: element.width + (isTable ? seatPadding * 2 : 0),
+        height: element.height + (isTable ? seatPadding * 2 : 0),
         transform: transformStyle,
         transformOrigin: "50% 50%",
         // Para zone_shape: la card NO captura pointer events. Solo
@@ -379,16 +395,21 @@ function TableElement({ element }: { element: SeatingElement }) {
     >
       {renderResizeHandles()}
 
-      {/* Línea punteada que delimita el área redimensionable.
-          Para mesas incluye el área de los asientos. */}
-      {isSingleSelected && isTable && (
+      {/* Dashed border dorado que delimita el ÁREA REDIMENSIONABLE.
+          Solo se muestra en MESAS NORMALES (no en lounge_table, áreas
+          ni zone_shape). Va 4px adentro del edge del card para no
+          chocar con los resize handles (que están en top: -8, etc.).
+          Como es `pointer-events: none`, no interfiere con la
+          interacción ni con el contenido del element. */}
+      {isSingleSelected && isTable && element.type !== "lounge_table" && (
         <div
           className="absolute pointer-events-none border-2 border-dashed border-[#C5A669]/45 rounded-lg"
           style={{
-            left: 4,
             top: 4,
+            left: 4,
             right: 4,
             bottom: 4,
+            zIndex: 25,
           }}
         />
       )}
@@ -397,10 +418,11 @@ function TableElement({ element }: { element: SeatingElement }) {
           dentro del contenedor dejando SEAT_PADDING de margen para
           que los asientos quepan dentro del bounding box. */}
       <div
+        className="absolute"
         style={{
           position: "absolute",
-          left: isTable ? SEAT_PADDING : 0,
-          top: isTable ? SEAT_PADDING : 0,
+          left: isTable ? seatPadding : 0,
+          top: isTable ? seatPadding : 0,
           width: element.width,
           height: element.height,
           overflow: isTable ? "visible" : undefined,

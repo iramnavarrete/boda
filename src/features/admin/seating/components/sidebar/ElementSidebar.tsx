@@ -70,6 +70,7 @@ const SIZE_EDITABLE_TYPES = new Set<ElementType>([
   "head_table",
   "cocktail_table",
   "sweethearts_table",
+  "lounge_table",
   // ── Estructurales ──
   "wall",
   "door",

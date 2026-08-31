@@ -22,6 +22,12 @@ interface TableSeatProps {
   colorBorder?: string;
   tableId?: string;
   guestId?: string;
+  /**
+   * Tamaño del asiento en px. Por defecto 28 (mismo tamaño que todas
+   * las mesas regulares y el lounge). Se mantiene como prop interna
+   * por si en el futuro se quiere un tamaño custom.
+   */
+  size?: number;
 }
 
 const STATUS_BADGE_COLOR: Record<string, string> = {
@@ -34,7 +40,7 @@ function StatusBadge({ status }: { status?: GuestStatus }) {
   const color = STATUS_BADGE_COLOR[status] ?? "bg-amber-500";
   return (
     <div
-      className={`absolute -top-1 -right-1 w-3.5 h-3.5 ${color} rounded-full border-2 border-white flex items-center justify-center shadow-sm`}
+      className={`absolute -top-1 -right-1 w-3.5 h-3.5 ${color} rounded-full border-2 border-white shadow-sm`}
     />
   );
 }
@@ -51,6 +57,7 @@ export function TableSeat({
   colorBorder = "#A8AEBA",
   tableId,
   guestId,
+  size = 28,
 }: TableSeatProps) {
   const removeGuestFromTable = useSeatingStore(
     (state) => state.removeGuestFromTable,
@@ -87,17 +94,22 @@ export function TableSeat({
       ref={setNodeRef}
       {...(canDrag ? attributes : {})}
       {...(canDrag ? listeners : {})}
-      className={`seat-inner w-7 h-7 rounded-full border-2 shadow-sm relative flex items-center justify-center transition-colors duration-200 shrink-0 touch-none ${
+      className={`seat-inner rounded-full border-2 shadow-sm relative flex items-center justify-center transition-colors duration-200 shrink-0 touch-none ${
         canDrag ? "cursor-grab active:cursor-grabbing" : ""
       }`}
       style={{
+        width: size,
+        height: size,
         backgroundColor: isAssigned ? colorBg : "#EBECEF",
         borderColor: isAssigned ? colorBorder : "#A8AEBA",
       }}
     >
       <span
-        className="text-[10px] font-bold select-none"
-        style={{ color: isAssigned ? "#2C2C29" : "#A8A29E" }}
+        className="font-bold select-none"
+        style={{
+          fontSize: Math.max(10, Math.round(size * 0.28)),
+          color: isAssigned ? "#2C2C29" : "#A8A29E",
+        }}
       >
         {seatNumber}
       </span>
