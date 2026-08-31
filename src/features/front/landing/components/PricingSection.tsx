@@ -117,7 +117,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
 );
 
 const Pricing: React.FC = () => {
-  const phoneNumber = "+526142537718";
+  const phoneNumber = "+526148750265";
 
   // --- LÓGICA DINÁMICA DE PROMOCIÓN ---
   // Cambia esto a false cuando expire la promoción el 15 de abril

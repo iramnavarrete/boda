@@ -342,7 +342,7 @@ const AdminShowcase: React.FC = () => {
           <TextureButton
             onClick={() =>
               window.open(
-                `https://wa.me/+526142537718?text=${encodeURIComponent("Hola me comunico para saber más información sobre el demo de la gestión de invitados para una invitación digital.")}`,
+                `https://wa.me/+526148750265?text=${encodeURIComponent("Hola me comunico para saber más información sobre el demo de la gestión de invitados para una invitación digital.")}`,
                 "_blank",
               )
             }
