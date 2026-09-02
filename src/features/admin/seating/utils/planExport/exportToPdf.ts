@@ -9,7 +9,7 @@ import {
 import { saveAs } from "file-saver";
 import { SeatingElement, FamilyElement } from "@/types/seating";
 import { buildGuestIndex } from "./planDrawing";
-import { capturePlanCanvas } from "./planCapture";
+import { capturePlanSnapshot } from "./planSnapshotCapture";
 import {
   CARD_W,
   CARD_GAP_X,
@@ -125,9 +125,9 @@ export async function exportPlanToPdf(opts: PdfExportOptions) {
     : 0;
   const totalPages = 1 + cardPages;
 
-  // Renderizar plano a alta resolución
-  const captured = await capturePlanCanvas(elements, families, {
-    dpi: 300,
+  // Renderizar plano a alta resolución (vía html-to-image sobre
+  // el PlanoSnapshot — MISMO render que el canvas del usuario)
+  const captured = await capturePlanSnapshot(elements, {
     pixelRatio: 2.5,
   });
   const planBytes = dataUrlToBytes(captured.dataUrl);

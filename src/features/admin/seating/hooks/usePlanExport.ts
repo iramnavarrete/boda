@@ -34,9 +34,34 @@ export function usePlanExport(opts: UsePlanExportOptions) {
 
   const elements = useSeatingStore((state) => state.elements);
   const families = useSeatingStore((state) => state.families);
+  const setSelectedElementId = useSeatingStore(
+    (state) => state.setSelectedElementId,
+  );
+  const setSelectedElementIds = useSeatingStore(
+    (state) => state.setSelectedElementIds,
+  );
 
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
+
+  /**
+   * Deselecciona TODO antes de exportar. ¿Por qué?
+   * El PlanoSnapshot se renderiza con los mismos componentes del
+   * canvas (PlanoSnapshot.tsx) pero con data-export-mode="true".
+   * Si hay elementos seleccionados al momento de capturar, el
+   * dashed border de selección y otros estilos de selección
+   * (single-selected) podrían filtrarse en la imagen final.
+   * Limpiamos la selección al INICIO de la exportación para
+   * garantizar un snapshot "limpio".
+   *
+   * Se usa `getState()` (no el valor del closure) para que ambos
+   * callbacks tengan siempre la versión más reciente de los
+   * setters sin necesidad de incluirlos en las dependencias.
+   */
+  const clearAllSelection = useCallback(() => {
+    useSeatingStore.getState().setSelectedElementId(null);
+    useSeatingStore.getState().setSelectedElementIds([]);
+  }, []);
 
   const exportImage = useCallback(
     async (config: ImageExportConfig) => {
@@ -47,6 +72,9 @@ export function usePlanExport(opts: UsePlanExportOptions) {
         return;
       }
 
+      // Deseleccionar ANTES de iniciar la captura para que el
+      // snapshot no incluya dashed borders de selección.
+      clearAllSelection();
       setIsExporting(true);
       setExportError(null);
 
@@ -69,7 +97,7 @@ export function usePlanExport(opts: UsePlanExportOptions) {
         setIsExporting(false);
       }
     },
-    [elements, families, invitationTitle],
+    [elements, families, invitationTitle, clearAllSelection],
   );
 
   const exportPdf = useCallback(
@@ -81,6 +109,9 @@ export function usePlanExport(opts: UsePlanExportOptions) {
         return;
       }
 
+      // Deseleccionar ANTES de iniciar la captura para que el
+      // snapshot no incluya dashed borders de selección.
+      clearAllSelection();
       setIsExporting(true);
       setExportError(null);
 
@@ -106,7 +137,7 @@ export function usePlanExport(opts: UsePlanExportOptions) {
         setIsExporting(false);
       }
     },
-    [elements, families, invitationTitle],
+    [elements, families, invitationTitle, clearAllSelection],
   );
 
   return {
