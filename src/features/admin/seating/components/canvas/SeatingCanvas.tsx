@@ -5,15 +5,28 @@ import { useSeatingStore } from "../../stores/useSeatingStore";
 import { useZoomStore } from "../../stores/useZoomStore";
 import TableElement from "./TableElement";
 import { ZoomIn, ZoomOut, Maximize2, Trash2 } from "lucide-react";
-import { useDroppable, useDndContext } from "@dnd-kit/core";
+import { useDroppable } from "@dnd-kit/core";
 import { ConfirmModalState } from "@/types";
 import { useCanvasZoom } from "../../hooks/useCanvasZoom";
 import { useCanvasSelectionBox } from "../../hooks/useCanvasSelectionBox";
+import { DraggingClassApplier } from "../../hooks/useDraggingClassApplier";
 import { getElementLayer } from "@/types/seating";
 
 interface SeatingCanvasProps {
   openConfirmModal: (config: Omit<ConfirmModalState, "isLoading">) => void;
 }
+
+/**
+ * Tamaño mínimo del canvas cuando el plano está vacío. Da espacio
+ * inicial para arrastrar las primeras mesas sin chocar con el borde.
+ */
+const CANVAS_MIN_SIZE = 2000;
+
+/**
+ * Padding extra que se agrega al bounding box de los elementos
+ * para tener espacio de "arrastre libre" cerca del borde.
+ */
+const CANVAS_PADDING = 1000;
 
 export default function SeatingCanvas({
   openConfirmModal,
@@ -31,9 +44,9 @@ export default function SeatingCanvas({
   const zoom = useZoomStore((state) => state.zoom);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasAreaRef = useRef<HTMLDivElement>(null);
-
-  const { active } = useDndContext();
-  const isDraggingAny = Boolean(active);
+  // Ref al div del selection box: el hook actualiza su style
+  // directamente (sin pasar por React) durante pointermove.
+  const selectionBoxDivRef = useRef<HTMLDivElement>(null);
 
   // Ordena los elementos por layer para que los estructurales siempre
   // queden al fondo del DOM (y por lo tanto detrás de mesas/áreas).
@@ -54,6 +67,33 @@ export default function SeatingCanvas({
     });
   }, [elements]);
 
+  /**
+   * Tamaño dinámico del canvas basado en el bounding box de los
+   * elementos + padding. Plano vacío → CANVAS_MIN_SIZE. Con
+   * elementos → max(boundingBox + padding, CANVAS_MIN_SIZE).
+   *
+   * Esto reduce drásticamente la VRAM y los píxeles backing del
+   * gradiente en planos típicos (vacíos o con pocas mesas),
+   * pasando de 16M píxeles (4000×4000 fijo) a ~4M píxeles o menos.
+   */
+  const canvasSize = useMemo(() => {
+    if (elements.length === 0) {
+      return { width: CANVAS_MIN_SIZE, height: CANVAS_MIN_SIZE };
+    }
+
+    let maxX = 0;
+    let maxY = 0;
+    for (const el of elements) {
+      if (el.x + el.width > maxX) maxX = el.x + el.width;
+      if (el.y + el.height > maxY) maxY = el.y + el.height;
+    }
+
+    return {
+      width: Math.max(CANVAS_MIN_SIZE, maxX + CANVAS_PADDING),
+      height: Math.max(CANVAS_MIN_SIZE, maxY + CANVAS_PADDING),
+    };
+  }, [elements]);
+
   const { setNodeRef: setDroppableCanvasRef } = useDroppable({
     id: "canvas",
     data: { type: "canvas" },
@@ -62,11 +102,10 @@ export default function SeatingCanvas({
   const { handleZoomTarget, fitToScreen } = useCanvasZoom(containerRef);
   const {
     isSelecting,
-    selectionBox,
     handlePointerDown,
     handlePointerMove,
     handlePointerUp,
-  } = useCanvasSelectionBox(canvasAreaRef);
+  } = useCanvasSelectionBox(canvasAreaRef, selectionBoxDivRef);
 
   // Initial fit-to-screen cuando se inicializa el plano
   useEffect(() => {
@@ -128,11 +167,14 @@ export default function SeatingCanvas({
         ref={containerRef}
         className={`relative flex-1 h-full w-full overflow-auto bg-[#F9F7F2] scrollbar-thin scrollbar-thumb-[#EBE5DA] ${
           isSelecting ? "is-selecting-active" : ""
-        } ${isDraggingAny ? "is-dragging-active" : ""}`}
+        }`}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
       >
+        {/* Sincroniza `is-dragging-active` en el containerRef vía
+            useDndMonitor (sin causar re-render de SeatingCanvas). */}
+        <DraggingClassApplier containerRef={containerRef} />
         {selectedElementIds.length > 1 && (
           <div
             className="multi-delete-popover fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-[#FDFBF7] border border-[#EBE5DA] shadow-xl rounded-2xl p-3 flex items-center gap-4 animate-in slide-in-from-top-3 duration-200"
@@ -163,16 +205,16 @@ export default function SeatingCanvas({
         <div
           className="relative"
           style={{
-            width: 4000 * zoom,
-            height: 4000 * zoom,
+            width: canvasSize.width * zoom,
+            height: canvasSize.height * zoom,
           }}
         >
           <div
             ref={canvasAreaRef}
             className="absolute top-0 left-0 origin-top-left canvas-droppable-area"
             style={{
-              width: "4000px",
-              height: "4000px",
+              width: `${canvasSize.width}px`,
+              height: `${canvasSize.height}px`,
               backgroundImage: `linear-gradient(#EBE5DA 1px, transparent 1px), linear-gradient(90deg, #EBE5DA 1px, transparent 1px)`,
               backgroundSize: "20px 20px",
               transform: `scale(${zoom})`,
@@ -183,17 +225,14 @@ export default function SeatingCanvas({
                 <TableElement key={el.id} element={el} />
               ))}
 
-              {isSelecting && (
-                <div
-                  className="absolute border border-[#C5A669] bg-[#C5A669]/10 rounded pointer-events-none z-50"
-                  style={{
-                    left: selectionBox.left,
-                    top: selectionBox.top,
-                    width: selectionBox.width,
-                    height: selectionBox.height,
-                  }}
-                />
-              )}
+              {/* Selection box: se renderiza SIEMPRE; el hook
+                  actualiza su `style.left/top/width/height` directamente
+                  y la clase `is-active` controla la visibilidad. */}
+              <div
+                ref={selectionBoxDivRef}
+                className="selection-box absolute border border-[#C5A669] bg-[#C5A669]/10 rounded pointer-events-none z-50"
+                style={{ left: 0, top: 0, width: 0, height: 0 }}
+              />
             </div>
           </div>
         </div>
