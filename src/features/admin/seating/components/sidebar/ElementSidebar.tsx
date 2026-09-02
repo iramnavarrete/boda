@@ -30,8 +30,7 @@ import {
   UserPlus,
   Clock,
   CheckCircle2,
-  ClipboardList,
-  UserX,
+  ListChecks,
 } from "lucide-react";
 import Tooltip from "@/features/shared/components/Tooltip";
 import { getTableIssues, TableIssue } from "../../utils/tableIssues";
@@ -638,7 +637,7 @@ function SizeControl({ element }: { element: SeatingElement }) {
 // ─────────────────────────────────────────────────────────────
 
 // ─────────────────────────────────────────────────────────────
-// Panel de Acciones Requeridas
+// Panel de Estatus de la Mesa
 // ─────────────────────────────────────────────────────────────
 // Muestra los issues detectados en la mesa seleccionada (declinados,
 // sobre-asignación, pendientes, etc.) con su acción sugerida. Solo
@@ -687,9 +686,9 @@ function TableActionsPanel({
   return (
     <div className="px-4 py-3 border-b border-[#EBE5DA] bg-[#FDFBF7]">
       <div className="flex items-center gap-1.5 mb-2">
-        <ClipboardList size={11} className="text-[#A8A29E]" />
+        <ListChecks size={11} className="text-[#A8A29E]" />
         <span className="text-[9px] text-[#A8A29E] uppercase font-bold tracking-widest">
-          Acciones Requeridas
+          Estatus de la Mesa
         </span>
         <span className="ml-auto text-[9px] text-[#A8A29E] font-bold bg-white border border-[#EBE5DA] rounded-md px-1.5 py-px">
           {issues.length}
