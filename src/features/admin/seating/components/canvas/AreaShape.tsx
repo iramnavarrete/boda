@@ -118,11 +118,13 @@ export function AreaShape({
 
     return (
       <div
-        className="area-shape w-full h-full relative pointer-events-none"
+        className="area-shape zone-shape w-full h-full relative pointer-events-none"
         style={{
           backgroundColor: "transparent",
-          border: "2px dashed #C5A669",
           borderRadius: "0.75rem",
+          // Borde punteado dibujado con SVG inline (vía background-image).
+          backgroundImage:
+            "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100%25' height='100%25'%3E%3Crect width='100%25' height='100%25' fill='none' rx='12' ry='12' stroke='%23C5A669' stroke-width='2' stroke-dasharray='10 6'/%3E%3C/svg%3E\")",
         }}
       >
         {/* 4 strips invisibles que capturan drag SOLO en el borde */}
