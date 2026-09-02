@@ -40,7 +40,7 @@ function StatusBadge({ status }: { status?: GuestStatus }) {
   const color = STATUS_BADGE_COLOR[status] ?? "bg-amber-500";
   return (
     <div
-      className={`absolute -top-1 -right-1 w-3.5 h-3.5 ${color} rounded-full border-2 border-white shadow-sm`}
+      className={`status-badge absolute -top-1 -right-1 w-3.5 h-3.5 ${color} rounded-full border-2 border-white shadow-sm`}
     />
   );
 }
@@ -126,7 +126,13 @@ export function TableSeat({
   const wrapperStyle = {
     left: x,
     top: y,
-    opacity: isDragging || isParentDragging ? 0.3 : 1,
+    // Solo aplicar opacidad reducida cuando ESTE asiento (invitado)
+    // se está arrastrando, NO cuando su mesa padre se arrastra.
+    // Antes también aplicaba fade con `isParentDragging`, lo cual
+    // hacía que TODOS los asientos de las mesas arrastradas se
+    // volvieran transparentes al multi-select, distrayendo sin
+    // aportar información útil.
+    opacity: isDragging ? 0.3 : 1,
   };
 
   const tooltipContent =
