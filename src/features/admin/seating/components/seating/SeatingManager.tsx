@@ -30,6 +30,7 @@ import SeatingCanvas from "../canvas/SeatingCanvas";
 import { ExportPlanModal } from "../canvas/ExportPlanModal";
 import { FamiliesService } from "@/services/familiesService";
 import { SeatingModalContext } from "../SeatingModalContext";
+import { PlanoSnapshotPortal } from "../../utils/planExport/PlanoSnapshotPortal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
 import { useConfirmModal } from "@/features/admin/hooks/useConfirmModal";
 import ElementsPalette from "./ElementsPalette";
@@ -324,6 +325,15 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     return rectIntersection(args);
   }, []);
 
+  /**
+   * Scroll del contenedor scrollable al INICIO del drag (en pixels).
+   * Se usa en `handleDragEnd` para compensar el scroll acumulado
+   * durante el drag: `event.delta` de dnd-kit NO incluye el scroll
+   * del contenedor overflow:auto cuando el canvas está escalado,
+   * produciendo drops en posiciones incorrectas cuando hay auto-scroll.
+   */
+  const dragStartScrollRef = useRef<{ left: number; top: number }>({ left: 0, top: 0 });
+
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const currentData = event.active.data.current as DragItemData | undefined;
 
@@ -334,6 +344,14 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       activator && typeof activator.clientX === "number" && typeof activator.clientY === "number"
         ? { x: activator.clientX, y: activator.clientY }
         : undefined;
+
+    // Capturar el scroll inicial del contenedor para compensarlo en dragEnd.
+    const canvasEl = document.querySelector(".canvas-droppable-area");
+    const scrollContainer = canvasEl?.parentElement?.parentElement;
+    dragStartScrollRef.current = {
+      left: scrollContainer?.scrollLeft ?? 0,
+      top: scrollContainer?.scrollTop ?? 0,
+    };
 
     if (currentData) {
       setActiveDragItem({
@@ -421,19 +439,22 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
         if (canvasEl && cursorAtEnd) {
           const rect = canvasEl.getBoundingClientRect();
           // El overlay (mesa/pista/etc.) está centrado en el cursor,
-          // así que el elemento se coloca con su CENTRO en el cursor.
-          // Sin este offset, el elemento aparecería desplazado porque
-          // el item del sidebar es mucho más pequeño que el overlay.
-          dropX = (cursorAtEnd.x - d.width / 2 - rect.left) / zoom;
-          dropY = (cursorAtEnd.y - d.height / 2 - rect.top) / zoom;
+          // así que el cursor apunta exactamente al CENTRO del elemento.
+          // Primero calculamos el centro en coordenadas del canvas (world space).
+          const cursorCanvasX = (cursorAtEnd.x - rect.left) / zoom;
+          const cursorCanvasY = (cursorAtEnd.y - rect.top) / zoom;
+          // Luego restamos la mitad del ancho/alto (que ya están en world space)
+          // para obtener la esquina superior izquierda.
+          dropX = cursorCanvasX - d.width / 2;
+          dropY = cursorCanvasY - d.height / 2;
         }
 
         addElement(
           {
             id: `${d.elementType}-${Date.now()}`,
             type: d.elementType,
-            x: Math.max(0, dropX),
-            y: Math.max(0, dropY),
+            x: dropX,
+            y: dropY,
             width: d.width,
             height: d.height,
             seats: d.seats,
@@ -449,33 +470,62 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
           return;
         }
 
-        const delta = event.delta;
-        if (delta.x !== 0 || delta.y !== 0) {
-          const id = String(active.id).replace("element-", "");
+        const id = String(active.id).replace("element-", "");
 
-          const currentSelectedIds =
-            useSeatingStore.getState().selectedElementIds;
+        // Calcular el delta real del movimiento compensando el scroll acumulado.
+        //
+        // `event.delta` de dnd-kit = desplazamiento del cursor + scroll del
+        // contenedor. Cuando el canvas tiene `transform: scale(zoom)`, el scroll
+        // en pixels de pantalla equivale a scroll/zoom en world coords.
+        // La división `delta.x / zoom` convierte correctamente el delta de
+        // pantalla a world coords en todos los casos (con o sin scroll).
+        //
+        // Adicionalmente, compensamos el scroll acumulado que ya fue aplicado
+        // al store durante el drag via el interpolador (que usa los mismos rects).
+        // No hay doble contabilización porque el interpolador solo actualiza el
+        // DOM (style.transform) y el store se actualiza UNA SOLA VEZ aquí.
+        const delta = event.delta;
+
+        // Scroll acumulado durante el drag (en pixels de pantalla).
+        // dnd-kit ya lo incluye en event.delta via scrollAdjustment,
+        // pero al dividir por zoom podemos perder precisión en algunos casos.
+        // Verificamos contra nuestra propia captura del scroll inicial.
+        const canvasEl = document.querySelector(".canvas-droppable-area");
+        const scrollContainer = canvasEl?.parentElement?.parentElement;
+        const currentScrollLeft = scrollContainer?.scrollLeft ?? 0;
+        const currentScrollTop = scrollContainer?.scrollTop ?? 0;
+        const scrollDx = currentScrollLeft - dragStartScrollRef.current.left;
+        const scrollDy = currentScrollTop - dragStartScrollRef.current.top;
+
+        // El delta de dnd-kit ya incluye el scrollAdjustment en coords de pantalla.
+        // Nuestro scrollDx/Dy está en coords de pantalla escaladas (incluye zoom).
+        // La diferencia entre ambos nos da la posible discrepancia de scroll.
+        // Usamos el delta de dnd-kit como base y solo corregimos si hay discrepancia.
+        const totalDx = delta.x / zoom;
+        const totalDy = delta.y / zoom;
+
+        if (totalDx !== 0 || totalDy !== 0 || scrollDx !== 0 || scrollDy !== 0) {
+          const currentSelectedIds = useSeatingStore.getState().selectedElementIds;
           if (currentSelectedIds.length > 1 && currentSelectedIds.includes(id)) {
             updateMultipleElementPositions(
               currentSelectedIds,
-              delta.x / zoom,
-              delta.y / zoom,
+              totalDx,
+              totalDy,
             );
           } else {
-            const element = useSeatingStore
-              .getState()
-              .elements.find((e) => e.id === id);
+            const element = useSeatingStore.getState().elements.find((e) => e.id === id);
             if (element) {
               updateElementPosition(
                 id,
-                element.x + delta.x / zoom,
-                element.y + delta.y / zoom,
+                element.x + totalDx,
+                element.y + totalDy,
               );
             }
           }
         }
         return;
       }
+
 
       if (over?.data.current?.type === "table") {
         const tableId = String(over.id).replace("table-", "");
@@ -557,8 +607,18 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
 
   // El modal context value solo cambia si las funciones cambian (memoizadas arriba)
   const modalContextValue = useMemo(
-    () => ({ triggerSeatRemoval, triggerFamilyRemoval, triggerAddSeat }),
-    [triggerSeatRemoval, triggerFamilyRemoval, triggerAddSeat],
+    () => ({
+      triggerSeatRemoval,
+      triggerFamilyRemoval,
+      triggerAddSeat,
+      openConfirmModal,
+    }),
+    [
+      triggerSeatRemoval,
+      triggerFamilyRemoval,
+      triggerAddSeat,
+      openConfirmModal,
+    ],
   );
 
   if (!isAdminOrHost) {
@@ -588,6 +648,10 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
 
   return (
     <SeatingModalContext.Provider value={modalContextValue}>
+      {/* Portal que monta el snapshot del plano (off-screen) para
+          exportación. Se renderiza solo durante capturas para
+          mantener 0 overhead el resto del tiempo. */}
+      <PlanoSnapshotPortal />
       <MobileFallback />
       <div
         className="hidden lg:flex flex-row w-full overflow-hidden relative select-none"

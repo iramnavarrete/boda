@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useSeatingStore } from "../../stores/useSeatingStore";
 import { ElementType, SeatingElement, STRUCTURAL_TYPES } from "@/types/seating";
 import { useSeatingModalContext } from "../SeatingModalContext";
@@ -15,7 +15,6 @@ import {
   Circle,
   ChevronLeft,
   X,
-  HandHelping,
   Move,
   AlertTriangle,
   Settings,
@@ -27,8 +26,15 @@ import {
   ArrowDownLeft,
   ArrowDownRight,
   type LucideIcon,
+  Armchair,
+  UserPlus,
+  Clock,
+  CheckCircle2,
+  ListChecks,
+  UserX,
 } from "lucide-react";
 import Tooltip from "@/features/shared/components/Tooltip";
+import { getTableIssues, TableIssue } from "../../utils/tableIssues";
 
 // ─────────────────────────────────────────────────────────────
 // Tipos y constantes
@@ -167,8 +173,16 @@ const SeatListItem = ({
         </span>
         {seat.guest && (
           <span
+            // Badge de status con 3 estados:
+            //  - confirmed  → verde (emerald)
+            //  - declined   → rojo (red)
+            //  - pending    → ámbar (amber)
             className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full border border-white ${
-              isConfirmed ? "bg-emerald-500" : "bg-amber-500"
+              isConfirmed
+                ? "bg-emerald-500"
+                : seat.guest.status === "declined"
+                  ? "bg-red-500"
+                  : "bg-amber-500"
             }`}
           />
         )}
@@ -230,23 +244,28 @@ const SeatListItem = ({
 };
 
 // ─────────────────────────────────────────────────────────────
-// Control de Rotación
+// Control de Rotación — TEMPORALMENTE DESHABILITADO
+// ─────────────────────────────────────────────────────────────
+// TODO: Re-habilitar cuando se pula el drag con elementos rotados.
+// Mientras tanto, se muestra un placeholder con opacidad baja y
+// un disclaimer de "próximamente disponible" para mantener la UI
+// coherente y que el usuario sepa que la función existe pero está
+// en desarrollo.
 // ─────────────────────────────────────────────────────────────
 
+// NOTA: `RotationControl` está definido pero actualmente no se
+// renderiza (ver el comentario `/* <RotationControl ... /> */` más
+// abajo). Lo dejamos intacto para que cuando se re-habilite la
+// rotación, solo sea quitar el comentario del JSX.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function RotationControl({ element }: { element: SeatingElement }) {
-  const updateElementRotation = useSeatingStore(
-    (state) => state.updateElementRotation,
-  );
   const rotation = element.rotation ?? 0;
 
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = parseInt(e.target.value, 10);
-    const snapped = Math.round(raw / 15) * 15;
-    updateElementRotation(element.id, snapped);
-  };
-
   return (
-    <div className="px-4 py-3 border-b border-[#EBE5DA]">
+    <div
+      className="px-4 py-3 border-b border-[#EBE5DA] relative"
+      style={{ opacity: 0.5 }}
+    >
       <div className="flex items-center justify-between mb-2">
         <label className="text-[9px] text-[#A8A29E] uppercase font-bold tracking-widest flex items-center gap-1.5">
           <RotateCw size={11} />
@@ -256,6 +275,7 @@ function RotationControl({ element }: { element: SeatingElement }) {
           {rotation}°
         </span>
       </div>
+
       <div className="flex items-center gap-2">
         <span className="text-[10px] text-[#A8A29E] font-bold w-6 text-right">
           0°
@@ -266,8 +286,8 @@ function RotationControl({ element }: { element: SeatingElement }) {
           max="360"
           step="15"
           value={rotation}
-          onChange={handleSliderChange}
-          className="flex-1 accent-[#C5A669] h-1.5 rounded-lg appearance-none cursor-pointer"
+          disabled
+          className="flex-1 accent-[#C5A669] h-1.5 rounded-lg appearance-none cursor-not-allowed"
           style={{
             background: `linear-gradient(to right, #C5A669 0%, #C5A669 ${
               (rotation / 360) * 100
@@ -278,23 +298,26 @@ function RotationControl({ element }: { element: SeatingElement }) {
           360°
         </span>
       </div>
+
       <div className="mt-2 grid grid-cols-4 gap-1.5">
-        {ROTATION_PRESETS.map((preset) => {
-          const isActive = rotation === preset;
-          return (
-            <button
-              key={preset}
-              onClick={() => updateElementRotation(element.id, preset)}
-              className={`py-1 text-[10px] font-bold rounded-md border transition-colors ${
-                isActive
-                  ? "bg-[#C5A669] text-white border-[#C5A669]"
-                  : "bg-white text-[#5A5A5A] border-[#EBE5DA] hover:border-[#C5A669] hover:text-[#C5A669]"
-              }`}
-            >
-              {preset}°
-            </button>
-          );
-        })}
+        {ROTATION_PRESETS.map((preset) => (
+          <button
+            key={preset}
+            disabled
+            className="py-1 text-[10px] font-bold rounded-md border bg-white text-[#5A5A5A] border-[#EBE5DA] cursor-not-allowed"
+          >
+            {preset}°
+          </button>
+        ))}
+      </div>
+
+      {/* Disclaimer de "próximamente" sobrepuesto al control */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="bg-[#FDFBF7] border border-[#EBE5DA] rounded-md px-2.5 py-1 shadow-sm">
+          <span className="text-[10px] font-bold text-[#A8A29E] uppercase tracking-wider">
+            Próximamente
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -614,6 +637,115 @@ function SizeControl({ element }: { element: SeatingElement }) {
 // Componente Principal
 // ─────────────────────────────────────────────────────────────
 
+// ─────────────────────────────────────────────────────────────
+// Panel de Estatus de la Mesa
+// ─────────────────────────────────────────────────────────────
+// Muestra los issues detectados en la mesa seleccionada (declinados,
+// sobre-asignación, pendientes, etc.) con su acción sugerida. Solo
+// se renderiza si la mesa tiene al menos 1 issue; si está perfecta,
+// se muestra un solo card verde de "Mesa completa, sin acciones".
+
+const ICON_MAP: Record<TableIssue["icon"], LucideIcon> = {
+  trash: Trash2,
+  "user-plus": UserPlus,
+  clock: Clock,
+  alert: AlertTriangle,
+  check: CheckCircle2,
+};
+
+const SEVERITY_STYLES: Record<
+  TableIssue["severity"],
+  { bg: string; border: string; iconColor: string; textColor: string }
+> = {
+  critical: {
+    bg: "bg-red-50/70",
+    border: "border-l-red-500",
+    iconColor: "text-red-600",
+    textColor: "text-red-900",
+  },
+  warning: {
+    bg: "bg-amber-50/70",
+    border: "border-l-amber-500",
+    iconColor: "text-amber-600",
+    textColor: "text-amber-900",
+  },
+  success: {
+    bg: "bg-emerald-50/70",
+    border: "border-l-emerald-500",
+    iconColor: "text-emerald-600",
+    textColor: "text-emerald-900",
+  },
+};
+
+function TableActionsPanel({
+  issues,
+}: {
+  issues: TableIssue[];
+}) {
+  if (issues.length === 0) return null;
+
+  return (
+    <div className="px-4 py-3 border-b border-[#EBE5DA] bg-[#FDFBF7]">
+      <div className="flex items-center gap-1.5 mb-2">
+        <ListChecks size={11} className="text-[#A8A29E]" />
+        <span className="text-[9px] text-[#A8A29E] uppercase font-bold tracking-widest">
+          Estatus de la Mesa
+        </span>
+        <span className="ml-auto text-[9px] text-[#A8A29E] font-bold bg-white border border-[#EBE5DA] rounded-md px-1.5 py-px">
+          {issues.length}
+        </span>
+      </div>
+
+      <div className="space-y-1.5">
+        {issues.map((issue) => {
+          const Icon = ICON_MAP[issue.icon];
+          const styles = SEVERITY_STYLES[issue.severity];
+          return (
+            <div
+              key={issue.id}
+              role={issue.severity === "critical" ? "alert" : "status"}
+              className={`relative pl-2.5 pr-2 py-2 rounded-md border border-[#EBE5DA] border-l-[3px] ${styles.border} ${styles.bg}`}
+            >
+              <div className="flex items-start gap-2">
+                <Icon
+                  size={13}
+                  className={`${styles.iconColor} shrink-0 mt-px`}
+                />
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={`text-[11px] font-bold leading-tight ${styles.textColor}`}
+                  >
+                    {issue.title}
+                  </p>
+                  {issue.message && (
+                    <p className="text-[10px] text-[#5A5A5A] leading-snug mt-0.5">
+                      {issue.message}
+                    </p>
+                  )}
+                </div>
+              </div>
+              {issue.action && (
+                <button
+                  onClick={issue.action.onClick}
+                  className={`mt-1.5 w-full text-[10px] font-bold uppercase tracking-wider py-1 rounded-md border transition-colors ${
+                    issue.severity === "critical"
+                      ? "bg-white border-red-200 text-red-600 hover:bg-red-50"
+                      : issue.severity === "warning"
+                        ? "bg-white border-amber-200 text-amber-700 hover:bg-amber-50"
+                        : "bg-white border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                  }`}
+                >
+                  {issue.action.label}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 interface ElementSidebarProps {
   onBack: () => void;
   onCloseSidebar?: () => void;
@@ -639,6 +771,121 @@ export function ElementSidebar({
   const removeElement = useSeatingStore((state) => state.removeElement);
   const showToast = useSeatingStore((state) => state.showToast);
   const guestMap = useGuestLookupMap();
+  const families = useSeatingStore((state) => state.families);
+
+  // Acceso al modal de confirmación global (no usar `window.confirm`
+  // — el proyecto usa un modal estilizado en `SeatingManager.tsx`
+  // que se renderiza con `<ConfirmationModal>` y se abre vía
+  // `openConfirmModal`).
+  const { openConfirmModal } = useSeatingModalContext();
+
+  // ─────────────────────────────────────────────────────────────
+  // ISSUES / ACCIONES REQUERIDAS de la mesa
+  // ─────────────────────────────────────────────────────────────
+  // Se calculan con `useMemo` para no recalcularlos en cada
+  // pointermove del drag. Solo se recalculan cuando cambia el
+  // elemento, el guestMap, las families o las acciones del store.
+  // Si la mesa no tiene seats configurados, retorna [] y el panel
+  // no se renderiza.
+  const tableIssues = useMemo(() => {
+    if (!element) return [];
+    return getTableIssues(element, {
+      guestMap,
+      families,
+      actions: {
+        removeGuestFromTable: (tableId, guestId) =>
+          useSeatingStore.getState().removeGuestFromTable(tableId, guestId),
+        // Cast a `Record<string, unknown>` para que el type del
+        // helper (permisivo) acepte la función real del context
+        // (que requiere `isOpen` y otros campos).
+        openConfirmModal: openConfirmModal as unknown as (
+          config: Record<string, unknown>,
+        ) => void,
+      },
+    });
+  }, [element, guestMap, families, openConfirmModal]);
+
+  // ─────────────────────────────────────────────────────────────
+  // CONFIRMACIÓN EN DOS PASOS ("click de nuevo para confirmar")
+  // ─────────────────────────────────────────────────────────────
+  // Para elementos SIN modal de confirmación previo (los que se
+  // eliminan con un solo click hoy), exigimos un segundo click
+  // antes de ejecutar la acción. Esto evita borrados accidentales.
+  //
+  // El estado se guarda indexado por `element.id` (en un Map), así
+  // cuando el usuario cambia de elemento seleccionado, el nuevo
+  // elemento arranca automáticamente con `confirming = false` sin
+  // necesidad de un `useEffect` que setee state (lo cual React 19
+  // marca como anti-pattern: cascading renders). El timer también
+  // se guarda por elemento para que cada uno tenga su propio
+  // countdown independiente.
+  //
+  // Para elementos CON modal (mesas con invitados asignados, etc.)
+  // este flujo NO se usa — la confirmación vive en el modal.
+  // ─────────────────────────────────────────────────────────────
+  const [confirmingMap, setConfirmingMap] = useState<
+    Record<string, boolean>
+  >({});
+  // `element` puede ser `undefined` antes del early return más abajo
+  // en el componente, así que usamos un fallback seguro.
+  const confirming = element ? (confirmingMap[element.id] ?? false) : false;
+  const confirmTimeoutsRef = useRef<
+    Map<string, ReturnType<typeof setTimeout>>
+  >(new Map());
+
+  // Helper para setear confirming del elemento actual y limpiar
+  // su timer si lo había. `element` puede ser `undefined` antes
+  // del early return; los callers reales están en el JSX posterior
+  // donde `element` ya está garantizado.
+  const setConfirming = (value: boolean) => {
+    if (!element) return;
+    if (value) {
+      // Limpiar timer previo de este mismo elemento (si existía)
+      const prevTimer = confirmTimeoutsRef.current.get(element.id);
+      if (prevTimer) clearTimeout(prevTimer);
+    } else {
+      // Limpiar el timer de este elemento
+      const t = confirmTimeoutsRef.current.get(element.id);
+      if (t) {
+        clearTimeout(t);
+        confirmTimeoutsRef.current.delete(element.id);
+      }
+    }
+    setConfirmingMap((prev) =>
+      prev[element.id] === value ? prev : { ...prev, [element.id]: value },
+    );
+  };
+
+  // Programar auto-reset del confirming después de 3 segundos.
+  // Se expone como helper para llamarlo al "armar" el botón.
+  const armConfirmingWithTimeout = () => {
+    if (!element) return;
+    setConfirming(true);
+    const elementId = element.id;
+    const timer = setTimeout(() => {
+      setConfirmingMap((prev) => {
+        if (!prev[elementId]) return prev;
+        // Recrear el Map sin la key del elemento (sin usar
+        // destructuring con `_` para evitar el warning de unused).
+        const next: Record<string, boolean> = {};
+        for (const k of Object.keys(prev)) {
+          if (k !== elementId) next[k] = prev[k];
+        }
+        return next;
+      });
+      confirmTimeoutsRef.current.delete(elementId);
+    }, 3000);
+    confirmTimeoutsRef.current.set(elementId, timer);
+  };
+
+  // Limpiar TODOS los timers al desmontar el sidebar.
+  useEffect(() => {
+    const timeouts = confirmTimeoutsRef.current;
+    return () => {
+      timeouts.forEach((t) => clearTimeout(t));
+      timeouts.clear();
+    };
+  }, []);
 
   // ── Hooks que dependen de `element` deben declararse ANTES del
   // early return para cumplir con las reglas de React Hooks. El
@@ -794,6 +1041,11 @@ export function ElementSidebar({
         </div>
       </div>
 
+      {/* Panel de acciones requeridas — solo se renderiza si la
+          mesa tiene issues (declinados, pendientes, etc.) o si está
+          completa. Las áreas/estructuras no tienen panel. */}
+      {tableIssues.length > 0 && <TableActionsPanel issues={tableIssues} />}
+
       {/* Contenido scrollable */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {/* Nombre / Alias — editable en su totalidad, sin importar
@@ -843,7 +1095,12 @@ export function ElementSidebar({
             <SeatPositionControl element={element} />
           )}
 
-        <RotationControl element={element} />
+        {/* TODO: Re-habilitar RotationControl cuando se pula el drag
+            con elementos rotados. Por ahora se oculta completamente
+            de la UI. El componente, el store y el tipo siguen
+            intactos para que cuando esté listo, solo sea quitar
+            este comentario y restaurar la línea. */}
+        {/* <RotationControl element={element} /> */}
 
         {hasSeatList && (
           <div className="px-4 py-3 border-b border-[#EBE5DA]">
@@ -909,7 +1166,7 @@ export function ElementSidebar({
               <div className="mt-3 relative overflow-hidden border-2 border-dashed border-[#C5A669]/50 rounded-xl p-3 bg-gradient-to-br from-[#FDFBF7] to-[#F9F7F2] text-center">
                 <div className="flex justify-center mb-2">
                   <div className="w-9 h-9 rounded-full bg-[#C5A669]/15 flex items-center justify-center">
-                    <HandHelping size={18} className="text-[#C5A669]" />
+                    <Armchair size={18} className="text-[#C5A669]" />
                   </div>
                 </div>
                 <p className="text-[10px] font-bold text-[#2C2C29] mb-1 uppercase tracking-wider">
@@ -918,7 +1175,7 @@ export function ElementSidebar({
                     : `${emptySeatsCount} asientos vacíos`}
                 </p>
                 <p className="text-[10px] text-[#5A5A5A] leading-relaxed">
-                  Arrastra familias o invitados del panel de la derecha a la
+                  Arrastra familias o invitados/personas del panel de la derecha a la
                   mesa en el plano para asignarlos.
                 </p>
               </div>
@@ -927,32 +1184,63 @@ export function ElementSidebar({
         )}
       </div>
 
-      {/* Footer con botón eliminar — validaciones: warning si hay invitados */}
+      {/* Footer con botón eliminar — validaciones: warning si hay invitados
+          o confirmación en dos pasos si NO hay modal previo. */}
       <div className="px-4 py-3 border-t border-[#EBE5DA] bg-[#F9F7F2]">
         <Tooltip
           text={
             hasAssignedGuests
               ? `Esta mesa tiene ${validAssignedCount} invitado(s) asignado(s). Se desasignarán automáticamente al eliminar la mesa.`
-              : "Eliminar este elemento del plano"
+              : confirming
+                ? "Click de nuevo para confirmar la eliminación"
+                : "Eliminar este elemento del plano"
           }
         >
           <button
             onClick={() => {
               if (hasAssignedGuests) {
-                const confirmMsg = `Esta mesa tiene ${validAssignedCount} invitado(s) asignado(s). ¿Eliminar la mesa y desasignar a los invitados?`;
-                if (window.confirm(confirmMsg)) {
-                  removeElement(element.id);
-                  onBack();
-                }
-              } else {
+                // Elementos CON modal de confirmación: abrimos el
+                // `<ConfirmationModal>` global (montado en
+                // SeatingManager.tsx) en lugar de `window.confirm`.
+                // El doble-click NO aplica porque el modal ya es
+                // la confirmación.
+                openConfirmModal({
+                  isOpen: true,
+                  showConfirmToast: false,
+                  title: "⚠️ Mesa con invitados asignados",
+                  message: `Esta mesa tiene ${validAssignedCount} invitado(s) asignado(s). Al eliminarla, los invitados quedarán sin mesa asignada. ¿Deseas continuar?`,
+                  isDanger: true,
+                  action: async () => {
+                    removeElement(element.id);
+                    onBack();
+                  },
+                });
+                return;
+              }
+
+              // Elementos SIN modal previo: exigimos un segundo click
+              // como confirmación. El primer click "arma" el botón
+              // y muestra el texto de aviso; el segundo ejecuta.
+              if (confirming) {
+                // Segundo click: limpia el timer y elimina.
+                setConfirming(false);
                 removeElement(element.id);
                 onBack();
+                return;
               }
+
+              // Primer click: armar el estado de confirmación y
+              // programar el auto-reset a 3 segundos.
+              armConfirmingWithTimeout();
             }}
-            className={`w-full flex items-center justify-center gap-2 px-3 py-2 bg-white border rounded-lg font-bold text-[10px] uppercase tracking-widest transition-colors shadow-sm ${
+            className={`w-full flex items-center justify-center gap-2 px-3 py-2 border rounded-lg font-bold text-[10px] uppercase tracking-widest transition-colors shadow-sm ${
               hasAssignedGuests
-                ? "border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400"
-                : "border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
+                ? "bg-white border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400"
+                : confirming
+                  ? // Estado "armado": fondo rojo sólido para señalar
+                    // que el siguiente click elimina.
+                    "bg-red-600 border-red-600 text-white hover:bg-red-700"
+                  : "bg-white border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
             }`}
           >
             {hasAssignedGuests ? (
@@ -960,7 +1248,11 @@ export function ElementSidebar({
             ) : (
               <Trash2 size={12} />
             )}
-            Eliminar elemento
+            {hasAssignedGuests
+              ? "Eliminar elemento"
+              : confirming
+                ? "Presiona de nuevo para confirmar"
+                : "Eliminar elemento"}
             {hasAssignedGuests && (
               <span className="ml-1 text-amber-600">
                 ({validAssignedCount})

@@ -26,6 +26,13 @@ export interface SeatingStore {
   toastMsg: string | null;
   isInitialized: boolean;
   hasUnsavedChanges: boolean;
+  /**
+   * Flag que controla la visibilidad del `<PlanoSnapshotPortal>`.
+   * Se activa SOLO durante la captura del plano para exportar.
+   * El portal debe estar montado DENTRO del `SeatingModalProvider`
+   * (y de cualquier otro context que los TableElements necesiten).
+   */
+  isSnapshotVisible: boolean;
 
   initialize: (
     dbElements: SeatingElement[],
@@ -80,6 +87,7 @@ export interface SeatingStore {
 
   setSelectedElementId: (id: string | null) => void;
   setSelectedElementIds: (ids: string[]) => void;
+  setSnapshotVisible: (visible: boolean) => void;
   showToast: (msg: string) => void;
   addLayoutElements: (newElements: SeatingElement[]) => void;
   removeMultipleElements: (ids: string[]) => void;
@@ -133,6 +141,7 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
   toastMsg: null,
   isInitialized: false,
   hasUnsavedChanges: false,
+  isSnapshotVisible: false,
 
   initialize: (dbElements, dbFamilies) => {
     const cleanedElements = dbElements.map((el) => ({
@@ -549,6 +558,7 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
 
   setSelectedElementId: (id) => set({ selectedElementId: id }),
   setSelectedElementIds: (ids) => set({ selectedElementIds: ids }),
+  setSnapshotVisible: (visible) => set({ isSnapshotVisible: visible }),
 
   addLayoutElements: (newElements) =>
     set((state) => ({
