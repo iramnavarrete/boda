@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCategoryCollapse } from "../../utils/categoryCollapseState";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import {
   Circle,
@@ -205,7 +205,7 @@ const ELEMENTS: { category: string; items: PaletteItemType[] }[] = [
         type: "photo_booth",
         label: "Cabina de fotos",
         seats: 0,
-        width: 140,
+        width: 170,
         height: 140,
         icon: Camera,
       },
@@ -285,14 +285,14 @@ const ELEMENTS: { category: string; items: PaletteItemType[] }[] = [
         label: "Cabina DJ",
         seats: 0,
         width: 120,
-        height: 80,
+        height: 90,
         icon: MonitorPlay,
       },
       {
         type: "cake_area",
         label: "Área Pastel",
         seats: 0,
-        width: 100,
+        width: 150,
         height: 100,
         icon: Cake,
       },
@@ -301,7 +301,7 @@ const ELEMENTS: { category: string; items: PaletteItemType[] }[] = [
         label: "Mesa Regalos",
         seats: 0,
         width: 140,
-        height: 70,
+        height: 90,
         icon: Gift,
       },
       // ── Accesos y habitaciones ──
@@ -317,7 +317,7 @@ const ELEMENTS: { category: string; items: PaletteItemType[] }[] = [
         type: "bride_room",
         label: "Cuarto de Novia",
         seats: 0,
-        width: 140,
+        width: 170,
         height: 100,
         icon: ChessQueen,
       },
@@ -325,7 +325,7 @@ const ELEMENTS: { category: string; items: PaletteItemType[] }[] = [
         type: "groom_room",
         label: "Cuarto de Novio",
         seats: 0,
-        width: 140,
+        width: 170,
         height: 100,
         icon: ChessKing,
       },
@@ -333,8 +333,8 @@ const ELEMENTS: { category: string; items: PaletteItemType[] }[] = [
         type: "smoking_area",
         label: "Zona Fumadores",
         seats: 0,
-        width: 120,
-        height: 120,
+        width: 165,
+        height: 150,
         icon: Cigarette,
       },
       // ── Decoración (ex-Mobiliario) ──
@@ -377,7 +377,7 @@ const ELEMENTS: { category: string; items: PaletteItemType[] }[] = [
       },
       {
         type: "zone_shape",
-        label: "Forma / Zona",
+        label: "Zona delimitada",
         seats: 0,
         width: 200,
         height: 140,
@@ -414,7 +414,7 @@ export function DraggablePaletteItem({ item }: { item: PaletteItemType }) {
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        className={`group/item flex items-center gap-4 mb-1 py-2 mx-3 px-4 bg-[#fffdf9] border-dashed border rounded-lg cursor-grab active:cursor-grabbing transition-colors border-gold ${
+        className={`group/item flex items-center gap-4 mb-1 py-2 mx-3 px-4 bg-[#fffdf9] border-dashed hover:border-solid border rounded-lg cursor-grab active:cursor-grabbing transition-colors border-gold ${
           isDragging ? "opacity-40" : "hover:border-gold-400 bg-white"
         }`}
         style={{ touchAction: "none" }}
@@ -470,16 +470,11 @@ export function DraggablePaletteItem({ item }: { item: PaletteItemType }) {
 }
 
 export default function ElementsPalette({ onClose }: { onClose?: () => void }) {
-  // Estado inicial: solo "Mesas" abierta. El resto colapsado.
-  const [collapsedCategories, setCollapsedCategories] = useState<
-    Record<string, boolean>
-  >({
-    Estructural: true,
-    Servicios: true,
-    Mobiliario: true,
-    Espacios: true,
-    Utilidades: true,
-  });
+  // Estado de colapso/expansión por categoría. Persiste entre
+  // mounts (vive a nivel de módulo) y entre refreshes (vía
+  // localStorage). Ver `utils/categoryCollapseState.ts`.
+  const { collapsed: collapsedCategories, toggle: toggleCategory } =
+    useCategoryCollapse();
 
   const elements = useSeatingStore((state) => state.elements);
   const elementCount = elements.length;
@@ -488,13 +483,6 @@ export default function ElementsPalette({ onClose }: { onClose?: () => void }) {
     id: "palette-area",
     data: { type: "sidebar" },
   });
-
-  const toggleCategory = (category: string) => {
-    setCollapsedCategories((prev) => ({
-      ...prev,
-      [category]: !prev[category],
-    }));
-  };
 
   return (
     <div
