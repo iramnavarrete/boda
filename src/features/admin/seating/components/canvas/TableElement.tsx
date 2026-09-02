@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { RotateCw } from "lucide-react";
 import { useDraggable, useDroppable, useDndContext } from "@dnd-kit/core";
 import { useSeatingStore } from "../../stores/useSeatingStore";
@@ -14,6 +14,11 @@ import { ElementShape } from "./ElementShape";
 import { useGuestLookupMap } from "../../hooks/useGuestLookupMap";
 import { useElementResize } from "../../hooks/useElementResize";
 import { useSelectedIdsSet } from "../../hooks/useSelectedIdsSet";
+import {
+  registerCard,
+  unregisterCard,
+  setCardRotation,
+} from "../../utils/canvas/dragInterpolator";
 
 const RESIZE_HANDLES = [
   { id: "top-left", style: { top: -8, left: -8 }, cursor: "cursor-nw-resize" },
@@ -108,7 +113,6 @@ function TableElement({ element }: { element: SeatingElement }) {
     attributes,
     listeners,
     setNodeRef: setDraggableRef,
-    transform,
     isDragging,
   } = useDraggable({
     id: `element-${element.id}`,
@@ -122,77 +126,161 @@ function TableElement({ element }: { element: SeatingElement }) {
     onPointerUpResize,
   } = useElementResize(element.id, { lockAxis, lockAspectRatio });
 
+  // Ref local al div del card para escribir el transform directo
+  // al DOM (sin pasar por React) durante el drag. Se combina con
+  // `setNodeRef` para no tener dos refs separadas.
+  const cardRef = useRef<HTMLElement | null>(null);
+
   const setNodeRef = useCallback(
     (node: HTMLElement | null) => {
+      cardRef.current = node;
       setDroppableRef(node);
       setDraggableRef(node);
     },
     [setDroppableRef, setDraggableRef],
   );
 
-  // Re-render a 60fps durante el drag activo.
+  // ──────────────────────────────────────────────────────────────────
+  // REF para `globalActive` que cambia DURANTE el drag sin re-registrar
+  // ──────────────────────────────────────────────────────────────────
+  // `globalActive` cambia en CADA `pointermove` durante un drag. Si lo
+  // pusiéramos como dependencia del `useEffect` que registra la card en
+  // el interpolator, el effect se re-ejecutaría cada frame → el cleanup
+  // llamaría `unregisterCard` (que limpia `style.transform`) → la card
+  // saltaría a su posición original → sensación de "scroll raro" en
+  // multi-select.
   //
-  // ¿Por qué? Porque el `transformStyle` de los elementos que NO son
-  // el activo pero sí están en la selección en masa (bulk) lee
-  // `globalActive.rect.current.translated` e `globalActive.rect.current.
-  // initial` para calcular su delta. Esos son REFS de dnd-kit, no state
-  // de React, así que un cambio en ellos no dispara re-render por sí
-  // solo. Sin este RAF loop, los "acompañantes" del drag multi-select
-  // solo se actualizarían al final del drag, dando un movimiento
-  // entrecortado.
-  //
-  // El loop solo se monta cuando este elemento es el que se está
-  // arrastrando O forma parte de la selección en masa.
-  const [, forceRender] = useState(0);
+  // Solución: lo almacenamos en un ref que se actualiza en cada render
+  // (sin causar re-ejecución del effect), y el `computeTarget` del
+  // interpolator lo lee directamente desde el ref.
+  // ──────────────────────────────────────────────────────────────────
+  const globalActiveRef = useRef(globalActive);
+  // Actualizar el ref en un effect (no durante render). El ref solo
+  // se lee dentro del `computeTarget` del interpolador (que se
+  // ejecuta en cada frame, fuera del ciclo de React), así que
+  // mantenerlo sincronizado vía effect es seguro y respeta la
+  // regla de React 19: "refs son valores, no se accede durante
+  // render".
   useEffect(() => {
-    if (!globalActive) return;
-    if (globalActive.data.current?.type !== "element") return;
-    const activeId = globalActive.id as string;
-    const isThisElementDragging = activeId === `element-${element.id}`;
-    if (!isThisElementDragging && !isSelectedInBulk) return;
+    globalActiveRef.current = globalActive;
+  }, [globalActive]);
 
-    let raf = 0;
-    const tick = () => {
-      forceRender((n) => (n + 1) & 0xffff);
-      raf = requestAnimationFrame(tick);
+  // Booleano que indica si ESTA card debe estar registrada en el
+  // interpolator durante el drag actual. Solo cambia 2 veces:
+  // al iniciar el drag (true) y al terminar (false). NO cambia
+  // en cada pointermove, así que es seguro como dependencia del
+  // useEffect.
+  const isActiveDrag =
+    globalActive?.data.current?.type === "element" &&
+    (globalActive.id === `element-${element.id}` || isSelectedInBulk);
+
+  // ──────────────────────────────────────────────────────────────────
+  // INTERPOLACIÓN / SUAVIZADO DEL DRAG (Opción D + RAF global)
+  // ──────────────────────────────────────────────────────────────────
+  // El RAF loop es GLOBAL y COMPARTIDO entre todos los TableElements
+  // (ver `utils/canvas/dragInterpolator.ts`). Esto garantiza que en
+  // multi-select, TODAS las mesas se actualicen en el mismo frame
+  // con el mismo target, eliminando el desfase que existía cuando
+  // cada mesa tenía su propio RAF.
+  //
+  // CRÍTICO: este effect SOLO se ejecuta cuando `isActiveDrag` cambia
+  // de booleano, NO en cada pointermove. Lee los valores actuales de
+  // `globalActive` a través del ref `globalActiveRef`, no del closure.
+  // ──────────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!isActiveDrag) return;
+
+    const card = cardRef.current;
+    if (!card) return;
+
+    // `computeTarget` es un closure que el interpolator global evalúa
+    // en cada frame. Lee los valores MÁS RECIENTES de dnd-kit desde
+    // refs (que se actualizan en cada render sin re-registrar la card)
+    // y devuelve el delta a aplicar en coords del mundo (post-zoom).
+    //
+    // IMPORTANTE: TODAS las cards (la arrastrada Y las del bulk) usan
+    // la MISMA fuente de verdad: `active.rect.current.translated -
+    // active.rect.current.initial`. dnd-kit actualiza `translated` en
+    // cada `pointermove`, incluyendo cuando hay auto-scroll (los rects
+    // son posiciones absolutas de pantalla via getBoundingClientRect,
+    // que ya reflejan el scroll actual). El delta resultante es el
+    // movimiento real en coords de pantalla, que dividimos por zoom
+    // para obtener el delta en world coords (coords del canvas).
+    const computeTarget = (): { x: number; y: number } | null => {
+      const active = globalActiveRef.current;
+      if (!active) return null;
+      const currentZoom = useZoomStore.getState().zoom;
+
+      if (
+        active.rect.current.translated &&
+        active.rect.current.initial
+      ) {
+        const deltaX =
+          active.rect.current.translated.left -
+          active.rect.current.initial.left;
+        const deltaY =
+          active.rect.current.translated.top -
+          active.rect.current.initial.top;
+        return {
+          x: deltaX / currentZoom,
+          y: deltaY / currentZoom,
+        };
+      }
+      return null;
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [globalActive, isSelectedInBulk, element.id]);
 
-  // Transform: combina drag translate3d + rotación
+
+    registerCard(element.id, card, computeTarget);
+    // Leer la rotación actual del store (no del closure) para que
+    // setCardRotation tenga el valor más reciente aunque el elemento
+    // se re-rotara justo antes de empezar el drag.
+    const currentRotation = useSeatingStore.getState().elements.find(
+      (el) => el.id === element.id
+    )?.rotation ?? 0;
+    setCardRotation(element.id, currentRotation);
+
+    return () => {
+      // Leer la rotación FINAL del store (no del closure) para que
+      // unregisterCard aplique la rotación correcta al DOM de forma
+      // síncrona, evitando el bug donde el elemento aparecía en 0°
+      // aunque el store dijera 90°.
+      const finalRotation = useSeatingStore.getState().elements.find(
+        (el) => el.id === element.id
+      )?.rotation ?? 0;
+      unregisterCard(element.id, finalRotation);
+    };
+    // Solo `isActiveDrag` cambia → effect se ejecuta 2 veces por drag
+    // (inicio y fin), NO en cada pointermove.
+  }, [isActiveDrag, element.id]);
+
+  // Transform para React: solo `rotate` cuando NO hay drag activo.
+  // Durante el drag, el interpolator global se encarga del transform.
   const transformStyle = (() => {
     const rotation = element.rotation ?? 0;
 
-    if (transform) {
-      const currentZoom = useZoomStore.getState().zoom;
-      return `translate3d(${transform.x / currentZoom}px, ${
-        transform.y / currentZoom
-      }px, 0) rotate(${rotation}deg)`;
-    }
-
-    if (
-      isSelectedInBulk &&
-      globalActive &&
-      globalActive.data.current?.type === "element" &&
-      globalActive.rect.current.translated &&
-      globalActive.rect.current.initial
-    ) {
-      const currentZoom = useZoomStore.getState().zoom;
-      const deltaX =
-        globalActive.rect.current.translated.left -
-        globalActive.rect.current.initial.left;
-      const deltaY =
-        globalActive.rect.current.translated.top -
-        globalActive.rect.current.initial.top;
-      return `translate3d(${deltaX / currentZoom}px, ${deltaY / currentZoom}px, 0) rotate(${rotation}deg)`;
+    if (globalActive && globalActive.data.current?.type === "element") {
+      const activeId = globalActive.id as string;
+      const isThisElementDragging = activeId === `element-${element.id}`;
+      if (isThisElementDragging || isSelectedInBulk) {
+        return undefined;
+      }
     }
 
     if (rotation !== 0) {
       return `rotate(${rotation}deg)`;
     }
 
-    return undefined;
+    // IMPORTANTE: retornar `"none"` (NO `undefined`) cuando no hay
+    // rotación. ¿Por qué? React solo pone en su style-cache las
+    // propiedades con valores truthy/strings. Si retornamos
+    // `undefined`, React IGNORA la propiedad `transform` y NO
+    // sobrescribe cualquier valor residual que haya dejado el
+    // interpolador (`rotate(0deg) translate3d(X, Y, 0)` queda en
+    // el DOM tras el drag). Con `"none"`, React SIEMPRE escribe
+    // `style.transform = "none"` y limpia el residuo → la card
+    // queda exactamente en su posición CSS (`left/top`).
+    return "none";
   })();
 
   const isPartOfActiveDrag =
@@ -231,113 +319,53 @@ function TableElement({ element }: { element: SeatingElement }) {
   ]);
 
   // ─────────────────────────────────────────────────────────────
-  // HANDLE DE ROTACIÓN EN EL CANVAS
-  // Aparece arriba del elemento cuando está seleccionado.
-  // Se arrastra para rotar el elemento alrededor de su centro.
-  //
-  // El handle y la línea de unión se renderizan DENTRO de la card,
-  // por lo que ROTAN con el elemento. Esto es más natural: el handle
-  // siempre está en la parte "superior" del elemento desde su
-  // perspectiva local, igual que en PowerPoint.
+  // HANDLE DE ROTACIÓN EN EL CANVAS — TEMPORALMENTE DESHABILITADO
   // ─────────────────────────────────────────────────────────────
+  // TODO: Re-habilitar cuando se pula el comportamiento del drag
+  // con elementos rotados. Hay un bug donde el `translate3d` del
+  // interpolador compone incorrectamente con el `rotate` aplicado
+  // por React, causando que la card se desplace en la dirección
+  // equivocada cuando tiene rotación ≠ 0.
+  //
+  // Por ahora el handle NO se renderiza en el canvas. La
+  // rotación se mantiene en el store (no se borra el campo
+  // `element.rotation`) para que cuando esté listo, los datos
+  // previos no se pierdan.
+  //
+  // El bloque original está comentado abajo como referencia.
+  // ─────────────────────────────────────────────────────────────
+  /*
   const rotationStateRef = useRef<{
     initialAngle: number;
     initialRotation: number;
   } | null>(null);
 
   const rotation = element.rotation ?? 0;
-  // Centro del elemento en coordenadas del mundo (no se ve afectado
-  // por la rotación porque la rotación es alrededor del centro).
   const centerX = element.x + element.width / 2;
   const centerY = element.y + element.height / 2;
-
-  // Posición del handle EN COORDENADAS DE LA CARD (con el padding
-  // de SEAT_PADDING para mesas, o 0 para zonas). Como está dentro
-  // de la card, rota con el elemento.
-  const HANDLE_OFFSET = 70; // separación pronunciada del elemento
-  const HANDLE_SIZE = 28; // w-7 h-7
+  const HANDLE_OFFSET = 70;
+  const HANDLE_SIZE = 28;
   const ROTATION_SNAP = 15;
   const cardWidth = element.width + (isTable ? seatPadding * 2 : 0);
   const elementTopY = isTable ? seatPadding : 0;
-  // x: centro horizontal de la card (que coincide con el centro
-  //    del elemento gracias al padding simétrico de SEAT_PADDING).
-  // y: HANDLE_OFFSET arriba del borde superior del elemento.
   const handleX = cardWidth / 2;
   const handleY = elementTopY - HANDLE_OFFSET;
-  // Línea de unión: del borde superior del elemento (elementTopY)
-  // hasta el borde inferior del handle (handleY + HANDLE_SIZE).
   const lineTopY = handleY + HANDLE_SIZE;
   const lineHeight = elementTopY - lineTopY;
 
   const handleRotationPointerDown = useCallback(
-    (e: React.PointerEvent) => {
-      e.stopPropagation();
-      e.preventDefault();
-
-      const canvasEl = document.querySelector(".canvas-droppable-area");
-      if (!canvasEl) return;
-      const canvasRect = canvasEl.getBoundingClientRect();
-      const zoom = useZoomStore.getState().zoom;
-
-      const centerXScreen = centerX * zoom + canvasRect.left;
-      const centerYScreen = centerY * zoom + canvasRect.top;
-
-      const initialAngle =
-        Math.atan2(
-          e.clientY - centerYScreen,
-          e.clientX - centerXScreen,
-        ) *
-        (180 / Math.PI);
-
-      rotationStateRef.current = {
-        initialAngle,
-        initialRotation: rotation,
-      };
-
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
-    },
+    (e: React.PointerEvent) => { ... },
     [element.id, centerX, centerY, rotation],
   );
-
   const handleRotationPointerMove = useCallback(
-    (e: React.PointerEvent) => {
-      const state = rotationStateRef.current;
-      if (!state) return;
-
-      const canvasEl = document.querySelector(".canvas-droppable-area");
-      if (!canvasEl) return;
-      const canvasRect = canvasEl.getBoundingClientRect();
-      const zoom = useZoomStore.getState().zoom;
-
-      const centerXScreen = centerX * zoom + canvasRect.left;
-      const centerYScreen = centerY * zoom + canvasRect.top;
-
-      const currentAngle =
-        Math.atan2(
-          e.clientY - centerYScreen,
-          e.clientX - centerXScreen,
-        ) *
-        (180 / Math.PI);
-
-      const deltaAngle = currentAngle - state.initialAngle;
-      const rawRotation = state.initialRotation + deltaAngle;
-      // Snap a múltiplos de 15° para mantener la grilla consistente.
-      const snappedRotation = Math.round(rawRotation / ROTATION_SNAP) * ROTATION_SNAP;
-
-      useSeatingStore.getState().updateElementRotation(element.id, snappedRotation);
-    },
+    (e: React.PointerEvent) => { ... },
     [element.id, centerX, centerY],
   );
-
   const handleRotationPointerUp = useCallback(
-    (e: React.PointerEvent) => {
-      if (rotationStateRef.current) {
-        (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-        rotationStateRef.current = null;
-      }
-    },
+    (e: React.PointerEvent) => { ... },
     [],
   );
+  */
 
   return (
     <div
@@ -396,23 +424,24 @@ function TableElement({ element }: { element: SeatingElement }) {
       {renderResizeHandles()}
 
       {/* Dashed border dorado que delimita el ÁREA REDIMENSIONABLE.
-          Solo se muestra en MESAS NORMALES (no en lounge_table, áreas
-          ni zone_shape). Va 4px adentro del edge del card para no
-          chocar con los resize handles (que están en top: -8, etc.).
+          Se renderiza SIEMPRE; la visibilidad se delega a CSS vía
+          `data-` attributes del card padre (ver globals.css:
+          .selection-dashed + .table-element-card[data-selected=...]
+          [data-is-table=true]:not([data-type="lounge_table"])).
+          Así React no re-renderiza el TableElement cuando cambia
+          la selección — el navegador se encarga del toggle.
           Como es `pointer-events: none`, no interfiere con la
           interacción ni con el contenido del element. */}
-      {isSingleSelected && isTable && element.type !== "lounge_table" && (
-        <div
-          className="absolute pointer-events-none border-2 border-dashed border-[#C5A669]/45 rounded-lg"
-          style={{
-            top: 4,
-            left: 4,
-            right: 4,
-            bottom: 4,
-            zIndex: 25,
-          }}
-        />
-      )}
+      <div
+        className="selection-dashed absolute pointer-events-none border-2 border-dashed border-[#C5A669]/45 rounded-lg"
+        style={{
+          top: 4,
+          left: 4,
+          right: 4,
+          bottom: 4,
+          zIndex: 25,
+        }}
+      />
 
       {/* Contenido del elemento (mesa o área). Las mesas se centran
           dentro del contenedor dejando SEAT_PADDING de margen para
@@ -486,38 +515,32 @@ function TableElement({ element }: { element: SeatingElement }) {
 
       {/* ────────────────────────────────────────────────────────
           HANDLE DE ROTACIÓN + LÍNEA DE UNIÓN
-          Renderizados DENTRO de la card para que roten con el
-          elemento (estilo PowerPoint). El handle siempre queda
-          en la parte "superior" del elemento desde su perspectiva
-          local, sin importar la rotación aplicada.
-          Solo visibles cuando el elemento está single-selected.
+          TEMPORALMENTE DESHABILITADO — ver comentario arriba.
+          Cuando esté listo el drag con rotación, descomentar
+          este bloque y las variables/handlers asociados.
           ──────────────────────────────────────────────────────── */}
-      {isSingleSelected && (
+      {false && isSingleSelected && (
         <>
           {/* Línea de unión: del borde inferior del handle al borde
               superior del elemento (en coords de la card). */}
           <div
             className="absolute w-px bg-[#C5A669]/50 pointer-events-none"
             style={{
-              left: handleX - 0.5, // centrar el 1px sobre handleX
-              top: lineTopY,
-              height: lineHeight,
+              left: 0 - 0.5, // centrar el 1px sobre handleX (deshabilitado)
+              top: 0,        // (deshabilitado)
+              height: 0,     // (deshabilitado)
             }}
           />
 
-          {/* Handle circular con ícono de rotación */}
+          {/* Handle circular con ícono de rotación (deshabilitado) */}
           <div
             className="absolute w-7 h-7 rounded-full bg-white border-2 border-[#C5A669] shadow-md flex items-center justify-center cursor-grab z-[55] hover:scale-110 transition-transform pointer-events-auto"
             style={{
-              left: handleX - HANDLE_SIZE / 2, // centrar el handle sobre handleX
-              top: handleY,
+              left: 0, // centrado sobre handleX (deshabilitado)
+              top: 0,
             }}
-            onPointerDown={handleRotationPointerDown}
-            onPointerMove={handleRotationPointerMove}
-            onPointerUp={handleRotationPointerUp}
-            onPointerCancel={handleRotationPointerUp}
             onClick={(e) => e.stopPropagation()}
-            title="Arrastra para rotar"
+            title="Arrastra para rotar (próximamente)"
           >
             <RotateCw
               size={14}
@@ -532,4 +555,37 @@ function TableElement({ element }: { element: SeatingElement }) {
   );
 }
 
-export default React.memo(TableElement);
+export default React.memo(
+  TableElement,
+  /**
+   * Comparator fino: solo re-render si cambió algo que AFECTA el
+   * render visual del card. Si todos los campos clave son iguales,
+   * retornamos `true` (no re-render). Esto evita que React evalúe
+   * el TableElement cuando el store devuelve un objeto `element`
+   * nuevo (referencia distinta) pero con los mismos valores.
+   *
+   * NO incluimos aquí campos de selección (`selectedElementId` /
+   * `selectedElementIds`) porque el estado de selección ya está
+   * delegado a CSS vía `data-` attributes — el navegador se
+   * encarga del toggle del border/sombra sin re-render de React.
+   */
+  (prev, next) => {
+    const a = prev.element;
+    const b = next.element;
+    return (
+      a.id === b.id &&
+      a.x === b.x &&
+      a.y === b.y &&
+      a.width === b.width &&
+      a.height === b.height &&
+      a.rotation === b.rotation &&
+      a.seats === b.seats &&
+      a.assignedSeats === b.assignedSeats &&
+      a.type === b.type &&
+      a.alias === b.alias &&
+      a.seatPosition === b.seatPosition &&
+      a.textPosition === b.textPosition &&
+      a.columnShape === b.columnShape
+    );
+  },
+);
