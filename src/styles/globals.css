@@ -204,7 +204,14 @@ html {
   z-index: 50 !important;
 }
 
-.seat-wrapper[data-highlighted="true"] > div > .seat-inner {
+/* Selector con espacio en lugar de `> div > ` para que funcione en
+   cualquier jerarquía DOM. En mesas regulares el `.seat-inner` es
+   nieto directo del `.seat-wrapper` (a través del Tooltip wrapper).
+   En el lounge, los TableSeats están DENTRO de los muebles
+   (sillón/bancas/poufs) que también tienen divs extra, y el
+   selector con `>` se rompía. El selector descendiente `.seat-inner`
+   apunta correctamente sin importar cuántos divs haya en medio. */
+.seat-wrapper[data-highlighted="true"] .seat-inner {
   background-color: #C5A669 !important;
   border-color: #A8AEBA !important;
   transform: scale(1.15) !important;
@@ -231,6 +238,61 @@ html {
 /* ==========================================================================
    OPTIMIZACIONES NATIVAS PARA PLANO DE DISTRIBUCIÓN DE MESAS (SEATING CHART)
    ========================================================================== */
+
+/* Dashed border de selección (delimita el área redimensionable de la mesa).
+   Se renderiza SIEMPRE en el TableElement, pero la visibilidad la
+   controla el navegador vía data-attributes del card padre.
+   Esto evita re-renders del TableElement al cambiar `isSingleSelected`. */
+.selection-dashed {
+  display: none;
+}
+
+.table-element-card[data-single-selected="true"][data-is-table="true"]:not([data-type="lounge_table"]) .selection-dashed {
+  display: block;
+}
+
+/* Selection box (drag-to-select del canvas).
+   Se renderiza SIEMPRE pero oculto; el hook actualiza su style
+   directamente (sin pasar por React) y agrega la clase `is-active`
+   para mostrarlo. */
+.selection-box {
+  display: none;
+}
+
+.selection-box.is-active {
+  display: block;
+}
+
+/* ==========================================================================
+   MODO EXPORTACIÓN (data-export-mode="true")
+   Aplica ligeros al plano antes de capturar con html-to-image:
+   oculta los elementos que NO deben aparecer en la imagen/PDF final.
+   ========================================================================== */
+
+[data-export-mode="true"] .selection-dashed {
+  display: none !important;
+}
+
+[data-export-mode="true"] .status-badge {
+  display: none !important;
+}
+
+[data-export-mode="true"] .element-capacity {
+  display: none !important;
+}
+
+/* Oculta el cursor grab/pointer-events en el snapshot (es solo visual). */
+[data-export-mode="true"] * {
+  cursor: default !important;
+}
+
+/* En el snapshot, la mesa de novios no muestra las sillas decorativas
+   (ChessQueen/ChessKing) — son referencia visual, no parte del plano. */
+[data-export-mode="true"][data-export-mode-hide-decorations="true"]
+  .sweethearts-wrapper
+  > div:first-child {
+  display: none !important;
+}
 
 /* Z-indices dinámicos de los elementos en el plano basados en data-attributes */
 .table-element-card {
@@ -260,7 +322,13 @@ html {
   justify-content: center;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   cursor: grab;
-  transition: all 0.15s ease-in-out;
+  /* Solo transicionamos shadow/color — NO transform, porque el
+     transform del .table-element-card (su contenedor padre) se
+     actualiza cada frame durante el drag via JS. Si transition
+     fuera sobre `all`, cualquier cambio de transform se animaría
+     en 150ms y daría sensación de "laggy". */
+  transition: box-shadow 0.15s ease-in-out,
+    background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
 }
 
 .table-element-inner:active {
@@ -343,9 +411,21 @@ html {
   border-color: #2563eb !important;
 }
 
+/* Drop target highlight para el lounge. El lounge NO tiene
+   `.table-element-inner` (su contenedor es `.lounge-wrapper`),
+   así que las reglas anteriores no le aplican. Esta regla
+   aplica feedback visual SOLO a la mesa central del lounge
+   (sin tocar el `.lounge-wrapper`, los SVG de sillones/bancas/
+   poufs ni aplicar scale/box-shadow al wrapper). Solo cambia
+   el color de fondo de la mesa central y agrega un borde
+   azul ligero, igual que las mesas regulares. */
+.table-element-card[data-is-over="true"][data-type="lounge_table"] .lounge-center-table {
+  background: #fffaee !important;
+  border-color: #a39987 !important;
+}
+
 /* Estado de Arrastre (Dragging) */
 .table-element-card[data-dragging="true"] .table-element-inner {
-  opacity: 0.8;
   transform: scale(1.03);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
