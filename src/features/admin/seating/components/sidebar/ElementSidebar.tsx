@@ -30,7 +30,7 @@ import {
   UserPlus,
   Clock,
   CheckCircle2,
-  ListChecks,
+  ClipboardList,
   UserX,
 } from "lucide-react";
 import Tooltip from "@/features/shared/components/Tooltip";
@@ -638,7 +638,7 @@ function SizeControl({ element }: { element: SeatingElement }) {
 // ─────────────────────────────────────────────────────────────
 
 // ─────────────────────────────────────────────────────────────
-// Panel de Estatus de la Mesa
+// Panel de Acciones Requeridas
 // ─────────────────────────────────────────────────────────────
 // Muestra los issues detectados en la mesa seleccionada (declinados,
 // sobre-asignación, pendientes, etc.) con su acción sugerida. Solo
@@ -646,7 +646,7 @@ function SizeControl({ element }: { element: SeatingElement }) {
 // se muestra un solo card verde de "Mesa completa, sin acciones".
 
 const ICON_MAP: Record<TableIssue["icon"], LucideIcon> = {
-  trash: Trash2,
+  "rotate-ccw": RotateCcw,
   "user-plus": UserPlus,
   clock: Clock,
   alert: AlertTriangle,
@@ -687,9 +687,9 @@ function TableActionsPanel({
   return (
     <div className="px-4 py-3 border-b border-[#EBE5DA] bg-[#FDFBF7]">
       <div className="flex items-center gap-1.5 mb-2">
-        <ListChecks size={11} className="text-[#A8A29E]" />
+        <ClipboardList size={11} className="text-[#A8A29E]" />
         <span className="text-[9px] text-[#A8A29E] uppercase font-bold tracking-widest">
-          Estatus de la Mesa
+          Acciones Requeridas
         </span>
         <span className="ml-auto text-[9px] text-[#A8A29E] font-bold bg-white border border-[#EBE5DA] rounded-md px-1.5 py-px">
           {issues.length}

@@ -19,7 +19,12 @@ import type { GuestLookupInfo } from "../hooks/useGuestLookupMap";
 
 export type IssueSeverity = "critical" | "warning" | "success";
 
-export type IssueIcon = "trash" | "user-plus" | "clock" | "alert" | "check";
+export type IssueIcon =
+  | "rotate-ccw"
+  | "user-plus"
+  | "clock"
+  | "alert"
+  | "check";
 
 export interface TableIssue {
   /** ID único (estable) para usar como key en React. */
@@ -69,8 +74,8 @@ export function getTableIssues(
   // ------------------------------------------------------------
   // 1. Recolectar info de los asientos asignados
   // ------------------------------------------------------------
-  const assigned = element.assignedSeats.filter(
-    (id): id is string => Boolean(id),
+  const assigned = element.assignedSeats.filter((id): id is string =>
+    Boolean(id),
   );
   const assignedInfos = assigned
     .map((id) => ctx.guestMap.get(id))
@@ -89,7 +94,7 @@ export function getTableIssues(
     issues.push({
       id: `${element.id}-declined`,
       severity: "critical",
-      icon: "trash",
+      icon: "rotate-ccw",
       title:
         declined.length === 1
           ? "1 invitado declinado"
@@ -138,9 +143,7 @@ export function getTableIssues(
       severity: "critical",
       icon: "alert",
       title:
-        overflow === 1
-          ? "1 invitado de más"
-          : `${overflow} invitados de más`,
+        overflow === 1 ? "1 invitado de más" : `${overflow} invitados de más`,
       message: `La mesa tiene capacidad para ${element.seats} pero hay ${assigned.length} asignados.`,
     });
   }
