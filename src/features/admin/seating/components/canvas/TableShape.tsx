@@ -45,10 +45,25 @@ export function TableShape({
         y =
           height / 2 + radius * Math.sin((angleDegrees - 90) * (Math.PI / 180));
       } else if (type === "half_moon_table") {
-        const angleDegrees = -180 + (i * 180) / Math.max(seatsCount - 1, 1);
-        const radius = width / 2 + 22;
-        x = width / 2 + radius * Math.cos(angleDegrees * (Math.PI / 180));
-        y = height / 2 + radius * Math.sin(angleDegrees * (Math.PI / 180));
+        if (seatPosition === "bottom") {
+          // Asientos en línea recta en el lado PLANO de la mesa
+          // (abajo). Es la misma disposición que una rectangular
+          // con un solo borde: spacing uniforme en X, pegados al
+          // borde inferior.
+          const spacing = width / (seatsCount + 1);
+          x = spacing * (i + 1);
+          y = height + 22;
+        } else {
+          // Default "top": asientos alrededor del ARCO de la media
+          // luna, en el exterior (con offset para que no se monten
+          // sobre la mesa). El centro del arco se coloca sobre la
+          // línea recta (width/2, height) — NO en el centro de la
+          // mesa — para que el arco siga la forma real de la D.
+          const angleDegrees = -180 + (i * 180) / Math.max(seatsCount - 1, 1);
+          const radius = width / 2 + 22;
+          x = width / 2 + radius * Math.cos(angleDegrees * (Math.PI / 180));
+          y = height + radius * Math.sin(angleDegrees * (Math.PI / 180));
+        }
       } else if (type === "square_table") {
         const seatsPerEdge = Math.ceil(seatsCount / 4);
         const edge = Math.floor(i / seatsPerEdge);
@@ -254,7 +269,7 @@ export function TableShape({
       >
         {/* ── MESA CENTRAL — sin ícono, con alias + count ── */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="flex flex-col items-center justify-center w-48 h-24 bg-gradient-to-br from-[#FAF8F5] to-[#EBE5DA] border-2 border-[#D7C9B2] rounded-[1rem] shadow-sm backdrop-blur-sm">
+          <div className="lounge-center-table flex flex-col items-center justify-center w-48 h-24 bg-gradient-to-br from-[#FAF8F5] to-[#EBE5DA] border-2 border-[#D7C9B2] rounded-[1rem] shadow-sm backdrop-blur-sm transition-colors duration-150">
             {alias && (
               <span className="font-serif text-[13px] font-bold text-[#7A6740] tracking-wide">
                 {alias || "Lounge"}
@@ -432,9 +447,6 @@ export function TableShape({
                 {alias}
               </span>
             )}
-            <span className="block text-[9px] font-bold tracking-widest uppercase mt-0.5 element-capacity opacity-70">
-              Mesa de los Novios
-            </span>
           </div>
         </div>
       </div>
@@ -454,12 +466,21 @@ export function TableShape({
         <div className="half-moon-content w-full h-full relative">
           {renderHalfMoonSvg()}
           <div
-            className="absolute inset-0 flex items-center justify-center pointer-events-none"
-            style={{ paddingBottom: height * 0.3 }}
+            className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-2"
+            style={{
+              // Si los asientos van abajo (línea recta), el alias
+              // sube a la parte superior (dentro del arco). Si van
+              // arriba (alrededor del arco), el alias se queda en
+              // el centro vertical, dentro del "hueco" de la D.
+              justifyContent:
+                seatPosition === "bottom" ? "flex-start" : "center",
+              paddingTop:
+                seatPosition === "bottom" ? height * 0.18 : 0,
+            }}
           >
-            <div className="text-center">
+            <div className="text-center max-w-full">
               {alias && (
-                <span className="block font-serif font-bold text-[1rem] element-alias">
+                <span className="block font-serif font-bold text-[1rem] element-alias truncate">
                   {alias}
                 </span>
               )}
@@ -469,6 +490,26 @@ export function TableShape({
                 </span>
               )}
             </div>
+          </div>
+        </div>
+      ) : type === "cocktail_table" ? (
+        // Mesa coctelera: texto más pequeño porque la mesa es reducida
+        // (generalmente 60-90px de diámetro vs ~120px de las demás).
+        // Usamos text-[0.7rem] para el alias y text-[9px] para el
+        // capacity en lugar de los tamaños por defecto (1rem / 11px)
+        // que se ven enormes en un círculo pequeño.
+        <div className="table-element-inner w-full h-full flex items-center justify-center">
+          <div className="text-center px-1.5 w-full">
+            {alias && (
+              <span className="block font-serif truncate w-full element-alias leading-tight text-[0.7rem]">
+                {alias}
+              </span>
+            )}
+            {isTable && (
+              <span className="block text-[9px] font-bold tracking-widest uppercase mt-px element-capacity leading-none">
+                {assignedSeatsCount}/{seatsCount}
+              </span>
+            )}
           </div>
         </div>
       ) : (
