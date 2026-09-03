@@ -146,7 +146,7 @@ function DraggableFamilyBase({
                     e.stopPropagation();
                     removeFamilyFromTable(family.id);
                   }}
-                  className="p-1 bg-white border border-[#EBE5DA] shadow-sm hover:bg-red-50 rounded text-red-400 hover:text-red-600 transition-colors"
+                  className="p-1 bg-white border border-[#EBE5DA] shadow-sm hover:bg-red-50 rounded text-amber-500 hover:text-amber-700 transition-colors"
                 >
                   <RotateCcw size={10} />
                 </button>

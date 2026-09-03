@@ -161,7 +161,7 @@ function DraggableGuestListItemBase({
                 onClick={handleRemove}
                 title="Desasignar invitado de la mesa"
                 aria-label="Desasignar invitado de la mesa"
-                className="p-1 bg-white border border-[#EBE5DA] shadow-sm hover:bg-red-50 rounded text-red-400 hover:text-red-600"
+                className="p-1 bg-white border border-[#EBE5DA] shadow-sm hover:bg-red-50 rounded text-amber-500 hover:text-amber-700"
               >
                 <RotateCcw size={10} />
               </button>

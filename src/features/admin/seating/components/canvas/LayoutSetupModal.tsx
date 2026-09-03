@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { X, Sparkles, Check } from "lucide-react";
 import { generateCustomLayout } from "../../utils/layoutGenerator";
 import { useSeatingStore } from "../../stores/useSeatingStore";
+import { getNextTableNumber } from "../../utils/tableAlias";
 
 interface LayoutSetupModalProps {
   isOpen: boolean;
@@ -43,13 +44,13 @@ export default function LayoutSetupModal({
       return;
     }
 
-    const currentTablesCount = elements.filter((e) => e.seats > 0).length;
+    const startingIndex = getNextTableNumber(elements);
 
     const generatedElements = generateCustomLayout({
       totalTables: tablesCount,
       seatsPerTable,
       includeDanceFloor,
-      startingIndex: currentTablesCount,
+      startingIndex,
       centerX: dropX,
       centerY: dropY,
     });

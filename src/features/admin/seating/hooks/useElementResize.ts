@@ -18,12 +18,19 @@ interface ResizeState {
 }
 
 /**
- * Encapsula la lógica de resize de los elementos del plano (solo áreas).
+ * Encapsula la lógica de resize de los elementos del plano.
  *
- * Devuelve los handlers de pointer para los handles de resize.
- * Se separa del componente para mantener TableElement enfocado en render.
+ * Opciones:
+ *  - `lockAxis: "x" | "y"` → bloquea resize en uno de los ejes
+ *    (ej. muro: solo ancho)
+ *  - `lockAspectRatio: true` → fuerza que width === height al
+ *    redimensionar (ej. mesas cuadradas y circulares)
  */
-export function useElementResize(elementId: string) {
+export function useElementResize(
+  elementId: string,
+  options?: { lockAxis?: "x" | "y"; lockAspectRatio?: boolean },
+) {
+  const { lockAxis, lockAspectRatio } = options ?? {};
   const resizeState = useRef<ResizeState | null>(null);
 
   const onPointerDownResize = useCallback(
@@ -65,25 +72,58 @@ export function useElementResize(elementId: string) {
       let newX = posX;
       let newY = posY;
 
-      if (corner.includes("left")) {
-        newW = Math.max(MIN_SIZE, Math.min(MAX_SIZE, w - dx));
-        newX = posX + (w - newW);
-      } else if (corner.includes("right")) {
-        newW = Math.max(MIN_SIZE, Math.min(MAX_SIZE, w + dx));
+      // ─── Lock aspect ratio (1:1) ─────────────────────────────
+      // Para mesas cuadradas/circulares: el delta aplicado es
+      // el mayor entre horizontal y vertical, manteniendo el cuadrado.
+      let effectiveDx = dx;
+      let effectiveDy = dy;
+      if (lockAspectRatio) {
+        const dominant = Math.max(Math.abs(dx), Math.abs(dy));
+        effectiveDx = Math.sign(dx) * dominant;
+        effectiveDy = Math.sign(dy) * dominant;
       }
 
-      if (corner.includes("top")) {
-        newH = Math.max(MIN_SIZE, Math.min(MAX_SIZE, h - dy));
-        newY = posY + (h - newH);
-      } else if (corner.includes("bottom")) {
-        newH = Math.max(MIN_SIZE, Math.min(MAX_SIZE, h + dy));
+      // Resize horizontal
+      if (lockAxis !== "y") {
+        if (corner.includes("left")) {
+          newW = Math.max(MIN_SIZE, Math.min(MAX_SIZE, w - effectiveDx));
+          newX = posX + (w - newW);
+        } else if (corner.includes("right")) {
+          newW = Math.max(MIN_SIZE, Math.min(MAX_SIZE, w + effectiveDx));
+        }
+      }
+
+      // Resize vertical
+      if (lockAxis !== "x") {
+        if (corner.includes("top")) {
+          newH = Math.max(MIN_SIZE, Math.min(MAX_SIZE, h - effectiveDy));
+          newY = posY + (h - newH);
+        } else if (corner.includes("bottom")) {
+          newH = Math.max(MIN_SIZE, Math.min(MAX_SIZE, h + effectiveDy));
+        }
+      }
+
+      // Si está bloqueado el aspect ratio, forzar width = height
+      if (lockAspectRatio) {
+        const maxSize = Math.max(newW, newH);
+        const dW = maxSize - newW;
+        const dH = maxSize - newH;
+        // Ajustar según el corner para mantener el lado que se arrastra
+        if (corner.includes("left")) {
+          newX = posX + dW; // el lado izquierdo se mueve con el resize
+        }
+        if (corner.includes("top")) {
+          newY = posY + dH;
+        }
+        newW = maxSize;
+        newH = maxSize;
       }
 
       useSeatingStore
         .getState()
         .updateElementGeometry(elementId, newW, newH, newX, newY);
     },
-    [elementId],
+    [elementId, lockAxis, lockAspectRatio],
   );
 
   const onPointerUpResize = useCallback(

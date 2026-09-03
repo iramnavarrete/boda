@@ -20,7 +20,7 @@
       "@/public/*": ["./public/*"],
       "@/*": ["./src/*"],
       "@/types": ["./types/types.d.ts"],
-      "@/types/*": ["./src/types/*", "./types/*"]
+      "@/types/seating": ["./types/seating"]
     },
     "target": "ES2017"
   },

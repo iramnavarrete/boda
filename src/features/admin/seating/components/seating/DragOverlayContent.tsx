@@ -1,8 +1,8 @@
 import React from "react";
 import { GripVertical, Sparkles } from "lucide-react";
-import { DragItemData } from "@/types/seating";
+import { DragItemData, SeatingElement } from "@/types/seating";
 import { useZoomStore } from "../../stores/useZoomStore";
-import { TableShape } from "../canvas/TableShape";
+import { ElementShape } from "../canvas/ElementShape";
 
 /**
  * Contenido del overlay de arrastre.
@@ -39,10 +39,33 @@ export function DragOverlayContent({
     //    El centrado en el cursor lo hace el padre; aquí solo escalamos
     //    el contenido desde su top-left.
     case "palette_element": {
+      // Construimos un SeatingElement "sintético" para que ElementShape
+      // (el dispatcher) pueda renderizar cualquier tipo de la paleta.
+      const synthetic: SeatingElement = {
+        id: "drag-overlay",
+        type: dragData.elementType as SeatingElement["type"],
+        alias: dragData.label,
+        x: 0,
+        y: 0,
+        width: dragData.width,
+        height: dragData.height,
+        seats: dragData.seats,
+        assignedSeats: [],
+        rotation: 0,
+      };
+
       return (
         <div
           className="relative table-element-card"
           data-is-table={dragData.seats > 0}
+          data-is-structural={
+            dragData.elementType === "wall" ||
+            dragData.elementType === "door" ||
+            dragData.elementType === "window" ||
+            dragData.elementType === "column" ||
+            dragData.elementType === "stairs" ||
+            dragData.elementType === "aisle"
+          }
           data-type={dragData.elementType}
           style={{
             width: `${dragData.width}px`,
@@ -51,13 +74,7 @@ export function DragOverlayContent({
             transformOrigin: "top left",
           }}
         >
-          <TableShape
-            type={dragData.elementType}
-            width={dragData.width}
-            height={dragData.height}
-            seatsCount={dragData.seats}
-            alias={dragData.label}
-          />
+          <ElementShape element={synthetic} />
         </div>
       );
     }

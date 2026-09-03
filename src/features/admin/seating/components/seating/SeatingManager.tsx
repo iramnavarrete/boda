@@ -30,16 +30,20 @@ import SeatingCanvas from "../canvas/SeatingCanvas";
 import { ExportPlanModal } from "../canvas/ExportPlanModal";
 import { FamiliesService } from "@/services/familiesService";
 import { SeatingModalContext } from "../SeatingModalContext";
+import { PlanoSnapshotPortal } from "../../utils/planExport/PlanoSnapshotPortal";
 import ConfirmationModal from "@/features/admin/components/ConfirmationModal";
 import { useConfirmModal } from "@/features/admin/hooks/useConfirmModal";
 import ElementsPalette from "./ElementsPalette";
+import ElementSidebar from "../sidebar/ElementSidebar";
 import LayoutSetupModal from "../canvas/LayoutSetupModal";
 import MobileFallback from "./MobileFallback";
 import { DragItemData } from "@/types/seating";
 import { CursorCenteredDragOverlay } from "./CursorCenteredDragOverlay";
 import { removeHighlightSeats } from "../../utils/highlightHelper";
+import { getDefaultTableAlias } from "../../utils/tableAlias";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import { getEventTypeName } from "@/utils/formatters";
+import { DragPositionTicker } from "./DragPositionTicker";
 
 interface SeatingManagerProps {
   invitationId: string;
@@ -50,24 +54,44 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
 
-  const {
-    updateElementPosition,
-    updateMultipleElementPositions,
-    assignGuestToTable,
-    assignFamilyToTable,
-    addElement,
-    elements,
-    families,
-    showToast,
-    toastMsg,
-    initialize,
-    isInitialized,
-    hasUnsavedChanges,
-    markSaved,
-    executeRemoveSeat,
-    executeDeleteFamily,
-    executeAddSeatToFamily,
-  } = useSeatingStore();
+  // Antes: `useSeatingStore()` SIN selector → retornaba el state
+  // completo → CUALQUIER `set()` en el store re-renderizaba el
+  // SeatingManager (padre del DndContext, de los 2 sidebars y del
+  // canvas). Con 50+ mesas y 200+ invitados esto se notaba en
+  // drags, asignaciones y real-time updates.
+  //
+  // Ahora: selectores puntuales. Cada slice se suscribe
+  // individualmente con `Object.is` (default de Zustand). Las
+  // funciones son referencias estables (Zustand nunca las
+  // reemplaza), así que estas suscripciones NUNCA disparan
+  // re-renders. Las slices que sí cambian (elements, families,
+  // toastMsg, selectedElementId, hasUnsavedChanges, isInitialized)
+  // solo re-renderizan cuando ESAS slices específicas cambian.
+  const updateElementPosition = useSeatingStore(
+    (s) => s.updateElementPosition,
+  );
+  const assignGuestToTable = useSeatingStore((s) => s.assignGuestToTable);
+  const assignFamilyToTable = useSeatingStore(
+    (s) => s.assignFamilyToTable,
+  );
+  const addElement = useSeatingStore((s) => s.addElement);
+  const elements = useSeatingStore((s) => s.elements);
+  const families = useSeatingStore((s) => s.families);
+  const showToast = useSeatingStore((s) => s.showToast);
+  const toastMsg = useSeatingStore((s) => s.toastMsg);
+  const initialize = useSeatingStore((s) => s.initialize);
+  const isInitialized = useSeatingStore((s) => s.isInitialized);
+  const hasUnsavedChanges = useSeatingStore((s) => s.hasUnsavedChanges);
+  const markSaved = useSeatingStore((s) => s.markSaved);
+  const executeRemoveSeat = useSeatingStore((s) => s.executeRemoveSeat);
+  const executeDeleteFamily = useSeatingStore((s) => s.executeDeleteFamily);
+  const executeAddSeatToFamily = useSeatingStore(
+    (s) => s.executeAddSeatToFamily,
+  );
+  const selectedElementId = useSeatingStore((s) => s.selectedElementId);
+  const setSelectedElementId = useSeatingStore(
+    (s) => s.setSelectedElementId,
+  );
 
   const { zoom } = useZoomStore();
   const invitationData = useInvitationStore((state) => state.invitationData);
@@ -166,6 +190,27 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       unsubscribe();
     };
   }, [invitationId, isAdminOrHost, initialize, showToast]);
+
+  // ============================================================================
+  // AUTO-OPEN DEL SIDEBAR IZQUIERDO AL SELECCIONAR UN ELEMENTO
+  // Si el usuario cierra el sidebar con la X y luego hace click en un
+  // elemento del plano, el sidebar se vuelve a abrir automáticamente
+  // para mostrar las propiedades del elemento seleccionado.
+  // ============================================================================
+  useEffect(() => {
+    if (selectedElementId) {
+      setLeftOpen(true);
+    }
+  }, [selectedElementId]);
+
+  // ============================================================================
+  // DRAG DE ELEMENTO EXISTENTE: el visual del drag lo maneja
+  // DragPositionTicker (renderizado como hijo del DndContext más
+  // abajo). No necesitamos un listener raw de `pointermove` acá:
+  // `useDndMonitor.onDragMove` es la API oficial de dnd-kit y
+  // garantiza lectura fresca del delta. Ver `DragPositionTicker.tsx`
+  // para los detalles de la arquitectura.
+  // ============================================================================
 
   // ============================================================================
   // HANDLERS DE CONFIRMACIÓN (memoizados para no romper el contexto de hijos)
@@ -308,6 +353,12 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     return rectIntersection(args);
   }, []);
 
+  /**
+   * (refs de scroll-compensation removidas: dnd-kit ya incluye el
+   * scroll acumulado en `event.delta`, así que no necesitamos
+   * tracking manual.)
+   */
+
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const currentData = event.active.data.current as DragItemData | undefined;
 
@@ -318,6 +369,9 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       activator && typeof activator.clientX === "number" && typeof activator.clientY === "number"
         ? { x: activator.clientX, y: activator.clientY }
         : undefined;
+
+    // (Captura de scroll removida: dnd-kit ya incluye el scroll
+    // acumulado en `event.delta` que recibimos en handleDragEnd.)
 
     if (currentData) {
       setActiveDragItem({
@@ -331,6 +385,11 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     if (typeof document !== "undefined") {
       document.body.classList.add("is-dragging-active");
     }
+
+    // El visual del drag lo maneja DragPositionTicker (renderizado
+    // como hijo del DndContext). No se necesita listener raw aquí:
+    // useDndMonitor.onDragMove es la API oficial de dnd-kit y garantiza
+    // lectura fresca del delta.
   }, []);
 
   const handleDragEnd = useCallback(
@@ -340,6 +399,12 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       if (typeof document !== "undefined") {
         document.body.classList.remove("is-dragging-active");
       }
+
+      // La limpieza del listener del ticker la hace DragPositionTicker
+      // en su propio `onDragEnd`/`onDragCancel` (que también borra el
+      // `style.transform` inline de las cards para que React retome el
+      // control). No necesitamos hacer nada más acá.
+
       removeHighlightSeats(
         "guest",
         String(event.active.id).replace("guest-", ""),
@@ -394,8 +459,9 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
           { type: "palette_element" }
         >;
         const isTable = d.seats > 0;
-        const tablesCount = elements.filter((e) => e.seats > 0).length + 1;
-        const alias = isTable ? `Mesa ${tablesCount}` : d.label;
+        const alias = isTable
+          ? getDefaultTableAlias(elements, d.elementType)
+          : d.label;
 
         const canvasEl = document.querySelector(".canvas-droppable-area");
         let dropX = 400;
@@ -404,19 +470,22 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
         if (canvasEl && cursorAtEnd) {
           const rect = canvasEl.getBoundingClientRect();
           // El overlay (mesa/pista/etc.) está centrado en el cursor,
-          // así que el elemento se coloca con su CENTRO en el cursor.
-          // Sin este offset, el elemento aparecería desplazado porque
-          // el item del sidebar es mucho más pequeño que el overlay.
-          dropX = (cursorAtEnd.x - d.width / 2 - rect.left) / zoom;
-          dropY = (cursorAtEnd.y - d.height / 2 - rect.top) / zoom;
+          // así que el cursor apunta exactamente al CENTRO del elemento.
+          // Primero calculamos el centro en coordenadas del canvas (world space).
+          const cursorCanvasX = (cursorAtEnd.x - rect.left) / zoom;
+          const cursorCanvasY = (cursorAtEnd.y - rect.top) / zoom;
+          // Luego restamos la mitad del ancho/alto (que ya están en world space)
+          // para obtener la esquina superior izquierda.
+          dropX = cursorCanvasX - d.width / 2;
+          dropY = cursorCanvasY - d.height / 2;
         }
 
         addElement(
           {
             id: `${d.elementType}-${Date.now()}`,
             type: d.elementType,
-            x: Math.max(0, dropX),
-            y: Math.max(0, dropY),
+            x: dropX,
+            y: dropY,
             width: d.width,
             height: d.height,
             seats: d.seats,
@@ -432,33 +501,42 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
           return;
         }
 
-        const delta = event.delta;
-        if (delta.x !== 0 || delta.y !== 0) {
-          const id = String(active.id).replace("element-", "");
+        const draggedId = String(active.id).replace("element-", "");
+        const selectedIds = useSeatingStore.getState().selectedElementIds;
+        // Persistimos la posición de TODOS los elementos arrastrados
+        // (dragged + bulk). El DragPositionTicker los movió
+        // visualmente durante el drag con `event.delta / zoom` (el
+        // delta de dnd-kit ya incluye el scroll acumulado en coords
+        // de viewport, así que dividir por zoom es suficiente).
+        // Acá usamos LA MISMA fórmula para que el drop calce exacto
+        // con la última posición pintada.
+        const idsToUpdate = Array.from(
+          new Set<string>([draggedId, ...selectedIds]),
+        );
 
-          const currentSelectedIds =
-            useSeatingStore.getState().selectedElementIds;
-          if (currentSelectedIds.length > 1 && currentSelectedIds.includes(id)) {
-            updateMultipleElementPositions(
-              currentSelectedIds,
-              delta.x / zoom,
-              delta.y / zoom,
-            );
-          } else {
-            const element = useSeatingStore
-              .getState()
-              .elements.find((e) => e.id === id);
-            if (element) {
-              updateElementPosition(
-                id,
-                element.x + delta.x / zoom,
-                element.y + delta.y / zoom,
-              );
+        // `event.delta` ya viene con el scroll acumulado
+        // (dnd-kit mide la diferencia entre `rect.translated` y
+        // `rect.initial` en coords de viewport, que reflejan el
+        // scroll). NO sumamos scroll manual — eso era DOBLE conteo
+        // y provocaba que el elemento se moviese más de lo que
+        // correspondía al hacer scroll.
+        const totalDx = event.delta.x / zoom;
+        const totalDy = event.delta.y / zoom;
+
+        if (totalDx !== 0 || totalDy !== 0) {
+          const elements = useSeatingStore.getState().elements;
+          for (const id of idsToUpdate) {
+            const el = elements.find((e) => e.id === id);
+            if (el) {
+              updateElementPosition(id, el.x + totalDx, el.y + totalDy);
             }
           }
         }
+
+        setActiveDragItem(null);
         return;
       }
+
 
       if (over?.data.current?.type === "table") {
         const tableId = String(over.id).replace("table-", "");
@@ -521,7 +599,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       elements,
       showToast,
       updateElementPosition,
-      updateMultipleElementPositions,
       zoom,
     ],
   );
@@ -540,9 +617,29 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
 
   // El modal context value solo cambia si las funciones cambian (memoizadas arriba)
   const modalContextValue = useMemo(
-    () => ({ triggerSeatRemoval, triggerFamilyRemoval, triggerAddSeat }),
-    [triggerSeatRemoval, triggerFamilyRemoval, triggerAddSeat],
+    () => ({
+      triggerSeatRemoval,
+      triggerFamilyRemoval,
+      triggerAddSeat,
+      openConfirmModal,
+    }),
+    [
+      triggerSeatRemoval,
+      triggerFamilyRemoval,
+      triggerAddSeat,
+      openConfirmModal,
+    ],
   );
+
+  // Safety net: si el componente se desmonta durante un drag
+  // (ej. cambio de página), DragPositionTicker tiene su propio
+  // cleanup en su useEffect. No necesitamos más acá porque ya no
+  // registramos listeners raw.
+
+  // NOTA: la lógica de drag-en-DOM se setea en `handleDragStart` (un
+  // listener raw de `pointermove` en `window` con un "ready gate")
+  // y se limpia en `handleDragEnd`. No usamos `useDndMonitor` aquí
+  // porque su `onDragMove` no resolvió el desfase (ver historial).
 
   if (!isAdminOrHost) {
     return (
@@ -571,6 +668,10 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
 
   return (
     <SeatingModalContext.Provider value={modalContextValue}>
+      {/* Portal que monta el snapshot del plano (off-screen) para
+          exportación. Se renderiza solo durante capturas para
+          mantener 0 overhead el resto del tiempo. */}
+      <PlanoSnapshotPortal />
       <MobileFallback />
       <div
         className="hidden lg:flex flex-row w-full overflow-hidden relative select-none"
@@ -583,12 +684,19 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
+          {/* DragPositionTicker: dueño único del `style.transform`
+              de las cards durante el drag. Renderiza null pero usa
+              useDndMonitor (debe estar dentro del DndContext).
+              TablaElement retorna `undefined` en su IIFE de transform
+              mientras esté siendo arrastrado, así que no hay doble
+              escritor. */}
+          <DragPositionTicker />
           <div
             className="flex flex-row shrink-0 transition-all duration-300"
             style={{ width: leftOpen ? "auto" : "0" }}
           >
             <aside
-              className="shrink-0 bg-[#FDFBF7] border-r border-[#EBE5DA] overflow-hidden flex flex-col h-full"
+              className="shrink-0 w-72 bg-[#FDFBF7] border-r border-[#EBE5DA] overflow-hidden flex flex-col h-full"
               style={{
                 transform: leftOpen ? "translateX(0)" : "translateX(-100%)",
                 transition: "transform 0.3s ease",
@@ -596,7 +704,14 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
                 zIndex: leftOpen ? "auto" : -1,
               }}
             >
-              <ElementsPalette onClose={() => setLeftOpen(false)} />
+              {selectedElementId ? (
+                <ElementSidebar
+                  onBack={() => setSelectedElementId(null)}
+                  onCloseSidebar={() => setLeftOpen(false)}
+                />
+              ) : (
+                <ElementsPalette onClose={() => setLeftOpen(false)} />
+              )}
             </aside>
           </div>
 

@@ -1,7 +1,10 @@
 import { saveAs } from "file-saver";
 import { SeatingElement, FamilyElement } from "@/types/seating";
 import { buildGuestIndex } from "./planDrawing";
-import { capturePlanCanvas, CapturedPlan } from "./planCapture";
+import {
+  capturePlanSnapshot,
+  CapturedSnapshot,
+} from "./planSnapshotCapture";
 import {
   CARD_W,
   CARD_GAP_X,
@@ -45,8 +48,13 @@ const WATERMARK_H = 80;
 /**
  * Render del plano (con o sin tarjetas) a alta resolución.
  *
- * - Modo "con distribución": título + plano + tarjetas laterales (igual
- *   que antes).
+ * El plano se captura usando `html-to-image` sobre un snapshot del
+ * DOM (los mismos componentes React que ve el usuario). Esto evita
+ * la duplicación de lógica de render que generaba bugs (íconos
+ * faltantes, textPosition ignorado, sillón del lounge sin dibujar,
+ * etc.).
+ *
+ * - Modo "con distribución": título + plano + tarjetas laterales.
  * - Modo "solo plano": título + plano centrado, ajustado al contenido,
  *   con marca de agua al pie.
  *
@@ -57,9 +65,8 @@ export async function exportPlanToImage(opts: ImageExportOptions) {
   const { invitationTitle, elements, families } = opts;
   const includeDistribution = opts.includeDistribution ?? true;
 
-  // 1) Renderizar el plano a alta resolución (2.5x por defecto)
-  const captured = await capturePlanCanvas(elements, families, {
-    dpi: 300,
+  // 1) Capturar el plano via html-to-image (mismo render que el canvas)
+  const captured = await capturePlanSnapshot(elements, {
     pixelRatio: 2.5,
   });
 
@@ -82,7 +89,7 @@ export async function exportPlanToImage(opts: ImageExportOptions) {
 
 async function renderLayout(
   invitationTitle: string,
-  planCapture: CapturedPlan,
+  planCapture: CapturedSnapshot,
   brandIcon: HTMLImageElement,
   elements: SeatingElement[],
   families: FamilyElement[],
@@ -106,7 +113,7 @@ async function renderLayout(
 
 async function renderPlanOnly(
   invitationTitle: string,
-  planCapture: CapturedPlan,
+  planCapture: CapturedSnapshot,
   brandIcon: HTMLImageElement,
 ): Promise<Uint8Array> {
   // Tamaño objetivo del plano dentro del lienzo
@@ -144,7 +151,7 @@ async function renderPlanOnly(
 
 async function renderWithDistribution(
   invitationTitle: string,
-  planCapture: CapturedPlan,
+  planCapture: CapturedSnapshot,
   brandIcon: HTMLImageElement,
   elements: SeatingElement[],
   families: FamilyElement[],
@@ -406,3 +413,4 @@ function slugify(s: string): string {
 // Re-export COLS_PER_SIDE para que esté accesible desde aquí
 // (viene de planCards.ts)
 export { COLS_PER_SIDE };
+

@@ -3,10 +3,20 @@ import { create } from "zustand";
 import { SeatingService } from "../services/seatingService";
 import { removeHighlightSeats } from "../utils/highlightHelper";
 import {
+  ColumnShape,
   FamilyElement,
   SeatingElement,
+  SeatPosition,
+  TextPosition,
   UnassignOptions,
 } from "@/types/seating";
+
+/** Normaliza un valor de rotación a 0-360. */
+const normalizeRotation = (rotation: number): number => {
+  if (!Number.isFinite(rotation)) return 0;
+  const r = rotation % 360;
+  return r < 0 ? r + 360 : r;
+};
 
 export interface SeatingStore {
   elements: SeatingElement[];
@@ -16,6 +26,13 @@ export interface SeatingStore {
   toastMsg: string | null;
   isInitialized: boolean;
   hasUnsavedChanges: boolean;
+  /**
+   * Flag que controla la visibilidad del `<PlanoSnapshotPortal>`.
+   * Se activa SOLO durante la captura del plano para exportar.
+   * El portal debe estar montado DENTRO del `SeatingModalProvider`
+   * (y de cualquier otro context que los TableElements necesiten).
+   */
+  isSnapshotVisible: boolean;
 
   initialize: (
     dbElements: SeatingElement[],
@@ -43,6 +60,10 @@ export interface SeatingStore {
   ) => void;
   updateElementSeats: (id: string, seats: number) => void;
   updateElementAlias: (id: string, alias: string) => void;
+  updateElementRotation: (id: string, rotation: number) => void;
+  updateElementColumnShape: (id: string, shape: ColumnShape) => void;
+  updateElementSeatPosition: (id: string, position: SeatPosition) => void;
+  updateElementTextPosition: (id: string, position: TextPosition) => void;
   assignGuestToTable: (tableId: string, guestId: string) => void;
   assignFamilyToTable: (tableId: string, familyId: string) => void;
   removeGuestFromTable: (tableId: string, guestId: string) => void;
@@ -66,6 +87,7 @@ export interface SeatingStore {
 
   setSelectedElementId: (id: string | null) => void;
   setSelectedElementIds: (ids: string[]) => void;
+  setSnapshotVisible: (visible: boolean) => void;
   showToast: (msg: string) => void;
   addLayoutElements: (newElements: SeatingElement[]) => void;
   removeMultipleElements: (ids: string[]) => void;
@@ -119,11 +141,17 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
   toastMsg: null,
   isInitialized: false,
   hasUnsavedChanges: false,
+  isSnapshotVisible: false,
 
   initialize: (dbElements, dbFamilies) => {
     const cleanedElements = dbElements.map((el) => ({
       ...el,
       assignedSeats: groupSeatsByFamily(el.assignedSeats, dbFamilies),
+      // Normaliza rotación al cargar (defensivo contra valores corruptos)
+      rotation:
+        typeof el.rotation === "number"
+          ? normalizeRotation(el.rotation)
+          : 0,
     }));
 
     set({
@@ -232,6 +260,38 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
     set((state) => ({
       elements: state.elements.map((el) =>
         el.id === id ? { ...el, alias } : el,
+      ),
+      hasUnsavedChanges: true,
+    })),
+
+  updateElementRotation: (id, rotation) =>
+    set((state) => ({
+      elements: state.elements.map((el) =>
+        el.id === id ? { ...el, rotation: normalizeRotation(rotation) } : el,
+      ),
+      hasUnsavedChanges: true,
+    })),
+
+  updateElementColumnShape: (id, shape) =>
+    set((state) => ({
+      elements: state.elements.map((el) =>
+        el.id === id ? { ...el, columnShape: shape } : el,
+      ),
+      hasUnsavedChanges: true,
+    })),
+
+  updateElementSeatPosition: (id, position) =>
+    set((state) => ({
+      elements: state.elements.map((el) =>
+        el.id === id ? { ...el, seatPosition: position } : el,
+      ),
+      hasUnsavedChanges: true,
+    })),
+
+  updateElementTextPosition: (id, position) =>
+    set((state) => ({
+      elements: state.elements.map((el) =>
+        el.id === id ? { ...el, textPosition: position } : el,
       ),
       hasUnsavedChanges: true,
     })),
@@ -498,6 +558,7 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
 
   setSelectedElementId: (id) => set({ selectedElementId: id }),
   setSelectedElementIds: (ids) => set({ selectedElementIds: ids }),
+  setSnapshotVisible: (visible) => set({ isSnapshotVisible: visible }),
 
   addLayoutElements: (newElements) =>
     set((state) => ({
