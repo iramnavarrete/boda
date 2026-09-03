@@ -54,25 +54,44 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
 
-  const {
-    updateElementPosition,
-    assignGuestToTable,
-    assignFamilyToTable,
-    addElement,
-    elements,
-    families,
-    showToast,
-    toastMsg,
-    initialize,
-    isInitialized,
-    hasUnsavedChanges,
-    markSaved,
-    executeRemoveSeat,
-    executeDeleteFamily,
-    executeAddSeatToFamily,
-    selectedElementId,
-    setSelectedElementId,
-  } = useSeatingStore();
+  // Antes: `useSeatingStore()` SIN selector → retornaba el state
+  // completo → CUALQUIER `set()` en el store re-renderizaba el
+  // SeatingManager (padre del DndContext, de los 2 sidebars y del
+  // canvas). Con 50+ mesas y 200+ invitados esto se notaba en
+  // drags, asignaciones y real-time updates.
+  //
+  // Ahora: selectores puntuales. Cada slice se suscribe
+  // individualmente con `Object.is` (default de Zustand). Las
+  // funciones son referencias estables (Zustand nunca las
+  // reemplaza), así que estas suscripciones NUNCA disparan
+  // re-renders. Las slices que sí cambian (elements, families,
+  // toastMsg, selectedElementId, hasUnsavedChanges, isInitialized)
+  // solo re-renderizan cuando ESAS slices específicas cambian.
+  const updateElementPosition = useSeatingStore(
+    (s) => s.updateElementPosition,
+  );
+  const assignGuestToTable = useSeatingStore((s) => s.assignGuestToTable);
+  const assignFamilyToTable = useSeatingStore(
+    (s) => s.assignFamilyToTable,
+  );
+  const addElement = useSeatingStore((s) => s.addElement);
+  const elements = useSeatingStore((s) => s.elements);
+  const families = useSeatingStore((s) => s.families);
+  const showToast = useSeatingStore((s) => s.showToast);
+  const toastMsg = useSeatingStore((s) => s.toastMsg);
+  const initialize = useSeatingStore((s) => s.initialize);
+  const isInitialized = useSeatingStore((s) => s.isInitialized);
+  const hasUnsavedChanges = useSeatingStore((s) => s.hasUnsavedChanges);
+  const markSaved = useSeatingStore((s) => s.markSaved);
+  const executeRemoveSeat = useSeatingStore((s) => s.executeRemoveSeat);
+  const executeDeleteFamily = useSeatingStore((s) => s.executeDeleteFamily);
+  const executeAddSeatToFamily = useSeatingStore(
+    (s) => s.executeAddSeatToFamily,
+  );
+  const selectedElementId = useSeatingStore((s) => s.selectedElementId);
+  const setSelectedElementId = useSeatingStore(
+    (s) => s.setSelectedElementId,
+  );
 
   const { zoom } = useZoomStore();
   const invitationData = useInvitationStore((state) => state.invitationData);
