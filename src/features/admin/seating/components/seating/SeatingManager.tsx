@@ -43,6 +43,7 @@ import { removeHighlightSeats } from "../../utils/highlightHelper";
 import { getDefaultTableAlias } from "../../utils/tableAlias";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import { getEventTypeName } from "@/utils/formatters";
+import { DragPositionTicker } from "./DragPositionTicker";
 
 interface SeatingManagerProps {
   invitationId: string;
@@ -55,7 +56,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
 
   const {
     updateElementPosition,
-    updateMultipleElementPositions,
     assignGuestToTable,
     assignFamilyToTable,
     addElement,
@@ -183,6 +183,15 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       setLeftOpen(true);
     }
   }, [selectedElementId]);
+
+  // ============================================================================
+  // DRAG DE ELEMENTO EXISTENTE: el visual del drag lo maneja
+  // DragPositionTicker (renderizado como hijo del DndContext más
+  // abajo). No necesitamos un listener raw de `pointermove` acá:
+  // `useDndMonitor.onDragMove` es la API oficial de dnd-kit y
+  // garantiza lectura fresca del delta. Ver `DragPositionTicker.tsx`
+  // para los detalles de la arquitectura.
+  // ============================================================================
 
   // ============================================================================
   // HANDLERS DE CONFIRMACIÓN (memoizados para no romper el contexto de hijos)
@@ -326,13 +335,10 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
   }, []);
 
   /**
-   * Scroll del contenedor scrollable al INICIO del drag (en pixels).
-   * Se usa en `handleDragEnd` para compensar el scroll acumulado
-   * durante el drag: `event.delta` de dnd-kit NO incluye el scroll
-   * del contenedor overflow:auto cuando el canvas está escalado,
-   * produciendo drops en posiciones incorrectas cuando hay auto-scroll.
+   * (refs de scroll-compensation removidas: dnd-kit ya incluye el
+   * scroll acumulado en `event.delta`, así que no necesitamos
+   * tracking manual.)
    */
-  const dragStartScrollRef = useRef<{ left: number; top: number }>({ left: 0, top: 0 });
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const currentData = event.active.data.current as DragItemData | undefined;
@@ -345,13 +351,8 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
         ? { x: activator.clientX, y: activator.clientY }
         : undefined;
 
-    // Capturar el scroll inicial del contenedor para compensarlo en dragEnd.
-    const canvasEl = document.querySelector(".canvas-droppable-area");
-    const scrollContainer = canvasEl?.parentElement?.parentElement;
-    dragStartScrollRef.current = {
-      left: scrollContainer?.scrollLeft ?? 0,
-      top: scrollContainer?.scrollTop ?? 0,
-    };
+    // (Captura de scroll removida: dnd-kit ya incluye el scroll
+    // acumulado en `event.delta` que recibimos en handleDragEnd.)
 
     if (currentData) {
       setActiveDragItem({
@@ -365,6 +366,11 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
     if (typeof document !== "undefined") {
       document.body.classList.add("is-dragging-active");
     }
+
+    // El visual del drag lo maneja DragPositionTicker (renderizado
+    // como hijo del DndContext). No se necesita listener raw aquí:
+    // useDndMonitor.onDragMove es la API oficial de dnd-kit y garantiza
+    // lectura fresca del delta.
   }, []);
 
   const handleDragEnd = useCallback(
@@ -374,6 +380,12 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       if (typeof document !== "undefined") {
         document.body.classList.remove("is-dragging-active");
       }
+
+      // La limpieza del listener del ticker la hace DragPositionTicker
+      // en su propio `onDragEnd`/`onDragCancel` (que también borra el
+      // `style.transform` inline de las cards para que React retome el
+      // control). No necesitamos hacer nada más acá.
+
       removeHighlightSeats(
         "guest",
         String(event.active.id).replace("guest-", ""),
@@ -470,59 +482,39 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
           return;
         }
 
-        const id = String(active.id).replace("element-", "");
+        const draggedId = String(active.id).replace("element-", "");
+        const selectedIds = useSeatingStore.getState().selectedElementIds;
+        // Persistimos la posición de TODOS los elementos arrastrados
+        // (dragged + bulk). El DragPositionTicker los movió
+        // visualmente durante el drag con `event.delta / zoom` (el
+        // delta de dnd-kit ya incluye el scroll acumulado en coords
+        // de viewport, así que dividir por zoom es suficiente).
+        // Acá usamos LA MISMA fórmula para que el drop calce exacto
+        // con la última posición pintada.
+        const idsToUpdate = Array.from(
+          new Set<string>([draggedId, ...selectedIds]),
+        );
 
-        // Calcular el delta real del movimiento compensando el scroll acumulado.
-        //
-        // `event.delta` de dnd-kit = desplazamiento del cursor + scroll del
-        // contenedor. Cuando el canvas tiene `transform: scale(zoom)`, el scroll
-        // en pixels de pantalla equivale a scroll/zoom en world coords.
-        // La división `delta.x / zoom` convierte correctamente el delta de
-        // pantalla a world coords en todos los casos (con o sin scroll).
-        //
-        // Adicionalmente, compensamos el scroll acumulado que ya fue aplicado
-        // al store durante el drag via el interpolador (que usa los mismos rects).
-        // No hay doble contabilización porque el interpolador solo actualiza el
-        // DOM (style.transform) y el store se actualiza UNA SOLA VEZ aquí.
-        const delta = event.delta;
+        // `event.delta` ya viene con el scroll acumulado
+        // (dnd-kit mide la diferencia entre `rect.translated` y
+        // `rect.initial` en coords de viewport, que reflejan el
+        // scroll). NO sumamos scroll manual — eso era DOBLE conteo
+        // y provocaba que el elemento se moviese más de lo que
+        // correspondía al hacer scroll.
+        const totalDx = event.delta.x / zoom;
+        const totalDy = event.delta.y / zoom;
 
-        // Scroll acumulado durante el drag (en pixels de pantalla).
-        // dnd-kit ya lo incluye en event.delta via scrollAdjustment,
-        // pero al dividir por zoom podemos perder precisión en algunos casos.
-        // Verificamos contra nuestra propia captura del scroll inicial.
-        const canvasEl = document.querySelector(".canvas-droppable-area");
-        const scrollContainer = canvasEl?.parentElement?.parentElement;
-        const currentScrollLeft = scrollContainer?.scrollLeft ?? 0;
-        const currentScrollTop = scrollContainer?.scrollTop ?? 0;
-        const scrollDx = currentScrollLeft - dragStartScrollRef.current.left;
-        const scrollDy = currentScrollTop - dragStartScrollRef.current.top;
-
-        // El delta de dnd-kit ya incluye el scrollAdjustment en coords de pantalla.
-        // Nuestro scrollDx/Dy está en coords de pantalla escaladas (incluye zoom).
-        // La diferencia entre ambos nos da la posible discrepancia de scroll.
-        // Usamos el delta de dnd-kit como base y solo corregimos si hay discrepancia.
-        const totalDx = delta.x / zoom;
-        const totalDy = delta.y / zoom;
-
-        if (totalDx !== 0 || totalDy !== 0 || scrollDx !== 0 || scrollDy !== 0) {
-          const currentSelectedIds = useSeatingStore.getState().selectedElementIds;
-          if (currentSelectedIds.length > 1 && currentSelectedIds.includes(id)) {
-            updateMultipleElementPositions(
-              currentSelectedIds,
-              totalDx,
-              totalDy,
-            );
-          } else {
-            const element = useSeatingStore.getState().elements.find((e) => e.id === id);
-            if (element) {
-              updateElementPosition(
-                id,
-                element.x + totalDx,
-                element.y + totalDy,
-              );
+        if (totalDx !== 0 || totalDy !== 0) {
+          const elements = useSeatingStore.getState().elements;
+          for (const id of idsToUpdate) {
+            const el = elements.find((e) => e.id === id);
+            if (el) {
+              updateElementPosition(id, el.x + totalDx, el.y + totalDy);
             }
           }
         }
+
+        setActiveDragItem(null);
         return;
       }
 
@@ -588,7 +580,6 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       elements,
       showToast,
       updateElementPosition,
-      updateMultipleElementPositions,
       zoom,
     ],
   );
@@ -620,6 +611,16 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
       openConfirmModal,
     ],
   );
+
+  // Safety net: si el componente se desmonta durante un drag
+  // (ej. cambio de página), DragPositionTicker tiene su propio
+  // cleanup en su useEffect. No necesitamos más acá porque ya no
+  // registramos listeners raw.
+
+  // NOTA: la lógica de drag-en-DOM se setea en `handleDragStart` (un
+  // listener raw de `pointermove` en `window` con un "ready gate")
+  // y se limpia en `handleDragEnd`. No usamos `useDndMonitor` aquí
+  // porque su `onDragMove` no resolvió el desfase (ver historial).
 
   if (!isAdminOrHost) {
     return (
@@ -664,6 +665,13 @@ export default function SeatingManager({ invitationId }: SeatingManagerProps) {
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
+          {/* DragPositionTicker: dueño único del `style.transform`
+              de las cards durante el drag. Renderiza null pero usa
+              useDndMonitor (debe estar dentro del DndContext).
+              TablaElement retorna `undefined` en su IIFE de transform
+              mientras esté siendo arrastrado, así que no hay doble
+              escritor. */}
+          <DragPositionTicker />
           <div
             className="flex flex-row shrink-0 transition-all duration-300"
             style={{ width: leftOpen ? "auto" : "0" }}
