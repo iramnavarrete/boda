@@ -218,3 +218,100 @@ export const exportFamiliesToExcel = async (
   const fileName = `Invitados_${new Date().toISOString().split("T")[0]}.xlsx`;
   saveAs(blob, fileName);
 };
+
+/**
+ * Columnas de la plantilla/importación. Se mantienen en un solo lugar
+ * para que el Excel exportado y el pegado en el modal usen exactamente
+ * el mismo orden, títulos y `key` por columna.
+ *
+ * El sufijo `(Opcional)` en el header marca los campos que pueden
+ * quedar vacíos al pegar/importar.
+ */
+export const IMPORT_TEMPLATE_COLUMNS: ReadonlyArray<{
+  key: string;
+  header: string;
+  width: number;
+}> = [
+  { key: "nombre", header: "Nombre", width: 32 },
+  { key: "cupos", header: "Cupos", width: 8 },
+  { key: "telefono", header: "Teléfono (Opcional)", width: 22 },
+  { key: "ingresoNinos", header: "Ingreso Niños (Opcional: si/no)", width: 34 },
+  { key: "etiqueta", header: "Etiqueta (Opcional: Novio/Novia/Ambos)", width: 40 },
+  { key: "nota", header: "Nota (Opcional)", width: 36 },
+];
+
+/**
+ * Filas de ejemplo que se incluyen en la plantilla para que el
+ * usuario vea el formato esperado. Cubren los casos más comunes:
+ * teléfono sin código de país, con código de país (con `+` y
+ * separación por espacios) y distintas etiquetas.
+ *
+ * El formato internacional usado es `+<código> <número>` para
+ * que el país sea detectable de forma inequívoca al parsear.
+ */
+const TEMPLATE_EXAMPLE_ROWS: ReadonlyArray<Record<string, string | number>> = [
+  {
+    nombre: "familia de ejemplo",
+    cupos: 3,
+    telefono: "0000000000",
+    ingresoNinos: "si",
+    etiqueta: "Ambos",
+    nota: "no olviden los anillos",
+  },
+  {
+    nombre: "familia de ejemplo EUA",
+    cupos: 3,
+    telefono: "+1 0000000000",
+    ingresoNinos: "si",
+    etiqueta: "Novia",
+    nota: "no olvides las botellas",
+  },
+  {
+    nombre: "familia de ejemplo MX",
+    cupos: 2,
+    telefono: "+52 6141234567",
+    ingresoNinos: "no",
+    etiqueta: "Novio",
+    nota: "mesa con vista al jardín",
+  },
+];
+
+/**
+ * Genera y descarga un archivo `.xlsx` con los encabezados de la
+ * plantilla de importación **y una fila de ejemplo** lista para
+ * que el usuario la borre o la use como guía al completar datos.
+ */
+export const downloadEmptyFamiliesTemplate = async (): Promise<void> => {
+  const workbook = new ExcelJS.Workbook();
+  const worksheet = workbook.addWorksheet("Invitados");
+
+  worksheet.columns = IMPORT_TEMPLATE_COLUMNS.map(({ key, header, width }) => ({
+    key,
+    header,
+    width,
+  }));
+
+  // Estilo del header: bold + bordes, igual que el export real.
+  const headerRow = worksheet.getRow(1);
+  headerRow.font = { bold: true };
+  styleBaseRow(headerRow);
+  headerRow.commit();
+
+  // Filas de ejemplo con datos completos para mostrar el formato
+  // esperado al pegar (incluye caso con y sin código de país).
+  TEMPLATE_EXAMPLE_ROWS.forEach((rowData) => {
+    const row = worksheet.addRow(rowData);
+    styleBaseRow(row);
+    row.commit();
+  });
+
+  // Congelar la primera fila para que al hacer scroll siga visible
+  // el nombre de cada columna.
+  worksheet.views = [{ state: "frozen", ySplit: 1 }];
+
+  const buffer = await workbook.xlsx.writeBuffer();
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  });
+  saveAs(blob, "Plantilla_Invitados.xlsx");
+};

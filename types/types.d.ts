@@ -223,8 +223,10 @@ export interface TagCounts {
 export interface ImportedFamily {
   nombre: string;
   invitados: number;
-  telefono: string;
-  notaAnfitrion: string;
+  telefono?: string;
+  notaAnfitrion?: string;
+  ninosPermitidos?: boolean;
+  etiqueta?: "Novio" | "Novia" | "Ambos" | null;
 }
 
 export interface ConfiguracionVisual {

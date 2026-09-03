@@ -1,15 +1,46 @@
 import { useState, useCallback } from "react";
 import { FamilyFormData } from "@/types";
 
-// Helper puro (fuera del hook para evitar recreaciones en memoria)
+/**
+ * Códigos de país soportados por el selector de WhatsApp.
+ * Mantener sincronizado con las `<option>` del select en
+ * `FamilyFormModal` y con `parsePhoneData`.
+ */
+const COUNTRY_CODES = ["52", "1", "34", "57", "54", "56"] as const;
+
+/**
+ * Helper puro: separa un teléfono guardado en el código de país
+ * y el número local. Acepta tres formatos para máxima compatibilidad:
+ *
+ *   1. Canónico nuevo:  "+52 6141234567"   → code="52", num="6141234567"
+ *   2. Canónico sin espacio: "+526141234567" → code="52", num="6141234567"
+ *   3. Legacy digits-only: "526141234567"  → code="52", num="6141234567"
+ *   4. Solo número local: "6141234567"     → code="52" (default), num="6141234567"
+ *
+ * Si el código detectado no está en la lista de soportados,
+ * cae al default "52" para no romper el selector.
+ */
 const parsePhoneData = (telefono?: string | null) => {
   if (!telefono) return { code: "52", num: "" };
 
+  const codes = COUNTRY_CODES as readonly string[];
+
+  // 1) Formato canónico con espacio: "+<code> <rest>"
+  const matchWithSpace = telefono.match(/^\+(\d{1,3})\s+(.+)$/);
+  if (matchWithSpace && codes.includes(matchWithSpace[1])) {
+    return { code: matchWithSpace[1], num: matchWithSpace[2] };
+  }
+
+  // 2) Formato canónico sin espacio: "+<code><rest>"
+  const matchNoSpace = telefono.match(/^\+(\d{1,3})(\d+)$/);
+  if (matchNoSpace && codes.includes(matchNoSpace[1])) {
+    return { code: matchNoSpace[1], num: matchNoSpace[2] };
+  }
+
+  // 3/4) Legacy: solo dígitos. Buscamos un código conocido al inicio.
   let parsedCode = "52";
   let parsedNum = telefono;
-  const codes = ["52", "1", "34", "57", "54", "56"];
-
-  for (const code of codes) {
+  for (const code of COUNTRY_CODES) {
     if (parsedNum.startsWith(code) && parsedNum.length > code.length) {
       parsedCode = code;
       parsedNum = parsedNum.substring(code.length);
@@ -49,13 +80,16 @@ export const useFamilyFormModal = (
   }
 
   // --- HANDLERS ---
+  // Guardamos SIEMPRE en formato canónico `+<código> <dígitos>` para
+  // que coincida con lo que produce el import desde Excel y para
+  // mantener el país inequívocamente detectable.
   const handleCountryChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const code = e.target.value;
       setCountryCode(code);
       setFormData((prev) => ({
         ...prev,
-        telefono: phoneNumber ? code + phoneNumber : "",
+        telefono: phoneNumber ? `+${code} ${phoneNumber}` : "",
       }));
     },
     [phoneNumber],
@@ -67,7 +101,7 @@ export const useFamilyFormModal = (
       setPhoneNumber(num);
       setFormData((prev) => ({
         ...prev,
-        telefono: num ? countryCode + num : "",
+        telefono: num ? `+${countryCode} ${num}` : "",
       }));
     },
     [countryCode],

@@ -9,8 +9,8 @@ export function useFamiliesImport(invitationId: string | undefined) {
   const [isImporting, setIsImporting] = useState(false);
 
   const handleImport = useCallback(
-    async (parsedFamilies: ImportedFamily[]) => {
-      if (!invitationId) return;
+    async (parsedFamilies: ImportedFamily[]): Promise<boolean> => {
+      if (!invitationId) return false;
       setIsImporting(true);
       try {
         await FamiliesService.batchImportFamilies(invitationId, parsedFamilies);
@@ -19,8 +19,10 @@ export function useFamiliesImport(invitationId: string | undefined) {
           "success",
         );
         setIsImportModalOpen(false);
+        return true;
       } catch {
         toast("Ocurrió un error al importar las familias.", "error");
+        return false;
       } finally {
         setIsImporting(false);
       }

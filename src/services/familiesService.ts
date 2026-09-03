@@ -509,7 +509,8 @@ export const FamiliesService = {
           confirmados: 0,
           notaInvitado: null,
           asientos: seats,
-          ninosPermitidos: null,
+          ninosPermitidos: family.ninosPermitidos ?? false,
+          etiqueta: family.etiqueta ?? null,
         });
 
         batch.set(familyPaths.familyContact(invitationId, familyId), {
