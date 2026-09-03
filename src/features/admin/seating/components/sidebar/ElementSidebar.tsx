@@ -243,28 +243,29 @@ const SeatListItem = ({
 };
 
 // ─────────────────────────────────────────────────────────────
-// Control de Rotación — TEMPORALMENTE DESHABILITADO
+// Control de Rotación
 // ─────────────────────────────────────────────────────────────
-// TODO: Re-habilitar cuando se pula el drag con elementos rotados.
-// Mientras tanto, se muestra un placeholder con opacidad baja y
-// un disclaimer de "próximamente disponible" para mantener la UI
-// coherente y que el usuario sepa que la función existe pero está
-// en desarrollo.
+// UI complementaria al handle de rotación del canvas. Permite
+// ajustar la rotación con un slider (snap a 15°) o con los presets
+// rápidos (0/90/180/270°). Sincronizada con el store: cualquier
+// cambio desde el handle se refleja acá, y viceversa.
 // ─────────────────────────────────────────────────────────────
 
-// NOTA: `RotationControl` está definido pero actualmente no se
-// renderiza (ver el comentario `/* <RotationControl ... /> */` más
-// abajo). Lo dejamos intacto para que cuando se re-habilite la
-// rotación, solo sea quitar el comentario del JSX.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function RotationControl({ element }: { element: SeatingElement }) {
+  const updateElementRotation = useSeatingStore(
+    (s) => s.updateElementRotation,
+  );
   const rotation = element.rotation ?? 0;
 
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = Number(e.target.value);
+    const snapped = Math.round(raw / 15) * 15;
+    const normalized = ((snapped % 360) + 360) % 360;
+    updateElementRotation(element.id, normalized);
+  };
+
   return (
-    <div
-      className="px-4 py-3 border-b border-[#EBE5DA] relative"
-      style={{ opacity: 0.5 }}
-    >
+    <div className="px-4 py-3 border-b border-[#EBE5DA]">
       <div className="flex items-center justify-between mb-2">
         <label className="text-[9px] text-[#A8A29E] uppercase font-bold tracking-widest flex items-center gap-1.5">
           <RotateCw size={11} />
@@ -282,11 +283,11 @@ function RotationControl({ element }: { element: SeatingElement }) {
         <input
           type="range"
           min="0"
-          max="360"
+          max="345"
           step="15"
           value={rotation}
-          disabled
-          className="flex-1 accent-[#C5A669] h-1.5 rounded-lg appearance-none cursor-not-allowed"
+          onChange={handleSliderChange}
+          className="flex-1 accent-[#C5A669] h-1.5 rounded-lg appearance-none cursor-pointer"
           style={{
             background: `linear-gradient(to right, #C5A669 0%, #C5A669 ${
               (rotation / 360) * 100
@@ -299,24 +300,22 @@ function RotationControl({ element }: { element: SeatingElement }) {
       </div>
 
       <div className="mt-2 grid grid-cols-4 gap-1.5">
-        {ROTATION_PRESETS.map((preset) => (
-          <button
-            key={preset}
-            disabled
-            className="py-1 text-[10px] font-bold rounded-md border bg-white text-[#5A5A5A] border-[#EBE5DA] cursor-not-allowed"
-          >
-            {preset}°
-          </button>
-        ))}
-      </div>
-
-      {/* Disclaimer de "próximamente" sobrepuesto al control */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="bg-[#FDFBF7] border border-[#EBE5DA] rounded-md px-2.5 py-1 shadow-sm">
-          <span className="text-[10px] font-bold text-[#A8A29E] uppercase tracking-wider">
-            Próximamente
-          </span>
-        </div>
+        {ROTATION_PRESETS.map((preset) => {
+          const isActive = rotation === preset;
+          return (
+            <button
+              key={preset}
+              onClick={() => updateElementRotation(element.id, preset)}
+              className={`py-1 text-[10px] font-bold rounded-md border transition-colors ${
+                isActive
+                  ? "bg-[#C5A669] text-white border-[#C5A669]"
+                  : "bg-white text-[#5A5A5A] border-[#EBE5DA] hover:border-[#C5A669] hover:text-[#C5A669] cursor-pointer"
+              }`}
+            >
+              {preset}°
+            </button>
+          );
+        })}
       </div>
     </div>
   );
@@ -1094,12 +1093,7 @@ export function ElementSidebar({
             <SeatPositionControl element={element} />
           )}
 
-        {/* TODO: Re-habilitar RotationControl cuando se pula el drag
-            con elementos rotados. Por ahora se oculta completamente
-            de la UI. El componente, el store y el tipo siguen
-            intactos para que cuando esté listo, solo sea quitar
-            este comentario y restaurar la línea. */}
-        {/* <RotationControl element={element} /> */}
+        <RotationControl element={element} />
 
         {hasSeatList && (
           <div className="px-4 py-3 border-b border-[#EBE5DA]">

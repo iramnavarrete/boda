@@ -77,7 +77,18 @@ export function DragPositionTicker() {
     if (session) {
       for (const id of session.ids) {
         const card = getCard(id);
-        if (card) card.style.transform = "";
+        if (!card) continue;
+        // Dejamos la card en su transform "de reposo" (solo rotate,
+        // sin translate) — el MISMO valor que TableElement calcula
+        // fuera de un drag. Es intencional que NO sea "" vacío: como
+        // TableElement ya no cambia su `transformStyle` por
+        // isBeingMoved, React no va a re-tocar esta propiedad del
+        // DOM al recibir el control de vuelta (su valor calculado no
+        // cambió respecto al render anterior) — si dejáramos "" acá,
+        // el elemento quedaría visualmente sin rotación después de
+        // soltar, porque nadie la restauraría.
+        const rotation = session.rotationById.get(id) ?? 0;
+        card.style.transform = rotation ? `rotate(${rotation}deg)` : "";
       }
     }
     sessionRef.current = null;

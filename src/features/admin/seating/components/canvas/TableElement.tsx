@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { RotateCw } from "lucide-react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { useSeatingStore } from "../../stores/useSeatingStore";
@@ -12,7 +12,7 @@ import { TableSeat } from "./TableSeat";
 import { ElementShape } from "./ElementShape";
 import { useGuestLookupMap } from "../../hooks/useGuestLookupMap";
 import { useElementResize } from "../../hooks/useElementResize";
-import { registerCard } from "../../utils/canvas/cardRegistry";
+import { getCard, registerCard } from "../../utils/canvas/cardRegistry";
 import { useSelectedIdsSet } from "../../hooks/useSelectedIdsSet";
 import { useIsElementDragging } from "../../stores/dragStateStore";
 
@@ -151,10 +151,17 @@ function TableElement({ element }: { element: SeatingElement }) {
   const transformStyle = (() => {
     const rotation = element.rotation ?? 0;
 
-    if (isBeingMoved) {
-      return undefined;
-    }
-
+    // Deliberadamente NO depende de `isBeingMoved`. Este valor es el
+    // estado "de reposo" del elemento (solo rotación, sin translate).
+    // Si dependiera de isBeingMoved, React blanquearía el transform en
+    // el commit que activa el drag, antes de que el
+    // DragPositionTicker tenga chance de escribir su primer frame —
+    // eso produce un parpadeo de 1 frame en elementos rotados. Al
+    // mantener este valor CONSTANTE durante todo el ciclo de drag
+    // (isBeingMoved true o false), React no vuelve a tocar la
+    // propiedad `transform` del DOM mientras se arrastra (bailout de
+    // reconciliación: no hay cambio en el valor calculado), dejando
+    // al ticker con control exclusivo sin pelear por el nodo.
     if (rotation !== 0) {
       return `rotate(${rotation}deg)`;
     }
@@ -195,64 +202,160 @@ function TableElement({ element }: { element: SeatingElement }) {
   ]);
 
   // ─────────────────────────────────────────────────────────────
-  // HANDLE DE ROTACIÓN EN EL CANVAS — TEMPORALMENTE DESHABILITADO
+  // HANDLE DE ROTACIÓN EN EL CANVAS
   // ─────────────────────────────────────────────────────────────
-  // TODO: Re-habilitar cuando se pula el comportamiento del drag
-  // con elementos rotados. Hay un bug donde el `translate3d` del
-  // interpolador compone incorrectamente con el `rotate` aplicado
-  // por React, causando que la card se desplace en la dirección
-  // equivocada cuando tiene rotación ≠ 0.
+  // Estilo PowerPoint: el handle está DENTRO de la card (rota con
+  // el elemento) y se posiciona arriba del centro horizontal. El
+  // usuario arrastra el handle y la card rota siguiendo el cursor
+  // alrededor de su centro.
   //
-  // Por ahora el handle NO se renderiza en el canvas. La
-  // rotación se mantiene en el store (no se borra el campo
-  // `element.rotation`) para que cuando esté listo, los datos
-  // previos no se pierdan.
-  //
-  // El bloque original está comentado abajo como referencia.
-  // ─────────────────────────────────────────────────────────────
-  /*
-  const rotationStateRef = useRef<{
-    initialAngle: number;
-    initialRotation: number;
-  } | null>(null);
-
+  // Importante sobre coordenadas: `e.clientX`/`e.clientY` son SIEMPRE
+  // coordenadas de PANTALLA, pero `element.x`/`element.y` son world
+  // (locales al `.canvas-droppable-area`, antes del `scale(zoom)`).
+  // Mezclar las dos da un ángulo incorrecto en cualquier zoom != 100%
+  // o con el canvas scrolleado. Por eso cacheamos el centro del
+  // elemento en coordenadas de pantalla (vía `getBoundingClientRect`
+  // del nodo del card registrado en cardRegistry) al pointerdown.
+  // Como la rotación es siempre alrededor del centro
+  // (transform-origin: 50% 50%, sin translate), ese centro coincide
+  // con el centro real sin importar zoom, scroll o la rotación actual.
   const rotation = element.rotation ?? 0;
-  // Centro del elemento en coordenadas del mundo (no se ve afectado
-  // por la rotación porque la rotación es alrededor del centro).
   const centerX = element.x + element.width / 2;
   const centerY = element.y + element.height / 2;
 
-  // Posición del handle EN COORDENADAS DE LA CARD (con el padding
-  // de SEAT_PADDING para mesas, o 0 para zonas). Como está dentro
-  // de la card, rota con el elemento.
   const HANDLE_OFFSET = 70; // separación pronunciada del elemento
   const HANDLE_SIZE = 28; // w-7 h-7
   const ROTATION_SNAP = 15;
   const cardWidth = element.width + (isTable ? seatPadding * 2 : 0);
   const elementTopY = isTable ? seatPadding : 0;
-  // x: centro horizontal de la card (que coincide con el centro
-  //    del elemento gracias al padding simétrico de SEAT_PADDING).
-  // y: HANDLE_OFFSET arriba del borde superior del elemento.
   const handleX = cardWidth / 2;
   const handleY = elementTopY - HANDLE_OFFSET;
-  // Línea de unión: del borde superior del elemento (elementTopY)
-  // hasta el borde inferior del handle (handleY + HANDLE_SIZE).
+  // Línea de unión: del borde inferior del handle al borde superior
+  // del elemento (en coords de la card, antes de rotar).
   const lineTopY = handleY + HANDLE_SIZE;
   const lineHeight = elementTopY - lineTopY;
 
+  // Ref con el estado del gesto de rotación. El centro se cachea en
+  // coordenadas de PANTALLA al pointerdown, así que no hace falta
+  // reconvertir zoom/scroll durante el gesto.
+  const rotationStateRef = useRef<{
+    initialAngle: number; // ángulo cursor→centro al pointerdown
+    initialRotation: number; // rotación del elemento al pointerdown
+    screenCenterX: number;
+    screenCenterY: number;
+    lastAppliedRotation: number; // último valor snappeado escrito al store
+  } | null>(null);
+
+  // Controla si la transición CSS de la card debe desactivarse. A
+  // diferencia de `isBeingMoved` (que solo cubre el drag de dnd-kit),
+  // esto cubre el gesto de rotación, que corre por fuera de dnd-kit.
+  // Sin esto, cada cambio de rotación durante el drag se anima por
+  // la transición CSS de la card, produciendo un salto/lag visible
+  // sobre todo en el primer movimiento del gesto.
+  const [isRotating, setIsRotating] = useState(false);
+
+  const updateElementRotation = useSeatingStore(
+    (s) => s.updateElementRotation,
+  );
+
   const handleRotationPointerDown = useCallback(
-    (e: React.PointerEvent) => { ... },
+    (e: React.PointerEvent) => {
+      // CRÍTICO: parar la propagación para que dnd-kit NO vea este
+      // pointerdown. Si lo viera, iniciaría un drag del elemento en
+      // lugar de una rotación.
+      e.stopPropagation();
+      e.preventDefault();
+
+      // El centro debe calcularse en coordenadas de PANTALLA, no en
+      // las coordenadas "world" de element.x/y — el canvas está
+      // escalado por zoom (transform: scale(zoom)), así que mezclar
+      // world coords con e.clientX/Y (que siempre son screen coords)
+      // da un ángulo incorrecto en cualquier zoom != 100% o con el
+      // canvas scrolleado. Usamos el bounding rect real del card: como
+      // la rotación es siempre alrededor del centro (transform-origin:
+      // 50% 50%, sin translate), su centro coincide con el centro real
+      // del elemento sin importar zoom, scroll o la rotación actual.
+      const cardEl = getCard(element.id);
+      const rect = cardEl?.getBoundingClientRect();
+      const screenCenterX = rect ? rect.left + rect.width / 2 : centerX;
+      const screenCenterY = rect ? rect.top + rect.height / 2 : centerY;
+
+      const startAngle =
+        Math.atan2(
+          e.clientY - screenCenterY,
+          e.clientX - screenCenterX,
+        ) * (180 / Math.PI);
+
+      rotationStateRef.current = {
+        initialAngle: startAngle,
+        initialRotation: rotation,
+        screenCenterX,
+        screenCenterY,
+        lastAppliedRotation: rotation,
+      };
+
+      // Desactiva la transición CSS de la card durante todo el gesto
+      // (ver diagnóstico arriba) — evita el brinco/lag al rotar.
+      setIsRotating(true);
+
+      // Captura el pointer: garantiza que pointermove/pointerup se
+      // sigan disparando aunque el cursor salga del handle.
+      e.currentTarget.setPointerCapture(e.pointerId);
+    },
     [element.id, centerX, centerY, rotation],
   );
+
   const handleRotationPointerMove = useCallback(
-    (e: React.PointerEvent) => { ... },
-    [element.id, centerX, centerY],
+    (e: React.PointerEvent) => {
+      const state = rotationStateRef.current;
+      if (!state) return;
+      e.stopPropagation();
+
+      const currentAngle =
+        Math.atan2(
+          e.clientY - state.screenCenterY,
+          e.clientX - state.screenCenterX,
+        ) * (180 / Math.PI);
+
+      // Delta en grados. atan2 devuelve -180..180, así que el delta
+      // puede cruzar el límite y dar saltos. Normalizamos a -180..180.
+      let delta = currentAngle - state.initialAngle;
+      if (delta > 180) delta -= 360;
+      if (delta < -180) delta += 360;
+
+      const newRotation = state.initialRotation + delta;
+
+      // Snap a pasos de ROTATION_SNAP (15°) EN CADA FRAME del gesto,
+      // no solo al soltar. La rotación nunca debe tener decimales,
+      // ni siquiera mientras se arrastra — se mueve de notch en notch.
+      const snappedRaw =
+        Math.round(newRotation / ROTATION_SNAP) * ROTATION_SNAP;
+      const normalized = ((snappedRaw % 360) + 360) % 360;
+
+      // Evita escribir al store si el valor snappeado no cambió desde
+      // el último frame (el cursor sigue dentro del mismo notch de
+      // 15°) — reduce renders innecesarios durante el arrastre.
+      if (normalized !== state.lastAppliedRotation) {
+        state.lastAppliedRotation = normalized;
+        updateElementRotation(element.id, normalized);
+      }
+    },
+    [element.id, updateElementRotation],
   );
-  const handleRotationPointerUp = useCallback(
-    (e: React.PointerEvent) => { ... },
-    [],
-  );
-  */
+
+  const handleRotationPointerUp = useCallback((e: React.PointerEvent) => {
+    e.stopPropagation();
+    // Ya no hace falta re-snapear acá: handleRotationPointerMove
+    // garantiza que el store siempre queda en un múltiplo de
+    // ROTATION_SNAP durante todo el gesto.
+    rotationStateRef.current = null;
+    setIsRotating(false);
+    try {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    } catch {
+      // Si el pointer ya no está capturado, ignorar.
+    }
+  }, []);
 
   return (
     <div
@@ -293,8 +396,8 @@ function TableElement({ element }: { element: SeatingElement }) {
         // composición del transform (evita primer-frame lag) y
         // desactivamos cualquier transition de hover/selección que
         // pudiera sumar latencia al escribir style.transform directo.
-        willChange: isBeingMoved ? "transform" : undefined,
-        transition: isBeingMoved ? "none" : undefined,
+        willChange: isBeingMoved || isRotating ? "transform" : undefined,
+        transition: isBeingMoved || isRotating ? "none" : undefined,
       }}
       onClick={(e) => {
         e.stopPropagation();
@@ -408,32 +511,40 @@ function TableElement({ element }: { element: SeatingElement }) {
 
       {/* ────────────────────────────────────────────────────────
           HANDLE DE ROTACIÓN + LÍNEA DE UNIÓN
-          TEMPORALMENTE DESHABILITADO — ver comentario arriba.
-          Cuando esté listo el drag con rotación, descomentar
-          este bloque y las variables/handlers asociados.
+          Estilo PowerPoint: handle dentro de la card (rota con el
+          elemento), snap a 15°, offset 70px arriba del centro.
+          Se muestra solo cuando el elemento está single-selected.
           ──────────────────────────────────────────────────────── */}
-      {false && isSingleSelected && (
+      {isSingleSelected && (
         <>
           {/* Línea de unión: del borde inferior del handle al borde
-              superior del elemento (en coords de la card). */}
+              superior del elemento (en coords de la card, antes de
+              rotar). Como está DENTRO de la card, también rota con
+              el elemento, manteniendo la conexión visual. */}
           <div
             className="absolute w-px bg-[#C5A669]/50 pointer-events-none"
             style={{
-              left: 0 - 0.5, // centrar el 1px sobre handleX (deshabilitado)
-              top: 0,        // (deshabilitado)
-              height: 0,     // (deshabilitado)
+              left: handleX - 0.5, // centrar el 1px sobre handleX
+              top: lineTopY,
+              height: lineHeight,
             }}
           />
 
-          {/* Handle circular con ícono de rotación (deshabilitado) */}
+          {/* Handle circular con ícono de rotación. Captura el
+              pointer para que el gesto funcione aunque el cursor
+              salga del handle. */}
           <div
             className="absolute w-7 h-7 rounded-full bg-white border-2 border-[#C5A669] shadow-md flex items-center justify-center cursor-grab z-[55] hover:scale-110 transition-transform pointer-events-auto"
             style={{
-              left: 0, // centrado sobre handleX (deshabilitado)
-              top: 0,
+              left: handleX - HANDLE_SIZE / 2, // centrado en handleX
+              top: handleY,
             }}
+            onPointerDown={handleRotationPointerDown}
+            onPointerMove={handleRotationPointerMove}
+            onPointerUp={handleRotationPointerUp}
+            onPointerCancel={handleRotationPointerUp}
             onClick={(e) => e.stopPropagation()}
-            title="Arrastra para rotar (próximamente)"
+            title="Arrastra para rotar (snap a 15°)"
           >
             <RotateCw
               size={14}
