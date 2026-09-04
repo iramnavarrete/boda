@@ -8,18 +8,20 @@ import {
   comprehensionSemiBold,
   aboveBeyondScript,
   rhymeFormal,
+  greatVibes,
+  edwardianScriptItc,
 } from "@/features/shared/fonts";
 
 export default function FrontLayout({
   children,
-  model = 'waves',
+  model = "waves",
 }: {
   children: React.ReactNode;
   model?: "waves" | "siena";
 }) {
   return (
     <main
-      className={`${newIconScript.variable} ${nourdLight.variable} ${nourdMedium.variable} ${nourdBold.variable} ${autography.variable} ${comprehensionDark.variable} ${comprehensionSemiBold.variable} ${aboveBeyondScript.variable} ${rhymeFormal.variable} text-charcoal min-h-screen relative overflow-hidden`}
+      className={`${newIconScript.variable} ${nourdLight.variable} ${nourdMedium.variable} ${nourdBold.variable} ${autography.variable} ${comprehensionDark.variable} ${comprehensionSemiBold.variable} ${aboveBeyondScript.variable} ${rhymeFormal.variable} ${greatVibes.variable} ${edwardianScriptItc.variable} text-charcoal min-h-screen relative overflow-hidden`}
     >
       {model === "siena" && (
         <svg height="0" width="0">

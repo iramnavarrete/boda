@@ -22,6 +22,8 @@ const config: Config = {
         comprehensionSemiBold: ["var(--font-comprehension-semi-bold)"],
         aboveBeyondScript: ["var(--font-above-beyond-script)"],
         rhymeFormal: ["var(--font-rhyme-formal)"],
+        edwardianScriptItc: ["var(--font-edwardian-script-itc)"],
+        greatVibes: ["var(--font-great-vibes)"],
       },
       colors: {
         primary: {
