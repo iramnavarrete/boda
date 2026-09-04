@@ -51,7 +51,7 @@ const FamilyCard = memo(
       <div
         onClick={() => (isAnySelected ? onSelectFamily(f.id) : onEdit(f))}
         className={cn(
-          "relative flex flex-col bg-white/90 rounded-2xl p-5 cursor-default transition-all duration-300 border-2 justify-between h-full",
+          "relative flex flex-col bg-white/90 rounded-2xl p-5 pb-3.5 cursor-default transition-all duration-300 border-2 justify-between min-h-44",
           isSelected
             ? "border-gold shadow-[0_8px_30px_-5px_rgba(197,166,105,0.3)] z-10"
             : "border-sand hover:border-gold/50 hover:shadow-lg hover:shadow-stone-200/50 md:hover:-translate-y-0.5",
@@ -80,7 +80,7 @@ const FamilyCard = memo(
 
           <div className="flex flex-col w-full min-w-0 gap-1.5">
             <div className="flex justify-between items-start w-full gap-3">
-              <h3 className="font-serif text-base font-bold text-charcoal leading-snug line-clamp-2">
+              <h3 title={f.nombre} className="font-serif text-base font-bold text-charcoal leading-snug line-clamp-2">
                 {f.nombre}
               </h3>
 
@@ -203,7 +203,7 @@ const FamiliesCards: React.FC<FamiliesCardsProps> = ({ families }) => {
   const containerVirtualizer = useVirtualizer({
     count: rowCount,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 180,
+    estimateSize: () => 186,
     overscan: 2,
     enabled: !isMobile,
   });
@@ -211,7 +211,7 @@ const FamiliesCards: React.FC<FamiliesCardsProps> = ({ families }) => {
   // 2. Virtualizador para MÓVIL (scroll global de la ventana)
   const windowVirtualizer = useWindowVirtualizer({
     count: rowCount,
-    estimateSize: () => 180,
+    estimateSize: () => 186,
     overscan: 2,
     scrollMargin: parentRef.current ? parentRef.current.offsetTop : 0,
     enabled: isMobile,
