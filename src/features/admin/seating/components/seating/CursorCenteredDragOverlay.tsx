@@ -102,7 +102,6 @@ export function CursorCenteredDragOverlay({
         position: "fixed",
         left: `${cursorPos.x}px`,
         top: `${cursorPos.y}px`,
-        transform: "translate(-50%, -50%)",
         pointerEvents: "none",
         zIndex: 99999,
       }}

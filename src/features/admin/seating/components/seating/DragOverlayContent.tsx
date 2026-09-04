@@ -39,6 +39,10 @@ export function DragOverlayContent({
     //    El centrado en el cursor lo hace el padre; aquí solo escalamos
     //    el contenido desde su top-left.
     case "palette_element": {
+      const effectiveZoom = zoom || 1;
+      const scaledWidth = dragData.width * effectiveZoom;
+      const scaledHeight = dragData.height * effectiveZoom;
+
       // Construimos un SeatingElement "sintético" para que ElementShape
       // (el dispatcher) pueda renderizar cualquier tipo de la paleta.
       const synthetic: SeatingElement = {
@@ -56,7 +60,7 @@ export function DragOverlayContent({
 
       return (
         <div
-          className="relative table-element-card"
+          className="table-element-card"
           data-is-table={dragData.seats > 0}
           data-is-structural={
             dragData.elementType === "wall" ||
@@ -68,9 +72,18 @@ export function DragOverlayContent({
           }
           data-type={dragData.elementType}
           style={{
+            position: "absolute",
+            // Offset calculado con el tamaño YA escalado — no con
+            // dragData.width/height crudo. Como el padre (el wrapper de
+            // CursorCenteredDragOverlay) está anclado exactamente en el
+            // cursor sin ningún transform propio, este left/top negativo
+            // deja el centro VISUAL (post-scale) del overlay exactamente
+            // sobre el cursor, para cualquier valor de zoom.
+            left: `${-scaledWidth / 2}px`,
+            top: `${-scaledHeight / 2}px`,
             width: `${dragData.width}px`,
             height: `${dragData.height}px`,
-            transform: `scale(${zoom || 1})`,
+            transform: `scale(${effectiveZoom})`,
             transformOrigin: "top left",
           }}
         >
