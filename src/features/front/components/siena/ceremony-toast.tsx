@@ -191,16 +191,14 @@ export default function CeremonyToast({
             />
 
             {/* SECCIÓN: HOSPEDAJE (slot externo tiene prioridad) */}
-            {accommodationSlot ? (
-              accommodationSlot
-            ) : (
-              accommodationConfig && (
-                <AccommodationSection
-                  config={accommodationConfig}
-                  styles={accommodationStyles}
-                />
-              )
-            )}
+            {accommodationSlot
+              ? accommodationSlot
+              : accommodationConfig && (
+                  <AccommodationSection
+                    config={accommodationConfig}
+                    styles={accommodationStyles}
+                  />
+                )}
 
             {/* NOTA IMPORTANTE (Opcional) */}
             {hasNoDinner && (
@@ -226,17 +224,15 @@ export default function CeremonyToast({
                   </p>
                   <p
                     className={cn(
-                      "text-current opacity-90 font-nourdLight text-sm leading-relaxed bg-[color-mix(in_srgb,currentColor_3%,transparent)] p-3 rounded-lg border border-[color-mix(in_srgb,currentColor_40%,transparent)]",
+                      "text-current opacity-90 font-nourdLight text-sm leading-relaxed bg-[color-mix(in_srgb,currentColor_3%,transparent)] p-4 rounded-lg border border-[color-mix(in_srgb,currentColor_40%,transparent)] whitespace-pre-line mx-2",
                       textClassName,
                     )}
                   >
                     Queremos que disfruten al máximo de nuestra celebración. Por
                     ello, les informamos que{" "}
-                    <span className="font-nourdMedium">
-                      no se servirá cena formal
-                    </span>{" "}
+                    <span className="font-nourdMedium">no se servirá cena</span>{" "}
                     durante el evento, para que puedan tomar sus precauciones.
-                    ¡Habrá mucha música, brindis y alegría!
+                    {"\n"}¡Habrá mucha música, brindis y alegría!
                   </p>
                 </div>
               </motion.div>
@@ -245,20 +241,18 @@ export default function CeremonyToast({
         </div>
 
         {/* SECCIÓN TIMELINE / ITINERARIO (slot externo tiene prioridad) */}
-        {timelineSlot ? (
-          timelineSlot
-        ) : (
-          timelineItems &&
-          timelineItems.length > 0 && (
-            <EditorialTimeline
-              items={timelineItems}
-              title={timelineTitle}
-              subtitle={timelineSubtitle}
-              styles={timelineStyles}
-              accentColor={timelineAccentColor}
-            />
-          )
-        )}
+        {timelineSlot
+          ? timelineSlot
+          : timelineItems &&
+            timelineItems.length > 0 && (
+              <EditorialTimeline
+                items={timelineItems}
+                title={timelineTitle}
+                subtitle={timelineSubtitle}
+                styles={timelineStyles}
+                accentColor={timelineAccentColor}
+              />
+            )}
 
         {/* SECCIÓN DEL CÓDIGO DE VESTIMENTA */}
         <div
