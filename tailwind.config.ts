@@ -8,6 +8,7 @@ const config: Config = {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/features/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/icons/**/*.{js,ts,jsx,tsx,mdx}",
     "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
@@ -22,6 +23,8 @@ const config: Config = {
         comprehensionSemiBold: ["var(--font-comprehension-semi-bold)"],
         aboveBeyondScript: ["var(--font-above-beyond-script)"],
         rhymeFormal: ["var(--font-rhyme-formal)"],
+        edwardianScriptItc: ["var(--font-edwardian-script-itc)"],
+        greatVibes: ["var(--font-great-vibes)"],
       },
       colors: {
         primary: {

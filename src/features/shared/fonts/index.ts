@@ -55,3 +55,15 @@ export const rhymeFormal = localFont({
   variable: "--font-rhyme-formal",
   display: "swap",
 });
+
+export const edwardianScriptItc = localFont({
+  src: "../../../../src/fonts/edwardian-script-itc.ttf",
+  variable: "--font-edwardian-script-itc",
+  display: "swap",
+});
+
+export const greatVibes = localFont({
+  src: "../../../../src/fonts/great-vibes.ttf",
+  variable: "--font-great-vibes",
+  display: "swap",
+});

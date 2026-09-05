@@ -15,8 +15,8 @@ import { useFamilyContext } from "../FamilyContext";
 type ImageConfig = {
   src: string;
   style?: { backgroundPosition?: string };
-  panStart?: string; // Ej: "50%" o "50% 50%" (Arranca al centro)
-  panEnd?: string; // Ej: "60%" o "60% 50%" (Termina al 60%)
+  panStart?: string; // Ej: "45%" o "45% 50%"
+  panEnd?: string;   // Ej: "55%" o "55% 50%"
   titlePosition?: "top" | "center" | "bottom";
 };
 
@@ -33,34 +33,21 @@ type Props = {
   scrollIndicatorDelay?: number;
 };
 
-// 🔥 HELPER DE MAPEO REAL DE PORCENTAJES (0% a 100%)
-// Mapea el porcentaje de la imagen (donde 50% es el centro) hacia el desplazamiento Translate
-const parseRealPercentToTranslate = (posStr?: string) => {
-  if (!posStr) return "0%, 0%";
-
+// 🔥 HELPER ULTRA RÁPIDO: Convierte "45%" o "left" a coordenadas X e Y
+const parsePosXY = (posStr?: string): [number, number] => {
+  if (!posStr) return [50, 50];
   let str = posStr.toLowerCase().trim();
-
-  // Compatibilidad con palabras clave
   if (str === "left") str = "0% 50%";
   if (str === "right") str = "100% 50%";
   if (str === "center") str = "50% 50%";
 
   const clean = str.replace(/,/g, "").trim().split(/\s+/);
-
-  // Leemos X (si mandan "60%", X = 60)
   let rawX = parseFloat(clean[0]);
   if (isNaN(rawX)) rawX = 50;
-
-  // Leemos Y (por defecto 50%)
   let rawY = clean[1] !== undefined ? parseFloat(clean[1]) : 50;
   if (isNaN(rawY)) rawY = 50;
 
-  // Convertimos la posición relativa al centro (50%).
-  // Si rawX es 60%, desplaza a +10% del centro.
-  const offsetX = rawX - 50;
-  const offsetY = rawY - 50;
-
-  return `${offsetX}%, ${offsetY}%`;
+  return [rawX, rawY];
 };
 
 export default function Cover({
@@ -178,49 +165,33 @@ export default function Cover({
           animation-delay: 3.2s;
         }
 
-        .pan-transform-transition {
-          transition: transform var(--slide-duration) linear;
+        /* 🔥 Keyframe dinámico impulsado por variables CSS */
+        @keyframes dynamicPanAnimation {
+          0% {
+            transform: translate3d(var(--pan-start-x), var(--pan-start-y), 0);
+          }
+          100% {
+            transform: translate3d(var(--pan-end-x), var(--pan-end-y), 0);
+          }
         }
       `}</style>
 
-      <div
-        className="relative w-full h-[95svh] bg-black"
-        style={
-          { "--slide-duration": `${slideDuration}ms` } as React.CSSProperties
-        }
-      >
-        <div
-          className="absolute inset-0 w-full h-full z-0"
-          style={{ clipPath: "inset(0 0 0 0)" }}
-        >
+      <div className="relative w-full h-[95svh] bg-black">
+        <div className="absolute inset-0 w-full h-full z-0" style={{ clipPath: "inset(0 0 0 0)" }}>
           <div className="fixed top-0 w-full max-w-[500px] 2xl:max-w-[600px] h-[95svh]">
             {imagesConfig.map((img, i) => {
               const isViewing = !isSealVisible && activeIndex === i;
-              const hasPan = Boolean(img.panStart && img.panEnd);
 
-              // Posición inicial tomando de panStart o backgroundPosition
-              const startPosStr = img.panStart
-                ? img.panStart
-                : img.style?.backgroundPosition || "50%";
-
-              const currentPosStr = hasPan
-                ? isViewing
-                  ? img.panEnd
-                  : startPosStr
-                : startPosStr;
-
-              // Convertimos porcentajes reales ("50%", "60%") a desplazamieto de translate
-              const cleanTranslate = parseRealPercentToTranslate(currentPosStr);
-              const [offsetX, offsetY] = cleanTranslate
-                .split(",")
-                .map((s) => s.trim());
+              // Extraemos las coordenadas de tus props panStart y panEnd
+              const [startX, startY] = parsePosXY(img.panStart || img.style?.backgroundPosition || "50%");
+              const [endX, endY] = parsePosXY(img.panEnd || img.panStart || img.style?.backgroundPosition || "50%");
 
               return (
                 <div
                   key={img.src}
                   className={cn(
-                    "absolute inset-0 w-full h-full overflow-hidden transition-opacity duration-[1500ms] ease-in-out",
-                    activeIndex === i ? "opacity-100 z-10" : "opacity-0 z-0",
+                    "absolute inset-0 w-full h-full overflow-hidden transition-opacity duration-[1200ms] ease-in-out",
+                    isViewing ? "opacity-100 z-10" : "opacity-0 z-0",
                   )}
                 >
                   <Image
@@ -228,20 +199,22 @@ export default function Cover({
                     alt={`Cover ${i + 1}`}
                     width={1000}
                     height={1000}
-                    priority={i === 0}
-                    sizes="100vh"
-                    quality={90}
-                    className={cn(
-                      "h-full w-auto max-w-none relative top-1/2 left-1/2 transform-gpu will-change-transform",
-                      hasPan ? "pan-transform-transition" : "",
-                    )}
+                    // Precargamos para evitar el tirón al decodificar la imagen
+                    priority={true}
+                    quality={85}
+                    className="h-full w-auto max-w-none absolute top-1/2 left-1/2 transform-gpu will-change-transform"
                     style={{
-                      // Usamos -50% para centrar la foto + el offset natural de tu porcentaje
-                      transform: `translate3d(calc(-50% - ${offsetX}), calc(-50% - ${offsetY}), 0)`,
-                      WebkitTransform: `translate3d(calc(-50% - ${offsetX}), calc(-50% - ${offsetY}), 0)`,
+                      // Usamos variables CSS para alimentar la animación sin recalcular con JS
+                      "--pan-start-x": `-${startX}%`,
+                      "--pan-start-y": `-${startY}%`,
+                      "--pan-end-x": `-${endX}%`,
+                      "--pan-end-y": `-${endY}%`,
+                      // Mientras está activa corre la animación; cuando se desvanece mantiene la posición final (panEnd)
+                      transform: `translate3d(var(--pan-end-x), var(--pan-end-y), 0)`,
+                      animation: isViewing ? `dynamicPanAnimation ${slideDuration}ms linear forwards` : "none",
                       backfaceVisibility: "hidden",
                       WebkitBackfaceVisibility: "hidden",
-                    }}
+                    } as React.CSSProperties}
                   />
                 </div>
               );

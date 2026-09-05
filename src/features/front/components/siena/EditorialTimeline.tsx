@@ -23,6 +23,7 @@ import ValsIcon from "@/icons/timeline/vals";
 import BaileIcon from "@/icons/timeline/baile";
 import DespedidaIcon from "@/icons/timeline/despedida";
 import CocktailsIcon from "@/icons/timeline/cocktails";
+import RamoIcon from "@/icons/timeline/ramo";
 
 // Mapa de íconos disponibles vinculados a tus componentes
 const iconDictionary: Record<string, React.ElementType> = {
@@ -33,7 +34,8 @@ const iconDictionary: Record<string, React.ElementType> = {
   vals: ValsIcon,
   baile: BaileIcon,
   despedida: DespedidaIcon,
-  cocktails: CocktailsIcon
+  cocktails: CocktailsIcon,
+  ramo: RamoIcon
 };
 
 // ============================================================================
