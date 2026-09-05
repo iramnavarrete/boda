@@ -224,7 +224,7 @@ export default function CeremonyToast({
                   </p>
                   <p
                     className={cn(
-                      "text-current opacity-90 font-nourdLight text-sm leading-relaxed bg-[color-mix(in_srgb,currentColor_3%,transparent)] p-4 rounded-lg border border-[color-mix(in_srgb,currentColor_40%,transparent)] whitespace-pre-line mx-2",
+                      "text-current opacity-90 font-nourdLight text-xs leading-[18px] bg-[color-mix(in_srgb,currentColor_3%,transparent)] p-4 rounded-lg border border-[color-mix(in_srgb,currentColor_40%,transparent)] whitespace-pre-line mx-2",
                       textClassName,
                     )}
                   >
