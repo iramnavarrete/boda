@@ -65,14 +65,14 @@ export default function VianeyOmarLogo(props: Props) {
       className="relative flex flex-col items-center justify-center text-center"
       {...props}
     >
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 aspect-square min-w-[340px] w-[140%] max-w-[400px] bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.28)_0%,transparent_65%)] pointer-events-none -z-10" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 aspect-square min-w-[340px] w-[200%] max-w-[400px] bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.28)_0%,transparent_65%)] pointer-events-none -z-10" />
 
       {/* TEXTO SUPERIOR */}
       <motion.p
-        className="font-edwardianScriptItc text-3xl drop-shadow-[4px_1px_1px_rgba(0,0,0,0.8)]"
+        className="font-greatVibes text-xl drop-shadow-[2px_2px_2px_rgba(0,0,0,1)]"
         variants={topTextVariants}
       >
-        Vianey <span className="font-greatVibes text-base ml-1 mr-0.5">&</span> Omar
+        07 | 11 | 26
       </motion.p>
 
       {/* SVG (MONOGRAMA) */}
@@ -92,11 +92,13 @@ export default function VianeyOmarLogo(props: Props) {
       </motion.svg>
 
       {/* TEXTO INFERIOR */}
+
       <motion.p
-        className="font-greatVibes text-xl drop-shadow-[4px_1px_1px_rgba(0,0,0,0.8)]"
+        className="font-edwardianScriptItc text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,01)] -mt-1.5"
         variants={bottomTextVariants}
       >
-        07/11/26
+        Vianey <span className="font-greatVibes text-base ml-0.5"> & </span>{" "}
+        Omar
       </motion.p>
     </motion.div>
   );
