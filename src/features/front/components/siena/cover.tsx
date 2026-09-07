@@ -201,7 +201,7 @@ export default function Cover({
                     height={1000}
                     // Precargamos para evitar el tirón al decodificar la imagen
                     priority={true}
-                    quality={85}
+                    quality={90}
                     className="h-full w-auto max-w-none absolute top-1/2 left-1/2 transform-gpu will-change-transform"
                     style={{
                       // Usamos variables CSS para alimentar la animación sin recalcular con JS
