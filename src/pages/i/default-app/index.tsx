@@ -22,22 +22,22 @@ import { brideName, groomName, weddingDate } from "@/constants/constants";
 import CustomLottie from "@/features/shared/components/CustomLottie";
 
 const newIconScript = localFont({
-  src: "../../../fonts/New-Icon-Script.otf",
+  src: "../../../fonts/NewIconScript-Regular.woff2",
   variable: "--font-new-icon-script",
 });
 
 const nourdLight = localFont({
-  src: "../../../fonts/nourd_light.ttf",
+  src: "../../../fonts/Nourd-Light.woff2",
   variable: "--font-nourd-light",
 });
 
 const nourdMedium = localFont({
-  src: "../../../fonts/nourd_medium.ttf",
+  src: "../../../fonts/Nourd-Medium.woff2",
   variable: "--font-nourd-medium",
 });
 
 const nourdBold = localFont({
-  src: "../../../fonts/nourd_bold.ttf",
+  src: "../../../fonts/Nourd-Bold.woff2",
   variable: "--font-nourd-bold",
 });
 
