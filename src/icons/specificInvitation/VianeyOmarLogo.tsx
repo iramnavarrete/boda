@@ -57,13 +57,18 @@ export default function VianeyOmarLogo(props: Props) {
     },
   };
 
-  // 4. CÍRCULO: Marco que aparece entre el SVG y los textos.
-  // Entra con scale + opacity (0→1) para dar sensación de "encuadre".
+  // 4. CÍRCULOS: marcos que aparecen entre el SVG y los textos.
+  // Se revelan con un efecto de MÁSCARA DE RECORTE de izquierda a
+  // derecha usando `clipPath` animado:
+  //   - `inset(0 100% 0 0)` → recortado 100% desde la derecha (oculto)
+  //   - `inset(0 0% 0 0)`   → sin recorte (visible)
+  // El lado derecho se va "abriendo" hacia 0%, revelando el círculo
+  // desde la izquierda. El contenedor padre tiene `overflow-hidden`
+  // para que el clipPath se vea limpio sin débordes.
   const circleVariants = {
-    hidden: { scale: 0, opacity: 0 },
+    hidden: { clipPath: "inset(0 100% 0 0)" },
     visible: {
-      scale: 1,
-      opacity: 1,
+      clipPath: "inset(0 0% 0 0)",
       transition: {
         delay: 2.3, // ⏱️ 1.5s (svg) + 0.8s
         duration: 0.8,
