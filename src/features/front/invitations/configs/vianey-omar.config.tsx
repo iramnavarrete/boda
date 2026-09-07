@@ -215,7 +215,7 @@ const vianeyOmarConfig: InvitationConfig = {
           objectPosition: "50% 85%"
         },
       ],
-      carouselHeight: 200,
+      carouselHeight: 230,
       customText:
         "Hay momentos que el tiempo no podrá borrar, porque el amor los hace eternos.",
     },
@@ -268,6 +268,8 @@ const vianeyOmarConfig: InvitationConfig = {
    *    (quote.quoteTextClassName y quote.authorClassName).
    *  - alexBrush: declarada en parents.parentsNamesClassName.
    */
+
+  // TODO ver si se puede automatizar para no ponerlas manualmente
   fonts: [
     "greatVibes",
     "edwardianScriptItc",
