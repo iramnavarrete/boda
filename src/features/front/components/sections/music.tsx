@@ -6,84 +6,12 @@ import { motion } from "framer-motion";
 import { cn } from "@heroui/theme";
 
 /**
- * Curva de easing exponencial (concave up, "ease-in") para el fade-in.
- *
- *   f(t) = (e^(k·t) - 1) / (e^k - 1)
- *
- * Arranca con pendiente muy baja (el volumen sube apenas al inicio, así
- * la música no entra "de golpe") y va acelerando hasta alcanzar el
- * volumen objetivo al final del fade. Es la curva que mejor se percibe
- * al oído: compensa la respuesta logarítmica del oído humano.
- *
- * `k` controla qué tan pronunciado es el ease-in. `k = 3` da un arranque
- * suave y un "swell" musical al final sin sentirse exagerado.
+ * Piso de silencio para las rampas exponenciales. `exponentialRampToValueAtTime`
+ * no acepta 0 como destino (es indefinido matemáticamente: e^x nunca llega a 0),
+ * así que usamos un valor imperceptiblemente bajo como "silencio" en su lugar.
+ * Es el mismo truco que usa el demo de referencia (0.01).
  */
-const FADE_EXPONENT = 3;
-const FADE_DENOM = Math.exp(FADE_EXPONENT) - 1;
-
-function easeInExp(t: number): number {
-  return (Math.exp(FADE_EXPONENT * t) - 1) / FADE_DENOM;
-}
-
-/**
- * Rampa el volumen del audio desde su valor actual hasta `target` (0–1)
- * con la curva exponencial. Cada llamada cancela la rampa anterior
- * mediante `tokenRef`, así que es seguro disparar ramps nuevas sin que
- * se encimen. Si `duration <= 0`, aplica el cambio de forma instantánea.
- *
- * `onDone` se invoca cuando la rampa termina, o de inmediato si no hay fade.
- */
-function rampVolume(
-  audio: HTMLAudioElement,
-  target: number,
-  duration: number,
-  tokenRef: { current: number },
-  onDone?: () => void,
-) {
-  const myToken = ++tokenRef.current;
-  // Defensivo: el setter de `audio.volume` lanza IndexSizeError si el
-  // valor se sale de [0, 1] o no es finito (NaN/Infinity). Blindamos
-  // `clamped`, `from` y el valor interpolado antes de cada asignación.
-  const clamped = Number.isFinite(target)
-    ? Math.max(0, Math.min(1, target))
-    : 0;
-
-  if (duration <= 0) {
-    audio.volume = clamped;
-    onDone?.();
-    return;
-  }
-
-  const start = performance.now();
-  const from = Number.isFinite(audio.volume)
-    ? Math.max(0, Math.min(1, audio.volume))
-    : 0;
-
-  const step = (now: number) => {
-    // Si una rampa más reciente tomó el control, salimos sin tocar nada.
-    if (myToken !== tokenRef.current) return;
-
-    const t = Math.min(1, (now - start) / duration);
-    const eased = easeInExp(t);
-    const raw = from + (clamped - from) * eased;
-    // Última línea de defensa: si por cualquier motivo (coma flotante,
-    // NaN colado, etc.) el valor quedó fuera de [0, 1] o no es finito,
-    // caemos a `clamped` (que ya está saneado) en vez de tirar el DOM.
-    const safe = Number.isFinite(raw)
-      ? Math.max(0, Math.min(1, raw))
-      : clamped;
-    audio.volume = safe;
-
-    if (t < 1) {
-      requestAnimationFrame(step);
-    } else {
-      audio.volume = clamped;
-      onDone?.();
-    }
-  };
-
-  requestAnimationFrame(step);
-}
+const SILENCE = 0.0001;
 
 export function AudioController({
   musicPath = "/music.mp3",
@@ -114,8 +42,12 @@ export function AudioController({
   const setAudioRef = useMusicStore((s) => s.setAudioRef);
   const setIsPlaying = useMusicStore((s) => s.setIsPlaying);
 
-  // Token para cancelar ramps en curso (cada ramp nueva lo incrementa).
-  const fadeTokenRef = useRef(0);
+  // AudioContext + GainNode: todo el control de volumen pasa por acá,
+  // usando exponentialRampToValueAtTime (igual que el demo de referencia)
+  // en vez de animar `audio.volume` con requestAnimationFrame.
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const gainNodeRef = useRef<GainNode | null>(null);
+
   // Última posición reportada por `timeupdate` (para detectar loop).
   const lastTimeRef = useRef(0);
   // Duración del audio (para distinguir loop real de un seek manual).
@@ -125,7 +57,7 @@ export function AudioController({
   // necesidad de re-enganchar listeners.
   const fadeMsRef = useRef(fadeMs);
   const targetVolumeRef = useRef(
-    Number.isFinite(volume) ? Math.max(0, Math.min(1, volume)) : 1,
+    Number.isFinite(volume) ? Math.max(SILENCE, Math.min(1, volume)) : 1,
   );
 
   useEffect(() => {
@@ -133,13 +65,14 @@ export function AudioController({
   }, [fadeMs]);
   useEffect(() => {
     targetVolumeRef.current = Number.isFinite(volume)
-      ? Math.max(0, Math.min(1, volume))
+      ? Math.max(SILENCE, Math.min(1, volume))
       : 1;
   }, [volume]);
 
   // MediaSession: actualiza la metadata cuando cambie el prop.
   useEffect(() => {
-    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator))
+      return;
     if (mediaMetadata) {
       try {
         navigator.mediaSession.metadata = new MediaMetadata(mediaMetadata);
@@ -149,34 +82,73 @@ export function AudioController({
     }
   }, [mediaMetadata]);
 
-  // Efecto principal: monta el <audio>, engancha listeners y configura
-  // los handlers de MediaSession.
+  // Efecto principal: monta el <audio>, arma el grafo de Web Audio,
+  // engancha listeners y configura los handlers de MediaSession.
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     setAudioRef(audio);
-    audio.volume = 0; // arrancamos en silencio; el fade-in se encarga.
+    audio.volume = 1; // fijo; el control real es el GainNode.
+
+    const AudioCtxCtor =
+      window.AudioContext ||
+      (window as unknown as { webkitAudioContext: typeof AudioContext })
+        .webkitAudioContext;
+    const ctx = new AudioCtxCtor();
+    // `createMediaElementSource` solo puede llamarse UNA vez por
+    // elemento <audio> en toda su vida útil.
+    const source = ctx.createMediaElementSource(audio);
+    const gainNode = ctx.createGain();
+    gainNode.gain.value = SILENCE; // arrancamos "en silencio".
+    source.connect(gainNode).connect(ctx.destination);
+
+    audioCtxRef.current = ctx;
+    gainNodeRef.current = gainNode;
+
+    /**
+     * Fade-in exponencial
+     */
+    const beginFadeIn = () => {
+      if (ctx.state === "closed") return;
+
+      const runRamp = () => {
+        if (ctx.state === "closed" || audio.paused) return;
+        const now = ctx.currentTime;
+        const target = Math.max(SILENCE, targetVolumeRef.current);
+        const durSec = Math.max(fadeMsRef.current, 0) / 1000;
+
+        gainNode.gain.cancelScheduledValues(now);
+        gainNode.gain.setValueAtTime(SILENCE, now);
+
+        if (durSec <= 0) {
+          gainNode.gain.setValueAtTime(target, now);
+          return;
+        }
+        gainNode.gain.exponentialRampToValueAtTime(target, now + durSec);
+      };
+
+      if (ctx.state === "running") {
+        runRamp();
+      } else {
+        ctx
+          .resume()
+          .catch(() => {})
+          .finally(runRamp);
+      }
+    };
 
     const onPlay = () => {
       setIsPlaying(true);
-      // Reseteamos a 0 y hacemos fade-in, así cada play arranca desde
-      // silencio sin importar el volumen que tenía antes (p.ej. tras un
-      // pause, donde ya no hacemos fade-out).
-      audio.volume = 0;
-      rampVolume(
-        audio,
-        targetVolumeRef.current,
-        fadeMsRef.current,
-        fadeTokenRef,
-      );
+      beginFadeIn();
     };
 
     const onPause = () => {
-      // Pause instantáneo: solo sincronizamos el estado. El volumen se
-      // queda donde esté (al objetivo) y el próximo play hará fade-in
-      // desde 0.
       setIsPlaying(false);
+      if (ctx.state !== "closed") {
+        gainNode.gain.cancelScheduledValues(ctx.currentTime);
+        gainNode.gain.setValueAtTime(SILENCE, ctx.currentTime);
+      }
     };
 
     const onEnded = () => {
@@ -194,14 +166,7 @@ export function AudioController({
         durationRef.current > 0 &&
         lastTimeRef.current > durationRef.current - 1.5
       ) {
-        // Trato el loop como un play nuevo: silencio y fade-in exponencial.
-        audio.volume = 0;
-        rampVolume(
-          audio,
-          targetVolumeRef.current,
-          fadeMsRef.current,
-          fadeTokenRef,
-        );
+        beginFadeIn();
       }
       lastTimeRef.current = audio.currentTime;
     };
@@ -216,19 +181,11 @@ export function AudioController({
     audio.addEventListener("timeupdate", onTimeUpdate);
     audio.addEventListener("loadedmetadata", onLoadedMetadata);
 
-    // MediaSession: handlers para los controles del dispositivo
-    // (lockscreen, auriculares, barra de notificaciones). Al llamar
-    // play/pause sobre el <audio> se disparan los eventos correspondientes,
-    // que mantienen el botón de música siempre sincronizado.
     if (typeof navigator !== "undefined" && "mediaSession" in navigator) {
       navigator.mediaSession.setActionHandler("play", () => {
-        audio.play().catch(() => {
-          // Autoplay bloqueado: el evento 'play' no se dispara y el estado
-          // permanece en false. No hacemos nada.
-        });
+        audio.play().catch(() => {});
       });
       navigator.mediaSession.setActionHandler("pause", () => {
-        // Pause directo desde el dispositivo, sin fade.
         audio.pause();
       });
     }
@@ -239,15 +196,14 @@ export function AudioController({
       audio.removeEventListener("ended", onEnded);
       audio.removeEventListener("timeupdate", onTimeUpdate);
       audio.removeEventListener("loadedmetadata", onLoadedMetadata);
-      // Cancela cualquier fade-in en curso al desmontar.
-      fadeTokenRef.current++;
       if (typeof navigator !== "undefined" && "mediaSession" in navigator) {
         navigator.mediaSession.setActionHandler("play", null);
         navigator.mediaSession.setActionHandler("pause", null);
       }
+      gainNodeRef.current = null;
+      audioCtxRef.current = null;
+      ctx.close().catch(() => {});
     };
-    // setAudioRef y setIsPlaying son selectores de Zustand con referencias
-    // estables, así que este efecto corre una vez al montar.
   }, [setAudioRef, setIsPlaying]);
 
   return <audio ref={audioRef} loop src={musicPath} />;
