@@ -67,3 +67,27 @@ export const greatVibes = localFont({
   variable: "--font-great-vibes",
   display: "swap",
 });
+
+export const gistesy = localFont({
+  src: "../../../../src/fonts/gistesy.ttf",
+  variable: "--font-gistesy",
+  display: "swap",
+});
+
+export const alexBrush = localFont({
+  src: "../../../../src/fonts/alex-brush.ttf",
+  variable: "--font-alex-brush",
+  display: "swap",
+});
+
+export const ebGaramondItalic = localFont({
+  src: "../../../../src/fonts/eb-garamond-italic.ttf",
+  variable: "--font-eb-garamond-italic",
+  display: "swap",
+});
+
+export const pinyonScript = localFont({
+  src: "../../../../src/fonts/pinyon-script.ttf",
+  variable: "--font-pinyon-script",
+  display: "swap",
+});

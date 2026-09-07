@@ -10,6 +10,10 @@ import {
   rhymeFormal,
   greatVibes,
   edwardianScriptItc,
+  gistesy,
+  alexBrush,
+  ebGaramondItalic,
+  pinyonScript,
 } from "@/features/shared/fonts";
 
 export default function FrontLayout({
@@ -21,7 +25,12 @@ export default function FrontLayout({
 }) {
   return (
     <main
-      className={`${newIconScript.variable} ${nourdLight.variable} ${nourdMedium.variable} ${nourdBold.variable} ${autography.variable} ${comprehensionDark.variable} ${comprehensionSemiBold.variable} ${aboveBeyondScript.variable} ${rhymeFormal.variable} ${greatVibes.variable} ${edwardianScriptItc.variable} text-charcoal min-h-screen relative overflow-hidden`}
+      className={`
+        ${newIconScript.variable} ${nourdLight.variable} ${nourdMedium.variable} ${nourdBold.variable} 
+        ${autography.variable} ${comprehensionDark.variable} ${comprehensionSemiBold.variable} ${aboveBeyondScript.variable} 
+        ${rhymeFormal.variable} ${greatVibes.variable} ${edwardianScriptItc.variable} ${gistesy.variable} ${alexBrush.variable}
+        ${ebGaramondItalic.variable} ${pinyonScript.variable}
+        text-charcoal min-h-screen relative overflow-hidden`}
     >
       {model === "siena" && (
         <svg height="0" width="0">
