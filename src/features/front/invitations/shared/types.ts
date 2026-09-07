@@ -20,6 +20,7 @@ import type {
   GraphicTimelineItem,
   TimelineStyleConfig,
 } from "@/features/front/components/siena/EditorialTimeline";
+import type { FontKey } from "@/features/shared/fonts";
 
 /**
  * Configuración del sello de apertura (EnvelopeSplash).
@@ -122,6 +123,17 @@ export interface InvitationConfig {
    * (útil para invitaciones que no quieren descripción pública).
    */
   metaDescription?: string;
+
+  /**
+   * Fuentes ADICIONALES que esta invitación necesita (más allá de las
+   * "core" que ya se cargan siempre: newIconScript, nourdLight,
+   * nourdMedium, nourdBold, rhymeFormal).
+   *
+   * Declarar solo las que el cover/logo/componentes específicos
+   * realmente usan. Cada fuente omitida ahorra ~50-200 KB de
+   * descarga al usuario final.
+   */
+  fonts?: FontKey[];
 
   /** Permite inyectar nodos extra (raro, pero útil para overrides). */
   extraHead?: ReactNode;

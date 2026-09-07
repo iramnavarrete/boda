@@ -8,6 +8,7 @@ import { FamilyProvider } from "@/features/front/components/FamilyContext";
 import EnvelopeSplash from "@/features/front/components/openingAnimations/EnvelopeSplash";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import type { Invitation } from "@/types";
+import type { FontInstance } from "@/features/shared/fonts";
 
 import type {
   DesktopSidebarsConfig,
@@ -49,6 +50,11 @@ interface InvitationFrameProps {
   sidebars: DesktopSidebarsConfig;
   contentWrapperClassName?: string;
   /**
+   * Fuentes adicionales a las core (que se cargan siempre). La config
+   * de cada invitación mapea sus `FontKey`s a instancias y las pasa aquí.
+   */
+  additionalFonts?: FontInstance[];
+  /**
    * Render prop que recibe el estado del sobre y devuelve el contenido
    * principal. Permite que las secciones (p. ej. Cover) reaccionen al
    * estado de apertura sin acoplarse a este componente.
@@ -73,6 +79,7 @@ export default function InvitationFrame({
   sealConfig,
   sidebars,
   contentWrapperClassName,
+  additionalFonts,
   children,
 }: InvitationFrameProps) {
   // Inicializa el store una sola vez por montaje del cliente.
@@ -87,7 +94,7 @@ export default function InvitationFrame({
     : sealConfig;
 
   return (
-    <FrontLayout>
+    <FrontLayout additionalFonts={additionalFonts}>
       <FamilyProvider>
         <EnvelopeSplash
           onOpen={() => setIsEnvelopeOpened(true)}

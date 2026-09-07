@@ -1,14 +1,40 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { cn } from "@heroui/theme";
 import Image from "next/image";
+import CountDownJarallax from "./countdownJarallax";
+
+export type CountDownVariant = "default" | "jarallax";
 
 type Props = {
+  /**
+   * Implementación a renderizar.
+   * - "default" (por defecto): versión original con `position: fixed` y pan
+   *   por object-position animado vía RAF.
+   * - "jarallax": variante con parallax por velocidad (Y) + pan (X). La
+   *   imagen vive dentro de su propia sección (sin `position: fixed`).
+   *
+   * Las props exclusivas de cada variant (ver JSDoc abajo) se ignoran cuando
+   * no aplican, para mantener ambos componentes independientes.
+   */
+  variant?: CountDownVariant;
+
   backgroundImage?: string;
   imageClassName?: string;
+  /**
+   * Clases extra para el contenedor raíz de la sección. Sirve para
+   * sobreescribir la altura por defecto (`h-[100svh]`) o añadir padding,
+   * background, etc. Aplica a ambos variants.
+   */
+  className?: string;
   panStart?: string;
   panEnd?: string;
+
+  /** Jarallax-only (sin efecto cuando variant="default"). */
+  speed?: number;
+  /** Jarallax-only (sin efecto cuando variant="default"). */
+  children?: ReactNode;
 };
 
 const SMOOTH_TIME = 0.15; // segundos. Sube = más suave/lento, baja = más inmediato.
@@ -36,12 +62,25 @@ function toTransform(x: number, y: number, overscan: number) {
   return `translate3d(${50 - x}%, ${50 - y}%, 0) scale(${overscan})`;
 }
 
-export default function CountDown({
+type DefaultProps = {
+  backgroundImage?: string;
+  imageClassName?: string;
+  className?: string;
+  panStart?: string;
+  panEnd?: string;
+};
+
+/**
+ * Implementación original: imagen con `position: fixed` y pan por
+ * object-position animado vía RAF (transform + scale con overscan).
+ */
+function CountDownDefault({
   backgroundImage = "/img/countdown.webp",
   imageClassName = "",
+  className,
   panStart = "50% 50%",
   panEnd,
-}: Props) {
+}: DefaultProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
@@ -148,7 +187,10 @@ export default function CountDown({
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[100svh] bg-transparent"
+      className={cn(
+        "relative w-full h-[100svh] bg-transparent",
+        className,
+      )}
     >
       {backgroundImage && (
         <div
@@ -175,5 +217,49 @@ export default function CountDown({
 
       <div className="relative z-10 w-full h-full flex flex-col items-center justify-center pointer-events-none" />
     </div>
+  );
+}
+
+/**
+ * Wrapper que delega al variant correspondiente.
+ *
+ * Importante: NO comparte lógica de hooks entre variants. Cada variant
+ * mantiene su propio árbol de componentes y su propio ciclo de vida, para
+ * que sea trivial cambiar entre uno y otro sin arrastrar estado ni
+ * subscripciones.
+ */
+export default function CountDown({
+  variant = "default",
+  backgroundImage,
+  imageClassName,
+  panStart,
+  panEnd,
+  speed,
+  className,
+  children,
+}: Props) {
+  if (variant === "jarallax") {
+    return (
+      <CountDownJarallax
+        backgroundImage={backgroundImage}
+        imageClassName={imageClassName}
+        panStart={panStart}
+        panEnd={panEnd}
+        speed={speed}
+        className={className}
+      >
+        {children}
+      </CountDownJarallax>
+    );
+  }
+
+  return (
+    <CountDownDefault
+      backgroundImage={backgroundImage}
+      imageClassName={imageClassName}
+      className={className}
+      panStart={panStart}
+      panEnd={panEnd}
+    />
   );
 }

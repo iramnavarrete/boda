@@ -25,6 +25,12 @@ const config: Config = {
         rhymeFormal: ["var(--font-rhyme-formal)"],
         edwardianScriptItc: ["var(--font-edwardian-script-itc)"],
         greatVibes: ["var(--font-great-vibes)"],
+        gistesy: ["var(--font-gistesy)"],
+        alexBrush: ["var(--font-alex-brush)"],
+        ebGaramondItalic: ["var(--font-eb-garamond-italic)"],
+        pinyonScript: ["var(--font-pinyon-script)"],
+        tangerine: ["var(--font-tangerine)"],
+        tangerineBold: ["var(--font-tangerine-bold)"],
       },
       colors: {
         primary: {

@@ -18,6 +18,7 @@ import AccommodationSection from "../sections/AccommodationSection";
 import TimelineSection from "../sections/TimelineSection";
 
 import type { InvitationConfig } from "./types";
+import { getFontsByKey } from "@/features/shared/fonts";
 
 interface InvitationPageProps {
   invitationData: Invitation & { eventUrl: string };
@@ -62,8 +63,14 @@ export default function InvitationPage({
     extraHead,
     accommodation,
     timeline,
-    metaDescription
+    metaDescription,
+    fonts,
   } = config;
+
+  // Mapea los FontKey declarados en la config a las instancias de
+  // localFont que `FrontLayout` necesita. `undefined` si la config
+  // no declara ninguna fuente adicional (carga solo las core).
+  const additionalFonts = fonts ? getFontsByKey(fonts) : undefined;
 
   return (
     <>
@@ -79,6 +86,7 @@ export default function InvitationPage({
         sealConfig={sealConfig}
         sidebars={sidebars}
         contentWrapperClassName={contentWrapperClassName}
+        additionalFonts={additionalFonts}
       >
         {({ isEnvelopeOpened }) => (
           <>

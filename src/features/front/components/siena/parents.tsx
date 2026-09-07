@@ -24,6 +24,7 @@ type Props = {
     showOnlyWeek?: boolean;
   };
   customLastPhrase?: string;
+  parentsNamesClassName?: string;
 };
 
 export default function ParentsGodFathers({
@@ -37,7 +38,8 @@ export default function ParentsGodFathers({
     hearthClassName: "",
     heartActiveClassName: "",
   },
-  customLastPhrase
+  customLastPhrase,
+  parentsNamesClassName = "",
 }: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
 
@@ -168,7 +170,13 @@ export default function ParentsGodFathers({
                   duration={seq.baseDuration}
                 />
               </div>
-              <div className="font-newIconScript drop-shadow-2xl text-2xl text-current leading-relaxed">
+              {/* padres novia */}
+              <div
+                className={cn(
+                  "font-newIconScript drop-shadow-2xl text-2xl text-current leading-relaxed",
+                  parentsNamesClassName,
+                )}
+              >
                 <ElegantText
                   delay={seq.delays.d4}
                   text={seq.texts.t4}
@@ -190,7 +198,13 @@ export default function ParentsGodFathers({
                   duration={seq.baseDuration}
                 />
               </div>
-              <div className="font-newIconScript drop-shadow-2xl text-2xl text-current leading-relaxed">
+              {/* padres novio */}
+              <div
+                className={cn(
+                  "font-newIconScript drop-shadow-2xl text-2xl text-current leading-relaxed",
+                  parentsNamesClassName,
+                )}
+              >
                 <ElegantText
                   delay={seq.delays.d7}
                   text={seq.texts.t7}
