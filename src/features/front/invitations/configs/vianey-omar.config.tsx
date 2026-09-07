@@ -3,7 +3,7 @@ import type { InvitationConfig } from "../shared/types";
 import VianeyOmarSealLogo from "@/icons/specificInvitation/VianeyOmarSealLogo";
 
 /**
- * Configuración de la invitación: Melissa & Santiago.
+ * Configuración de la invitación: Vianey & Omar.
  */
 const vianeyOmarConfig: InvitationConfig = {
   slug: "vianey-omar",
@@ -26,7 +26,7 @@ const vianeyOmarConfig: InvitationConfig = {
       { time: "9:15 PM", title: "Vals y primer baile", iconKey: "vals" },
       { time: "09:30 PM", title: "Desarrollo de la fiesta", iconKey: "baile" },
       { time: "11:00 PM", title: "Trasnochados", iconKey: "banquete" },
-      { time: "12:00 PM", title: "Banquete", iconKey: "cocktails" },
+      { time: "12:00 PM", title: "Brindis y corte de pastel", iconKey: "cocktails" },
       {
         time: "12:30 PM",
         title: "Lanzamiento de ramo y liga",
@@ -100,10 +100,11 @@ const vianeyOmarConfig: InvitationConfig = {
 
     quote: {
       svgColor: "#58624F",
-      containerClassname: "bg-[#58624F]",
-      quote:
-        "Con amor eterno te he amado.",
-      author: "Jeremías 31:3",
+      containerClassname: "bg-[#58624F] text-xl",
+      quote: " Con amor eterno te he amado. ",
+      author: "Jeremías 31,3",
+      quoteTextClassName: "font-tangerineBold text-3xl",
+      authorClassName: "font-tangerine text-3xl opacity-90 -mt-2",
     },
 
     parents: {
@@ -112,6 +113,7 @@ const vianeyOmarConfig: InvitationConfig = {
       textClassName: "text-[#58624F]",
       svgsColor: "rgb(37 42 51 / 0.8)",
       addToCalendarBtnClassName: "text-[#1e241b]",
+      parentsNamesClassName: "font-alexBrush",
       calendarOptions: {
         className: "bg-[#58624F]",
       },
@@ -120,9 +122,11 @@ const vianeyOmarConfig: InvitationConfig = {
     },
 
     countDown: {
-      backgroundImage: "/img/vianey-omar/cover/c1.webp",
-      panStart: "40% ",
-      panEnd: "80% ",
+      variant: "jarallax",
+      backgroundImage: "/img/vianey-omar/countdown1.jpg",
+      panStart: "45%",
+      panEnd: "60%",
+      className: "h-[70svh]",
     },
 
     dressCode: {
@@ -137,7 +141,6 @@ const vianeyOmarConfig: InvitationConfig = {
         { hex: "#556B2F", name: "Verde Olivo" },
         { hex: "#1E4D2B", name: "Verdes en general" },
       ],
-      hasNoDinner: true,
       ceremonyImage: "/img/templo/sagrado-corazon.png",
       receptionImage: "/img/salon/quinta-aurora.jpg",
       showFlowersBg: false,
@@ -151,7 +154,7 @@ const vianeyOmarConfig: InvitationConfig = {
         title: "Caballeros",
         subtitle: "Traje formal / Vaquero",
         description:
-          "Traje formal con camisa de vestir, corbata o moño y zapatos de vestir. o si así lo decide un estilo vaquero elegante que esté a la altura de la celebración. Se sugiere evitar prendas de estilo casual.",
+          "Traje formal con camisa de vestir, corbata o moño y zapatos de vestir, o si así lo decide un estilo vaquero elegante que esté a la altura de la celebración. Se sugiere evitar prendas de estilo casual.",
       },
       bothRestrictions:
         "Agradecemos su comprensión y apoyo respetando el código de vestimenta requerido por el salón.",
@@ -202,15 +205,17 @@ const vianeyOmarConfig: InvitationConfig = {
           alt: "Imagen de la galería 5",
           thumb: "/img/vianey-omar/gallery/thumbs/g5.webp",
           msrc: "/img/vianey-omar/gallery/thumbs/g5.webp",
+          objectPosition: "50% 70%"
         },
         {
           src: "/img/vianey-omar/gallery/g8.webp",
           alt: "Imagen de la galería 8",
           thumb: "/img/vianey-omar/gallery/thumbs/g8.webp",
           msrc: "/img/vianey-omar/gallery/thumbs/g8.webp",
+          objectPosition: "50% 85%"
         },
       ],
-      carouselHeight: "dynamic",
+      carouselHeight: 200,
       customText:
         "Hay momentos que el tiempo no podrá borrar, porque el amor los hace eternos.",
     },
@@ -219,7 +224,7 @@ const vianeyOmarConfig: InvitationConfig = {
       showCash: true,
       transfer: {
         bank: "santander",
-        beneficiary: "Vianey Aracely Valdez Reyes",
+        beneficiary: "Vianey Araceli Valdez Reyes",
         cardNumber: "5579 1004 9284 5415",
       },
       containerClassName: "bg-[#58624F]",
@@ -246,7 +251,7 @@ const vianeyOmarConfig: InvitationConfig = {
     },
 
     audio: {
-      musicPath: "/music/baby-im-yours-2.mp3",
+      musicPath: "/music/so-easy-piano.mp3#t=28",
       fadeMs: 1000,
       mediaMetadata: {
         title: "Vianey & Omar",
@@ -255,6 +260,21 @@ const vianeyOmarConfig: InvitationConfig = {
       },
     },
   },
+
+  /**
+   * Fuentes adicionales a las core (que ya se cargan siempre):
+   *  - greatVibes, edwardianScriptItc: las usa VianeyOmarLogo.
+   *  - tangerine, tangerineBold: declaradas en classNames de esta config
+   *    (quote.quoteTextClassName y quote.authorClassName).
+   *  - alexBrush: declarada en parents.parentsNamesClassName.
+   */
+  fonts: [
+    "greatVibes",
+    "edwardianScriptItc",
+    "tangerine",
+    "tangerineBold",
+    "alexBrush",
+  ],
 };
 
 export default vianeyOmarConfig;

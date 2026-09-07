@@ -2,6 +2,33 @@
 // globalmente y no se re-instancien en cada render.
 import localFont from "next/font/local";
 
+// ─── Tipos ──────────────────────────────────────────────────────────────────
+
+/** Forma mínima de un resultado de `localFont()` que necesitamos. */
+export type FontInstance = { variable: string };
+
+/** Identificadores de las fuentes disponibles en este proyecto. */
+export type FontKey =
+  | "newIconScript"
+  | "nourdLight"
+  | "nourdMedium"
+  | "nourdBold"
+  | "rhymeFormal"
+  | "greatVibes"
+  | "edwardianScriptItc"
+  | "ebGaramondItalic"
+  | "alexBrush"
+  | "tangerine"
+  | "tangerineBold"
+  | "gistesy"
+  | "pinyonScript"
+  | "autography"
+  | "comprehensionDark"
+  | "comprehensionSemiBold"
+  | "aboveBeyondScript";
+
+// ─── Fuentes (declaraciones, sin cambios) ───────────────────────────────────
+
 export const newIconScript = localFont({
   src: "../../../../src/fonts/NewIconScript-Regular.woff2",
   variable: "--font-new-icon-script",
@@ -91,3 +118,75 @@ export const pinyonScript = localFont({
   variable: "--font-pinyon-script",
   display: "swap",
 });
+
+// ─── Tangerine (Peter Wiegel, OFL) ──────────────────────────────────────────
+
+export const tangerine = localFont({
+  src: "../../../../src/fonts/Tangerine-Regular.woff2",
+  variable: "--font-tangerine",
+  display: "swap",
+});
+
+export const tangerineBold = localFont({
+  src: "../../../../src/fonts/Tangerine-Bold.woff2",
+  variable: "--font-tangerine-bold",
+  display: "swap",
+});
+
+// ─── Mapa nombre → instancia + helpers ──────────────────────────────────────
+
+/**
+ * Mapa de cada `FontKey` a su instancia de `localFont`.
+ *
+ * Usar `satisfies` (en vez de `: Record<FontKey, FontInstance>`) preserva
+ * los tipos literales de cada `localFont()` para que las CSS variables se
+ * sigan deduciendo correctamente en cada call site.
+ */
+const FONT_MAP = {
+  newIconScript,
+  nourdLight,
+  nourdMedium,
+  nourdBold,
+  rhymeFormal,
+  greatVibes,
+  edwardianScriptItc,
+  ebGaramondItalic,
+  alexBrush,
+  tangerine,
+  tangerineBold,
+  gistesy,
+  pinyonScript,
+  autography,
+  comprehensionDark,
+  comprehensionSemiBold,
+  aboveBeyondScript,
+} satisfies Record<FontKey, FontInstance>;
+
+/**
+ * Devuelve las instancias de `localFont` para los `FontKey` dados.
+ * Útil para que las configs declaren subsets por nombre sin importar
+ * las fuentes directamente.
+ */
+export function getFontsByKey(keys: FontKey[]): FontInstance[] {
+  return keys.map((k) => FONT_MAP[k]);
+}
+
+/**
+ * Fuentes que SIEMPRE se cargan en cualquier invitación que use
+ * `FrontLayout` (con o sin `additionalFonts`):
+ *  - `newIconScript`, `nourdLight`, `nourdMedium`, `nourdBold`:
+ *    las usan los componentes default (parents, quote, cover, etc.).
+ *  - `rhymeFormal`: la usa `WaxSeal` (el sobre de apertura), presente
+ *    en todas las invitaciones.
+ */
+export const CORE_FONT_KEYS: readonly FontKey[] = [
+  "newIconScript",
+  "nourdLight",
+  "nourdMedium",
+  "nourdBold",
+  "rhymeFormal",
+] as const;
+
+export function getCoreFonts(): FontInstance[] {
+  return getFontsByKey([...CORE_FONT_KEYS]);
+}

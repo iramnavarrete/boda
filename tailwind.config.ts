@@ -29,6 +29,8 @@ const config: Config = {
         alexBrush: ["var(--font-alex-brush)"],
         ebGaramondItalic: ["var(--font-eb-garamond-italic)"],
         pinyonScript: ["var(--font-pinyon-script)"],
+        tangerine: ["var(--font-tangerine)"],
+        tangerineBold: ["var(--font-tangerine-bold)"],
       },
       colors: {
         primary: {

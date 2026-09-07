@@ -1,35 +1,29 @@
 import {
-  newIconScript,
-  nourdBold,
-  nourdLight,
-  nourdMedium,
-  autography,
-  comprehensionDark,
-  comprehensionSemiBold,
-  aboveBeyondScript,
-  rhymeFormal,
-  greatVibes,
-  edwardianScriptItc,
-  gistesy,
-  alexBrush,
-  ebGaramondItalic,
-  pinyonScript,
+  getCoreFonts,
+  type FontInstance,
 } from "@/features/shared/fonts";
 
 export default function FrontLayout({
   children,
   model = "waves",
+  additionalFonts = [],
 }: {
   children: React.ReactNode;
   model?: "waves" | "siena";
+  /**
+   * Fuentes ADICIONALES a las "core" (que siempre se cargan).
+   * Cada invitación pasa solo las que su config/logo requiere,
+   * evitando descargar las 15 fuentes en invitaciones que usan 4-5.
+   */
+  additionalFonts?: FontInstance[];
 }) {
+  const allFonts = [...getCoreFonts(), ...additionalFonts];
+  const fontClasses = allFonts.map((f) => f.variable).join(" ");
+
   return (
     <main
       className={`
-        ${newIconScript.variable} ${nourdLight.variable} ${nourdMedium.variable} ${nourdBold.variable} 
-        ${autography.variable} ${comprehensionDark.variable} ${comprehensionSemiBold.variable} ${aboveBeyondScript.variable} 
-        ${rhymeFormal.variable} ${greatVibes.variable} ${edwardianScriptItc.variable} ${gistesy.variable} ${alexBrush.variable}
-        ${ebGaramondItalic.variable} ${pinyonScript.variable}
+        ${fontClasses}
         text-charcoal min-h-screen relative overflow-hidden`}
     >
       {model === "siena" && (
