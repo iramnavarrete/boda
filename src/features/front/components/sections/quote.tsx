@@ -11,6 +11,18 @@ type Props = {
   svgColor?: string;
   quote?: string;
   author?: string;
+  /**
+   * Clases extra aplicadas al primer texto animado (el texto de la cita).
+   * Sirve para sobreescribir tamaño, tipografía, color o sombra desde la
+   * config de la invitación. Default "".
+   */
+  quoteTextClassName?: string;
+  /**
+   * Clases extra aplicadas al segundo texto animado (el autor).
+   * Sirve para sobreescribir tamaño, tipografía, color o sombra desde la
+   * config de la invitación. Default "".
+   */
+  authorClassName?: string;
 };
 
 const Quote: FC<Props> = ({
@@ -18,6 +30,8 @@ const Quote: FC<Props> = ({
   svgColor,
   quote,
   author,
+  quoteTextClassName = "",
+  authorClassName = "",
 }) => {
   const quoteText = useMemo(() => {
     return quote
@@ -41,11 +55,18 @@ const Quote: FC<Props> = ({
         <div className="text-md">
           <div className="text-white font-nourdLight text-center flex flex-col items-center gap-4">
             {/* Primer texto animado */}
-            <ElegantText text={quoteText} duration={baseDuration} delay={0} />
+            <div className={cn(quoteTextClassName)}>
+              <ElegantText text={quoteText} duration={baseDuration} delay={0} />
+            </div>
 
             {/* Segundo texto animado (Autor) */}
             {author && (
-              <div className="font-nourdMedium opacity-80 mt-2">
+              <div
+                className={cn(
+                  "font-nourdMedium opacity-80 mt-2",
+                  authorClassName,
+                )}
+              >
                 <ElegantText
                   text={author}
                   duration={baseDuration}
