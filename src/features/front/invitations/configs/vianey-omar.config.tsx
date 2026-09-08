@@ -154,7 +154,7 @@ const vianeyOmarConfig: InvitationConfig = {
         title: "Caballeros",
         subtitle: "Traje formal / Vaquero",
         description:
-          "Traje formal con camisa de vestir, corbata o moño y zapatos de vestir, o si así lo decide un estilo vaquero elegante que esté a la altura de la celebración. Se sugiere evitar prendas de estilo casual.",
+          "Traje formal con camisa de vestir, corbata o moño y zapatos de vestir, o si así lo decide un estilo vaquero elegante que esté a la altura de la celebración. Se sugiere evitar prendas de estilo casual. Evita el uso de telas de mezclilla",
       },
       bothRestrictions:
         "Agradecemos su comprensión y apoyo respetando el código de vestimenta requerido por el salón.",
