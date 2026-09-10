@@ -75,11 +75,8 @@ export const generateCustomLayout = ({
         // Posicionamos las filas utilizando el nuevo centro desplazado
         const posY = tablesCenterY - totalTablesHeight / 2 + r * spacingY - 45;
 
-        tableCount++;
-        sideTableCount++;
-
         newElements.push({
-          id: `round_table-${timestamp}-auto-${tableCount}`,
+          id: `round_table-${timestamp}-auto-${tableCount + 1}`,
           type: "round_table",
           alias: `Mesa ${startingIndex + tableCount}`,
           x: posX,
@@ -89,6 +86,8 @@ export const generateCustomLayout = ({
           seats: seatsPerTable,
           assignedSeats: [],
         });
+        tableCount++;
+        sideTableCount++;
       }
     }
   }
