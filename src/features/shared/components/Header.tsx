@@ -376,6 +376,15 @@ const Header = ({
                 <Gem size={14} className="text-gold" />
                 <span>Paquetes</span>
               </Link>
+            ) : variant === "admin" ? (
+              <Tooltip text="Cerrar Sesión" position="bottom">
+                <button
+                  onClick={AuthService.logout}
+                  className="flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                >
+                  <LogOut size={18} className="text-red-400" />
+                </button>
+              </Tooltip>
             ) : (
               <button
                 onClick={AuthService.logout}
@@ -499,14 +508,22 @@ const DesktopNavLink = ({
   activeClassName,
   compact = false,
 }: DesktopNavLinkProps) => {
+  // En modo compacto (admin): el item ACTIVO muestra su label visible y
+  // NO lleva tooltip (ya se ve qué página es); los INACTIVOS quedan
+  // colapsados a icono y muestran el label en tooltip al hacer hover.
+  const showLabel = !compact || active;
+  const withTooltip = compact && !active;
+
   const content = (
     <Link
       href={href}
-      title={compact ? undefined : label}
+      title={withTooltip ? undefined : label}
       className={cn(
         "flex items-center justify-center rounded-full font-medium transition-all border border-transparent",
         // Padding: compacto (icon-only) vs extendido (icon + label)
-        compact ? "p-2" : "gap-2 px-4 py-2 text-sm",
+        compact && !showLabel
+          ? "p-2"
+          : "gap-2 px-4 py-2 text-sm",
         baseClassName,
         active && activeClassName,
       )}
@@ -521,12 +538,13 @@ const DesktopNavLink = ({
           {icon}
         </span>
       )}
-      {!compact && <span>{label}</span>}
+      {showLabel && <span>{label}</span>}
     </Link>
   );
 
-  // En modo compacto, envolvemos en Tooltip para mostrar el label en hover.
-  if (compact) {
+  // En modo compacto y solo si el item NO está activo, envolvemos en
+  // Tooltip para mostrar el label en hover.
+  if (withTooltip) {
     return (
       <Tooltip text={label} position="bottom">
         {content}
