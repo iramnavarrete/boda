@@ -74,6 +74,7 @@ export default function InvitationDashboard() {
             <RecentActivityCard
               invitationId={invitationData?.id}
               setLastActivity={setLastActivity}
+              activityRoute={`/admin/invitations/${invitationData?.id}/activity`}
             />
           </div>
           <div className="lg:col-span-2 flex flex-col min-h-0">
