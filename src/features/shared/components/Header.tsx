@@ -17,6 +17,7 @@ import {
   Users,
   ScanLine,
   LayoutTemplate,
+  Activity,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useParams, usePathname } from "next/navigation";
@@ -24,6 +25,7 @@ import { cn } from "@heroui/theme";
 import Link from "next/link";
 import { AuthService } from "@/services/authService";
 import JnInvitacionesIcon from "@/icons/jn-invitaciones-icon";
+import Tooltip from "./Tooltip";
 import { useRouter } from "next/router";
 import { Invitation } from "@/types";
 import { getEventTypeName } from "@/utils/formatters";
@@ -241,6 +243,12 @@ const Header = ({
           icon: <Mail size={18} />,
           active: pathname?.includes("/quotes"),
         },
+        {
+          label: "Actividad",
+          href: `${basePath}/activity`,
+          icon: <Activity size={18} />,
+          active: pathname?.includes("/activity"),
+        },
       );
     }
 
@@ -348,6 +356,9 @@ const Header = ({
                 {...item}
                 baseClassName={config.navLinkBase}
                 activeClassName={config.navLinkActive}
+                // Solo admin usa el modo compacto (icon-only + Tooltip).
+                // Landing e invitations-panel mantienen label visible.
+                compact={variant === "admin"}
               />
             ))}
           </nav>
@@ -472,9 +483,11 @@ const Header = ({
   );
 };
 
-interface NavLinkProps extends NavItemType {
+interface DesktopNavLinkProps extends NavItemType {
   baseClassName?: string;
   activeClassName?: string;
+  /** Modo compacto: solo icono (sin label visible), el label aparece en Tooltip. */
+  compact?: boolean;
 }
 
 const DesktopNavLink = ({
@@ -484,29 +497,45 @@ const DesktopNavLink = ({
   icon,
   baseClassName,
   activeClassName,
-}: NavLinkProps) => (
-  <Link
-    href={href}
-    title={label}
-    className={cn(
-      "flex items-center justify-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all border border-transparent",
-      baseClassName,
-      active && activeClassName,
-    )}
-  >
-    {icon && (
-      <span
-        className={cn(
-          "transition-colors opacity-70 group-hover:opacity-100 flex items-center",
-          active && "opacity-100 text-current",
-        )}
-      >
-        {icon}
-      </span>
-    )}
-    <span>{label}</span>
-  </Link>
-);
+  compact = false,
+}: DesktopNavLinkProps) => {
+  const content = (
+    <Link
+      href={href}
+      title={compact ? undefined : label}
+      className={cn(
+        "flex items-center justify-center rounded-full font-medium transition-all border border-transparent",
+        // Padding: compacto (icon-only) vs extendido (icon + label)
+        compact ? "p-2" : "gap-2 px-4 py-2 text-sm",
+        baseClassName,
+        active && activeClassName,
+      )}
+    >
+      {icon && (
+        <span
+          className={cn(
+            "transition-colors flex items-center",
+            active ? "opacity-100 text-current" : "opacity-70",
+          )}
+        >
+          {icon}
+        </span>
+      )}
+      {!compact && <span>{label}</span>}
+    </Link>
+  );
+
+  // En modo compacto, envolvemos en Tooltip para mostrar el label en hover.
+  if (compact) {
+    return (
+      <Tooltip text={label} position="bottom">
+        {content}
+      </Tooltip>
+    );
+  }
+
+  return content;
+};
 
 interface MenuItemProps extends NavItemType {
   onClick?: () => void;
