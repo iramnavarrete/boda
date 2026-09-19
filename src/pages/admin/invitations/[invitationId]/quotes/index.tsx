@@ -1,4 +1,4 @@
-import FamilyQuotesList from "@/features/admin/components/FamilyQuotesList";
+import { FamilyQuotesList } from "@/features/admin/quotes";
 import Loader from "@/features/front/components/Loader";
 import AdminLayout from "@/features/shared/layouts/admin";
 import { useRouter } from "next/router";

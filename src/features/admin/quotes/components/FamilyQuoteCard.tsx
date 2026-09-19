@@ -1,7 +1,8 @@
-import { memo, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { memo } from "react";
 import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
 import { FamilyQuoteMap } from "@/services/familyQuotesService";
 import Botanic1 from "@/icons/botanic/botanic1";
+import Botanic3 from "@/icons/botanic/botanic3";
 import Botanic4 from "@/icons/botanic/botanic4";
 import {
   CheckCircle2,
@@ -12,6 +13,7 @@ import {
   UserMinus,
   Tag,
 } from "lucide-react";
+import { useBotanicLevel, useElementRef } from "../hooks/useBotanicLevel";
 
 const getInitials = (name: string) => {
   let parts = name.trim().split(" ");
@@ -21,9 +23,6 @@ const getInitials = (name: string) => {
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return name.substring(0, 2).toUpperCase();
 };
-
-/** Altura en px a partir de la cual mostramos el botánico más alto. */
-const TALL_BOTANIC_THRESHOLD = 260;
 
 interface FamilyQuoteCardProps {
   msg: FamilyQuoteMap;
@@ -43,33 +42,8 @@ function FamilyQuoteCardImpl({ msg, onManualToggle }: FamilyQuoteCardProps) {
   } = msg;
   const timeAgo = useTimeAgo(fechaModificacion);
 
-  // Detectamos la altura real de la card con ResizeObserver para decidir
-  // qué botánico colocar. Container queries con `size` funcionan pero son
-  // menos confiables cross-browser que un observer en React.
-  const cardRef = useRef<HTMLDivElement | null>(null);
-  const [isTall, setIsTall] = useState(false);
-
-  // Medición inicial sincrónica (useLayoutEffect) para evitar el flash
-  // de botánico incorrecto en el primer paint de cards altas.
-  useLayoutEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
-    setIsTall(el.getBoundingClientRect().height >= TALL_BOTANIC_THRESHOLD);
-  }, []);
-
-  // Observer para cambios posteriores (ej. badge "Nuevo" aparece/desaparece
-  // al togglear leído, lo que altera la altura de la card).
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) return;
-      setIsTall(entry.contentRect.height >= TALL_BOTANIC_THRESHOLD);
-    });
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+  const cardRef = useElementRef<HTMLDivElement>();
+  const botanicLevel = useBotanicLevel(cardRef);
 
   return (
     <div
@@ -91,10 +65,11 @@ function FamilyQuoteCardImpl({ msg, onManualToggle }: FamilyQuoteCardProps) {
             aria-hidden="true"
             className="absolute inset-0 pointer-events-none overflow-visible z-0 text-gold-500"
           >
-            {isTall ? (
-              <Botanic1 className="absolute -bottom-2 -right-2 w-24 h-44 rotate-[15deg] opacity-[0.25] -translate-x-2" />
-            ) : (
+            {botanicLevel === "short" && (
               <Botanic4 className="absolute -top-2 -right-3 w-16 h-24 -rotate-[20deg] opacity-[0.3] -translate-x-1" />
+            )}
+            {botanicLevel === "tall" && (
+              <Botanic1 className="absolute -bottom-2 -right-2 w-24 h-44 rotate-[15deg] opacity-[0.25] -translate-x-2" />
             )}
           </div>
 
