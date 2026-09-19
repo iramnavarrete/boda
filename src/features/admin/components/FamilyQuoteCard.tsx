@@ -1,7 +1,8 @@
-import { memo } from "react";
+import { memo, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
-import BotanicalAccent from "@/features/shared/components/BotanicalAccent";
 import { FamilyQuoteMap } from "@/services/familyQuotesService";
+import Botanic1 from "@/icons/botanic/botanic1";
+import Botanic4 from "@/icons/botanic/botanic4";
 import {
   CheckCircle2,
   Mail,
@@ -10,7 +11,6 @@ import {
   XCircle,
   UserMinus,
   Tag,
-  Sparkles,
 } from "lucide-react";
 
 const getInitials = (name: string) => {
@@ -21,6 +21,9 @@ const getInitials = (name: string) => {
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return name.substring(0, 2).toUpperCase();
 };
+
+/** Altura en px a partir de la cual mostramos el botánico más alto. */
+const TALL_BOTANIC_THRESHOLD = 260;
 
 interface FamilyQuoteCardProps {
   msg: FamilyQuoteMap;
@@ -43,28 +46,67 @@ function FamilyQuoteCardImpl({
   } = msg;
   const timeAgo = useTimeAgo(fechaModificacion);
 
+  // Detectamos la altura real de la card con ResizeObserver para decidir
+  // qué botánico colocar. Container queries con `size` funcionan pero son
+  // menos confiables cross-browser que un observer en React.
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const [isTall, setIsTall] = useState(false);
+
+  // Medición inicial sincrónica (useLayoutEffect) para evitar el flash
+  // de botánico incorrecto en el primer paint de cards altas.
+  useLayoutEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    setIsTall(el.getBoundingClientRect().height >= TALL_BOTANIC_THRESHOLD);
+  }, []);
+
+  // Observer para cambios posteriores (ej. badge "Nuevo" aparece/desaparece
+  // al togglear leído, lo que altera la altura de la card).
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      setIsTall(entry.contentRect.height >= TALL_BOTANIC_THRESHOLD);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   return (
     <div
+      ref={cardRef}
       className={`
         relative rounded-2xl group flex flex-col w-full overflow-hidden
         transition-all duration-300 ease-out bg-white/70 shadow-[0_8px_30px_rgba(197,166,105,0.15)] hover:-translate-y-1 hover:shadow-[0_14px_40px_rgba(197,166,105,0.22)]
       `}
       onClick={() => onManualToggle(id, false)}
     >
-      {/* Acento botánico decorativo en la esquina superior derecha.
-          Si la card NO está leída, el badge "Nuevo" ocupa esa zona,
-          así que ocultamos el acento para no chocar visualmente. */}
-      {leido && (
-        <BotanicalAccent
-          variant="sprig"
-          className="absolute top-2 right-3 w-9 h-12 text-gold-500/70 z-0 pointer-events-none"
-        />
-      )}
+      {/*
+        Capa decorativa: botánico dorado siempre presente, detrás de todo.
+        Pointer-events-none para no bloquear clicks sobre la card.
+        overflow-hidden para que no se desborde al rotar.
+      */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 pointer-events-none overflow-hidden z-0 text-gold-500"
+      >
+        {isTall ? (
+          <Botanic1
+            className="absolute -bottom-2 -right-2 w-24 h-44 rotate-[15deg] opacity-[0.07] -translate-x-2"
+          />
+        ) : (
+          <Botanic4
+            className="absolute -top-2 -right-3 w-20 h-36 -rotate-[20deg] opacity-[0.09] -translate-x-1"
+          />
+        )}
+      </div>
 
       <div className="px-5 py-5 md:px-6 md:py-6 flex flex-col flex-1 relative">
         {/* Badge "Nuevo" — más compacto que antes, con animación.
             Posicionado absolute arriba a la derecha; z-10 para quedar
-            por encima del botanical cuando ambos coincidan. */}
+            por encima del botanical. */}
         {!leido && (
           <div className="absolute top-5 right-5 bg-gold-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-md flex items-center gap-1 z-10 animate-bounce">
             Nuevo
