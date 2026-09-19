@@ -1,5 +1,4 @@
 export { default as ActivityAdmin } from "./ActivityAdmin";
-export { default as ActivityHeader } from "./ActivityHeader";
 export { default as ActivityFiltersSidebar } from "./ActivityFiltersSidebar";
 export { default as ActivityCard } from "./ActivityCard";
 export { default as ActivityCards } from "./ActivityCards";
