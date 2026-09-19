@@ -30,12 +30,12 @@ const SQUARE_ASPECT_TYPES = new Set([
   "round_table",
   "square_table",
   "cocktail_table",
+  "door",
 ]);
 
 // Estructurales con resize restringido a un solo eje
 const AXIS_LOCKED_TYPES: Record<string, "x" | "y"> = {
   wall: "x",
-  door: "x",
   window: "x",
 };
 

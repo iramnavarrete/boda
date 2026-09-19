@@ -18,10 +18,16 @@ const GAP = 8;
 const CLOSE_DELAY = 120; // ms — puente entre wrapper y tooltip
 const VIEWPORT_MARGIN = 8; // px — margen mínimo al borde del viewport
 
+// Registry module-level: coordina que solo 1 tooltip esté visible a la vez.
+// Cuando un tooltip se abre, cierra inmediatamente cualquier otro que esté
+// abierto (sin esperar el delay de CLOSE_DELAY).
+//
+// Esto resuelve el bug donde al mover el cursor rápidamente de un tooltip
+// a otro, durante el periodo de 120ms del "puente" del primer tooltip,
+// ambos quedaban visibles en pantalla.
+const activeTooltipClosers = new Set<() => void>();
+
 // Funciones a nivel de módulo para `useSyncExternalStore`.
-// Más estables que definirlas dentro del componente y evita el
-// warning de "Calling setState synchronously within an effect"
-// que aparecía con el patrón `useEffect(() => setMounted(true), [])`.
 const noopSubscribe = () => () => {};
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
@@ -73,7 +79,6 @@ const Tooltip = forwardRef<TooltipRef, TooltipProps>(function Tooltip({
   });
 
   // `mounted` vía useSyncExternalStore: false en SSR, true en cliente.
-  // No causa el warning de cascading render.
   const mounted = useSyncExternalStore(
     noopSubscribe,
     getClientSnapshot,
@@ -88,8 +93,6 @@ const Tooltip = forwardRef<TooltipRef, TooltipProps>(function Tooltip({
   }, []);
 
   // Ocultar el tooltip ante cualquier scroll (ventana o contenedor padre).
-  // El scroll mueve al wrapper de su posición cached, así que recalcular
-  // cada frame sería costoso — es más simple cerrarlo.
   useEffect(() => {
     if (!open) return;
     const handleScroll = () => {
@@ -104,8 +107,7 @@ const Tooltip = forwardRef<TooltipRef, TooltipProps>(function Tooltip({
   }, [open]);
 
   // Handlers de hover con puente: dan 120ms para que el cursor cruce del
-  // wrapper al tooltip (o viceversa) sin que se cierre. Es la técnica
-  // estándar para tooltips con contenido interactivo (botones, links).
+  // wrapper al tooltip (o viceversa) sin que se cierre.
   const cancelClose = useCallback(() => {
     if (closeTimerRef.current) {
       clearTimeout(closeTimerRef.current);
@@ -123,25 +125,30 @@ const Tooltip = forwardRef<TooltipRef, TooltipProps>(function Tooltip({
 
   const handleOpen = useCallback(() => {
     cancelClose();
+
+    // Antes de abrir este tooltip, cierra inmediatamente cualquier otro que
+    // esté abierto. Esto evita que durante el CLOSE_DELAY (puente) coexistan
+    // dos tooltips visibles en pantalla.
+    activeTooltipClosers.forEach((closeOther) => {
+      closeOther();
+    });
     setOpen(true);
   }, [cancelClose]);
 
-  /**
-   * Expone un handle imperativo para que el padre pueda cerrar el
-   * tooltip en un momento específico (p.ej. antes de abrir un modal),
-   * sin depender del event bubbling — que se rompe si el child hace
-   * `e.stopPropagation()` en su onClick.
-   *
-   *   const tooltipRef = useRef<TooltipRef>(null);
-   *   const handleDelete = (e) => {
-   *     e.stopPropagation();
-   *     tooltipRef.current?.close();   // ← cierra antes de abrir el modal
-   *     triggerModal(...);
-   *   };
-   *   <Tooltip ref={tooltipRef} ...>
-   *     <button onClick={handleDelete}>...</button>
-   *   </Tooltip>
-   */
+  // Registry: cuando este tooltip está abierto, registra su close para que
+  // otros tooltips puedan cerrarlo. Al cerrarse/desmontarse, se desregistra.
+  useEffect(() => {
+    if (!open) return;
+    const close = () => {
+      cancelClose();
+      setOpen(false);
+    };
+    activeTooltipClosers.add(close);
+    return () => {
+      activeTooltipClosers.delete(close);
+    };
+  }, [open, cancelClose]);
+
   useImperativeHandle(
     ref,
     () => ({
@@ -164,13 +171,14 @@ const Tooltip = forwardRef<TooltipRef, TooltipProps>(function Tooltip({
       return { coords: { top: 0, left: 0 }, actualPosition: position };
     }
     const rect = wrapperRef.current.getBoundingClientRect();
-    // Defaults razonables mientras se mide la primera vez
-    const w = size.width || 220;
-    const h = size.height || 40;
+    // Fallback pequeño mientras se mide el tooltip por primera vez.
+    // Usamos un valor bajo (80px) para que el centrado inicial no se vea
+    // muy desplazado cuando el contenido real sea más corto (ej: "Inicio").
+    const w = size.width || 80;
+    const h = size.height || 32;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
 
-    // Auto-flip: si no cabe en la posición pedida, usar la opuesta.
     let actual: TooltipPosition = position;
     if (position === "top" && rect.top - h - GAP < VIEWPORT_MARGIN) {
       actual = "bottom";
@@ -188,12 +196,6 @@ const Tooltip = forwardRef<TooltipRef, TooltipProps>(function Tooltip({
     let top = 0;
     let left = 0;
 
-    // Compensación para `align="right"`: el borde derecho del tooltip
-    // queda matemáticamente alineado con el del trigger, pero en la
-    // práctica se ve corrido ~4-6px a la izquierda por el border de
-    // 1px del propio tooltip + el padding del botón. Este offset lo
-    // empuja a la derecha para que el triángulo apunte visualmente
-    // al centro del botón (no a su borde).
     const RIGHT_ALIGN_NUDGE = 12;
 
     switch (actual) {
@@ -225,32 +227,11 @@ const Tooltip = forwardRef<TooltipRef, TooltipProps>(function Tooltip({
         break;
     }
 
-    // Clamp final: garantiza que el tooltip siempre quede dentro del viewport,
-    // aunque el flip no haya sido suficiente (p.ej. item muy pequeño en una
-    // zona ya cercana al borde).
     top = Math.max(VIEWPORT_MARGIN, Math.min(top, vh - h - VIEWPORT_MARGIN));
     left = Math.max(VIEWPORT_MARGIN, Math.min(left, vw - w - VIEWPORT_MARGIN));
 
     return { coords: { top, left }, actualPosition: actual };
   }, [position, align, size]);
-
-  /**
-   * EFECTOS DE MEDICIÓN POST-RENDER
-   *
-   * Estos `useLayoutEffect` SON el patrón estándar de React para
-   * sincronizar state con el DOM (leer `getBoundingClientRect`,
-   * `offsetWidth`, etc.). El linter `react-hooks/set-state-in-effect`
-   * los marca como warning porque el setState está en el body del
-   * effect, pero en este caso NO se puede derivar el valor durante
-   * render (necesitamos medir el DOM post-render). El propio React
-   * docs recomienda `eslint-disable-next-line` para estos casos:
-   * https://react.dev/learn/you-might-not-need-an-effect#reading-latest-state-and-props
-   *
-   * `useLayoutEffect` (no `useEffect`) es clave: corre síncronamente
-   * antes de que el browser pinte, así que el usuario nunca ve el
-   * "primer frame" con valores incorrectos — el browser solo pinta
-   * cuando ya tenemos las medidas reales.
-   */
 
   // Tras abrir o cambiar el texto, medir el tooltip y guardar su tamaño.
   useLayoutEffect(() => {
@@ -287,9 +268,6 @@ const Tooltip = forwardRef<TooltipRef, TooltipProps>(function Tooltip({
         {children}
       </div>
 
-      {/* Portal al body: escapa del stacking context del item virtualizado,
-          garantizando que el tooltip quede encima de TODO sin importar
-          el z-index de los vecinos. */}
       {mounted && open
         ? createPortal(
             <div
@@ -301,8 +279,6 @@ const Tooltip = forwardRef<TooltipRef, TooltipProps>(function Tooltip({
                 !interactive && "pointer-events-none",
               )}
               style={{ top: coords.top, left: coords.left }}
-              // El tooltip también participa del puente: si el cursor
-              // entra, cancela cualquier cierre pendiente del wrapper.
               onMouseEnter={cancelClose}
               onMouseLeave={scheduleClose}
             >
@@ -342,38 +318,17 @@ function getArrowClasses(
 
   const verticalAlign = "top-1/2 -translate-y-1/2";
 
-  /**
-   * MISMA técnica que `TableSettingsPopover` (líneas 214-217):
-   *
-   *   <div class="absolute ... w-3 h-3 bg-... border-r border-b border-... rotate-45"
-   *        style="bottom: -5" />
-   *
-   * El "triángulo" es un cuadrado 12×12 rotado 45°. Se posiciona con
-   * `-bottom-[5px]` (AFUERA del tooltip). La mitad que queda DENTRO
-   * del tooltip se oculta naturalmente porque su `bg-white` coincide
-   * con el `bg-white` del tooltip — visualmente solo se ve la mitad
-   * inferior del rombo, que es un triángulo.
-   *
-   * Para que esto funcione, los bordes deben estar SÓLO en los dos
-   * lados que forman la "V" del triángulo (los otros dos lados no
-   * deben tener borde, si no se vería un cuadrado fantasma con
-   * bordes cruzando el interior).
-   */
   const base =
     "absolute w-[12px] h-[12px] bg-white border-[#EBE5DA] rotate-45 pointer-events-none";
 
   switch (position) {
     case "top":
-      // Triángulo apuntando hacia ABAJO (debajo del tooltip)
       return `${base} -bottom-[5px] ${horizontalAlign} border-r border-b`;
     case "bottom":
-      // Triángulo apuntando hacia ARRIBA (encima del tooltip)
       return `${base} -top-[5px] ${horizontalAlign} border-l border-t`;
     case "left":
-      // Triángulo apuntando a la DERECHA (a la derecha del tooltip)
       return `${base} -right-[5px] ${verticalAlign} border-t border-r`;
     case "right":
-      // Triángulo apuntando a la IZQUIERDA (a la izquierda del tooltip)
       return `${base} -left-[5px] ${verticalAlign} border-b border-l`;
   }
 }

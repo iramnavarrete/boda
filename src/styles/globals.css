@@ -769,3 +769,70 @@ body.is-dragging-active * {
 .table-element-card:not([data-is-structural="true"]):not([data-is-utility="true"]):active {
   cursor: grabbing;
 }
+
+/* ==========================================================================
+   SCROLLBAR GLOBAL — estilos consistentes para TODOS los scrolls de la app.
+
+   Aplicamos estilos a TODOS los elementos excepto html/body (que
+   tienen sus propios scrollbars nativos del navegador). Los pseudo-
+   elementos ::-webkit-scrollbar solo se renderizan en elementos que
+   realmente tienen scroll, así que no afectan rendimiento.
+
+   Paleta stone-300/400/500 semi-transparente (gris, NO dorado).
+   ========================================================================== */
+
+*:not(html):not(body) {
+  /* Estado normal: thumb invisible (alpha 0). El track sigue
+     reservado pero no se ve. Safari/Chrome/Edge respetan esto. */
+  scrollbar-color: rgba(200, 194, 186, 0) transparent; /* thumb transparente / track transparent */
+  scrollbar-width: thin;
+  transition: scrollbar-color 0.3s ease;
+}
+
+/* Solo Firefox: `-moz-appearance` es propiedad específica de Mozilla.
+   Aquí hacemos el scrollbar más ancho para igualar el look del WebKit 8px.
+   Chrome/Edge/Safari siguen con `thin` (8px via webkit-scrollbar). */
+@supports (-moz-appearance: none) {
+  *:not(html):not(body) {
+    scrollbar-width: auto;
+  }
+}
+
+/* Al hover o focus: thumb aparece con su color normal.
+   Firefox hace auto-hide nativo; replicamos ese feel con solo CSS. */
+*:not(html):not(body):hover,
+*:not(html):not(body):focus-within {
+  scrollbar-color: rgba(200, 194, 186, 0.65) transparent;
+  transition: scrollbar-color 0.2s ease;
+}
+
+*:not(html):not(body)::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*:not(html):not(body)::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*:not(html):not(body)::-webkit-scrollbar-thumb {
+  background-color: rgba(200, 194, 186, 0); /* invisible por default */
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background-color 0.3s ease;
+}
+
+/* Hover sobre el scrollbar: thumb aparece */
+*:not(html):not(body)::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(168, 162, 158, 0.85);
+}
+
+/* Active (arrastrando): más oscuro */
+*:not(html):not(body)::-webkit-scrollbar-thumb:active {
+  background-color: rgba(120, 113, 108, 0.9);
+}
+
+*:not(html):not(body)::-webkit-scrollbar-corner {
+  background: transparent;
+}

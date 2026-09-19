@@ -153,7 +153,7 @@ const ELEMENTS: { category: string; items: PaletteItemType[] }[] = [
         label: "Puerta",
         seats: 0,
         width: 80,
-        height: 24,
+        height: 80,
         icon: DoorOpen,
       },
       {

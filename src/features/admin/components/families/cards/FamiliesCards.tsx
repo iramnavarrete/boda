@@ -233,7 +233,7 @@ const FamiliesCards: React.FC<FamiliesCardsProps> = ({ families }) => {
     <div
       ref={parentRef}
       className={cn(
-        "w-full pr-2 -mr-2 pb-20 md:pb-10",
+        "w-full pb-20 md:pb-10",
         isMobile
           ? "h-auto overflow-visible"
           : "h-[calc(100dvh-380px)] md:h-[calc(100dvh-320px)] lg:h-[calc(100dvh-205px)] overflow-y-auto scrollbar-thin scrollbar-thumb-[#EBE5DA]",
@@ -278,6 +278,20 @@ const FamiliesCards: React.FC<FamiliesCardsProps> = ({ families }) => {
                   />
                 </div>
               ))}
+
+              {/* Spacers invisibles — ocupan las columnas restantes en filas
+                  parciales. `flex-1` los hace crecer para llenar el espacio
+                  sobrante; `shrink-0` en las cards asegura que mantengan
+                  su ancho de columna. Solo aplica en desktop (mobile=1col). */}
+              {!isMobile &&
+                Array.from({ length: columns - rowFamilies.length }, (_, i) => (
+                  <div
+                    key={`spacer-${i}`}
+                    className="pb-2 grow"
+                    aria-hidden="true"
+                    style={{ width: `${100 / columns}%` }}
+                  />
+                ))}
             </div>
           );
         })}

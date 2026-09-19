@@ -1,53 +1,36 @@
 import React, { Dispatch, SetStateAction } from "react";
-import { Activity, CheckCircle2, XCircle, MailOpen } from "lucide-react";
+import { Activity, ArrowRight } from "lucide-react";
+import Link from "next/link";
 import { FamilyActivity } from "@/types";
-import { useTimeAgo } from "@/features/shared/hooks/useTimeAgo";
 import { useRecentActivities } from "../hooks/useRecentActivities";
+import { ACTIVITY_VISUAL } from "@/features/admin/activity/utils/activityLabels";
+import {
+  StatusIconCircle,
+  TimeAgoStamp,
+} from "@/features/admin/activity/components";
 import DashboardCard from "./DashboardCard";
 
 const ActivityItem: React.FC<{ activity: FamilyActivity }> = ({ activity }) => {
   const familyName = activity.familyName || activity.guestName || "Invitado";
-  const timeAgo = useTimeAgo(activity.timestamp);
+  const visual = ACTIVITY_VISUAL[activity.action];
+  // Lowercase del label para el estilo de frase del dashboard.
+  const actionLabel = visual.label(activity).toLowerCase();
 
-  let config = {
-    icon: <MailOpen size={14} />,
-    text: "abrió la invitación",
-    bgColor: "bg-stone-100",
-    iconColor: "text-stone-500",
-  };
-
-  if (activity.action === "confirm") {
-    config = {
-      icon: <CheckCircle2 size={14} />,
-      text: `confirmó asistencia${activity.confirmedGuests ? ` de ${activity.confirmedGuests} invitado${activity.confirmedGuests === 1 ? "" : "s"}` : ""}`,
-      bgColor: "bg-[#E7F3EF]",
-      iconColor: "text-[#2D5B4F]",
-    };
-  } else if (activity.action === "decline") {
-    config = {
-      icon: <XCircle size={14} />,
-      text: "declinó la invitación",
-      bgColor: "bg-[#F9EAE9]",
-      iconColor: "text-[#853935]",
-    };
-  }
   return (
     <div className="flex items-start gap-4 p-3 hover:bg-[#FDFBF7] rounded-xl transition-colors border border-transparent hover:border-[#EBE5DA] group">
-      <div
-        className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border border-black/5 group-hover:scale-110 transition-transform ${config.bgColor} ${config.iconColor}`}
-      >
-        {config.icon}
+      <div className="transition-transform group-hover:scale-110">
+        <StatusIconCircle action={activity.action} size="md" />
       </div>
       <div className="flex-1 pt-0.5">
         <p className="text-[13px] text-[#5A5A5A] leading-snug">
-          <strong className="text-[#2C3627] font-bold">
-            {`${familyName} `}
-          </strong>{" "}
-          {config.text}
+          <strong className="text-[#2C3627] font-bold">{`${familyName} `}</strong>
+          {" "}
+          {actionLabel}
         </p>
-        <span className="text-[10px] text-[#A8A29E] font-medium capitalize-first mt-1 block">
-          {timeAgo}
-        </span>
+        <TimeAgoStamp
+          timestamp={activity.timestamp}
+          className="text-[10px] text-[#A8A29E] font-medium capitalize-first mt-1 block"
+        />
       </div>
     </div>
   );
@@ -58,11 +41,14 @@ const MemoizedActivityItem = React.memo(ActivityItem);
 interface RecentActivityCardProps {
   setLastActivity: Dispatch<SetStateAction<FamilyActivity | null>>;
   invitationId?: string;
+  /** Ruta a la página completa de actividad. Si se omite, no se muestra el botón "Ver más". */
+  activityRoute?: string;
 }
 
 const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
   setLastActivity,
   invitationId,
+  activityRoute,
 }) => {
   const { activities, lastActivity } = useRecentActivities(invitationId, 20);
 
@@ -100,6 +86,22 @@ const RecentActivityCard: React.FC<RecentActivityCardProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Footer con "Ver más" — lleva al listado completo */}
+      {activityRoute && (
+        <div className="shrink-0 pt-1 mt-1 border-t border-[#EBE5DA]">
+          <Link
+            href={activityRoute}
+            className="group flex items-center justify-center gap-1.5 w-full py-2 text-xs font-bold text-stone-500 hover:text-gold-600 uppercase tracking-widest transition-colors"
+          >
+            <span>Ver más</span>
+            <ArrowRight
+              size={13}
+              className="transition-transform duration-200 group-hover:translate-x-0.5"
+            />
+          </Link>
+        </div>
+      )}
     </DashboardCard>
   );
 };

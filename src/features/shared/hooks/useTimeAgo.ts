@@ -19,104 +19,106 @@ type ValidTimestamp =
   | FirestoreTimestamp
   | SerializedTimestamp;
 
+/**
+ * Formatea un timestamp como texto relativo en español.
+ *
+ * Se extrae a una función pura para poder inicializar el estado del
+ * hook sincrónicamente (sin esperar al `useEffect`). Esto evita que
+ * las cards virtualizadas (masonic) parpadeen con texto vacío cada
+ * vez que se desmontan/remontan al scrollear.
+ */
+function formatTimeAgo(timestamp: ValidTimestamp | null | undefined): string {
+  if (!timestamp) return "";
+
+  let date: Date;
+
+  if (timestamp instanceof Date) {
+    date = timestamp;
+  } else if (typeof timestamp === "string" || typeof timestamp === "number") {
+    date = new Date(timestamp);
+  } else if (
+    "toDate" in timestamp &&
+    typeof timestamp.toDate === "function"
+  ) {
+    date = timestamp.toDate();
+  } else if (
+    "seconds" in timestamp &&
+    typeof timestamp.seconds === "number"
+  ) {
+    date = new Date(timestamp.seconds * 1000);
+  } else {
+    date = new Date(String(timestamp));
+  }
+
+  if (isNaN(date.getTime())) return "";
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const targetDate = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+  );
+
+  const timeFormatter = new Intl.DateTimeFormat("es-MX", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  const timeStr = timeFormatter.format(date).toLowerCase();
+
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+
+  if (diffMins < 1) {
+    return "Hace un momento";
+  } else if (diffMins < 60) {
+    return `Hace ${diffMins} min`;
+  } else if (targetDate.getTime() === today.getTime()) {
+    return `Hoy a las ${timeStr}`;
+  } else if (targetDate.getTime() === yesterday.getTime()) {
+    return `Ayer a las ${timeStr}`;
+  } else {
+    const diffDays = Math.floor(
+      (now.getTime() - targetDate.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    if (diffDays < 7) {
+      const dayFormatter = new Intl.DateTimeFormat("es-MX", {
+        weekday: "long",
+      });
+      const dayStr = dayFormatter.format(date);
+      const capitalizedDay =
+        dayStr.charAt(0).toUpperCase() + dayStr.slice(1);
+      return `${capitalizedDay} a las ${timeStr}`;
+    } else {
+      const fullFormatter = new Intl.DateTimeFormat("es-MX", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+      return fullFormatter.format(date);
+    }
+  }
+}
+
 export function useTimeAgo(timestamp?: ValidTimestamp | null) {
-  const [timeAgo, setTimeAgo] = useState<string>("");
+  // Inicializamos SINCRONICAMENTE para evitar el flash de string vacío
+  // en mounts/remounts de la virtualización.
+  const [timeAgo, setTimeAgo] = useState<string>(() =>
+    formatTimeAgo(timestamp ?? null),
+  );
 
   useEffect(() => {
-    if (!timestamp) return;
-
-    const updateTime = () => {
-      let date: Date;
-
-      // 1. Normalizamos la fecha utilizando Type Guards estrictos
-      if (timestamp instanceof Date) {
-        date = timestamp;
-      } else if (
-        typeof timestamp === "string" ||
-        typeof timestamp === "number"
-      ) {
-        date = new Date(timestamp);
-      } else if (
-        "toDate" in timestamp &&
-        typeof timestamp.toDate === "function"
-      ) {
-        // Es un Timestamp nativo de Firestore
-        date = timestamp.toDate();
-      } else if (
-        "seconds" in timestamp &&
-        typeof timestamp.seconds === "number"
-      ) {
-        // Es un objeto serializado de Firestore
-        date = new Date(timestamp.seconds * 1000);
-      } else {
-        // Fallback seguro
-        date = new Date(String(timestamp));
-      }
-
-      // Si por alguna razón la fecha no es válida, abortamos
-      if (isNaN(date.getTime())) return;
-
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      const targetDate = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate(),
-      );
-
-      // Formateador de horas (ej: "5:00 p.m.")
-      const timeFormatter = new Intl.DateTimeFormat("es-MX", {
-        hour: "numeric",
-        minute: "2-digit",
-        hour12: true,
-      });
-      const timeStr = timeFormatter.format(date).toLowerCase();
-
-      const diffMs = now.getTime() - date.getTime();
-      const diffMins = Math.floor(diffMs / 60000);
-
-      // Lógica de visualización
-      if (diffMins < 1) {
-        setTimeAgo("Hace un momento");
-      } else if (diffMins < 60) {
-        setTimeAgo(`Hace ${diffMins} min`);
-      } else if (targetDate.getTime() === today.getTime()) {
-        setTimeAgo(`Hoy a las ${timeStr}`);
-      } else if (targetDate.getTime() === yesterday.getTime()) {
-        setTimeAgo(`Ayer a las ${timeStr}`);
-      } else {
-        const diffDays = Math.floor(
-          (now.getTime() - targetDate.getTime()) / (1000 * 60 * 60 * 24),
-        );
-
-        if (diffDays < 7) {
-          // "Lunes a las 5:00 p.m."
-          const dayFormatter = new Intl.DateTimeFormat("es-MX", {
-            weekday: "long",
-          });
-          const dayStr = dayFormatter.format(date);
-          const capitalizedDay =
-            dayStr.charAt(0).toUpperCase() + dayStr.slice(1);
-          setTimeAgo(`${capitalizedDay} a las ${timeStr}`);
-        } else {
-          // "16 mar 2026"
-          const fullFormatter = new Intl.DateTimeFormat("es-MX", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          });
-          setTimeAgo(fullFormatter.format(date));
-        }
-      }
-    };
-
-    // Calcular inmediatamente y luego actualizar cada minuto
-    updateTime();
-    const interval = setInterval(updateTime, 60000);
-
+    // Re-sincronizamos tras el mount por si `timestamp` cambió y para
+    // actualizar el texto cada minuto.
+    setTimeAgo(formatTimeAgo(timestamp ?? null));
+    const interval = setInterval(() => {
+      setTimeAgo(formatTimeAgo(timestamp ?? null));
+    }, 60000);
     return () => clearInterval(interval);
   }, [timestamp]);
 
