@@ -10,8 +10,17 @@ import { motion } from "framer-motion";
 import { FamilyQuoteMap } from "@/services/familyQuotesService";
 import FamilyQuoteCard from "./FamilyQuoteCard";
 
+/** Gap entre cards del masonry (px). */
 const MASONRY_GAP = 20;
+
+/** Ancho mínimo de cada columna del masonry (masonic deriva las reales). */
 const MASONRY_COLUMN_WIDTH = 280;
+
+/**
+ * Estimación inicial de altura para evitar saltos en el primer render.
+ * Promedio observado en `FamilyQuoteCard`: ~200–260px en cards cortas,
+ * ~280–360px en cards largas. Usamos 240 como valor intermedio.
+ */
 const ITEM_HEIGHT_ESTIMATE = 240;
 
 /**
@@ -44,7 +53,7 @@ interface QuotesMasonryProps {
  * inmediato, sin distorsión por ítems que están despidiéndose.
  */
 const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
-  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   const [scrollTop, setScrollTop] = useState(0);
   const [wrapperHeight, setWrapperHeight] = useState(0);
@@ -223,6 +232,7 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
                 width: nodeRect.width,
                 height: nodeRect.height,
               });
+              itemCacheRef.current.set(id, props.data);
             }
           }}
           className="w-full"
