@@ -50,14 +50,14 @@ function FamilyQuoteCardImpl({ msg, onManualToggle }: FamilyQuoteCardProps) {
       ref={cardRef}
       className={`
         relative rounded-2xl group flex flex-col w-full overflow-hidden
-        transition-all duration-300 ease-out bg-white/70 shadow-[0_8px_30px_rgba(197,166,105,0.15)] hover:-translate-y-1 hover:shadow-[0_14px_40px_rgba(197,166,105,0.22)]
+        transition-all duration-300 ease-out bg-white/70 shadow-[0_2px_15px_rgba(197,166,105,0.15)] hover:-translate-y-1 hover:shadow-[0_2px_20px_rgba(197,166,105,0.22)]
       `}
       onClick={() => onManualToggle(id, false)}
     >
       <div className="px-5 py-5 md:px-6 md:py-6 flex flex-col flex-1 relative">
         <div className="relative">
           {!leido && (
-            <div className="absolute top-5 right-5 bg-gold-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-md flex items-center gap-1 z-10 animate-bounce">
+            <div className="absolute top-0 right-0 bg-gold-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-md flex items-center gap-1 z-10 animate-bounce">
               Nuevo
             </div>
           )}
