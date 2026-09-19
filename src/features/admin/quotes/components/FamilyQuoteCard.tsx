@@ -77,7 +77,7 @@ function FamilyQuoteCardImpl({ msg, onManualToggle }: FamilyQuoteCardProps) {
             <Quote size={20} className="fill-current" />
           </div>
 
-          <p className="px-2 font-serif text-[15px] md:text-base italic leading-snug mb-5 flex-1 text-stone-custom break-words relative z-[1]">
+          <p className="whitespace-pre-wrap px-2 font-serif text-[15px] md:text-base italic leading-snug mb-5 flex-1 text-stone-custom break-words relative z-[1]">
             {`${mensaje}`}
           </p>
         </div>

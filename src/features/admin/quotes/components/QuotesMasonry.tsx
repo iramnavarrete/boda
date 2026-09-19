@@ -10,25 +10,22 @@ import { motion } from "framer-motion";
 import { FamilyQuoteMap } from "@/services/familyQuotesService";
 import FamilyQuoteCard from "./FamilyQuoteCard";
 
-/** Gap entre cards del masonry (px). */
 const MASONRY_GAP = 20;
-
-/** Ancho mínimo de cada columna del masonry (masonic deriva las reales). */
 const MASONRY_COLUMN_WIDTH = 280;
-
-/**
- * Estimación inicial de altura para evitar saltos en el primer render.
- * Promedio observado en `FamilyQuoteCard`: ~200–260px en cards cortas,
- * ~280–360px en cards largas. Usamos 240 como valor intermedio.
- */
 const ITEM_HEIGHT_ESTIMATE = 240;
 
 /**
- * Duración (ms) que mantenemos un ítem "exiting" en `displayedItems`
- * antes de removerlo de verdad. Coincide con el spring de framer-motion
- * (stiffness 300 / damping 30) que tarda ~220ms en estabilizarse.
+ * Duración (ms) de la animación de salida de la capa overlay.
+ * Debe coincidir con la `transition` del overlay más abajo.
  */
-const EXIT_DURATION_MS = 220;
+const EXIT_DURATION_MS = 260;
+
+interface RectLike {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
 
 interface QuotesMasonryProps {
   messages: FamilyQuoteMap[];
@@ -38,20 +35,13 @@ interface QuotesMasonryProps {
 /**
  * Grid masonry virtualizado con `masonic` + animaciones de framer-motion.
  *
- * **Por qué dos arreglos (`messages` vs `displayedItems`):**
- * masonic desmonta un ítem en cuanto sale del array `items`. Sin un buffer,
- * no hay forma de que framer-motion anime la salida (no llega a montar
- * el frame de "exit"). Por eso:
- * - Cuando llegan ítems nuevos al prop `messages`, se sincronizan
- *   inmediatamente en `displayedItems` → entran con `initial`/`animate`.
- * - Cuando un ítem desaparece del prop `messages`, permanece en
- *   `displayedItems` durante `EXIT_DURATION_MS`, marcado como "exiting"
- *   para que framer-motion anime a `{opacity:0, scale:0.9}`.
- * - Tras el timeout, recién se remueve del array.
- *
- * **Virtualización preservada:**
- * masonic decide qué renderizar según viewport + overscan. Solo los
- * ítems visibles se animan; los fuera de pantalla se saltan.
+ * DISEÑO: `items` de useMasonry es SIEMPRE `messages` directo, sin
+ * buffer de estructura. Los ítems que "salen" (por filtro o toggle) se
+ * capturan en su última posición conocida y se renderizan en una capa
+ * overlay INDEPENDIENTE (position: absolute), que no participa del
+ * cálculo de columnas de masonic. Así el masonry real (lo que queda o
+ * lo que entra) siempre obtiene su posición final correcta de
+ * inmediato, sin distorsión por ítems que están despidiéndose.
  */
 const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -60,44 +50,106 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
   const [wrapperHeight, setWrapperHeight] = useState(0);
   const [wrapperWidth, setWrapperWidth] = useState(0);
 
-  // Buffer de ítems que verá el usuario (con posible retraso en remoción).
-  const [displayedItems, setDisplayedItems] = useState<FamilyQuoteMap[]>(messages);
+  // Última posición conocida en pantalla de cada card (relativa al
+  // contenedor scrolleable). Se actualiza en cada render vía ref
+  // callback. Cuando un id desaparece de `messages`, esta es la
+  // posición que usamos para el overlay de salida.
+  const lastRectRef = useRef<Map<string, RectLike>>(new Map());
 
-  // Sincronización de `displayedItems` con el prop `messages`.
+  // Cache del último dato conocido de cada item (para poder renderizar
+  // su contenido en el overlay aunque ya no esté en `messages`).
+  const itemCacheRef = useRef<Map<string, FamilyQuoteMap>>(new Map());
+
+  // Ids presentes en el `messages` del render anterior, para diffear.
+  const prevIdsRef = useRef<Set<string>>(new Set(messages.map((m) => m.id)));
+
+  // Timers de remoción del overlay, por id.
+  const exitTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map(),
+  );
+
+  const [exitingOverlays, setExitingOverlays] = useState<
+    Array<{ id: string; item: FamilyQuoteMap; rect: RectLike }>
+  >([]);
+
   useEffect(() => {
-    const incomingIds = new Set(messages.map((m) => m.id));
-    let removedIds: string[] = [];
+    const currentIds = new Set(messages.map((m) => m.id));
+    const prevIds = prevIdsRef.current;
 
-    setDisplayedItems((prev) => {
-      const toExit = prev.filter((p) => !incomingIds.has(p.id));
-      removedIds = toExit.map((t) => t.id);
-      // Incoming + exiting: los exiting se quedan al final para que su
-      // posición de layout cambie si masonic los reordena (framer-motion
-      // anima ese cambio + el fade-out).
-      return [...messages, ...toExit];
-    });
+    const removedIds = [...prevIds].filter((id) => !currentIds.has(id));
 
     if (removedIds.length > 0) {
-      const timer = setTimeout(() => {
-        setDisplayedItems((prev) =>
-          prev.filter((p) => incomingIds.has(p.id)),
+      const newOverlays = removedIds
+        .map((id) => {
+          const rect = lastRectRef.current.get(id);
+          const item = itemCacheRef.current.get(id);
+          // Si nunca se llegó a medir (estaba fuera del viewport +
+          // overscan, virtualizado), no hay nada que animar: se
+          // descarta silenciosamente, no es visible de todas formas.
+          if (!rect || !item) return null;
+          return { id, item, rect };
+        })
+        .filter(
+          (o): o is { id: string; item: FamilyQuoteMap; rect: RectLike } =>
+            o !== null,
         );
-      }, EXIT_DURATION_MS);
-      return () => clearTimeout(timer);
+
+      if (newOverlays.length > 0) {
+        setExitingOverlays((prev) => {
+          const withoutDupes = prev.filter(
+            (o) => !newOverlays.some((n) => n.id === o.id),
+          );
+          return [...withoutDupes, ...newOverlays];
+        });
+
+        newOverlays.forEach(({ id }) => {
+          const existing = exitTimersRef.current.get(id);
+          if (existing) clearTimeout(existing);
+
+          const timer = setTimeout(() => {
+            setExitingOverlays((prev) => prev.filter((o) => o.id !== id));
+            exitTimersRef.current.delete(id);
+          }, EXIT_DURATION_MS);
+          exitTimersRef.current.set(id, timer);
+        });
+      }
     }
+
+    // "Revividos": un id que estaba en el overlay volvió a aparecer en
+    // `messages` antes de que terminara su animación de salida (ej.
+    // toggle rápido de ida y vuelta). Se cancela su timer y se saca del
+    // overlay — vuelve a ser un ítem normal del masonry real.
+    setExitingOverlays((prev) => {
+      const stillExiting = prev.filter((o) => {
+        if (currentIds.has(o.id)) {
+          const t = exitTimersRef.current.get(o.id);
+          if (t) {
+            clearTimeout(t);
+            exitTimersRef.current.delete(o.id);
+          }
+          return false;
+        }
+        return true;
+      });
+      return stillExiting.length === prev.length ? prev : stillExiting;
+    });
+
+    // Refrescar cache de contenido con lo que hay en `messages` AHORA,
+    // después del lookup de removals — así los items que están saliendo
+    // todavía tienen su última versión disponible para el overlay en
+    // ESTE mismo effect. El `forEach` solo hace `.set()`, nunca borra:
+    // los exiting siguen en el cache mientras dure su animación.
+    messages.forEach((m) => itemCacheRef.current.set(m.id, m));
+
+    prevIdsRef.current = currentIds;
   }, [messages]);
 
-  // `exitingIds` derivado: ítems que están en displayedItems pero ya no
-  // están en messages. No requiere estado propio — se recalcula cuando
-  // cualquiera de los dos cambia.
-  const exitingIds = useMemo(() => {
-    const incomingIds = new Set(messages.map((m) => m.id));
-    const set = new Set<string>();
-    displayedItems.forEach((d) => {
-      if (!incomingIds.has(d.id)) set.add(d.id);
-    });
-    return set;
-  }, [displayedItems, messages]);
+  useEffect(() => {
+    return () => {
+      exitTimersRef.current.forEach(clearTimeout);
+      exitTimersRef.current.clear();
+    };
+  }, []);
 
   // Medición del contenedor scrollable.
   useEffect(() => {
@@ -108,7 +160,6 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
       setWrapperWidth(el.clientWidth);
       setWrapperHeight(el.clientHeight);
     };
-
     measure();
 
     const handleScroll = () => setScrollTop(el.scrollTop);
@@ -123,22 +174,17 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
     };
   }, []);
 
-  // Hash estable para invalidar el positioner SOLO cuando algo que afecta
-  // el layout cambia (orden, contenido que afecta altura, ID nuevo).
-  //
-  // `leido` se omite a propósito: al marcar como leído/desleído NO queremos
-  // que masonic recalcule posiciones (el badge es absolute, el botón de mail
-  // tiene tamaño fijo → la altura visual no cambia → no debe haber layout
-  // shift). Incluir `leido` aquí causaba un parpadeo no deseado.
+  // Hash para invalidar el positioner: ids presentes + lo que afecta
+  // altura. `leido` excluido a propósito (no afecta altura del card).
   const layoutHash = useMemo(
     () =>
-      displayedItems
-        .map((m) =>
-          // Solo los campos que afectan la altura visible del card.
-          `${m.id}|${m.mensaje.length}|${m.autor.length}|${m.parentesco ?? ""}`,
+      messages
+        .map(
+          (m) =>
+            `${m.id}|${m.mensaje.length}|${m.autor.length}|${m.parentesco ?? ""}`,
         )
         .join(";"),
-    [displayedItems],
+    [messages],
   );
 
   const positioner = usePositioner(
@@ -155,40 +201,47 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
 
   const renderCard = useCallback(
     (props: RenderComponentProps<FamilyQuoteMap>) => {
-      const isExiting = exitingIds.has(props.data.id);
+      const id = props.data.id;
       return (
         <motion.div
           layout
-          layoutId={props.data.id}
+          // IMPORTANTE: función inline a propósito, NO memoizar con
+          // useCallback/useMemo. Necesitamos que React la re-invoque en
+          // cada render de esta card para mantener `lastRectRef`
+          // actualizado con la posición vigente (memoizarla rompería la
+          // captura continua y el overlay usaría coordenadas viejas).
+          ref={(node) => {
+            if (node && wrapperRef.current) {
+              const wrapperRect = wrapperRef.current.getBoundingClientRect();
+              const nodeRect = node.getBoundingClientRect();
+              lastRectRef.current.set(id, {
+                top:
+                  nodeRect.top -
+                  wrapperRect.top +
+                  wrapperRef.current.scrollTop,
+                left: nodeRect.left - wrapperRect.left,
+                width: nodeRect.width,
+                height: nodeRect.height,
+              });
+            }
+          }}
           className="w-full"
           initial={{ opacity: 0, y: 12, scale: 0.96 }}
-          animate={{
-            opacity: isExiting ? 0 : 1,
-            y: 0,
-            scale: isExiting ? 0.9 : 1,
-            pointerEvents: isExiting ? ("none" as const) : ("auto" as const),
-          }}
-          // Transiciones separadas:
-          //  - `layout`: cambios de posición/tamaño (reorder, altura al editar
-          //    el contenido del mensaje) → easeOut suave para que se sienta orgánico.
-          //  - `default`: entrada/salida → spring snappy.
+          animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{
             layout: { duration: 0.35, ease: [0.32, 0.72, 0, 1] },
             default: { type: "spring", stiffness: 300, damping: 30 },
           }}
         >
-          <FamilyQuoteCard
-            msg={props.data}
-            onManualToggle={onManualToggle}
-          />
+          <FamilyQuoteCard msg={props.data} onManualToggle={onManualToggle} />
         </motion.div>
       );
     },
-    [exitingIds, onManualToggle],
+    [onManualToggle],
   );
 
   const rendered = useMasonry<FamilyQuoteMap>({
-    items: displayedItems,
+    items: messages,
     positioner,
     height: wrapperHeight || 800,
     scrollTop,
@@ -201,9 +254,25 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
   return (
     <div
       ref={wrapperRef}
-      className="h-full w-full overflow-y-auto scrollbar-thin scrollbar-thumb-[#EBE5DA] pr-1"
+      className="relative h-full w-full overflow-y-auto scrollbar-thin scrollbar-thumb-[#EBE5DA] pr-1"
     >
       {rendered}
+
+      {exitingOverlays.map(({ id, item, rect }) => (
+        <motion.div
+          key={`exiting-${id}`}
+          className="absolute pointer-events-none"
+          style={{ top: rect.top, left: rect.left, width: rect.width }}
+          initial={{ opacity: 1, scale: 1 }}
+          animate={{ opacity: 0, scale: 0.92 }}
+          transition={{
+            duration: EXIT_DURATION_MS / 1000,
+            ease: [0.32, 0.72, 0, 1],
+          }}
+        >
+          <FamilyQuoteCard msg={item} onManualToggle={onManualToggle} />
+        </motion.div>
+      ))}
     </div>
   );
 };

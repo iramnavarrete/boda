@@ -26,6 +26,29 @@ export type FamilyQuoteMap = Omit<FamilyQuote, "asistencia"> & {
   parentesco?: string;
 };
 
+/**
+ * Compara dos `FamilyQuoteMap` por VALOR en los campos que la UI usa
+ * (render en `FamilyQuoteCard`, sort, filter). Si se agregan campos
+ * nuevos al tipo que se rendericen/filtren/ordenen, sumarlos acá.
+ *
+ * Pieza clave del structural sharing en `subscribeToQuoteMessages`: si
+ * Firestore emite un snapshot donde solo cambió `leido` en un doc,
+ * queremos reusar la referencia del objeto anterior para que
+ * `React.memo` y los `useMemo` río abajo no se invaliden espuriamente.
+ */
+function isSameQuote(a: FamilyQuoteMap, b: FamilyQuoteMap): boolean {
+  return (
+    a.id === b.id &&
+    a.autor === b.autor &&
+    a.mensaje === b.mensaje &&
+    a.fechaCreacion === b.fechaCreacion &&
+    a.fechaModificacion === b.fechaModificacion &&
+    a.leido === b.leido &&
+    a.parentesco === b.parentesco &&
+    a.asistencia === b.asistencia
+  );
+}
+
 export const FamilyQuotesService = {
   subscribeToQuoteMessages: (
     invitationId: string,
@@ -33,6 +56,11 @@ export const FamilyQuotesService = {
     onError?: (error: FirestoreError) => void,
   ) => {
     if (!invitationId) return () => {};
+
+    // Closure: recuerda el último resultado emitido para hacer
+    // structural sharing entre snapshots consecutivos. Cada suscripción
+    // nueva arranca vacía, lo cual es correcto.
+    let previousById = new Map<string, FamilyQuoteMap>();
 
     return onSnapshot(
       query(getQuotesCollection(invitationId)),
@@ -55,7 +83,18 @@ export const FamilyQuotesService = {
           .filter((q) => q.mensaje.trim() !== "")
           .sort((a, b) => b.fechaModificacion - a.fechaModificacion);
 
-        callback(quotesList);
+        // Structural sharing: reusar referencia del objeto anterior
+        // cuando su contenido no cambió. Seguro porque
+        // `toggleMessageReadStatus` solo toca `leido` y no actualiza
+        // `fechaModificacion`, así que el `.sort()` no puede reordenar.
+        const mergedList = quotesList.map((next) => {
+          const prev = previousById.get(next.id);
+          return prev && isSameQuote(prev, next) ? prev : next;
+        });
+
+        previousById = new Map(mergedList.map((m) => [m.id, m]));
+
+        callback(mergedList);
       },
       (error) => {
         if (onError) onError(error);
