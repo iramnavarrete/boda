@@ -7,6 +7,8 @@ import {
   onSnapshot,
   serverTimestamp,
   QueryConstraint,
+  FirestoreError,
+  Unsubscribe,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase/config";
 import { FamilyActivity } from "@/types";
@@ -20,7 +22,6 @@ export const ActivityService = {
    */
   logActivity: async (
     invitationId: string,
-    // 🔥 Ahora omitimos el "familyName" del Omit, lo que significa que es OBLIGATORIO enviarlo en el payload
     payload: Omit<FamilyActivity, "id" | "timestamp">,
   ) => {
     if (!invitationId || !payload.familyId || !payload.familyName) return;
@@ -32,7 +33,6 @@ export const ActivityService = {
         invitationId,
         "activity",
       );
-      // 🔥 Guardamos directo sin hacer getDoc()
       await addDoc(activityRef, {
         ...payload,
         timestamp: serverTimestamp(),
@@ -43,40 +43,71 @@ export const ActivityService = {
   },
 
   /**
-   * Se suscribe a la actividad reciente (Privado - Admin)
-   * Devuelve los últimos X registros en tiempo real.
+   * Suscripción en tiempo real a TODA la actividad de una invitación (Admin).
+   *
+   * Usa `onSnapshot` con `orderBy("timestamp", "desc")` para mantener el
+   * orden cronológico inverso automáticamente. Si se pasa `options.limit`,
+   * trunca al más reciente (útil para previews como el dashboard).
+   *
+   * Devuelve una función de cleanup para `useEffect`.
+   */
+  subscribeToActivity: (
+    invitationId: string,
+    options: { limit?: number } | undefined,
+    callback: (activities: FamilyActivity[]) => void,
+    onError?: (error: FirestoreError) => void,
+  ): Unsubscribe => {
+    if (!invitationId) return () => {};
+
+    const queryConstraints: QueryConstraint[] = [
+      orderBy("timestamp", "desc"),
+    ];
+    if (options?.limit !== undefined && options.limit > 0) {
+      queryConstraints.push(limit(options.limit));
+    }
+
+    return onSnapshot(
+      query(
+        collection(db, invitationsCollectionName, invitationId, "activity"),
+        ...queryConstraints,
+      ),
+      (snapshot) => {
+        const activities = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data({ serverTimestamps: "estimate" });
+          return {
+            id: docSnap.id,
+            familyId: data.familyId,
+            familyName: data.familyName,
+            guestName: data.guestName,
+            action: data.action,
+            confirmedGuests: data.confirmedGuests,
+            timestamp: data.timestamp,
+          } as FamilyActivity;
+        });
+        callback(activities);
+      },
+      (error) => {
+        if (onError) onError(error);
+        else console.error("Error al escuchar la actividad:", error);
+      },
+    );
+  },
+
+  /**
+   * Variante con límite por defecto (compatibilidad con el dashboard).
+   * Internamente delega en `subscribeToActivity`.
    */
   subscribeToRecentActivity: (
     invitationId: string,
     limitCount: number | undefined,
     callback: (activities: FamilyActivity[]) => void,
-  ) => {
-    const queryConstraints: QueryConstraint[] = [orderBy("timestamp", "desc")];
-
-    if (limitCount !== undefined && limitCount > 0) {
-      queryConstraints.push(limit(limitCount));
-    }
-
-    const q = query(
-      collection(db, invitationsCollectionName, invitationId, "activity"),
-      ...queryConstraints,
+    onError?: (error: FirestoreError) => void,
+  ): Unsubscribe => {
+    return ActivityService.subscribeToActivity(
+      invitationId,
+      { limit: limitCount },
+      callback,
+      onError,
     );
-
-    const unsubscribe = onSnapshot(
-      q,
-      (snapshot) => {
-        const activities = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        })) as FamilyActivity[];
-
-        callback(activities);
-      },
-      (error) => {
-        console.error("Error al escuchar la actividad:", error);
-      },
-    );
-
-    return unsubscribe;
   },
 };

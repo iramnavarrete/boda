@@ -28,7 +28,7 @@ export function StructuralElementShape({
     case "wall":
       return <WallShape width={width} height={height} />;
     case "door":
-      return <DoorShape width={width} height={height} />;
+      return <DoorShape width={width} height={height} alias={alias} />;
     case "window":
       return <WindowShape width={width} height={height} />;
     case "column":
@@ -111,21 +111,28 @@ function WallShape({ width, height }: { width: number; height: number }) {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 2. PUERTA — fix: línea dorada del mismo tamaño desde el inicio
+// 2. PUERTA — interpretación minimalista del símbolo arquitectónico
+// estándar: jamba vertical sólida a la izquierda + arco punteado
+// de barrido desde el tope de la jamba hasta la esquina inferior
+// derecha. El arco es ELÍPTICO (rx = width, ry = height) para que
+// se adapte a cualquier aspect ratio del bounding box y siempre
+// conecte los dos puntos (top-left → bottom-right) sin distorsionarse.
 // ─────────────────────────────────────────────────────────────
-function DoorShape({ width, height }: { width: number; height: number }) {
-  // Marco inferior (línea gris gruesa) — ocupa todo el ancho
-  // Bisagra a la izquierda, hoja diagonal hacia arriba-derecha
-  // Arco de apertura (línea dorada punteada) — desde la bisagra hasta arriba
-
-  const hingeX = 4;
-  const hingeY = height - 2;
-  // La diagonal de la hoja es igual al ancho de la puerta
-  // (la puerta "abre" de izquierda a derecha)
-  const leafLength = width - 6;
-  // El final de la hoja está arriba-derecha, formando ~90° con el marco
-  const leafEndX = hingeX + leafLength;
-  const leafEndY = Math.max(2, hingeY - leafLength);
+function DoorShape({
+  width,
+  height,
+  alias,
+}: {
+  width: number;
+  height: number;
+  alias?: string;
+}) {
+  // Grosor de la jamba y del arco, en coords del viewBox. Como el
+  // SVG usa preserveAspectRatio="none" con viewBox = box del
+  // elemento, las líneas conservan su grosor relativo correctamente.
+  const jambStroke = Math.max(2, Math.min(width, height) * 0.08);
+  const arcStroke = Math.max(1, Math.min(width, height) * 0.02);
+  const showLabel = !!(alias && width >= 60 && height >= 60);
 
   return (
     <div className="structural-shape w-full h-full relative">
@@ -135,45 +142,36 @@ function DoorShape({ width, height }: { width: number; height: number }) {
         preserveAspectRatio="none"
         style={{ overflow: "visible" }}
       >
-        {/* Marco inferior (línea gris gruesa) */}
+        {/* Jamba vertical (línea sólida a la izquierda, ocupa todo el alto) */}
         <line
           x1={0}
-          y1={height}
-          x2={width}
+          y1={0}
+          x2={0}
           y2={height}
           stroke={STROKE}
-          strokeWidth={3}
+          strokeWidth={jambStroke}
         />
-        {/* Bisagra */}
-        <circle cx={hingeX} cy={hingeY} r={2.5} fill={STROKE} />
-        {/* Hoja de la puerta (línea diagonal dorada) */}
-        <line
-          x1={hingeX}
-          y1={hingeY}
-          x2={leafEndX}
-          y2={leafEndY}
-          stroke={DOOR_GOLD}
-          strokeWidth={2.5}
-        />
-        {/* Arco de apertura (línea dorada punteada, mismo radio que la hoja) */}
+        {/* Arco de apertura: elíptico desde (0,0) hasta (width,height),
+            sweep-flag=1 → bulge hacia la región superior-derecha
+            (hacia AFUERA de la jamba, como en planos arquitectónicos). */}
         <path
-          d={`M ${leafEndX} ${leafEndY} A ${leafLength} ${leafLength} 0 0 0 ${hingeX} ${leafEndY}`}
+          d={`M 0 0 A ${width} ${height} 0 0 1 ${width} ${height}`}
           fill="none"
           stroke={DOOR_GOLD}
-          strokeWidth={1}
-          strokeDasharray="3 2"
-          opacity={0.8}
-        />
-        {/* Pequeña marca de la otra jamba */}
-        <line
-          x1={width - 2}
-          y1={height}
-          x2={width - 2}
-          y2={height - 4}
-          stroke={STROKE}
-          strokeWidth={2}
+          strokeWidth={arcStroke}
+          strokeDasharray="4 3"
+          strokeLinecap="round"
+          opacity={0.85}
         />
       </svg>
+      {showLabel && (
+        <span
+          className="absolute left-0 right-0 text-center font-serif text-[1rem] text-[#5A5A5A] leading-none pointer-events-none whitespace-nowrap"
+          style={{ bottom: `calc(100% + 5px)` }}
+        >
+          {alias}
+        </span>
+      )}
     </div>
   );
 }
