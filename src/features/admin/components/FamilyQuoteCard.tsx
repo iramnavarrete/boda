@@ -30,10 +30,7 @@ interface FamilyQuoteCardProps {
   onManualToggle: (id: string, currentStatus: boolean) => void;
 }
 
-function FamilyQuoteCardImpl({
-  msg,
-  onManualToggle,
-}: FamilyQuoteCardProps) {
+function FamilyQuoteCardImpl({ msg, onManualToggle }: FamilyQuoteCardProps) {
   const {
     leido,
     asistencia,
@@ -83,45 +80,34 @@ function FamilyQuoteCardImpl({
       `}
       onClick={() => onManualToggle(id, false)}
     >
-      {/*
-        Capa decorativa: botánico dorado siempre presente, detrás de todo.
-        Pointer-events-none para no bloquear clicks sobre la card.
-        overflow-hidden para que no se desborde al rotar.
-      */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 pointer-events-none overflow-hidden z-0 text-gold-500"
-      >
-        {isTall ? (
-          <Botanic1
-            className="absolute -bottom-2 -right-2 w-24 h-44 rotate-[15deg] opacity-[0.07] -translate-x-2"
-          />
-        ) : (
-          <Botanic4
-            className="absolute -top-2 -right-3 w-20 h-36 -rotate-[20deg] opacity-[0.09] -translate-x-1"
-          />
-        )}
-      </div>
-
       <div className="px-5 py-5 md:px-6 md:py-6 flex flex-col flex-1 relative">
-        {/* Badge "Nuevo" — más compacto que antes, con animación.
-            Posicionado absolute arriba a la derecha; z-10 para quedar
-            por encima del botanical. */}
-        {!leido && (
-          <div className="absolute top-5 right-5 bg-gold-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-md flex items-center gap-1 z-10 animate-bounce">
-            Nuevo
+        <div className="relative">
+          {!leido && (
+            <div className="absolute top-5 right-5 bg-gold-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shadow-md flex items-center gap-1 z-10 animate-bounce">
+              Nuevo
+            </div>
+          )}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 pointer-events-none overflow-visible z-0 text-gold-500"
+          >
+            {isTall ? (
+              <Botanic1 className="absolute -bottom-2 -right-2 w-24 h-44 rotate-[15deg] opacity-[0.25] -translate-x-2" />
+            ) : (
+              <Botanic4 className="absolute -top-2 -right-3 w-16 h-24 -rotate-[20deg] opacity-[0.3] -translate-x-1" />
+            )}
           </div>
-        )}
 
-        <div className="text-gold-500 opacity-60 mb-2 relative z-[1]">
-          <Quote size={20} className="fill-current" />
+          <div className="text-gold-500 opacity-60 mb-2 relative z-[1]">
+            <Quote size={20} className="fill-current" />
+          </div>
+
+          <p className="px-2 font-serif text-[15px] md:text-base italic leading-snug mb-5 flex-1 text-stone-custom break-words relative z-[1]">
+            {`${mensaje}`}
+          </p>
         </div>
 
-        <p className="px-2 font-serif text-[15px] md:text-base italic leading-snug mb-5 flex-1 text-stone-custom break-words relative z-[1]">
-          {`${mensaje}`}
-        </p>
-
-        <div className="flex items-start justify-between pt-3 mt-auto border-t border-sand-200/60 relative z-[1]">
+        <div className="flex items-start justify-between pt-3 mt-auto border-t border-sand-200/60 relative z-[1] bg-[#fdfdfb]">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="relative shrink-0">
               <div className="w-9 h-9 rounded-full flex items-center justify-center text-[12px] font-bold shadow-sm bg-gold-500 text-white">
