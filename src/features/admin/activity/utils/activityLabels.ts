@@ -29,6 +29,14 @@ export interface ActivityVisualConfig {
   iconColorClass: string;
   /** Clases Tailwind para el badge de estado (chip). */
   badgeClass: string;
+  /**
+   * Clases Tailwind para el highlight del trigger del dropdown cuando este
+   * filtro está activo y el dropdown está cerrado. Permite asignar un
+   * color distintivo a cada filtro (verde para confirm, rojo para decline,
+   * ámbar para unanswered, etc.) para que en móvil el usuario distinga
+   * claramente qué filtro está aplicado.
+   */
+  triggerActiveClass: string;
 }
 
 export const ACTIVITY_VISUAL: Record<ActivityActionType, ActivityVisualConfig> =
@@ -40,6 +48,7 @@ export const ACTIVITY_VISUAL: Record<ActivityActionType, ActivityVisualConfig> =
       iconBgClass: "bg-stone-100",
       iconColorClass: "text-stone-500",
       badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
+      triggerActiveClass: "border-stone-400 bg-stone-100",
     },
     confirm: {
       label: (a) => {
@@ -53,14 +62,16 @@ export const ACTIVITY_VISUAL: Record<ActivityActionType, ActivityVisualConfig> =
       iconBgClass: "bg-emerald-100",
       iconColorClass: "text-emerald-600",
       badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      triggerActiveClass: "border-emerald-400 bg-emerald-50/70",
     },
     decline: {
       label: () => "Declinó la invitación",
-      shortLabel: "Rechazados",
+      shortLabel: "Rechazos",
       icon: XCircle,
       iconBgClass: "bg-red-100",
       iconColorClass: "text-red-600",
       badgeClass: "bg-red-50 text-red-700 border-red-200",
+      triggerActiveClass: "border-red-300 bg-red-50/70",
     },
   };
 
@@ -98,6 +109,7 @@ export const FILTER_VISUAL: Record<
     iconColorClass: "text-stone-500",
     // Badge con tono amber para indicar "pendiente"
     badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
+    triggerActiveClass: "border-amber-300 bg-amber-50/70",
   },
 };
 

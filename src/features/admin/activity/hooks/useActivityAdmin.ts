@@ -78,6 +78,35 @@ export function useActivityAdmin() {
     [searchFilteredActivities],
   );
 
+  // ── Flag "isUnanswered" por familia ──
+  // Calculado sobre `searchFilteredActivities` (post-search, pre-action-filter)
+  // para que el indicador "visto sin responder" sea estable independiente del
+  // filtro de acción activo. Si lo calculáramos sobre `filteredActivities`,
+  // el flag desaparecería al filtrar por "view" (las actividades de confirm/
+  // decline ya no entrarían al cálculo). Lo queremos como dato del
+  // estado real de la familia, no del filtro actual.
+  const unansweredByFamily = useMemo(() => {
+    const flags = new Map<
+      string,
+      { view: boolean; confirm: boolean; decline: boolean }
+    >();
+    for (const a of searchFilteredActivities) {
+      if (!a.familyId) continue;
+      const f = flags.get(a.familyId) ?? {
+        view: false,
+        confirm: false,
+        decline: false,
+      };
+      f[a.action] = true;
+      flags.set(a.familyId, f);
+    }
+    const result = new Map<string, boolean>();
+    for (const [fid, f] of flags) {
+      result.set(fid, f.view && !f.confirm && !f.decline);
+    }
+    return result;
+  }, [searchFilteredActivities]);
+
   // ── Hidden breakdown ──
   // Para cada familia VISIBLE en el grupo actual, contamos cuántas
   // actividades de OTROS tipos tiene en el universo completo (no filtrado).
@@ -109,15 +138,16 @@ export function useActivityAdmin() {
     return map;
   }, [activities, filterStatus]);
 
-  // Inyectamos el `hiddenBreakdown` en cada grupo. Si no hay desglose,
-  // devolvemos `{}` para mantener la forma estable.
+  // Inyectamos el `hiddenBreakdown` y `isUnanswered` en cada grupo. Si no
+  // hay desglose / flag, devolvemos defaults para mantener la forma estable.
   const groupedActivities: ActivityGroup[] = useMemo(
     () =>
       baseGroups.map((g) => ({
         ...g,
         hiddenBreakdown: hiddenBreakdownByFamily.get(g.familyId) ?? {},
+        isUnanswered: unansweredByFamily.get(g.familyId) ?? false,
       })),
-    [baseGroups, hiddenBreakdownByFamily],
+    [baseGroups, hiddenBreakdownByFamily, unansweredByFamily],
   );
 
   const hasActiveFilters =

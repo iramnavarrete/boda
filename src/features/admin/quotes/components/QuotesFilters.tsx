@@ -26,13 +26,6 @@ const TABS: Record<
 
 /**
  * Barra de filtros (segmented control tipo pill) + búsqueda libre.
- *
- * Estilo:
- *  - Contenedor pill con fondo claro y border sand.
- *  - Cada tab es una píldora con icono + label + count badge.
- *  - Tab activa: bg blanco + shadow + ring dorado; count dorado.
- *  - Tab inactiva: transparente; count gris con border.
- *  - La línea inferior animada se cambió por un ring (más limpio).
  */
 const QuotesFilters = ({
   filter,
@@ -44,7 +37,10 @@ const QuotesFilters = ({
 }: QuotesFiltersProps) => {
   return (
     <div className="flex flex-col-reverse md:flex-row md:items-end justify-between gap-3 shrink-0">
-      <div className="flex gap-1.5 overflow-hidden w-full md:w-auto p-1 bg-white/40 rounded-full border border-sand-200/60 self-start">
+      <div
+        className="flex gap-1.5 overflow-x-auto md:overflow-hidden md:w-auto p-1 bg-white/40 rounded-full border border-sand-200/60 self-start"
+        style={{ scrollbarWidth: "none" }}
+      >
         {(["all", "unread", "read"] as const).map((f) => {
           const isActive = filter === f;
           const tab = TABS[f];
@@ -52,7 +48,10 @@ const QuotesFilters = ({
             <button
               key={f}
               onClick={() => onFilterChange(f)}
-              className={`relative px-3.5 py-1.5 text-xs whitespace-nowrap transition-all flex items-center gap-1.5 rounded-full font-medium ${
+              // shrink-0 evita que el contenido se comprima al hacer
+              // scroll horizontal; whitespace-nowrap mantiene el label
+              // entero en una línea.
+              className={`relative shrink-0 whitespace-nowrap px-2.5 md:px-3.5 py-1.5 text-[11px] md:text-xs transition-all flex items-center gap-1 md:gap-1.5 rounded-full font-medium ${
                 isActive
                   ? "text-primary bg-white shadow-sm border border-sand-200"
                   : "text-charcoal-500 hover:text-charcoal-800 hover:bg-white/50 border border-transparent"
@@ -69,7 +68,7 @@ const QuotesFilters = ({
               )}
               <span>{tab.label}</span>
               <span
-                className={`text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded-full ${
+                className={`text-[10px] font-bold tabular-nums px-1 md:px-1.5 py-0.5 rounded-full ${
                   isActive
                     ? "bg-gold-500/10 text-gold-500"
                     : "bg-white/80 text-charcoal-400 border border-sand-200"
@@ -93,7 +92,7 @@ const QuotesFilters = ({
           );
         })}
       </div>
-      <div className="flex items-center gap-2 w-full md:w-auto mb-3 md:mb-2">
+      <div className="flex items-center gap-2 w-full md:w-auto mb-1 md:mb-2">
         <div className="relative w-full md:w-64">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors duration-300 group-focus-within:text-gold text-stone-custom">
             <Search size={15} />
