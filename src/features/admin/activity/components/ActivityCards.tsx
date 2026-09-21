@@ -81,6 +81,28 @@ const ActivityCards = ({ groups }: ActivityCardsProps) => {
     Array<{ id: string; item: ActivityGroup; rect: RectLike }>
   >([]);
 
+  /**
+   * Flag "ya medimos". Empieza en `false`: masonic coloca los ítems usando
+   * `ITEM_HEIGHT_ESTIMATE` (posiciones aproximadas). Tras el primer
+   * montaje, el ResizeObserver interno de masonic mide las alturas
+   * reales; bumpamos este flag → el positioner invalida y recalcula con
+   * datos reales → un único reflow "settle" sin parpadeo.
+   *
+   * Mientras está en `false`, ocultamos el contenedor con `opacity-0`
+   * para enmascarar el frame inicial con estimaciones incorrectas.
+   */
+  const [hasMeasured, setHasMeasured] = useState(false);
+  useEffect(() => {
+    let id2 = 0;
+    const id1 = requestAnimationFrame(() => {
+      id2 = requestAnimationFrame(() => setHasMeasured(true));
+    });
+    return () => {
+      cancelAnimationFrame(id1);
+      if (id2) cancelAnimationFrame(id2);
+    };
+  }, [groups]);
+
   useEffect(() => {
     const currentIds = new Set(groups.map((g) => g.familyId));
     const prevIds = prevIdsRef.current;
@@ -205,7 +227,11 @@ const ActivityCards = ({ groups }: ActivityCardsProps) => {
       columnGutter: MASONRY_GAP,
       rowGutter: MASONRY_GAP,
     },
-    [layoutHash],
+    // `hasMeasured` incluido como dep: tras el primer montaje, cuando
+    // el ResizeObserver de masonic ya tiene alturas reales, este bump
+    // fuerza al positioner a recalcular con datos reales en vez de los
+    // estimados de `ITEM_HEIGHT_ESTIMATE`.
+    [layoutHash, hasMeasured],
   );
 
   const renderCard = useCallback(
@@ -264,7 +290,12 @@ const ActivityCards = ({ groups }: ActivityCardsProps) => {
   return (
     <div
       ref={wrapperRef}
-      className="relative h-full w-full overflow-y-auto scrollbar-thin scrollbar-thumb-[#EBE5DA]"
+      // `opacity-0` hasta el primer "settle" de masonic (después del
+      // cual `hasMeasured=true`). Enmascara el frame inicial con
+      // posiciones estimadas — se notaba como cards "pegadas" o con
+      // espaciado raro hasta que el ResizeObserver corregía. Con la
+      // transition de 150ms, el fade-in queda natural.
+      className={`relative h-full w-full overflow-y-auto scrollbar-thin scrollbar-thumb-[#EBE5DA] transition-opacity duration-150 ${hasMeasured ? "opacity-100" : "opacity-0"}`}
     >
       {rendered}
 

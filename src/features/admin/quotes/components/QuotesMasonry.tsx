@@ -81,6 +81,20 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
     Array<{ id: string; item: FamilyQuoteMap; rect: RectLike }>
   >([]);
 
+  const [hasMeasured, setHasMeasured] = useState(false);
+  useEffect(() => {
+    // Doble RAF para asegurar que el ResizeObserver ya disparó y masonic
+    // ya midió antes de invalidar el positioner.
+    let id2 = 0;
+    const id1 = requestAnimationFrame(() => {
+      id2 = requestAnimationFrame(() => setHasMeasured(true));
+    });
+    return () => {
+      cancelAnimationFrame(id1);
+      if (id2) cancelAnimationFrame(id2);
+    };
+  }, [messages]);
+
   useEffect(() => {
     const currentIds = new Set(messages.map((m) => m.id));
     const prevIds = prevIdsRef.current;
@@ -205,7 +219,11 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
       columnGutter: MASONRY_GAP,
       rowGutter: MASONRY_GAP,
     },
-    [layoutHash],
+    // `hasMeasured` incluido como dep: tras el primer montaje, cuando
+    // el ResizeObserver de masonic ya tiene alturas reales, este bump
+    // fuerza al positioner a recalcular con datos reales en vez de los
+    // estimados de `ITEM_HEIGHT_ESTIMATE`.
+    [layoutHash, hasMeasured],
   );
 
   const renderCard = useCallback(
@@ -264,7 +282,12 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
   return (
     <div
       ref={wrapperRef}
-      className="relative h-full w-full overflow-y-auto scrollbar-thin scrollbar-thumb-[#EBE5DA] pr-1"
+      // `opacity-0` hasta el primer "settle" de masonic (después del
+      // cual `hasMeasured=true`). Enmascara el frame inicial con
+      // posiciones estimadas — en móvil se veía como cards "pegadas"
+      // hasta que el ResizeObserver corregía. Con la transition de 150ms,
+      // el fade-in queda natural.
+      className={`relative h-full w-full overflow-y-auto scrollbar-thin scrollbar-thumb-[#EBE5DA] pr-1 transition-opacity duration-150 ${hasMeasured ? "opacity-100" : "opacity-0"}`}
     >
       {rendered}
 
