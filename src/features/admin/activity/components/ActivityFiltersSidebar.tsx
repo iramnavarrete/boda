@@ -7,12 +7,13 @@ import {
   X,
   RefreshCw,
   LayoutList,
+  SlidersHorizontal,
   ArrowDown,
   ArrowUp,
 } from "lucide-react";
 import { cn } from "@heroui/theme";
 import { useActivityContext } from "../context/ActivityContext";
-import { ACTIVITY_VISUAL } from "../utils/activityLabels";
+import { ACTIVITY_VISUAL, FILTER_VISUAL } from "../utils/activityLabels";
 import { Dropdown } from "./Dropdown";
 import type {
   DropdownOption,
@@ -40,7 +41,7 @@ const FILTER_OPTIONS: FilterOptionDef[] = [
   },
   {
     value: "decline",
-    label: "Rechazados",
+    label: "Rechazos",
     icon: React.createElement(ACTIVITY_VISUAL.decline.icon, { size: 13 }),
   },
 ];
@@ -80,6 +81,48 @@ const SORT_OPTIONS: SortOptionDef[] = [
 /** ID para coordinar que solo un dropdown esté abierto a la vez. */
 type DropdownKey = "filter" | "special" | "sort";
 
+/**
+ * Esquema de colores de cada filtro cuando está activo en el sidebar
+ * desktop (botones) — mismo lenguaje visual que los dropdowns móvil.
+ * Coordenado con `FILTER_VISUAL` para que el color sea consistente en
+ * toda la UI.
+ */
+const FILTER_ACTIVE_STYLES: Record<
+  ActivityFilterType,
+  { bg: string; border: string; icon: string; badge: string }
+> = {
+  all: {
+    bg: "bg-[#FDFBF7]",
+    border: "border-gold/40",
+    icon: "text-gold",
+    badge: "bg-gold/10 border-gold/30 text-gold",
+  },
+  confirm: {
+    bg: "bg-emerald-50/60",
+    border: "border-emerald-400",
+    icon: "text-emerald-600",
+    badge: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+  view: {
+    bg: "bg-amber-50/60",
+    border: "border-amber-300",
+    icon: "text-amber-600",
+    badge: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+  decline: {
+    bg: "bg-red-50/60",
+    border: "border-red-300",
+    icon: "text-red-600",
+    badge: "bg-red-50 text-red-700 border-red-200",
+  },
+  unanswered: {
+    bg: "bg-amber-50/60",
+    border: "border-amber-300",
+    icon: "text-amber-600",
+    badge: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+};
+
 const ActivityFiltersSidebar: React.FC = () => {
   const {
     counts,
@@ -105,18 +148,21 @@ const ActivityFiltersSidebar: React.FC = () => {
   const filterDropdownOptions: DropdownOption<ActivityFilterType>[] =
     FILTER_OPTIONS.map((opt) => {
       const count = countFor(opt.value);
+      const isActive = opt.value === filterStatus;
+      // El color del badge se coordina con el highlight del trigger:
+      // emerald para confirm, amber para view, red para decline, gris para
+      // el resto. Reutilizamos el `badgeClass` ya definido en FILTER_VISUAL.
+      const activeBadgeClass =
+        isActive ? FILTER_VISUAL[opt.value]?.badgeClass : undefined;
       return {
         value: opt.value,
         label: opt.label,
         icon: opt.icon,
-        // Badge de conteo en cada opción, igual que los botones desktop.
         trailing: (
           <span
             className={cn(
               "text-[10px] font-bold px-1.5 py-0.5 rounded-md border tabular-nums",
-              opt.value === filterStatus
-                ? "bg-gold/10 border-gold/30 text-gold"
-                : "bg-white border-[#EBE5DA] text-stone-400",
+              activeBadgeClass ?? "bg-white border-[#EBE5DA] text-stone-400",
             )}
           >
             {count}
@@ -134,9 +180,13 @@ const ActivityFiltersSidebar: React.FC = () => {
   );
 
   // Opciones para "Filtros especiales" (móvil) — incluye el count badge.
+  // El color del badge se coordina con el highlight del trigger (amber).
   const specialFilterDropdownOptions: DropdownOption<ActivityFilterType>[] =
     SPECIAL_FILTERS.map((opt) => {
       const count = countFor(opt.value);
+      const isActive = opt.value === filterStatus;
+      const activeBadgeClass =
+        isActive ? FILTER_VISUAL[opt.value]?.badgeClass : undefined;
       return {
         value: opt.value,
         label: opt.label,
@@ -145,9 +195,7 @@ const ActivityFiltersSidebar: React.FC = () => {
           <span
             className={cn(
               "text-[10px] font-bold px-1.5 py-0.5 rounded-md border tabular-nums",
-              opt.value === filterStatus
-                ? "bg-gold/10 border-gold/30 text-gold"
-                : "bg-white border-[#EBE5DA] text-stone-400",
+              activeBadgeClass ?? "bg-white border-[#EBE5DA] text-stone-400",
             )}
           >
             {count}
@@ -198,8 +246,10 @@ const ActivityFiltersSidebar: React.FC = () => {
           </div>
         </div>
 
-        {/* ── MÓVIL: Dropdowns personalizados (grid 2 cols) ── */}
-        <div className="grid grid-cols-2 gap-2 lg:hidden">
+        {/* ── MÓVIL: Dropdowns personalizados. Stack vertical en móvil para que
+            los labels ("Todas las actividades", "Vistas sin responder", etc.)
+            quepan completos sin truncarse; en lg+ no se renderiza. ── */}
+        <div className="grid grid-cols-1 gap-2 lg:hidden">
           <Dropdown
             ariaLabel="Tipo de actividad"
             value={filterStatus}
@@ -207,6 +257,12 @@ const ActivityFiltersSidebar: React.FC = () => {
             open={openDropdown === "filter"}
             onOpenChange={(o) => setOpenDropdown(o ? "filter" : null)}
             options={filterDropdownOptions}
+            // "all" es el valor por defecto; cualquier otro = filtro activo.
+            // Color del highlight (border + bg) e icono vienen del visual
+            // config del filtro aplicado, coordinados con el badge de la card.
+            isActive={filterStatus !== "all"}
+            activeClassName={FILTER_VISUAL[filterStatus]?.triggerActiveClass}
+            iconActiveClass={FILTER_VISUAL[filterStatus]?.iconColorClass}
           />
           <Dropdown
             ariaLabel="Ordenar por"
@@ -215,6 +271,8 @@ const ActivityFiltersSidebar: React.FC = () => {
             open={openDropdown === "sort"}
             onOpenChange={(o) => setOpenDropdown(o ? "sort" : null)}
             options={sortDropdownOptions}
+            // "recent" es el sort por defecto
+            isActive={sortBy !== "recent"}
           />
         </div>
 
@@ -227,6 +285,14 @@ const ActivityFiltersSidebar: React.FC = () => {
             open={openDropdown === "special"}
             onOpenChange={(o) => setOpenDropdown(o ? "special" : null)}
             options={specialFilterDropdownOptions}
+            // "unanswered" es un filtro especial: cualquier selección es activa.
+            activeClassName={FILTER_VISUAL.unanswered?.triggerActiveClass}
+            iconActiveClass={FILTER_VISUAL.unanswered?.iconColorClass}
+            isActive={filterStatus === "unanswered"}
+            // Cuando NO hay filtro especial aplicado (filterStatus === "all"),
+            // el trigger muestra este label + icono en vez del primer option.
+            placeholderLabel="Filtros especiales"
+            placeholderIcon={<SlidersHorizontal size={13} />}
           />
         </div>
 
@@ -239,6 +305,10 @@ const ActivityFiltersSidebar: React.FC = () => {
             {FILTER_OPTIONS.map((opt) => {
               const isActive = filterStatus === opt.value;
               const count = countFor(opt.value);
+              // Color del highlight cuando está activo (mismo esquema que
+              // los dropdowns móvil): emerald para confirm, amber para view,
+              // red para decline, gold para "all".
+              const active = FILTER_ACTIVE_STYLES[opt.value];
               return (
                 <button
                   key={opt.value}
@@ -246,7 +316,7 @@ const ActivityFiltersSidebar: React.FC = () => {
                   className={cn(
                     "group flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-[13px] transition-all border text-left",
                     isActive
-                      ? "bg-[#FDFBF7] border-gold/40 text-charcoal shadow-sm"
+                      ? `${active.bg} ${active.border} text-charcoal shadow-sm`
                       : "bg-white border-transparent text-stone-500 hover:bg-[#F9F7F2] hover:border-[#EBE5DA]",
                   )}
                 >
@@ -254,7 +324,7 @@ const ActivityFiltersSidebar: React.FC = () => {
                     <span
                       className={cn(
                         "shrink-0",
-                        isActive ? "text-gold" : "text-stone-400",
+                        isActive ? active.icon : "text-stone-400",
                       )}
                     >
                       {opt.icon}
@@ -267,7 +337,7 @@ const ActivityFiltersSidebar: React.FC = () => {
                     className={cn(
                       "shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-md border tabular-nums",
                       isActive
-                        ? "bg-gold/10 border-gold/30 text-gold"
+                        ? active.badge
                         : "bg-white border-[#EBE5DA] text-stone-400",
                     )}
                   >
@@ -288,6 +358,7 @@ const ActivityFiltersSidebar: React.FC = () => {
             {SPECIAL_FILTERS.map((opt) => {
               const isActive = filterStatus === opt.value;
               const count = countFor(opt.value);
+              const active = FILTER_ACTIVE_STYLES[opt.value];
               return (
                 <button
                   key={opt.value}
@@ -295,7 +366,7 @@ const ActivityFiltersSidebar: React.FC = () => {
                   className={cn(
                     "group flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-[13px] transition-all border text-left",
                     isActive
-                      ? "bg-[#FDFBF7] border-gold/40 text-charcoal shadow-sm"
+                      ? `${active.bg} ${active.border} text-charcoal shadow-sm`
                       : "bg-white border-transparent text-stone-500 hover:bg-[#F9F7F2] hover:border-[#EBE5DA]",
                   )}
                 >
@@ -303,7 +374,7 @@ const ActivityFiltersSidebar: React.FC = () => {
                     <span
                       className={cn(
                         "shrink-0",
-                        isActive ? "text-gold" : "text-stone-400",
+                        isActive ? active.icon : "text-stone-400",
                       )}
                     >
                       {opt.icon}
@@ -316,7 +387,7 @@ const ActivityFiltersSidebar: React.FC = () => {
                     className={cn(
                       "shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-md border tabular-nums",
                       isActive
-                        ? "bg-gold/10 border-gold/30 text-gold"
+                        ? active.badge
                         : "bg-white border-[#EBE5DA] text-stone-400",
                     )}
                   >
