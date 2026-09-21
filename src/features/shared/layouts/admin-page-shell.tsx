@@ -51,11 +51,7 @@ const AdminPageShell = ({
     <div
       className={cn(
         "bg-[#F9F7F2] font-sans text-[#2C2C29] flex flex-col w-full",
-        // El comportamiento "header + search bar fijos" solo aplica en
-        // desktop (md+). En móvil el padre fluye naturalmente, el header
-        // y la search bar hacen scroll con la página, y desaparece el
-        // espacio gris al final que dejaba `h-[calc(100svh-65px)]`.
-        fillViewport && "md:h-[calc(100svh-65px)] md:overflow-hidden",
+        fillViewport && "h-[calc(100lvh-65px)] md:overflow-hidden",
         className,
       )}
     >
@@ -86,7 +82,10 @@ const AdminPageShell = ({
       {/* Contenido (lo único que scrollea si fillViewport) */}
       <section
         className={cn(
-          "max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 pb-2 flex-1 min-h-0",
+          // En desktop: flex-1 + min-h-0 para llenar el espacio restante y
+          // permitir scroll interno del masonry. En móvil: tamaño natural
+          // (la página entera scrollea, no hay flex grow).
+          "max-w-screen-2xl w-full mx-auto px-4 sm:px-6 lg:px-8 pb-2 md:flex-1 md:min-h-0",
           contentClassName,
         )}
       >
