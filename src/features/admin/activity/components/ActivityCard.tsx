@@ -42,14 +42,13 @@ export interface ActivityCardProps {
 }
 
 const ActivityCard: React.FC<ActivityCardProps> = memo(({ group }) => {
-  const { familyName, activities, hiddenBreakdown } = group;
+  const { familyName, activities, hiddenBreakdown, isUnanswered } = group;
   const count = activities.length;
   const hasScroll = count > 4;
 
   // ── Datos de filtro para el badge "Filtrado · X" ──
   const { filterStatus } = useActivityContext();
   const filterVisual = FILTER_VISUAL[filterStatus];
-  const isUnansweredFilter = filterStatus === "unanswered";
 
   // ── Conteo y desglose de actividades ocultas ──
   const hiddenEntries = Object.entries(hiddenBreakdown) as [
@@ -60,9 +59,9 @@ const ActivityCard: React.FC<ActivityCardProps> = memo(({ group }) => {
     (sum, [, n]) => sum + (n as number),
     0,
   );
-  // "Filtrado · X" solo aparece si hay actividades OCULTAS por el filtro.
-  // Para "unanswered" no aplica (no hay confirm/decline que ocultar).
-  const hasHidden = hiddenTotal > 0 && filterVisual !== null && !isUnansweredFilter;
+  // "Filtrado · X" solo aparece si hay actividades OCULTAS por el filtro
+  // (no aplica a filtros "all" ni "unanswered").
+  const hasHidden = hiddenTotal > 0 && filterVisual !== null && filterStatus !== "unanswered";
 
   return (
     <div
@@ -143,19 +142,16 @@ const ActivityCard: React.FC<ActivityCardProps> = memo(({ group }) => {
           ))}
         </div>
 
-        {/* 2. Placeholder "Esperando confirmación" — fuera del scroll.
-            Estilo compacto en una sola línea, similar al badge "+N ocultas". */}
-        {isUnansweredFilter && (
+        {/* Badge "Esperando confirmación de asistencia" */}
+        {isUnanswered && (
           <div className="pt-2 mt-2 border-t border-dashed border-[#F0EAE0]">
-            <p className="text-[10px] text-stone-400 font-medium leading-tight">
-              <Clock
-                size={9}
-                className="inline-block mr-1 -mt-0.5 text-amber-600"
-              />
-              <span className="font-bold text-amber-700">
-                Esperando confirmación
-              </span>
-            </p>
+            <span
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border bg-amber-50 text-amber-700 border-amber-200"
+              title="Esta familia abrió la invitación pero aún no confirmó ni rechazó"
+            >
+              <Clock size={9} className="shrink-0" />
+              Esperando confirmación de asistencia
+            </span>
           </div>
         )}
 

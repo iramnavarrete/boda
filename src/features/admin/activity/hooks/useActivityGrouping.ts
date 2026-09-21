@@ -19,7 +19,10 @@ export function useActivityGrouping(
     const ts = (a: FamilyActivity): number => {
       const t = a.timestamp as unknown;
       if (t instanceof Date) return t.getTime();
-      if (t && typeof (t as { toMillis?: () => number }).toMillis === "function") {
+      if (
+        t &&
+        typeof (t as { toMillis?: () => number }).toMillis === "function"
+      ) {
         return (t as { toMillis: () => number }).toMillis();
       }
       return Date.parse(String(t ?? 0));
@@ -46,10 +49,9 @@ export function useActivityGrouping(
         familyName,
         primaryGuestName,
         activities: sorted,
-        // Se inicializa vacío; el breakdown real se inyecta desde `useActivityAdmin`
-        // comparando contra el universo completo de actividades.
         hiddenBreakdown: {},
         lastActivityTimestamp: ts(sorted[0]),
+        isUnanswered: false,
       });
     }
 

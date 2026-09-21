@@ -50,6 +50,7 @@ export interface ActivityGroup {
   hiddenBreakdown: HiddenBreakdown;
   /** Timestamp (ms epoch) de la actividad más reciente del grupo (visible u oculta). */
   lastActivityTimestamp: number;
+  isUnanswered: boolean;
 }
 
 /**
