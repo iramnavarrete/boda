@@ -1,14 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  useMasonry,
-  usePositioner,
-  type RenderComponentProps,
-} from "masonic";
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useMasonry, usePositioner, type RenderComponentProps } from "masonic";
 import { motion } from "framer-motion";
 import { FamilyQuoteMap } from "@/services/familyQuotesService";
 import FamilyQuoteCard from "./FamilyQuoteCard";
+
+// Evita el warning de useLayoutEffect en SSR (Next).
+const useIsoLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 /** Gap entre cards del masonry (px). */
 const MASONRY_GAP = 20;
@@ -36,22 +43,17 @@ interface RectLike {
   height: number;
 }
 
+interface ExitingOverlay {
+  id: string;
+  item: FamilyQuoteMap;
+  rect: RectLike;
+}
+
 interface QuotesMasonryProps {
   messages: FamilyQuoteMap[];
   onManualToggle: (id: string, currentStatus: boolean) => void;
 }
 
-/**
- * Grid masonry virtualizado con `masonic` + animaciones de framer-motion.
- *
- * DISEÑO: `items` de useMasonry es SIEMPRE `messages` directo, sin
- * buffer de estructura. Los ítems que "salen" (por filtro o toggle) se
- * capturan en su última posición conocida y se renderizan en una capa
- * overlay INDEPENDIENTE (position: absolute), que no participa del
- * cálculo de columnas de masonic. Así el masonry real (lo que queda o
- * lo que entra) siempre obtiene su posición final correcta de
- * inmediato, sin distorsión por ítems que están despidiéndose.
- */
 const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -59,11 +61,14 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
   const [wrapperHeight, setWrapperHeight] = useState(0);
   const [wrapperWidth, setWrapperWidth] = useState(0);
 
-  // Última posición conocida en pantalla de cada card (relativa al
-  // contenedor scrolleable). Se actualiza en cada render vía ref
-  // callback. Cuando un id desaparece de `messages`, esta es la
-  // posición que usamos para el overlay de salida.
-  const lastRectRef = useRef<Map<string, RectLike>>(new Map());
+  // Nodos DOM vivos por id. Se llena/limpia vía ref callback en
+  // mount/unmount de cada card.
+  const nodesRef = useRef<Map<string, HTMLElement>>(new Map());
+
+  // Posición de cada card medida justo en su desmontaje (ver el ref
+  // callback en `renderCard`). El layout effect de `messages` la consume
+  // para armar los overlays de salida.
+  const exitRectsRef = useRef<Map<string, RectLike>>(new Map());
 
   // Cache del último dato conocido de cada item (para poder renderizar
   // su contenido en el overlay aunque ya no esté en `messages`).
@@ -77,9 +82,7 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
     new Map(),
   );
 
-  const [exitingOverlays, setExitingOverlays] = useState<
-    Array<{ id: string; item: FamilyQuoteMap; rect: RectLike }>
-  >([]);
+  const [exitingOverlays, setExitingOverlays] = useState<ExitingOverlay[]>([]);
 
   const [hasMeasured, setHasMeasured] = useState(false);
   useEffect(() => {
@@ -95,53 +98,42 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
     };
   }, [messages]);
 
-  useEffect(() => {
+  useIsoLayoutEffect(() => {
     const currentIds = new Set(messages.map((m) => m.id));
-    const prevIds = prevIdsRef.current;
 
-    const removedIds = [...prevIds].filter((id) => !currentIds.has(id));
+    const newOverlays: ExitingOverlay[] = [];
+    prevIdsRef.current.forEach((id) => {
+      if (currentIds.has(id)) return;
+      const rect = exitRectsRef.current.get(id);
+      const item = itemCacheRef.current.get(id);
+      // Sin rect = no estaba visible (virtualizada / fuera de pantalla):
+      // no hay nada que animar, no se ve de todas formas.
+      if (!rect || !item) return;
+      newOverlays.push({ id, item, rect });
+    });
+    // Limpiar para no arrastrar posiciones viejas a futuros cambios.
+    exitRectsRef.current.clear();
 
-    if (removedIds.length > 0) {
-      const newOverlays = removedIds
-        .map((id) => {
-          const rect = lastRectRef.current.get(id);
-          const item = itemCacheRef.current.get(id);
-          // Si nunca se llegó a medir (estaba fuera del viewport +
-          // overscan, virtualizado), no hay nada que animar: se
-          // descarta silenciosamente, no es visible de todas formas.
-          if (!rect || !item) return null;
-          return { id, item, rect };
-        })
-        .filter(
-          (o): o is { id: string; item: FamilyQuoteMap; rect: RectLike } =>
-            o !== null,
+    if (newOverlays.length > 0) {
+      setExitingOverlays((prev) => {
+        const withoutDupes = prev.filter(
+          (o) => !newOverlays.some((n) => n.id === o.id),
         );
+        return [...withoutDupes, ...newOverlays];
+      });
 
-      if (newOverlays.length > 0) {
-        setExitingOverlays((prev) => {
-          const withoutDupes = prev.filter(
-            (o) => !newOverlays.some((n) => n.id === o.id),
-          );
-          return [...withoutDupes, ...newOverlays];
-        });
+      newOverlays.forEach(({ id }) => {
+        const existing = exitTimersRef.current.get(id);
+        if (existing) clearTimeout(existing);
 
-        newOverlays.forEach(({ id }) => {
-          const existing = exitTimersRef.current.get(id);
-          if (existing) clearTimeout(existing);
-
-          const timer = setTimeout(() => {
-            setExitingOverlays((prev) => prev.filter((o) => o.id !== id));
-            exitTimersRef.current.delete(id);
-          }, EXIT_DURATION_MS);
-          exitTimersRef.current.set(id, timer);
-        });
-      }
+        const timer = setTimeout(() => {
+          setExitingOverlays((prev) => prev.filter((o) => o.id !== id));
+          exitTimersRef.current.delete(id);
+        }, EXIT_DURATION_MS);
+        exitTimersRef.current.set(id, timer);
+      });
     }
 
-    // "Revividos": un id que estaba en el overlay volvió a aparecer en
-    // `messages` antes de que terminara su animación de salida (ej.
-    // toggle rápido de ida y vuelta). Se cancela su timer y se saca del
-    // overlay — vuelve a ser un ítem normal del masonry real.
     setExitingOverlays((prev) => {
       const stillExiting = prev.filter((o) => {
         if (currentIds.has(o.id)) {
@@ -157,11 +149,9 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
       return stillExiting.length === prev.length ? prev : stillExiting;
     });
 
-    // Refrescar cache de contenido con lo que hay en `messages` AHORA,
-    // después del lookup de removals — así los items que están saliendo
-    // todavía tienen su última versión disponible para el overlay en
-    // ESTE mismo effect. El `forEach` solo hace `.set()`, nunca borra:
-    // los exiting siguen en el cache mientras dure su animación.
+    // Refrescar cache de contenido con lo que hay en `messages` AHORA.
+    // El `forEach` solo hace `.set()`, nunca borra: los exiting siguen
+    // en el cache mientras dure su animación.
     messages.forEach((m) => itemCacheRef.current.set(m.id, m));
 
     prevIdsRef.current = currentIds;
@@ -197,8 +187,6 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
     };
   }, []);
 
-  // Hash para invalidar el positioner: ids presentes + lo que afecta
-  // altura. `leido` excluido a propósito (no afecta altura del card).
   const layoutHash = useMemo(
     () =>
       messages
@@ -219,10 +207,6 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
       columnGutter: MASONRY_GAP,
       rowGutter: MASONRY_GAP,
     },
-    // `hasMeasured` incluido como dep: tras el primer montaje, cuando
-    // el ResizeObserver de masonic ya tiene alturas reales, este bump
-    // fuerza al positioner a recalcular con datos reales en vez de los
-    // estimados de `ITEM_HEIGHT_ESTIMATE`.
     [layoutHash, hasMeasured],
   );
 
@@ -232,26 +216,33 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
       return (
         <motion.div
           layout
-          // IMPORTANTE: función inline a propósito, NO memoizar con
-          // useCallback/useMemo. Necesitamos que React la re-invoque en
-          // cada render de esta card para mantener `lastRectRef`
-          // actualizado con la posición vigente (memoizarla rompería la
-          // captura continua y el overlay usaría coordenadas viejas).
-          ref={(node) => {
-            if (node && wrapperRef.current) {
-              const wrapperRect = wrapperRef.current.getBoundingClientRect();
-              const nodeRect = node.getBoundingClientRect();
-              lastRectRef.current.set(id, {
-                top:
-                  nodeRect.top -
-                  wrapperRect.top +
-                  wrapperRef.current.scrollTop,
-                left: nodeRect.left - wrapperRect.left,
-                width: nodeRect.width,
-                height: nodeRect.height,
-              });
-              itemCacheRef.current.set(id, props.data);
+          ref={(node: HTMLDivElement | null) => {
+            if (node) {
+              nodesRef.current.set(id, node);
+              exitRectsRef.current.delete(id);
+              return;
             }
+
+            const prevNode = nodesRef.current.get(id);
+            nodesRef.current.delete(id);
+
+            const wrapper = wrapperRef.current;
+            if (!prevNode || !wrapper) return;
+
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const r = prevNode.getBoundingClientRect();
+            const rect: RectLike = {
+              top: r.top - wrapperRect.top + wrapper.scrollTop,
+              left: r.left - wrapperRect.left,
+              width: r.width,
+              height: r.height,
+            };
+            const visibleTop = wrapper.scrollTop;
+            const visibleBottom = visibleTop + wrapper.clientHeight;
+            if (rect.top + rect.height < visibleTop || rect.top > visibleBottom)
+              return;
+
+            exitRectsRef.current.set(id, rect);
           }}
           className="w-full"
           initial={{ opacity: 0, y: 12, scale: 0.96 }}
@@ -282,11 +273,6 @@ const QuotesMasonry = ({ messages, onManualToggle }: QuotesMasonryProps) => {
   return (
     <div
       ref={wrapperRef}
-      // `opacity-0` hasta el primer "settle" de masonic (después del
-      // cual `hasMeasured=true`). Enmascara el frame inicial con
-      // posiciones estimadas — en móvil se veía como cards "pegadas"
-      // hasta que el ResizeObserver corregía. Con la transition de 150ms,
-      // el fade-in queda natural.
       className={`relative h-full w-full overflow-y-auto scrollbar-thin scrollbar-thumb-[#EBE5DA] pr-1 transition-opacity duration-150 ${hasMeasured ? "opacity-100" : "opacity-0"}`}
     >
       {rendered}

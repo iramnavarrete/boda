@@ -1,14 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  useMasonry,
-  usePositioner,
-  type RenderComponentProps,
-} from "masonic";
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useMasonry, usePositioner, type RenderComponentProps } from "masonic";
 import { motion } from "framer-motion";
 import ActivityCard from "./ActivityCard";
 import type { ActivityGroup } from "../types";
+
+// Evita el warning de useLayoutEffect en SSR (Next).
+const useIsoLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 /** Gap entre cards del masonry (px). */
 const MASONRY_GAP = 20;
@@ -34,22 +41,16 @@ interface RectLike {
   height: number;
 }
 
+interface ExitingOverlay {
+  id: string;
+  item: ActivityGroup;
+  rect: RectLike;
+}
+
 interface ActivityCardsProps {
   groups: ActivityGroup[];
 }
 
-/**
- * Grid masonry virtualizado con `masonic` + animaciones de framer-motion.
- *
- * Misma lógica de animación que `QuotesMasonry`: `items` de useMasonry
- * es SIEMPRE `groups` directo, sin buffer intermedio de estructura.
- * Los ítems que "salen" (por filtro, sort, etc.) se capturan en su
- * última posición conocida y se renderizan en una capa overlay
- * INDEPENDIENTE (position: absolute), que no participa del cálculo de
- * columnas de masonic. Así el masonry real (lo que queda o lo que
- * entra) siempre obtiene su posición final correcta de inmediato,
- * sin distorsión por ítems que están despidiéndose.
- */
 const ActivityCards = ({ groups }: ActivityCardsProps) => {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -57,11 +58,14 @@ const ActivityCards = ({ groups }: ActivityCardsProps) => {
   const [wrapperHeight, setWrapperHeight] = useState(0);
   const [wrapperWidth, setWrapperWidth] = useState(0);
 
-  // Última posición conocida en pantalla de cada card (relativa al
-  // contenedor scrolleable). Se actualiza en cada render vía ref
-  // callback. Cuando un id desaparece de `groups`, esta es la
-  // posición que usamos para el overlay de salida.
-  const lastRectRef = useRef<Map<string, RectLike>>(new Map());
+  // Nodos DOM vivos por id. Se llena/limpia vía ref callback en
+  // mount/unmount de cada card.
+  const nodesRef = useRef<Map<string, HTMLElement>>(new Map());
+
+  // Posición de cada card medida justo en su desmontaje (ver el ref
+  // callback en `renderCard`). El layout effect de `groups` la consume
+  // para armar los overlays de salida.
+  const exitRectsRef = useRef<Map<string, RectLike>>(new Map());
 
   // Cache del último dato conocido de cada item (para poder renderizar
   // su contenido en el overlay aunque ya no esté en `groups`).
@@ -77,20 +81,8 @@ const ActivityCards = ({ groups }: ActivityCardsProps) => {
     new Map(),
   );
 
-  const [exitingOverlays, setExitingOverlays] = useState<
-    Array<{ id: string; item: ActivityGroup; rect: RectLike }>
-  >([]);
+  const [exitingOverlays, setExitingOverlays] = useState<ExitingOverlay[]>([]);
 
-  /**
-   * Flag "ya medimos". Empieza en `false`: masonic coloca los ítems usando
-   * `ITEM_HEIGHT_ESTIMATE` (posiciones aproximadas). Tras el primer
-   * montaje, el ResizeObserver interno de masonic mide las alturas
-   * reales; bumpamos este flag → el positioner invalida y recalcula con
-   * datos reales → un único reflow "settle" sin parpadeo.
-   *
-   * Mientras está en `false`, ocultamos el contenedor con `opacity-0`
-   * para enmascarar el frame inicial con estimaciones incorrectas.
-   */
   const [hasMeasured, setHasMeasured] = useState(false);
   useEffect(() => {
     let id2 = 0;
@@ -103,53 +95,42 @@ const ActivityCards = ({ groups }: ActivityCardsProps) => {
     };
   }, [groups]);
 
-  useEffect(() => {
+  useIsoLayoutEffect(() => {
     const currentIds = new Set(groups.map((g) => g.familyId));
-    const prevIds = prevIdsRef.current;
 
-    const removedIds = [...prevIds].filter((id) => !currentIds.has(id));
+    const newOverlays: ExitingOverlay[] = [];
+    prevIdsRef.current.forEach((id) => {
+      if (currentIds.has(id)) return;
+      const rect = exitRectsRef.current.get(id);
+      const item = itemCacheRef.current.get(id);
+      // Sin rect = no estaba visible (virtualizada / fuera de pantalla):
+      // no hay nada que animar, no se ve de todas formas.
+      if (!rect || !item) return;
+      newOverlays.push({ id, item, rect });
+    });
+    // Limpiar para no arrastrar posiciones viejas a futuros cambios.
+    exitRectsRef.current.clear();
 
-    if (removedIds.length > 0) {
-      const newOverlays = removedIds
-        .map((id) => {
-          const rect = lastRectRef.current.get(id);
-          const item = itemCacheRef.current.get(id);
-          // Si nunca se llegó a medir (estaba fuera del viewport +
-          // overscan, virtualizado), no hay nada que animar: se
-          // descarta silenciosamente, no es visible de todas formas.
-          if (!rect || !item) return null;
-          return { id, item, rect };
-        })
-        .filter(
-          (o): o is { id: string; item: ActivityGroup; rect: RectLike } =>
-            o !== null,
+    if (newOverlays.length > 0) {
+      setExitingOverlays((prev) => {
+        const withoutDupes = prev.filter(
+          (o) => !newOverlays.some((n) => n.id === o.id),
         );
+        return [...withoutDupes, ...newOverlays];
+      });
 
-      if (newOverlays.length > 0) {
-        setExitingOverlays((prev) => {
-          const withoutDupes = prev.filter(
-            (o) => !newOverlays.some((n) => n.id === o.id),
-          );
-          return [...withoutDupes, ...newOverlays];
-        });
+      newOverlays.forEach(({ id }) => {
+        const existing = exitTimersRef.current.get(id);
+        if (existing) clearTimeout(existing);
 
-        newOverlays.forEach(({ id }) => {
-          const existing = exitTimersRef.current.get(id);
-          if (existing) clearTimeout(existing);
-
-          const timer = setTimeout(() => {
-            setExitingOverlays((prev) => prev.filter((o) => o.id !== id));
-            exitTimersRef.current.delete(id);
-          }, EXIT_DURATION_MS);
-          exitTimersRef.current.set(id, timer);
-        });
-      }
+        const timer = setTimeout(() => {
+          setExitingOverlays((prev) => prev.filter((o) => o.id !== id));
+          exitTimersRef.current.delete(id);
+        }, EXIT_DURATION_MS);
+        exitTimersRef.current.set(id, timer);
+      });
     }
 
-    // "Revividos": un id que estaba en el overlay volvió a aparecer en
-    // `groups` antes de que terminara su animación de salida. Se cancela
-    // su timer y se saca del overlay — vuelve a ser un ítem normal del
-    // masonry real.
     setExitingOverlays((prev) => {
       const stillExiting = prev.filter((o) => {
         if (currentIds.has(o.id)) {
@@ -165,11 +146,9 @@ const ActivityCards = ({ groups }: ActivityCardsProps) => {
       return stillExiting.length === prev.length ? prev : stillExiting;
     });
 
-    // Refrescar cache de contenido con lo que hay en `groups` AHORA,
-    // después del lookup de removals — así los items que están saliendo
-    // todavía tienen su última versión disponible para el overlay en
-    // ESTE mismo effect. El `forEach` solo hace `.set()`, nunca borra:
-    // los exiting siguen en el cache mientras dure su animación.
+    // Refrescar cache de contenido con lo que hay en `groups` AHORA.
+    // El `forEach` solo hace `.set()`, nunca borra: los exiting siguen
+    // en el cache mientras dure su animación.
     groups.forEach((g) => itemCacheRef.current.set(g.familyId, g));
 
     prevIdsRef.current = currentIds;
@@ -211,8 +190,7 @@ const ActivityCards = ({ groups }: ActivityCardsProps) => {
     () =>
       groups
         .map(
-          (g) =>
-            `${g.familyId}|${g.familyName.length}|${g.activities.length}`,
+          (g) => `${g.familyId}|${g.familyName.length}|${g.activities.length}`,
         )
         .join(";"),
     [groups],
@@ -227,10 +205,6 @@ const ActivityCards = ({ groups }: ActivityCardsProps) => {
       columnGutter: MASONRY_GAP,
       rowGutter: MASONRY_GAP,
     },
-    // `hasMeasured` incluido como dep: tras el primer montaje, cuando
-    // el ResizeObserver de masonic ya tiene alturas reales, este bump
-    // fuerza al positioner a recalcular con datos reales en vez de los
-    // estimados de `ITEM_HEIGHT_ESTIMATE`.
     [layoutHash, hasMeasured],
   );
 
@@ -240,26 +214,37 @@ const ActivityCards = ({ groups }: ActivityCardsProps) => {
       return (
         <motion.div
           layout
-          // IMPORTANTE: función inline a propósito, NO memoizar con
-          // useCallback/useMemo. Necesitamos que React la re-invoque en
-          // cada render de esta card para mantener `lastRectRef`
-          // actualizado con la posición vigente (memoizarla rompería la
-          // captura continua y el overlay usaría coordenadas viejas).
-          ref={(node) => {
-            if (node && wrapperRef.current) {
-              const wrapperRect = wrapperRef.current.getBoundingClientRect();
-              const nodeRect = node.getBoundingClientRect();
-              lastRectRef.current.set(id, {
-                top:
-                  nodeRect.top -
-                  wrapperRect.top +
-                  wrapperRef.current.scrollTop,
-                left: nodeRect.left - wrapperRect.left,
-                width: nodeRect.width,
-                height: nodeRect.height,
-              });
-              itemCacheRef.current.set(id, props.data);
+          ref={(node: HTMLDivElement | null) => {
+            if (node) {
+              nodesRef.current.set(id, node);
+              exitRectsRef.current.delete(id);
+              return;
             }
+
+            const prevNode = nodesRef.current.get(id);
+            nodesRef.current.delete(id);
+
+            const wrapper = wrapperRef.current;
+            if (!prevNode || !wrapper) return;
+
+            const wrapperRect = wrapper.getBoundingClientRect();
+            const r = prevNode.getBoundingClientRect();
+            const rect: RectLike = {
+              top: r.top - wrapperRect.top + wrapper.scrollTop,
+              left: r.left - wrapperRect.left,
+              width: r.width,
+              height: r.height,
+            };
+
+            // Solo interesa lo que estaba visible. Las cards que masonic
+            // desmonta por virtualización (fuera de viewport + overscan)
+            // se descartan para no guardar posiciones que ya no aplican.
+            const visibleTop = wrapper.scrollTop;
+            const visibleBottom = visibleTop + wrapper.clientHeight;
+            if (rect.top + rect.height < visibleTop || rect.top > visibleBottom)
+              return;
+
+            exitRectsRef.current.set(id, rect);
           }}
           className="w-full"
           initial={{ opacity: 0, y: 12, scale: 0.96 }}
@@ -290,11 +275,6 @@ const ActivityCards = ({ groups }: ActivityCardsProps) => {
   return (
     <div
       ref={wrapperRef}
-      // `opacity-0` hasta el primer "settle" de masonic (después del
-      // cual `hasMeasured=true`). Enmascara el frame inicial con
-      // posiciones estimadas — se notaba como cards "pegadas" o con
-      // espaciado raro hasta que el ResizeObserver corregía. Con la
-      // transition de 150ms, el fade-in queda natural.
       className={`relative h-full w-full overflow-y-auto scrollbar-thin scrollbar-thumb-[#EBE5DA] transition-opacity duration-150 ${hasMeasured ? "opacity-100" : "opacity-0"}`}
     >
       {rendered}
