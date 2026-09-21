@@ -51,7 +51,11 @@ const AdminPageShell = ({
     <div
       className={cn(
         "bg-[#F9F7F2] font-sans text-[#2C2C29] flex flex-col w-full",
-        fillViewport && "h-[calc(100svh-65px)] overflow-hidden",
+        // El comportamiento "header + search bar fijos" solo aplica en
+        // desktop (md+). En móvil el padre fluye naturalmente, el header
+        // y la search bar hacen scroll con la página, y desaparece el
+        // espacio gris al final que dejaba `h-[calc(100svh-65px)]`.
+        fillViewport && "md:h-[calc(100svh-65px)] md:overflow-hidden",
         className,
       )}
     >
