@@ -1,4 +1,4 @@
-import { BellRing, Info, Unlock, Check } from "lucide-react";
+import { BellRing, Info, Unlock, Check, Loader2 } from "lucide-react";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useState } from "react";
 import Modal from "@/features/shared/components/Modal";
@@ -10,6 +10,8 @@ interface SendWhatsappModalProps {
   familyName: string;
   onClose: () => void;
   onConfirm: (dateStr: string | null, autoBlock: boolean) => void;
+  loadingPhone?: boolean;
+  phoneError?: string | null;
 }
 
 export default function SendWhatsappModal({
@@ -18,6 +20,8 @@ export default function SendWhatsappModal({
   familyName,
   onClose,
   onConfirm,
+  loadingPhone = false,
+  phoneError = null,
 }: SendWhatsappModalProps) {
   const storageKey =
     type === "initial" ? "whatsapp_initial_date" : "whatsapp_reminder_date";
@@ -68,6 +72,22 @@ export default function SendWhatsappModal({
           <b className="text-[#2C2C29]">{familyName}</b>. Selecciona la fecha
           límite de respuesta:
         </p>
+
+        {/* Error del pre-fetch del teléfono */}
+        {phoneError && (
+          <div className="mb-4 flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-100 text-xs text-red-700">
+            <Info size={14} className="shrink-0 mt-0.5" />
+            <span className="leading-snug">{phoneError}</span>
+          </div>
+        )}
+
+        {/* Indicador de carga del teléfono */}
+        {/* {loadingPhone && (
+          <div className="mb-4 flex items-center gap-2 text-xs text-[#A8A29E]">
+            <Loader2 size={14} className="animate-spin shrink-0" />
+            <span>Verificando celular del invitado…</span>
+          </div>
+        )} */}
 
         {/* Fecha límite (Componente personalizado) */}
         <div className="mb-4">
@@ -131,14 +151,14 @@ export default function SendWhatsappModal({
             </button>
             <button
               onClick={handleConfirm}
-              disabled={!limitDate}
-              className={`flex-1 px-4 py-3.5 rounded-xl text-white font-bold shadow-lg transition-all disabled:opacity-50 disabled:pointer-events-none text-sm ${
+              disabled={!limitDate || loadingPhone || !!phoneError}
+              className={`flex-1 px-4 py-3.5 rounded-xl text-white font-bold shadow-lg transition-all disabled:opacity-50 disabled:pointer-events-none text-sm flex items-center justify-center gap-2 ${
                 isInitial
                   ? "bg-[#C5A669] hover:bg-[#B39358] shadow-[#C5A669]/20"
                   : "bg-orange-500 hover:bg-orange-600 shadow-orange-500/20"
               }`}
             >
-              Enviar
+              {loadingPhone ? "Cargando…" : "Enviar"}
             </button>
           </div>
           <button

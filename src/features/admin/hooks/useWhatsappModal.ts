@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Family } from "@/types";
 import { FamiliesService } from "@/services/familiesService";
 import { useToast } from "@/features/shared/components/Toast";
@@ -7,18 +7,36 @@ import {
   replaceWhatsappVariables,
   type WhatsappMessageContext,
 } from "@/utils/whatsappMessage";
+import {
+  getCachedPhone,
+  setCachedPhone,
+  invalidatePhoneCache,
+} from "@/features/admin/utils/phoneCache";
 
 interface WhatsappModalState {
   isOpen: boolean;
   type: "initial" | "reminder";
   family: Family | null;
+  // Teléfono pre-cargado al abrir el modal. Se obtiene vía Firestore antes
+  // de que el usuario confirme, para que `window.open()` se ejecute de forma
+  // síncrona dentro del user-gesture (Safari bloquea popups tras un await).
+  phone: string | null;
+  loadingPhone: boolean;
+  phoneError: string | null;
 }
 
 const CLOSED: WhatsappModalState = {
   isOpen: false,
   type: "initial",
   family: null,
+  phone: null,
+  loadingPhone: false,
+  phoneError: null,
 };
+
+// Re-export para que los call-sites que prefieran importar desde el hook
+// sigan encontrando `invalidatePhoneCache`.
+export { invalidatePhoneCache };
 
 // ────────────────────────────────────────────────────────────────────────────
 // Emojis Unicode (se envían directo vía WhatsApp).
@@ -114,30 +132,84 @@ export function useWhatsappModal(invitationId: string | undefined) {
   // Leemos la invitación actual del store para acceder a los mensajes custom
   const invitationData = useInvitationStore((state) => state.invitationData);
 
+  // Token para ignorar respuestas de fetches viejos si el usuario abre y
+  // cierra el modal rápidamente sobre varias familias.
+  const fetchTokenRef = useRef(0);
+
   const open = useCallback(
-    (family: Family, type: "initial" | "reminder") =>
-      setModal({ isOpen: true, type, family: family }),
-    [],
-  );
+    async (family: Family, type: "initial" | "reminder") => {
+      if (!invitationId) {
+        toast("No hay una invitación activa", "error");
+        return;
+      }
 
-  const close = useCallback(() => setModal(CLOSED), []);
+      // 1) Mostramos el modal inmediatamente con estado "loading".
+      setModal({
+        isOpen: true,
+        type,
+        family,
+        phone: null,
+        loadingPhone: true,
+        phoneError: null,
+      });
 
-  const sendMessage = useCallback(
-    async (family: Family, message: string, onSuccess: () => void) => {
-      if (!invitationId) return;
+      const token = ++fetchTokenRef.current;
+
+      // 2) Pre-fetch del teléfono. Esto ocurre en background; cuando el
+      // usuario confirme en el modal, el teléfono ya estará listo y
+      // `window.open()` podrá ejecutarse de forma síncrona.
       try {
-        const contactInfo = await FamiliesService.getFamilyContactInfo(
-          invitationId,
-          family.id,
-        );
-        const telefono = contactInfo?.telefono;
+        let phone: string | null | undefined = getCachedPhone(family.id);
 
-        if (!telefono) {
-          toast("No se encontró el celular de este invitado", "error");
+        if (phone === undefined) {
+          const contactInfo = await FamiliesService.getFamilyContactInfo(
+            invitationId,
+            family.id,
+          );
+          phone = contactInfo?.telefono?.replace(/[+\s]/g, "") ?? null;
+          setCachedPhone(family.id, phone);
+        }
+
+        // Si el usuario ya cerró/abrió otro modal, descartar.
+        if (token !== fetchTokenRef.current) return;
+
+        if (!phone) {
+          setModal((prev) => ({
+            ...prev,
+            loadingPhone: false,
+            phoneError: "No se encontró el celular de este invitado",
+          }));
           return;
         }
 
-        const phone = telefono.replace(/[+\s]/g, "");
+        setModal((prev) => ({
+          ...prev,
+          loadingPhone: false,
+          phone,
+        }));
+      } catch {
+        if (token !== fetchTokenRef.current) return;
+        setModal((prev) => ({
+          ...prev,
+          loadingPhone: false,
+          phoneError: "Error al cargar el celular del invitado",
+        }));
+      }
+    },
+    [invitationId, toast],
+  );
+
+  const close = useCallback(() => {
+    fetchTokenRef.current++; // invalida cualquier fetch en vuelo
+    setModal(CLOSED);
+  }, []);
+
+  const sendMessage = useCallback(
+    (phone: string, message: string, onSuccess: () => void) => {
+      // ⚠️ Esta función NO debe ser async. `window.open` debe ejecutarse
+      // síncronamente dentro del user-gesture del clic del usuario, antes
+      // de cualquier await. De lo contrario Safari bloquea el popup.
+      try {
         window.open(
           `https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(message)}`,
           "_blank",
@@ -147,13 +219,21 @@ export function useWhatsappModal(invitationId: string | undefined) {
         toast("Error al intentar abrir WhatsApp", "error");
       }
     },
-    [invitationId, toast],
+    [toast],
   );
 
   const handleSubmit = useCallback(
     async (dateStr: string | null, autoBlock: boolean) => {
-      const { family, type } = modal;
+      const { family, type, phone, phoneError } = modal;
       if (!family || !invitationId) return;
+
+      // Defensa en profundidad: si por algún motivo todavía no hay teléfono,
+      // no abrimos popup (Safari podría bloquearlo igualmente).
+      if (phoneError) {
+        toast(phoneError, "error");
+        return;
+      }
+      if (!phone) return;
 
       const shouldSaveDate = autoBlock && !!dateStr;
 
@@ -170,27 +250,29 @@ export function useWhatsappModal(invitationId: string | undefined) {
         customTemplate,
       );
 
-      if (type === "initial") {
-        await sendMessage(family, msg, () => {
+      // Construimos el "marcaWhatsAppEnviado" como fire-and-forget. No
+      // bloqueamos al usuario: la UI ya cerró el modal antes de que esto
+      // termine en Firestore.
+      const markSent = () => {
+        if (type === "initial") {
           FamiliesService.markWhatsAppSent(
             invitationId,
             family,
             shouldSaveDate ? dateStr! : undefined,
           );
-          close();
-        });
-      } else {
-        await sendMessage(family, msg, () => {
+        } else {
           FamiliesService.markReminderAsSent(
             invitationId,
             family,
             shouldSaveDate ? dateStr! : undefined,
           );
-          close();
-        });
-      }
+        }
+        close();
+      };
+
+      sendMessage(phone, msg, markSent);
     },
-    [modal, invitationId, sendMessage, close, invitationData],
+    [modal, invitationId, sendMessage, close, invitationData, toast],
   );
 
   return { modal, open, close, handleSubmit };
