@@ -1,4 +1,4 @@
-import { BellRing, Info, Unlock, Check, Loader2 } from "lucide-react";
+import { BellRing, Info, Unlock, Check } from "lucide-react";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useState } from "react";
 import Modal from "@/features/shared/components/Modal";
