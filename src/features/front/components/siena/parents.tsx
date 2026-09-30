@@ -100,9 +100,9 @@ export default function ParentsGodFathers({
         containerClassName,
       )}
     >
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0  overflow-hidden pointer-events-none">
         <FlowersBackground1
-          className="w-full h-[65%] absolute top-0"
+          className="w-full h-[60%] absolute top-0"
           color={svgsColor}
         />
         <FlowersBackground1
