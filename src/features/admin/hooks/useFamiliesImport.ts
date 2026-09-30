@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { ImportedFamily } from "@/types";
 import { FamiliesService } from "@/services/familiesService";
 import { useToast } from "@/features/shared/components/Toast";
+import { invalidatePhoneCache } from "@/features/admin/utils/phoneCache";
 
 export function useFamiliesImport(invitationId: string | undefined) {
   const { toast } = useToast();
@@ -14,6 +15,11 @@ export function useFamiliesImport(invitationId: string | undefined) {
       setIsImporting(true);
       try {
         await FamiliesService.batchImportFamilies(invitationId, parsedFamilies);
+        // Una importación bulk puede traer teléfonos nuevos para muchas
+        // familias. Limpiamos el cache completo: no podemos saber cuáles
+        // cambiaron sin releer todo, y la próxima apertura de modal va a
+        // repoblar con los valores frescos.
+        invalidatePhoneCache();
         toast(
           `${parsedFamilies.length} familia${parsedFamilies.length === 1 ? "" : "s"} importadas exitosamente.`,
           "success",

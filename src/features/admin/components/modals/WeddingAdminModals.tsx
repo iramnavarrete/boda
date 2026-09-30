@@ -56,6 +56,8 @@ export const WeddingAdminModals = memo(function WeddingAdminModals() {
         familyName={whatsapp.modal.family?.nombre ?? ""}
         onClose={whatsapp.close}
         onConfirm={whatsapp.handleSubmit}
+        loadingPhone={whatsapp.modal.loadingPhone}
+        phoneError={whatsapp.modal.phoneError}
       />
 
       <UnlockChangesModal

@@ -3,6 +3,7 @@ import { useToast } from "@/features/shared/components/Toast";
 import { exportFamiliesToExcel } from "@/services/excelService";
 import { SeatingService } from "@/features/admin/seating/services/seatingService";
 import { Family, FamilyFormData } from "@/types";
+import { invalidatePhoneCache } from "@/features/admin/utils/phoneCache";
 
 export function useFamilyActions(invitationId?: string) {
   const { toast } = useToast();
@@ -31,6 +32,13 @@ export function useFamilyActions(invitationId?: string) {
         formData,
         !currentFamily,
       );
+
+      // Si el teléfono cambió, invalidamos el cache para que la próxima
+      // vez que se abra el modal de WhatsApp se vuelva a leer de Firestore
+      // en lugar de usar el teléfono viejo.
+      if (formData.telefono !== undefined) {
+        invalidatePhoneCache(familyId);
+      }
 
       toast(
         currentFamily

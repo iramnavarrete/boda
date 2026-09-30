@@ -2,7 +2,6 @@ import CheersIcon from "@/icons/cheers-icon";
 import { motion } from "framer-motion";
 import ChurchIcon from "@/icons/church-icon";
 import BeigeWaves from "@/icons/beige-waves";
-import FlowersBackground2 from "@/icons/flowers-background-2";
 import {
   churchSequence,
   glassesSequence,
@@ -20,6 +19,11 @@ import EditorialTimeline, {
   GraphicTimelineItem,
   TimelineStyleConfig,
 } from "./EditorialTimeline";
+import FlowersBackground1 from "@/icons/flowers-background-1";
+import Botanic1 from "@/icons/botanic/botanic1";
+import Botanic2 from "@/icons/botanic/botanic2";
+import Botanic3 from "@/icons/botanic/botanic3";
+import Botanic4 from "@/icons/botanic/botanic4";
 
 type Props = {
   containerClassName?: string;
@@ -130,13 +134,6 @@ export default function CeremonyToast({
         )}
       >
         <div className="px-5 relative min-h-screen">
-          {showFlowersBg && (
-            <FlowersBackground2
-              className="absolute h-[70%] 2xl:h-[95%] w-full left-0 top-12 z-0 opacity-80"
-              color={svgsColor}
-            />
-          )}
-
           <div
             className={cn(
               "px-4 py-24 flex flex-col relative z-10",
@@ -144,6 +141,30 @@ export default function CeremonyToast({
             )}
             style={{ gap: gapBetweenElements }}
           >
+            {showFlowersBg && (
+              <div className="opacity-15 z-0">
+                <Botanic1
+                  className="absolute h-48 w-auto -left-20 top-12 rotate-[25deg]"
+                  color={svgsColor}
+                />
+                <Botanic3
+                  className="absolute h-56 w-auto -right-28 top-60 -rotate-[25deg]"
+                  color={svgsColor}
+                />
+                <Botanic2
+                  className="absolute h-48 w-auto -left-20 top-[38%] rotate-[25deg]"
+                  color={svgsColor}
+                />
+                <Botanic4
+                  className="absolute h-56 w-auto -right-44 top-[35%] -rotate-[25deg]"
+                  color={svgsColor}
+                />
+                <Botanic3
+                  className="absolute h-56 w-auto -right-32 top-[55%] -rotate-[45deg]"
+                  color={svgsColor}
+                />
+              </div>
+            )}
             {/* EVENTO CEREMONIA */}
             <EditorialEvent
               imageSrc={ceremonyImage}

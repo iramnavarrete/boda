@@ -5,7 +5,6 @@ import { motion, animate, useInView, AnimationSequence } from "framer-motion";
 import ChurchIcon from "@/icons/church-icon";
 import DressCodeIcon from "@/icons/church-icon copy";
 import BeigeWaves from "@/icons/beige-waves";
-import FlowersBackground2 from "@/icons/flowers-background-2";
 import {
   churchSequence,
   glassesSequence,
@@ -13,6 +12,7 @@ import {
 import { useInvitationStore } from "../../stores/invitationStore";
 import { formatTo12Hour } from "@/utils/formatters";
 import { cn } from "@heroui/theme";
+import FlowersBackground1 from "@/icons/flowers-background-1";
 
 interface CardEventProps {
   time: string;
@@ -177,7 +177,7 @@ export default function CeremonyToast({
         )}
       >
         <div className="px-5 relative">
-          <FlowersBackground2
+          <FlowersBackground1
             className="absolute h-[70%] 2xl:h-[95%] w-full left-0 top-12 z-0"
             color={svgsColor}
           />
