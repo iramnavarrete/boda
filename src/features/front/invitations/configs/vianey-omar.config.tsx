@@ -25,8 +25,12 @@ const vianeyOmarConfig: InvitationConfig = {
       { time: "9:00 PM", title: "Bienvenida", iconKey: "recepcion" },
       { time: "9:15 PM", title: "Vals y primer baile", iconKey: "vals" },
       { time: "09:30 PM", title: "Desarrollo de la fiesta", iconKey: "baile" },
-      { time: "11:00 PM", title: "Trasnochados", iconKey: "banquete" },
-      { time: "12:00 PM", title: "Brindis y corte de pastel", iconKey: "cocktails" },
+      { time: "11:00 PM", title: "Trasnochados", iconKey: "maruchanElotes" },
+      {
+        time: "12:00 PM",
+        title: "Brindis y corte de pastel",
+        iconKey: "cocktails",
+      },
       {
         time: "12:30 PM",
         title: "Lanzamiento de ramo y liga",
@@ -137,9 +141,9 @@ const vianeyOmarConfig: InvitationConfig = {
       svgsColor: "#58624F",
       forbiddenColors: [
         { hex: "#FFFFFF", name: "Blanco / Marfil" },
-        { hex: "#78866B", name: "Verde Salvia" },
-        { hex: "#556B2F", name: "Verde Olivo" },
-        { hex: "#1E4D2B", name: "Verdes en general" },
+        { hex: "#616d45", name: "Verde Militar" },
+        { hex: "#78875e", name: "Verde Olivo" },
+        { hex: "#8ea579", name: "Verde Salvia" },
       ],
       ceremonyImage: "/img/templo/sagrado-corazon.png",
       receptionImage: "/img/salon/quinta-aurora.jpg",
@@ -154,7 +158,7 @@ const vianeyOmarConfig: InvitationConfig = {
         title: "Caballeros",
         subtitle: "Traje formal / Vaquero",
         description:
-          "Traje formal con camisa de vestir, corbata o moño y zapatos de vestir, o si así lo decide un estilo vaquero elegante que esté a la altura de la celebración. Se sugiere evitar prendas de estilo casual. Evita el uso de telas de mezclilla",
+          "Traje formal con camisa de vestir, corbata o moño y zapatos de vestir, o si así lo decide un estilo vaquero elegante que esté a la altura de la celebración. Se sugiere evitar prendas de estilo casual. Evita el uso de telas de mezclilla.",
       },
       bothRestrictions:
         "Agradecemos su comprensión y apoyo respetando el código de vestimenta requerido por el salón.",
@@ -205,14 +209,14 @@ const vianeyOmarConfig: InvitationConfig = {
           alt: "Imagen de la galería 5",
           thumb: "/img/vianey-omar/gallery/thumbs/g5.webp",
           msrc: "/img/vianey-omar/gallery/thumbs/g5.webp",
-          objectPosition: "50% 70%"
+          objectPosition: "50% 70%",
         },
         {
           src: "/img/vianey-omar/gallery/g8.webp",
           alt: "Imagen de la galería 8",
           thumb: "/img/vianey-omar/gallery/thumbs/g8.webp",
           msrc: "/img/vianey-omar/gallery/thumbs/g8.webp",
-          objectPosition: "50% 85%"
+          objectPosition: "50% 85%",
         },
       ],
       carouselHeight: 230,

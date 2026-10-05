@@ -24,6 +24,7 @@ import BaileIcon from "@/icons/timeline/baile";
 import DespedidaIcon from "@/icons/timeline/despedida";
 import CocktailsIcon from "@/icons/timeline/cocktails";
 import RamoIcon from "@/icons/timeline/ramo";
+import MaruchanElotes from "@/icons/timeline/maruchan-elotes";
 
 // Mapa de íconos disponibles vinculados a tus componentes
 const iconDictionary: Record<string, React.ElementType> = {
@@ -35,7 +36,8 @@ const iconDictionary: Record<string, React.ElementType> = {
   baile: BaileIcon,
   despedida: DespedidaIcon,
   cocktails: CocktailsIcon,
-  ramo: RamoIcon
+  ramo: RamoIcon,
+  maruchanElotes: MaruchanElotes
 };
 
 // ============================================================================
