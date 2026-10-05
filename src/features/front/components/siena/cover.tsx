@@ -240,15 +240,29 @@ export default function Cover({
             <div className="h-full w-full flex flex-col justify-start">
               <div
                 className={cn(
-                  "relative flex flex-col w-full drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)] transition-all duration-[1500ms] ease-in-out transform-gpu",
+                  "relative flex flex-col w-full drop-shadow-[4px_2px_1px_rgba(0,0,0,0.25)]",
                   customTitleComponent ? "py-12" : "pt-12",
                   textAlign === "right" && "items-end pr-6 text-right",
                   textAlign === "left" && "items-start pl-6 text-left",
                   textAlign === "center" && "items-center px-6 text-center",
-                  titlePos === "top" ? "translate-y-0" : "",
-                  titlePos === "center" ? "translate-y-[40%]" : "",
-                  titlePos === "bottom" ? "translate-y-[80%]" : "",
                 )}
+                style={{
+                  // FIX SAFARI: en lugar de `translate-y-[X%]` de Tailwind
+                  // (que se compila a un `transform` composite con
+                  // rotate/scale/skew vía CSS variables y rompe la
+                  // interpolación en Safari → brincos en Y), usamos
+                  // un `transform` simple inline. Combinado con
+                  // `transition-transform` (en lugar de `transition-all`)
+                  // y `willChange: "transform"`, el cambio entre las
+                  // 3 posiciones (top/center/bottom) interpola
+                  // suavemente en Safari, Chrome y Firefox.
+                  transform: `translate3d(0, ${
+                    titlePos === "center" ? 40 : titlePos === "bottom" ? 80 : 0
+                  }%, 0)`,
+                  transition:
+                    "transform 1500ms ease-in-out, opacity 1500ms ease-in-out",
+                  willChange: "transform",
+                }}
               >
                 {customTitleComponent ? (
                   !isSealVisible && (
