@@ -11,6 +11,7 @@ import Image from "next/image";
 import { cn } from "@heroui/theme";
 import Music from "../sections/music";
 import { useFamilyContext } from "../FamilyContext";
+import SwipeUpGesture from "@/icons/swipe-up-gesture";
 
 type ImageConfig = {
   src: string;
@@ -158,7 +159,7 @@ export default function Cover({
       <style>{`
         @keyframes smoothBounce {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
+          50% { transform: translateY(-3px); }
         }
         .animate-smooth-bounce {
           animation: smoothBounce 1.6s ease-in-out infinite;
@@ -314,7 +315,7 @@ export default function Cover({
 
           <div
             className={cn(
-              "absolute bottom-11 left-0 right-0 w-full flex justify-center pointer-events-none transition-all duration-1000 ease-out",
+              "absolute bottom-6 left-0 right-0 w-full flex justify-center pointer-events-none transition-all duration-1000 ease-out",
               isSealVisible
                 ? "opacity-0 translate-y-10"
                 : "opacity-100 translate-y-0",
@@ -327,27 +328,14 @@ export default function Cover({
           >
             <div
               className={cn(
-                "flex flex-col items-center gap-1 text-white drop-shadow-[2px_4px_2px_rgba(0,0,0,0.25)]",
+                "flex flex-col text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.45)]",
                 isSealVisible ? "" : "animate-smooth-bounce",
               )}
             >
               <span className="text-[9px] uppercase tracking-[0.3em] font-nourdMedium opacity-90 drop-shadow-md">
                 Desliza
               </span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="opacity-90"
-              >
-                <path d="m6 9 6 6 6-6" />
-              </svg>
+              <SwipeUpGesture />
             </div>
           </div>
         </div>
