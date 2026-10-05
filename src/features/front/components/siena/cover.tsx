@@ -166,26 +166,15 @@ export default function Cover({
           animation-delay: 3.2s;
         }
 
-        /* 🔥 Keyframes únicos por imagen con valores hardcodeados.
-            Esto soluciona el bug de Safari: no interpola var() dentro
-            de @keyframes, así que inyectamos un @keyframes específico
-            por slide con sus panStart/panEnd ya "horneados". */
-        ${imagesConfig
-          .map((img, i) => {
-            const [startX, startY] = parsePosXY(
-              img.panStart || img.style?.backgroundPosition || "50%",
-            );
-            const [endX, endY] = parsePosXY(
-              img.panEnd || img.panStart || img.style?.backgroundPosition || "50%",
-            );
-            return `
-              @keyframes dynamicPan_${i} {
-                0%   { transform: translate3d(-${startX}%, -${startY}%, 0); }
-                100% { transform: translate3d(-${endX}%, -${endY}%, 0); }
-              }
-            `;
-          })
-          .join("\n")}
+        /* 🔥 Keyframe dinámico impulsado por variables CSS */
+        @keyframes dynamicPanAnimation {
+          0% {
+            transform: translate3d(var(--pan-start-x), var(--pan-start-y), 0);
+          }
+          100% {
+            transform: translate3d(var(--pan-end-x), var(--pan-end-y), 0);
+          }
+        }
       `}</style>
 
       <div className="relative w-full h-[95svh] bg-black">
@@ -194,13 +183,9 @@ export default function Cover({
             {imagesConfig.map((img, i) => {
               const isViewing = !isSealVisible && activeIndex === i;
 
-              // Solo necesitamos las coordenadas finales aquí — el @keyframes
-              // dinámico generado arriba ya tiene los valores de panStart
-              // horneados en sus keyframes 0%/100%.
-              const [, , endX, endY] = [
-                ...parsePosXY(img.panStart || img.style?.backgroundPosition || "50%"),
-                ...parsePosXY(img.panEnd || img.panStart || img.style?.backgroundPosition || "50%"),
-              ];
+              // Extraemos las coordenadas de tus props panStart y panEnd
+              const [startX, startY] = parsePosXY(img.panStart || img.style?.backgroundPosition || "50%");
+              const [endX, endY] = parsePosXY(img.panEnd || img.panStart || img.style?.backgroundPosition || "50%");
 
               return (
                 <div
@@ -220,19 +205,17 @@ export default function Cover({
                     quality={90}
                     className="h-full w-auto max-w-none absolute top-1/2 left-1/2 transform-gpu will-change-transform"
                     style={{
-                      // Posición final (panEnd) — cuando la slide no está activa
-                      // se queda "congelada" en su destino para que la entrada
-                      // de la siguiente (con opacity) se vea natural.
-                      transform: `translate3d(-${endX}%, -${endY}%, 0)`,
-                      // Cada slide usa su propio @keyframes con valores
-                      // hardcodeados (evita el bug de Safari con var()
-                      // dentro de @keyframes).
-                      animation: isViewing
-                        ? `dynamicPan_${i} ${slideDuration}ms linear forwards`
-                        : "none",
+                      // Usamos variables CSS para alimentar la animación sin recalcular con JS
+                      "--pan-start-x": `-${startX}%`,
+                      "--pan-start-y": `-${startY}%`,
+                      "--pan-end-x": `-${endX}%`,
+                      "--pan-end-y": `-${endY}%`,
+                      // Mientras está activa corre la animación; cuando se desvanece mantiene la posición final (panEnd)
+                      transform: `translate3d(var(--pan-end-x), var(--pan-end-y), 0)`,
+                      animation: isViewing ? `dynamicPanAnimation ${slideDuration}ms linear forwards` : "none",
                       backfaceVisibility: "hidden",
                       WebkitBackfaceVisibility: "hidden",
-                    }}
+                    } as React.CSSProperties}
                   />
                 </div>
               );
