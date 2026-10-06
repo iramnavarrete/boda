@@ -179,10 +179,10 @@ export default function CeremonyToast({
                   : undefined
               }
               sequence={!ceremonyImage ? churchSequence : undefined}
-              address={invitationData?.ceremonia.direccion || ""}
-              link={invitationData?.ceremonia.enlaceMaps || "#"}
-              place={invitationData?.ceremonia.nombreTemplo || ""}
-              time={invitationData?.ceremonia.hora || ""}
+              address={invitationData?.ceremonia?.direccion || ""}
+              link={invitationData?.ceremonia?.enlaceMaps || "#"}
+              place={invitationData?.ceremonia?.nombreTemplo || ""}
+              time={invitationData?.ceremonia?.hora || ""}
               title="Ceremonia"
               textClassName={textClassName}
               typeEvent="Misa"
@@ -202,10 +202,10 @@ export default function CeremonyToast({
                   : undefined
               }
               sequence={!receptionImage ? glassesSequence : undefined}
-              address={invitationData?.recepcion.direccion || ""}
-              link={invitationData?.recepcion.enlaceMaps || "#"}
-              place={invitationData?.recepcion.nombreSalon || ""}
-              time={invitationData?.recepcion.hora || ""}
+              address={invitationData?.recepcion?.direccion || ""}
+              link={invitationData?.recepcion?.enlaceMaps || "#"}
+              place={invitationData?.recepcion?.nombreSalon || ""}
+              time={invitationData?.recepcion?.hora || ""}
               title="Recepción"
               textClassName={textClassName}
               typeEvent="Fiesta"

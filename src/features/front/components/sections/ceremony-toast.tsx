@@ -190,10 +190,10 @@ export default function CeremonyToast({
                 />
               )}
               sequence={churchSequence}
-              address={invitationData?.ceremonia.direccion || ""}
-              link={invitationData?.ceremonia.enlaceMaps || "#"}
-              place={invitationData?.ceremonia.nombreTemplo || ""}
-              time={invitationData?.ceremonia.hora || ""}
+              address={invitationData?.ceremonia?.direccion || ""}
+              link={invitationData?.ceremonia?.enlaceMaps || "#"}
+              place={invitationData?.ceremonia?.nombreTemplo || ""}
+              time={invitationData?.ceremonia?.hora || ""}
               title="Ceremonia"
               textClassName={textClassName}
               mapBtnClassName={mapBtnClassName}
@@ -206,10 +206,10 @@ export default function CeremonyToast({
                 />
               )}
               sequence={glassesSequence}
-              address={invitationData?.recepcion.direccion || ""}
-              link={invitationData?.recepcion.enlaceMaps || "#"}
-              place={invitationData?.recepcion.nombreSalon || ""}
-              time={invitationData?.recepcion.hora || ""}
+              address={invitationData?.recepcion?.direccion || ""}
+              link={invitationData?.recepcion?.enlaceMaps || "#"}
+              place={invitationData?.recepcion?.nombreSalon || ""}
+              time={invitationData?.recepcion?.hora || ""}
               title="Recepción"
               textClassName={textClassName}
               mapBtnClassName={mapBtnClassName}
