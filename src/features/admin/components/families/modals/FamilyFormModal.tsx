@@ -15,9 +15,8 @@ import Modal from "@/features/shared/components/Modal";
 import { cn } from "@heroui/theme";
 import { FamilyFormData } from "@/types";
 import { useFamilyFormModal } from "../../../hooks/useFamilyFormModal";
-
-// Opciones predefinidas de etiquetas
-const TAG_OPTIONS = ["Novia", "Novio", "Ambos"];
+import { useInvitationStore } from "@/features/front/stores/invitationStore";
+import { getEtiquetaOptions } from "@/features/admin/utils/etiquetaPorTipo";
 
 interface FamilyFormModalProps {
   isOpen: boolean;
@@ -36,6 +35,13 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
   isEdit,
   onBackdropPress,
 }) => {
+  // Etiquetas según el tipo de invitación (boda: Novia/Novio/Ambos,
+  // XV Años: Fam. Paterna/Fam. Materna/Amigos/Otros, etc.). El
+  // helper retorna `[{value, label}]`; mostramos `label` y guardamos
+  // `value` canónico en Firestore.
+  const tipo = useInvitationStore((s) => s.invitationData?.tipo);
+  const TAG_OPTIONS = getEtiquetaOptions(tipo);
+
   // Inyectamos nuestro hook personalizado
   const {
     formData,
@@ -241,19 +247,19 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
                   </span>
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {TAG_OPTIONS.map((tag) => (
+                  {TAG_OPTIONS.map(({ value, label }) => (
                     <button
-                      key={tag}
+                      key={value}
                       type="button"
-                      onClick={() => handleTagToggle(tag)}
+                      onClick={() => handleTagToggle(value)}
                       className={cn(
                         "px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border",
-                        formData.etiqueta === tag
+                        formData.etiqueta === value
                           ? "bg-gold border-gold text-white shadow-sm shadow-gold/20"
                           : "bg-white border-sand text-stone-500 hover:border-gold/40 hover:text-charcoal hover:bg-sand-light/50",
                       )}
                     >
-                      {tag}
+                      {label}
                     </button>
                   ))}
                 </div>
