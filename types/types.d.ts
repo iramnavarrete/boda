@@ -276,7 +276,15 @@ export interface WhatsappCounts {
   empty: number;
 }
 
-export type TagFilterType = "all" | "Novia" | "Novio" | "Ambos";
+export type TagFilterType =
+  | "all"
+  | "Novia"
+  | "Novio"
+  | "Ambos"
+  | "Familia Paterna"
+  | "Familia Materna"
+  | "Amigos"
+  | "Otros";
 
 export interface TagCounts {
   all: number;
@@ -290,7 +298,13 @@ export interface ImportedFamily {
   telefono?: string;
   notaAnfitrion?: string;
   ninosPermitidos?: boolean;
-  etiqueta?: "Novio" | "Novia" | "Ambos" | null;
+  /**
+   * Etiqueta canónica. El set concreto aceptado depende del
+   * `invitation.tipo` y se valida en el importador — ver
+   * `etiquetaPorTipo.ts`. Mantener `string` libre para no romper
+   * bodas existentes con "Novia"/"Novio"/"Ambos".
+   */
+  etiqueta?: string | null;
 }
 
 export interface ConfiguracionVisual {
