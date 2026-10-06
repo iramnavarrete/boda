@@ -11,6 +11,7 @@ import SantanderIcon from "@/icons/siena/banks/santander";
 import HsbcIcon from "@/icons/siena/banks/hsbc";
 import NuIcon from "@/icons/siena/banks/nu";
 import LluviaSobres from "@/icons/siena/lluvia-sobres";
+import { useClipboard } from "@/features/front/hooks/useClipboard";
 
 type StoreGift = {
   type: "amazon" | "liverpool" | "other";
@@ -76,7 +77,7 @@ const GiftsTable: FC<Props> = ({
   customQuote,
 }) => {
   const [isCardInfoVisible, setIsCardInfoVisible] = useState(false);
-  const [copiedText, setCopiedText] = useState<string | null>(null);
+  const { copiedText, copy: handleCopy } = useClipboard();
 
   const ref = useRef(null);
   const isInView = useInView(ref);
@@ -86,42 +87,6 @@ const GiftsTable: FC<Props> = ({
       animate(giftSequence);
     }
   }, [isInView]);
-
-  const handleCopy = async (text: string) => {
-    if (navigator.clipboard && window.isSecureContext) {
-      try {
-        await navigator.clipboard.writeText(text);
-        setCopiedText(text);
-        setTimeout(() => setCopiedText(null), 2000);
-        return;
-      } catch (err) {
-        console.warn(
-          "API Clipboard bloqueada, usando método alternativo...",
-          err,
-        );
-      }
-    }
-
-    // Fallback seguro
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    textArea.style.position = "fixed";
-    textArea.style.left = "-999999px";
-    textArea.style.top = "-999999px";
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-
-    try {
-      document.execCommand("copy");
-      setCopiedText(text);
-      setTimeout(() => setCopiedText(null), 2000);
-    } catch (err) {
-      console.error("Fallo al copiar texto", err);
-    }
-
-    document.body.removeChild(textArea);
-  };
 
   // 🔥 Animación base para los íconos (Efecto "Pop" con rebote)
   const iconAnimationProps = {
