@@ -44,6 +44,11 @@ export default function CustomLottie({
   lottieRef,
   options,
   isPaused = false,
+  // Destructuramos `isClickToPauseDisabled` para que NO caiga en
+  // `...rest` y se filtre al DOM a través del `<Lottie>` (es un prop
+  // legacy de lottie-react que ya no aplica pero callers lo siguen
+  // pasando). Aceptamos la prop por backward-compat pero la ignoramos.
+  isClickToPauseDisabled: _isClickToPauseDisabledIgnored,
   eventListeners,
   ...rest // Resto de props
 }: CustomLottieProps) {

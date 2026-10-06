@@ -8,6 +8,7 @@ import mobile from "@/public/lottie/envolpe.json";
 import desktop from "@/public/lottie/envolpeDesktop.json";
 import { cn } from "@heroui/theme";
 import WaxSeal from "@/features/shared/components/WaxSeal";
+import { colorizeLottie } from "@/utils/lottie";
 
 interface EnvelopeSplashProps {
   className?: string;
@@ -17,6 +18,23 @@ interface EnvelopeSplashProps {
     sealColor?: string;
     textColor?: string;
     customSvg?: React.ReactNode;
+    /** SVG opcional para el borde/ornamento circular del sello
+     *  (reemplaza el `SealDecoration` por defecto). */
+    borderSvg?: React.ReactNode;
+  };
+  /**
+   * Colores opcionales para recolorear el sobre.
+   * Si se omite, mantiene los colores originales del Lottie.
+   *
+   *  - `body`: cuerpo del sobre + carta interior (en el JSON, ambos usan
+   *    el mismo color crema claro).
+   *  - `border`: bordes/solapas del sobre.
+   *
+   * Útil para variantes del tema (ej. XV: body verde, border dorado).
+   */
+  envelopeColors?: {
+    body: string;
+    border: string;
   };
 }
 
@@ -24,6 +42,7 @@ export default function EnvelopeSplash({
   className = "",
   onOpen,
   sealConfig,
+  envelopeColors,
 }: EnvelopeSplashProps) {
   const [isSealVisible, setIsSealVisible] = useState(true);
   const [envolpeDivHidden, setEnvolpeDivHidden] = useState(false);
@@ -31,6 +50,17 @@ export default function EnvelopeSplash({
   const [isLottieLoaded, setIsLottieLoaded] = useState(false);
   const [overlayHidden, setOverlayHidden] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // Resolución del JSON final del Lottie. Si `envelopeColors` viene,
+  // aplicamos `colorizeLottie` sobre el JSON importado (mobile o desktop).
+  const baseMobileData = mobile as Parameters<typeof colorizeLottie>[0];
+  const baseDesktopData = desktop as Parameters<typeof colorizeLottie>[0];
+  const mobileAnimationData = envelopeColors
+    ? colorizeLottie(baseMobileData, "envelope", envelopeColors)
+    : baseMobileData;
+  const desktopAnimationData = envelopeColors
+    ? colorizeLottie(baseDesktopData, "envelopeDesktop", envelopeColors)
+    : baseDesktopData;
 
   useEffect(() => {
     const handleResize = () => {
@@ -96,7 +126,7 @@ export default function EnvelopeSplash({
           "absolute inset-0 bg-accent z-[51] transition-opacity duration-500 ease-in-out",
           isLottieLoaded ? "opacity-0" : "opacity-100",
         )}
-        style={{ display: overlayHidden ? "none" : "block" }}
+        style={{ display: overlayHidden ? "none" : "block", backgroundColor: envelopeColors?.body || "#f5efe6 " }}
         onTransitionEnd={() => {
           if (isLottieLoaded) {
             setOverlayHidden(true);
@@ -108,7 +138,7 @@ export default function EnvelopeSplash({
         className="w-full"
         options={{
           loop: false,
-          animationData: isMobile ? mobile : desktop,
+          animationData: isMobile ? mobileAnimationData : desktopAnimationData,
           autoplay: false,
           rendererSettings: {
             preserveAspectRatio: "xMidYMid slice",
@@ -144,6 +174,7 @@ export default function EnvelopeSplash({
           textColor={sealConfig?.textColor}
           sealColor={sealConfig?.sealColor}
           customSvg={sealConfig?.customSvg}
+          borderSvg={sealConfig?.borderSvg}
         />
       </div>
     </div>
