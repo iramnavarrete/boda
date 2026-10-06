@@ -86,12 +86,34 @@ const TicketCard: FC<StateCardProps> = ({
         backgroundColor: null,
       });
 
-      const dataUrl = canvas.toDataURL("image/png");
+      // Convertir a Blob en vez de dataURL. Safari tiene un límite
+      // histórico de longitud para href de `<a>` (data URLs >2MB fallan);
+      // los Blob URLs no tienen ese límite. Chrome funciona con ambos.
+      const blob: Blob | null = await new Promise((resolve) =>
+        canvas.toBlob((b) => resolve(b), "image/png"),
+      );
+      if (!blob) throw new Error("No se pudo convertir el canvas a Blob");
+
+      // Blob URL temporal — hay que revocarlo después para no leakear memoria.
+      const objectUrl = URL.createObjectURL(blob);
+      const safeName = familyData.nombre.replace(/\s+/g, "-");
+      const fileName = `Pase-${safeName}.png`;
 
       const link = document.createElement("a");
-      link.download = `Pase-${familyData.nombre.replace(/\s+/g, "-")}.png`;
-      link.href = dataUrl;
+      link.href = objectUrl;
+      link.download = fileName;
+      link.style.display = "none";
+      // Safari requiere que el `<a>` esté en el DOM (aunque sea
+      // invisible) para que `click()` dispare la descarga. Chrome
+      // es más permisivo pero appendar es safe para ambos.
+      document.body.appendChild(link);
       link.click();
+      // Cleanup en el siguiente tick para que Safari tenga tiempo de
+      // procesar la descarga antes de remover el link.
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(objectUrl);
+      }, 0);
 
       toast("¡Pase descargado con éxito!", "success");
     } catch (err) {
