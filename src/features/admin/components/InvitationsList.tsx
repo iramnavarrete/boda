@@ -16,7 +16,7 @@ import Loader from "@/features/front/components/Loader";
 import Image from "next/image";
 import { useCountdown } from "@/features/front/hooks/useCountDown";
 import Link from "next/link";
-import { formatTimeStamp } from "@/utils/formatters";
+import { formatTimeStamp, getEventTypeName } from "@/utils/formatters";
 import { Invitation } from "@/types";
 import CreateInvitationModal from "./CreateInvitationModal";
 
@@ -76,7 +76,7 @@ const InvitationCard = ({
         <div>
           <p className="text-[10px] font-bold text-[#C5A669] uppercase tracking-widest mb-1.5 flex items-center gap-2">
             <span className="w-6 h-[1px] bg-[#C5A669]/50"></span>
-            {invitation.tipo}
+            {getEventTypeName(invitation.tipo)}
           </p>
           <h3 className="font-serif text-2xl text-[#2C2C29] leading-tight group-hover:text-[#C5A669] transition-colors duration-300">
             {invitation.nombre}

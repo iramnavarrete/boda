@@ -11,9 +11,11 @@ import {
   MessageCircle,
   BellRing,
   Info,
+  Crown,
+  MessageSquare,
 } from "lucide-react";
 import Modal from "@/features/shared/components/Modal";
-import { EventType, Invitation, Modify } from "@/types";
+import { EventType, EventLocation, Invitation, Modify, Padrinos, Padres, Quinceanera } from "@/types";
 import { InvitationsService } from "@/services/invitationsService";
 import { Timestamp } from "firebase/firestore";
 
@@ -21,6 +23,23 @@ type FormDataState = Modify<
   Invitation,
   {
     fecha: string;
+    // Reforzamos como requeridos en el form (el initialState los define
+    // siempre, aunque Invitation los marque opcionales). Esto le da a
+    // TS un shape estable para `handleNestedChange<"padresQuinceanera", ...>`
+    // y `handleNestedChange<"quinceanera", ...>`.
+    padresQuinceanera: Padres;
+    quinceanera: Quinceanera;
+    padrinos: Padrinos;
+    rsvpPhone: string;
+    rsvpDeadline: string;
+    // `ceremonia` y `recepcion` son opcionales en `Invitation` (pueden
+    // omitirse del payload si están vacíos), pero el form SIEMPRE los
+    // mantiene inicializados como objetos vacíos. Reforzamos como
+    // requeridos aquí para que los inputs y `handleNestedChange`
+    // encuentren el shape estable, sin perder la opcionalidad a nivel
+    // payload (controlada por `hasAnyEventValue`).
+    ceremonia: EventLocation;
+    recepcion: EventLocation;
   }
 >;
 
@@ -30,6 +49,34 @@ interface CreateInvitationModalProps {
   onSuccess?: () => void;
   invitationToEdit?: Invitation | null;
 }
+
+/**
+ * Indica si un objeto `EventLocation` tiene AL MENOS UN sub-campo con
+ * valor truthy. Se usa para decidir si incluir `ceremonia` / `recepcion`
+ * en el payload de Firestore — si TODOS los campos están vacíos,
+ * omitimos el bloque entero en lugar de guardar un objeto `{}`.
+ *
+ * Acepta `EventLocation | undefined` para tolerar el caso donde el
+ * sub-objeto aún no haya sido inicializado en el form.
+ */
+const hasAnyEventValue = (
+  event?: {
+    nombreTemplo?: string;
+    nombreSalon?: string;
+    hora?: string;
+    direccion?: string;
+    enlaceMaps?: string;
+  },
+): boolean => {
+  if (!event) return false;
+  return Boolean(
+    event.nombreTemplo ||
+      event.nombreSalon ||
+      event.hora ||
+      event.direccion ||
+      event.enlaceMaps,
+  );
+};
 
 const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
   isOpen,
@@ -73,6 +120,12 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
     },
     mensajeInicial: "",
     mensajeRecordatorio: "",
+    // ─── XV Años (defaults vacíos) ──────────────────────────────────────
+    padresQuinceanera: { mama: "", papa: "" },
+    padrinos: { nombre1: "", nombre2: "" },
+    quinceanera: { monograma: "" },
+    rsvpPhone: "",
+    rsvpDeadline: "",
   };
 
   const [formData, setFormData] = useState<FormDataState>(initialState);
@@ -104,6 +157,15 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
           initialState.configuracionVisual,
         mensajeInicial: invitationToEdit.mensajeInicial || "",
         mensajeRecordatorio: invitationToEdit.mensajeRecordatorio || "",
+        // ─── XV Años ──────────────────────────────────────────────────
+        padresQuinceanera: invitationToEdit.padresQuinceanera || {
+          mama: "",
+          papa: "",
+        },
+        padrinos: invitationToEdit.padrinos || { nombre1: "", nombre2: "" },
+        quinceanera: invitationToEdit.quinceanera || { monograma: "" },
+        rsvpPhone: invitationToEdit.rsvpPhone || "",
+        rsvpDeadline: invitationToEdit.rsvpDeadline || "",
       });
     } else if (!isOpen) {
       setFormData(initialState);
@@ -127,11 +189,24 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
         imagenPortada: formData.imagenPortada,
         padresNovia: formData.padresNovia,
         padresNovio: formData.padresNovio,
-        ceremonia: formData.ceremonia,
-        recepcion: formData.recepcion,
+        // `ceremonia` y `recepcion` son opcionales en el tipo. Sólo los
+        // incluimos si el admin llenó AL MENOS un sub-campo — así no
+        // guardamos objetos vacíos en Firestore.
+        ...(hasAnyEventValue(formData.ceremonia) && {
+          ceremonia: formData.ceremonia,
+        }),
+        ...(hasAnyEventValue(formData.recepcion) && {
+          recepcion: formData.recepcion,
+        }),
         configuracionVisual: formData.configuracionVisual,
         mensajeInicial: formData.mensajeInicial || "",
         mensajeRecordatorio: formData.mensajeRecordatorio || "",
+        // ─── XV Años ──────────────────────────────────────────────────
+        padresQuinceanera: formData.padresQuinceanera,
+        padrinos: formData.padrinos,
+        quinceanera: formData.quinceanera,
+        rsvpPhone: formData.rsvpPhone || "",
+        rsvpDeadline: formData.rsvpDeadline || "",
       };
 
       if (invitationToEdit?.id) {
@@ -161,7 +236,13 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
   };
 
   const handleNestedChange = <
-    P extends "ceremonia" | "recepcion" | "padresNovia" | "padresNovio",
+    P extends
+      | "ceremonia"
+      | "recepcion"
+      | "padresNovia"
+      | "padresNovio"
+      | "padresQuinceanera"
+      | "quinceanera",
     K extends keyof FormDataState[P],
   >(
     parent: P,
@@ -171,6 +252,13 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
     setFormData((prev) => ({
       ...prev,
       [parent]: { ...prev[parent], [field]: value },
+    }));
+  };
+
+  const handlePadrinosChange = (field: keyof Padrinos, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      padrinos: { ...(prev.padrinos || { nombre1: "", nombre2: "" }), [field]: value },
     }));
   };
 
@@ -581,7 +669,7 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
 
             {/* COLUMNA DERECHA */}
             <div className="space-y-8">
-              {/* PADRES DE LOS NOVIOS (Mantenido intacto) */}
+              {/* PADRES — BODA */}
               {formData.tipo === "boda" && (
                 <section className="space-y-5 bg-white p-6 rounded-[20px] border border-sand-200 shadow-sm">
                   <h4 className="font-serif text-gold-500 text-lg border-b border-sand-200 pb-2 flex items-center gap-2">
@@ -676,6 +764,156 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
                 </section>
               )}
 
+              {/* PAPÁS DE LA QUINCEAÑERA — XV */}
+              {formData.tipo === "xv_anos" && (
+                <section className="space-y-5 bg-white p-6 rounded-[20px] border border-sand-200 shadow-sm">
+                  <h4 className="font-serif text-gold-500 text-lg border-b border-sand-200 pb-2 flex items-center gap-2">
+                    <Crown size={18} /> Papás de la Quinceañera
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#5A5A5A] uppercase mb-1">
+                        Mamá
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 rounded-lg border border-sand-200 bg-[#FDFBF7] outline-none"
+                        value={formData.padresQuinceanera?.mama || ""}
+                        onChange={(e) =>
+                          handleNestedChange(
+                            "padresQuinceanera",
+                            "mama",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#5A5A5A] uppercase mb-1">
+                        Papá
+                      </label>
+                      <input
+                        type="text"
+                        className="w-full px-3 py-2 rounded-lg border border-sand-200 bg-[#FDFBF7] outline-none"
+                        value={formData.padresQuinceanera?.papa || ""}
+                        onChange={(e) =>
+                          handleNestedChange(
+                            "padresQuinceanera",
+                            "papa",
+                            e.target.value,
+                          )
+                        }
+                      />
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* PADRINOS — XV */}
+              {formData.tipo === "xv_anos" && (
+                <section className="space-y-5 bg-white p-6 rounded-[20px] border border-sand-200 shadow-sm">
+                  <h4 className="font-serif text-gold-500 text-lg border-b border-sand-200 pb-2 flex items-center gap-2">
+                    <Heart size={18} /> Padrinos
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#5A5A5A] uppercase mb-1">
+                        Padrino 1
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Nombre completo"
+                        className="w-full px-3 py-2 rounded-lg border border-sand-200 bg-[#FDFBF7] outline-none"
+                        value={formData.padrinos?.nombre1 || ""}
+                        onChange={(e) =>
+                          handlePadrinosChange("nombre1", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#5A5A5A] uppercase mb-1">
+                        Padrino 2
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Nombre completo"
+                        className="w-full px-3 py-2 rounded-lg border border-sand-200 bg-[#FDFBF7] outline-none"
+                        value={formData.padrinos?.nombre2 || ""}
+                        onChange={(e) =>
+                          handlePadrinosChange("nombre2", e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* DATOS DE LA QUINCEAÑERA — XV */}
+              {formData.tipo === "xv_anos" && (
+                <section className="space-y-5 bg-white p-6 rounded-[20px] border border-sand-200 shadow-sm">
+                  <h4 className="font-serif text-gold-500 text-lg border-b border-sand-200 pb-2 flex items-center gap-2">
+                    <Crown size={18} /> Datos de la Quinceañera
+                  </h4>
+                  <div>
+                    <label className="block text-[10px] font-bold text-[#5A5A5A] uppercase mb-1">
+                      Monograma (inicial para sello / monograma)
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={2}
+                      placeholder="S"
+                      className="w-full px-3 py-2 rounded-lg border border-sand-200 bg-[#FDFBF7] outline-none uppercase tracking-widest"
+                      value={formData.quinceanera?.monograma || ""}
+                      onChange={(e) =>
+                        handleNestedChange(
+                          "quinceanera",
+                          "monograma",
+                          e.target.value.toUpperCase().slice(0, 2),
+                        )
+                      }
+                    />
+                  </div>
+                </section>
+              )}
+
+              {/* WHATSAPP & RSVP — XV */}
+              {formData.tipo === "xv_anos" && (
+                <section className="space-y-5 bg-white p-6 rounded-[20px] border border-sand-200 shadow-sm">
+                  <h4 className="font-serif text-gold-500 text-lg border-b border-sand-200 pb-2 flex items-center gap-2">
+                    <MessageSquare size={18} /> WhatsApp &amp; RSVP
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#5A5A5A] uppercase mb-1">
+                        WhatsApp (con lada, sin +)
+                      </label>
+                      <input
+                        type="tel"
+                        placeholder="5214490000000"
+                        className="w-full px-3 py-2 rounded-lg border border-sand-200 bg-[#FDFBF7] outline-none"
+                        value={formData.rsvpPhone || ""}
+                        onChange={(e) =>
+                          handleChange("rsvpPhone", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#5A5A5A] uppercase mb-1">
+                        Fecha Límite
+                      </label>
+                      <input
+                        type="date"
+                        className="w-full px-3 py-2 rounded-lg border border-sand-200 bg-[#FDFBF7] outline-none"
+                        value={formData.rsvpDeadline || ""}
+                        onChange={(e) =>
+                          handleChange("rsvpDeadline", e.target.value)
+                        }
+                      />
+                    </div>
+                  </div>
+                </section>
+              )}
+
               {/* CEREMONIA */}
               <section className="space-y-5 bg-white p-6 rounded-[20px] border border-sand-200 shadow-sm">
                 <h4 className="font-serif text-gold-500 text-lg border-b border-sand-200 pb-2 flex items-center gap-2">
@@ -739,7 +977,6 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
                     </label>
                     <input
                       type="time"
-                      required
                       className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-[#FDFBF7] outline-none"
                       value={formData.ceremonia.hora}
                       onChange={(e) =>
@@ -813,7 +1050,6 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
                     </label>
                     <input
                       type="time"
-                      required
                       className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-[#FDFBF7] outline-none"
                       value={formData.recepcion.hora}
                       onChange={(e) =>
