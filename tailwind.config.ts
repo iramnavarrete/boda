@@ -31,6 +31,10 @@ const config: Config = {
         pinyonScript: ["var(--font-pinyon-script)"],
         tangerine: ["var(--font-tangerine)"],
         tangerineBold: ["var(--font-tangerine-bold)"],
+        // ─── XV Años (Emerald & Gold Luxury) ─────────────────────────────
+        cormorant: ["var(--font-cormorant)", "serif"],
+        cinzel: ["var(--font-cinzel)", "serif"],
+        montserrat: ["var(--font-montserrat)", "sans-serif"],
       },
       colors: {
         primary: {
@@ -115,10 +119,43 @@ const config: Config = {
         },
         paper: "#F9F7F2",
         "stone-custom": "#5A5A5A",
+        // ─── XV Años — Emerald palette (gold ya existe arriba) ───────────
+        forest: {
+          950: "#06130e",
+          900: "#0a1c15",
+          850: "#0f241d",
+          800: "#142d24",
+          700: "#1a382d",
+          600: "#23493b",
+        },
+        // ─── XV Años — Tokens semánticos (theme-aware via CSS vars).
+        // Usan el placeholder `<alpha-value>` de Tailwind para que
+        // `bg-xv-accent-soft/40` funcione correctamente con CSS vars. ─────
+        "xv-bg": {
+          deepest: "rgb(var(--xv-bg-deepest) / <alpha-value>)",
+          deep: "rgb(var(--xv-bg-deep) / <alpha-value>)",
+          mid: "rgb(var(--xv-bg-mid) / <alpha-value>)",
+          "mid-soft": "rgb(var(--xv-bg-mid-soft) / <alpha-value>)",
+          "card-from": "rgb(var(--xv-bg-card-from) / <alpha-value>)",
+          "card-to": "rgb(var(--xv-bg-card-to) / <alpha-value>)",
+        },
+        "xv-accent": {
+          primary: "rgb(var(--xv-accent-primary) / <alpha-value>)",
+          soft: "rgb(var(--xv-accent-soft) / <alpha-value>)",
+          text: "rgb(var(--xv-accent-text) / <alpha-value>)",
+          muted: "rgb(var(--xv-accent-muted) / <alpha-value>)",
+          light: "rgb(var(--xv-accent-light) / <alpha-value>)",
+          dark: "rgb(var(--xv-accent-dark) / <alpha-value>)",
+        },
+        "xv-border": {
+          soft: "var(--xv-border-soft)",
+          medium: "var(--xv-border-medium)",
+        },
       },
       backgroundImage: {
         main: 'url("/img/principal.jpg")',
         countdown: 'url("/img/countdown.webp")',
+        enchantedForest: 'url("/img/xv/esmerald/bosque.png")',
       },
     },
   },
