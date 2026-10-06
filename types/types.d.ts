@@ -104,6 +104,47 @@ interface Padres {
   papa: string;
 }
 
+/**
+ * Padrinos de la quinceañera. Solo se usa cuando `tipo === "xv_anos"`.
+ * En el admin modal se renderiza con dos campos de texto independientes.
+ */
+export interface Padrinos {
+  nombre1: string;
+  nombre2: string;
+}
+
+/**
+ * Datos específicos de la quinceañera. Hoy solo `mometama` (la
+ * inicial que va en el sello y los monogramas del cover/footer).
+ * El nombre completo sigue siendo `invitation.nombre` para
+ * mantener un solo "título" visible.
+ */
+export interface Quinceanera {
+  monograma: string;
+}
+
+/**
+ * Sugerencia de canción para la playlist de la XV Años.
+ *
+ * - Para familias invitadas (con `?family=` en la URL): se persiste
+ *   en Firestore bajo `invitations/{id}/songs/{songId}`.
+ * - Para invitados anónimos (sin family id): se mantiene sólo en
+ *   memoria (useState) durante la sesión del visitante, sembrado
+ *   con un repertorio de canciones por defecto.
+ */
+export interface SongSuggestion {
+  id: string;
+  /** Título de la canción. */
+  title: string;
+  /** Artista o grupo. */
+  artist: string;
+  /** Nombre de quien sugiere. Para familias invitadas, se autollenará
+   *  con el nombre del grupo familiar. Para anónimos, viene del input. */
+  suggestedBy: string;
+  /** Timestamp de creación (Date.now() en memoria, serverTimestamp en Firestore). */
+  createdAt: number;
+}
+
 export interface Invitation {
   id: string;
   nombre: string;
@@ -113,8 +154,19 @@ export interface Invitation {
   padresNovio: Padres;
   tipo: string;
   imagenPortada?: string;
-  recepcion: EventLocation;
-  ceremonia: EventLocation;
+  /**
+   * Datos del evento de recepción. **Opcional** — se omite del payload
+   * cuando todos sus sub-campos (`nombreSalon`, `hora`, `direccion`,
+   * `enlaceMaps`) están vacíos. Esto permite crear invitaciones sin
+   * recepción (ej. bodas sólo con misa, XV sólo con misa, etc.).
+   */
+  recepcion?: EventLocation;
+  /**
+   * Datos del evento de ceremonia. **Opcional** — mismo trato que
+   * `recepcion`: se omite del payload si todos sus sub-campos están
+   * vacíos.
+   */
+  ceremonia?: EventLocation;
   fechaISO?: string;
   configuracionVisual?: ConfiguracionVisual;
   /**
@@ -124,6 +176,18 @@ export interface Invitation {
    */
   mensajeInicial?: string;
   mensajeRecordatorio?: string;
+
+  // ─── XV AÑOS ────────────────────────────────────────────────────────────
+  /** Papás de la quinceañera (XV). `padresNovio` se ignora en XV. */
+  padresQuinceanera?: Padres;
+  /** Padrinos que acompañan a la quinceañera en misa/recepción. */
+  padrinos?: Padrinos;
+  /** Datos específicos de la quinceañera (monograma para sello/monograma). */
+  quinceanera?: Quinceanera;
+  /** Teléfono WhatsApp del quinceañera/familia (incluye lada, sin '+'). */
+  rsvpPhone?: string;
+  /** Fecha límite para confirmar asistencia (ISO `YYYY-MM-DD`). */
+  rsvpDeadline?: string;
 }
 
 // Tipo auxiliar para las escalas de color completas (50-950)
