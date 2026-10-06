@@ -39,7 +39,10 @@ export default function InvitationDashboard() {
     }
   }, [invitationData?.id]);
 
-  const stats = useEventStats(families || [], { elements });
+  const stats = useEventStats(families || [], {
+    tipo: invitationData?.tipo,
+    elements,
+  });
 
   useEffect(() => {
     if (error) {
