@@ -308,7 +308,9 @@ const XvTicketBody: FC<{
           <span className="text-xv-accent-soft text-[10px]">✦</span>
         </div>
         <p className="font-montserrat text-[10px] tracking-[0.3em] uppercase text-xv-accent-soft/90 font-medium mt-2">
-          {invitationData?.nombre ? `XV · ${invitationData.nombre}` : "Mis XV Años"}
+          {invitationData?.nombre
+            ? `XV · ${invitationData.nombre}`
+            : "Mis XV Años"}
         </p>
         <p className="font-montserrat text-[9px] tracking-[0.25em] uppercase text-xv-accent-soft/80 mt-0.5">
           {formattedDate}
@@ -430,8 +432,8 @@ const DeclineCard: FC<StateCardProps> = ({
           </p>
           <div className="h-px w-16 bg-xv-accent-soft/30 mx-auto my-4" />
           <p className="font-cormorant italic text-base text-xv-accent-soft/70 leading-relaxed">
-            “Tal vez no puedan acompañarnos físicamente, pero los llevaremos en
-            el alma de nuestra fiesta y en nuestros corazones.”
+            “Aunque no coincidan nuestros pasos esta noche, su recuerdo bailará
+            conmigo en mis quince años.”
           </p>
           <p className="font-cormorant text-2xl text-xv-accent-soft mt-4 italic">
             ¡Nos vemos pronto!
@@ -445,7 +447,11 @@ const DeclineCard: FC<StateCardProps> = ({
 /* ============================================================================
  * ClosedCard
  * ========================================================================== */
-const ClosedCard: FC<StateCardProps> = ({ textClassName, variant, outerRef }) => {
+const ClosedCard: FC<StateCardProps> = ({
+  textClassName,
+  variant,
+  outerRef,
+}) => {
   const isWedding = variant === "wedding";
   return (
     <motion.div
@@ -594,6 +600,7 @@ const Assistants: FC<Props> = ({
             familyData={familyData}
             formattedDeadline={formattedDeadline}
             isFormLocked={isFormLocked}
+            isFormSubmitted={isFormSubmitted}
           />
         )}
 
@@ -874,20 +881,22 @@ const WeddingHeader: FC<{
       <p className="pt-6 text-3xl drop-shadow-[2px_2px_2px_rgba(0,0,0,0.25)] font-newIconScript px-5 text-center">
         Confirmación de asistencia
       </p>
-      {!isFormLocked && !isFormSubmitted && (
-        <div className="flex flex-col items-center gap-3">
-          <p className="font-nourdLight text-sm text-center px-10 max-w-sm opacity-80">
-            Tu lugar te espera. Por favor, confirma tu asistencia a
-            continuación.
-          </p>
-          {familyData?.fechaLimiteConfirmacion && formattedDeadline && (
-            <DeadlinePill
-              variant="wedding"
-              formattedDeadline={formattedDeadline}
-            />
-          )}
-        </div>
+      {!isFormLocked && (
+        <p className="font-nourdLight text-sm text-center px-10 max-w-sm opacity-80">
+          Tu lugar te espera. Por favor, confirma tu asistencia a continuación.
+        </p>
       )}
+      {/* Pill solo cuando el FORM está visible (pre-submit).
+          Post-submit se muestra debajo del botón "Modificar respuesta". */}
+      {!isFormLocked &&
+        !isFormSubmitted &&
+        familyData?.fechaLimiteConfirmacion &&
+        formattedDeadline && (
+          <DeadlinePill
+            variant="wedding"
+            formattedDeadline={formattedDeadline}
+          />
+        )}
     </div>
   </AnimatedEntrance>
 );
@@ -896,7 +905,8 @@ const XvHeader: FC<{
   familyData: Family;
   formattedDeadline: string;
   isFormLocked: boolean;
-}> = ({ familyData, formattedDeadline, isFormLocked }) => (
+  isFormSubmitted: boolean;
+}> = ({ familyData, formattedDeadline, isFormLocked, isFormSubmitted }) => (
   <div className="flex flex-col items-center text-center mb-6 max-w-md">
     {!isFormLocked && (
       <>
@@ -910,13 +920,17 @@ const XvHeader: FC<{
         <h2 className="font-cormorant text-4xl text-white italic mb-3">
           Confirma tu Asistencia
         </h2>
-        <p className="font-cormorant italic text-base text-xv-accent-soft/85 leading-relaxed mb-3">
-          Bajo la bóveda celeste, cada persona presente iluminará mi historia.
-          Tu compañía es mi más preciado regalo.
+        <p className="font-cormorant text-base text-xv-accent-soft/70 px-5 whitespace-pre-wrap">
+          Por favor, confirma tu asistencia para poder asegurar tus lugares.
+          {"\n"}¡Queremos que seas parte de esta gran noche!
         </p>
-        {familyData?.fechaLimiteConfirmacion && formattedDeadline && (
-          <DeadlinePill variant="xv" formattedDeadline={formattedDeadline} />
-        )}
+        {/* Pill solo cuando el FORM está visible (pre-submit).
+            Post-submit se muestra debajo del botón "Modificar respuesta". */}
+        {!isFormSubmitted &&
+          familyData?.fechaLimiteConfirmacion &&
+          formattedDeadline && (
+            <DeadlinePill variant="xv" formattedDeadline={formattedDeadline} />
+          )}
       </>
     )}
   </div>
@@ -926,20 +940,19 @@ const DeadlinePill: FC<{
   variant: AssistantsVariant;
   formattedDeadline: string;
 }> = ({ variant, formattedDeadline }) => {
-  const text = formattedDeadline.replace(" a las ", " — ");
-  if (variant === "wedding") {
-    return (
-      <div className="flex items-center gap-1.5 mx-6 px-4 py-1.5 bg-[color-mix(in_srgb,currentColor_3%,transparent)] border border-[color-mix(in_srgb,currentColor_15%,transparent)] rounded-full mt-2">
-        <Clock size={12} className="opacity-60 shrink-0" />
-        <span className="text-[10px] font-bold uppercase tracking-widest text-center opacity-70">
-          Tienes hasta el {formattedDeadline} para confirmar
-        </span>
-      </div>
-    );
-  }
   return (
-    <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-xv-bg-mid border border-xv-accent-soft/30 text-xv-accent-soft font-montserrat text-[10px] tracking-[0.2em] uppercase font-semibold">
-      Favor de confirmar antes del {text}
+    <div
+      className={cn(
+        "flex items-center gap-1.5 mx-6 px-4 py-1.5 rounded-full mt-5",
+        variant === "wedding"
+          ? "bg-[color-mix(in_srgb,currentColor_5%,transparent)] border border-[color-mix(in_srgb,currentColor_15%,transparent)]"
+          : "bg-xv-bg-mid/60 border border-xv-accent-soft/30 text-xv-accent-soft/70",
+      )}
+    >
+      <Clock size={12} className="opacity-60 shrink-0" />
+      <span className="text-[10px] font-bold uppercase tracking-widest text-center opacity-70">
+        Tienes hasta el {formattedDeadline} para confirmar
+      </span>
     </div>
   );
 };
@@ -957,8 +970,8 @@ const NoKidsBox: FC<{ variant: AssistantsVariant }> = ({ variant }) => {
             Evento Solo Adultos
           </span>
           <span className="text-[12px] font-serif italic leading-relaxed opacity-80">
-            &quot;Agradecemos de corazón tu comprensión al respetar nuestro
-            deseo de tener una boda solo para adultos.&quot;
+            “Agradecemos de corazón tu comprensión al respetar nuestro deseo de
+            tener una boda solo para adultos.”
           </span>
         </div>
       </div>
@@ -971,8 +984,8 @@ const NoKidsBox: FC<{ variant: AssistantsVariant }> = ({ variant }) => {
           Evento Solo Adultos
         </span>
         <span className="text-[12px] font-serif italic leading-relaxed opacity-85 text-xv-accent-soft">
-          “Te agradezco de corazón tu comprensión al respetar mi deseo de
-          tener un evento sin niños.”
+          “Te agradezco de corazón tu comprensión al respetar mi deseo de tener
+          un evento sin niños.”
         </span>
       </div>
     </div>
@@ -1282,10 +1295,11 @@ const ModifyAndDeadline: FC<{
     return null;
   }
 
-  // XV: motion.button simple + deadline como <p> inferior.
+  // XV: motion.button simple + deadline pill DEBAJO del botón
+  // (post-submit, ya que el header pre-submit lo mostró arriba).
   if (variant === "xv") {
     return (
-      <>
+      <div className="flex flex-col items-center gap-5">
         <motion.button
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1296,15 +1310,18 @@ const ModifyAndDeadline: FC<{
           Modificar respuesta
         </motion.button>
         {familyData?.fechaLimiteConfirmacion && formattedDeadline && (
-          <p className="mt-3 font-montserrat text-[10px] tracking-[0.2em] uppercase text-xv-accent-soft/60 text-center">
-            Puedes ajustar hasta el {formattedDeadline}
-          </p>
+          <div className="flex items-center gap-1.5 mx-6 px-3 py-1.5 bg-xv-bg-mid/60 border border-xv-accent-soft/30 text-xv-accent-soft/70 rounded-full">
+            <Clock size={12} className="opacity-60 shrink-0" />
+            <span className="text-[9px] font-bold uppercase tracking-widest text-center opacity-70">
+              Puedes ajustar hasta el {formattedDeadline}
+            </span>
+          </div>
         )}
-      </>
+      </div>
     );
   }
 
-  // Boda (default): motion.div con botón bordered + pill del deadline.
+  // Boda (default): botón bordered + pill del deadline debajo.
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -1316,7 +1333,7 @@ const ModifyAndDeadline: FC<{
         onClick={onModify}
         className="font-medium text-xs uppercase tracking-widest border-b border-[color-mix(in_srgb,currentColor_60%,transparent)] hover:border-current hover:opacity-100 transition-all pb-0.5 opacity-60 text-current"
       >
-        Modificar mi respuesta
+        Modificar respuesta
       </button>
       {familyData?.fechaLimiteConfirmacion && formattedDeadline && (
         <div className="flex items-center gap-1.5 mx-6 px-3 py-1.5 bg-[color-mix(in_srgb,currentColor_3%,transparent)] border border-[color-mix(in_srgb,currentColor_15%,transparent)] rounded-full">
