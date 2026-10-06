@@ -30,6 +30,10 @@ const TYPE_COLORS: Record<
   head_table: { fill: "#FEF3C7", stroke: "#F59E0B", text: "#B45309" },
   sweethearts_table: { fill: "#FCE7F3", stroke: "#C5A669", text: "#8B5A8C" },
   lounge_table: { fill: "#F5F3FF", stroke: "#A78BFA", text: "#5B21B6" },
+  // ─── XV Años ───────────────────────────────────────────
+  // Paleta dorada/rosada para que destaque como pieza central de la XV.
+  quinceanera_table: { fill: "#FEF3C7", stroke: "#C5A669", text: "#92400E" },
+  quinceanera_room: { fill: "#FCE7F3", stroke: "#F472B6", text: "#9D174D" },
   // ─── Estructurales ──────────────────────────────────────
   wall: { fill: "#EBE5DA", stroke: "#5A5A5A", text: "#2C2C29" },
   door: { fill: "#FDFBF7", stroke: "#A78B5C", text: "#7A6740" },

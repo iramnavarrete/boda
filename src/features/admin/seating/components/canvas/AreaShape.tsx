@@ -264,6 +264,13 @@ function getAreaStyle(type: ElementType): AreaStyle {
       return { Icon: ChessKing, color: "#92400E", bg: "#FEF3C7", border: "#C5A669" };
     case "smoking_area":
       return { Icon: Cigarette, color: "#52525B", bg: "#F4F4F5", border: "#A1A1AA" };
+    case "quinceanera_room":
+      return {
+        Icon: ChessQueen,
+        color: "#BE185D",
+        bg: "#FCE7F3",
+        border: "#F472B6",
+      };
 
     default:
       return { Icon: BoxSelect, color: "#5A5A5A", bg: "#F9F7F2", border: "#C5A669" };

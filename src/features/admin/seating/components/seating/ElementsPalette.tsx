@@ -2,6 +2,7 @@
 
 import { useCategoryCollapse } from "../../utils/categoryCollapseState";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import {
   Circle,
   Square,
@@ -28,11 +29,9 @@ import {
   Sofa,
   Leaf,
   Trees,
-  Crown,
   Cigarette,
   Type as TypeIcon,
   BoxSelect,
-  Heart,
   Wrench,
   type LucideIcon,
   Landmark,
@@ -122,6 +121,16 @@ const ELEMENTS: { category: string; items: PaletteItemType[] }[] = [
       {
         type: "sweethearts_table",
         label: "Mesa de Novios",
+        seats: 0,
+        width: 220,
+        height: 100,
+        icon: ChessQueen,
+      },
+      {
+        // XV Años — pieza central de la quinceañera. Solo visible
+        // cuando `invitationData.tipo === "xv_anos"`.
+        type: "quinceanera_table",
+        label: "Mesa Quinceañera",
         seats: 0,
         width: 220,
         height: 100,
@@ -330,6 +339,16 @@ const ELEMENTS: { category: string; items: PaletteItemType[] }[] = [
         icon: ChessKing,
       },
       {
+        // XV Años — dressing room / salón privado de la quinceañera.
+        // Solo visible cuando `invitationData.tipo === "xv_anos"`.
+        type: "quinceanera_room",
+        label: "Cuarto Quinceañera",
+        seats: 0,
+        width: 170,
+        height: 100,
+        icon: ChessQueen,
+      },
+      {
         type: "smoking_area",
         label: "Zona Fumadores",
         seats: 0,
@@ -479,6 +498,43 @@ export default function ElementsPalette({ onClose }: { onClose?: () => void }) {
   const elements = useSeatingStore((state) => state.elements);
   const elementCount = elements.length;
 
+  // ── Filtrado por tipo de invitación ────────────────────────────
+  // - Boda (default): items boda (incluye Mesa de Novios, Cuarto de
+  //   Novia/Novio); oculta XV items.
+  // - XV Años: items XV (Mesa Quinceañera, Cuarto Quinceañera);
+  //   oculta los items boda que no aplican (Mesa de Novios, Cuarto
+  //   de Novia/Novio).
+  // - Otros tipos (bautizo, cumpleanos): misma lógica que boda.
+  const tipo = useInvitationStore((s) => s.invitationData?.tipo);
+  const isXv = tipo === "xv_anos";
+
+  /** Tipos boda que ocultamos cuando la invitación es XV. */
+  const WEDDING_ONLY_TYPES: ReadonlySet<string> = new Set([
+    "sweethearts_table",
+    "bride_room",
+    "groom_room",
+  ]);
+
+  /** Tipos XV que solo mostramos cuando la invitación es XV. */
+  const XV_ONLY_TYPES: ReadonlySet<string> = new Set([
+    "quinceanera_table",
+    "quinceanera_room",
+  ]);
+
+  const filteredElements = ELEMENTS.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => {
+      if (isXv) {
+        // En XV: ocultar boda-only, mostrar xv-only.
+        if (WEDDING_ONLY_TYPES.has(item.type)) return false;
+        return true;
+      }
+      // En boda/bautizo/cumpleanos: mostrar boda-only, ocultar xv-only.
+      if (XV_ONLY_TYPES.has(item.type)) return false;
+      return true;
+    }),
+  })).filter((group) => group.items.length > 0);
+
   const { setNodeRef } = useDroppable({
     id: "palette-area",
     data: { type: "sidebar" },
@@ -550,7 +606,7 @@ export default function ElementsPalette({ onClose }: { onClose?: () => void }) {
         </div>
 
         {/* ── Categorías de elementos ──────────────────────────────── */}
-        {ELEMENTS.map((group) => {
+        {filteredElements.map((group) => {
           const isCollapsed = collapsedCategories[group.category];
           const CategoryIcon = CATEGORY_ICONS[group.category];
           return (

@@ -1,6 +1,5 @@
-import React from "react";
 import { ChessKing, ChessQueen } from "lucide-react";
-import { ElementType, TableShapeProps } from "@/types/seating";
+import { TableShapeProps } from "@/types/seating";
 
 /**
  * Renderiza la forma de las MESAS (incluyendo la mesa de novios).
@@ -24,11 +23,13 @@ export function TableShape({
   const isTable = seatsCount > 0;
   const isHalfMoon = type === "half_moon_table";
   const isSweethearts = type === "sweethearts_table";
+  const isQuinceanera = type === "quinceanera_table";
   const isLoungeTable = type === "lounge_table";
 
   const renderSeats = () => {
-    if (!isTable || isSweethearts || isLoungeTable) {
-      // Para sweethearts y lounge_table las sillas se renderizan aparte
+    if (!isTable || isSweethearts || isQuinceanera || isLoungeTable) {
+      // Para sweethearts, quinceanera y lounge_table las sillas
+      // se renderizan aparte (sillas decorativas con iconos).
       return null;
     }
     const seats = [];
@@ -92,9 +93,14 @@ export function TableShape({
         x = spacing * (index + 1);
         y = isTop ? -22 : height + 22;
       } else if (type === "head_table") {
+        // Mesa principal (head_table) — sus sillas pueden ir arriba
+        // o abajo según `seatPosition`. Default "bottom" porque
+        // naturalmente la mesa principal se mira desde abajo (los
+        // novios/padrinos miran al salón), pero el admin puede
+        // invertirlo si quiere.
         const spacing = width / (seatsCount + 1);
         x = spacing * (i + 1);
-        y = height + 22;
+        y = seatPosition === "top" ? -22 : height + 22;
       }
 
       if (renderSeatItem) {
@@ -438,6 +444,55 @@ export function TableShape({
           aria-hidden
         >
           <ChessKing size={28} strokeWidth={2} color="#A78B5C" />
+        </div>
+
+        <div className="table-element-inner sweethearts-table w-full h-full flex items-center justify-center relative">
+          <div className="text-center px-4 w-full">
+            {alias && (
+              <span className="block font-serif text-[1.05rem] element-alias">
+                {alias}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // Mesa de la quinceañera (XV Años)
+  //
+  // Misma forma visual que la Mesa de Novios (sweethearts_table) pero
+  // con UNA sola silla centrada (Crown) en lugar de dos. Como
+  // `seats: 0` en el registry, ningún invitado puede ser asignado
+  // aquí — la silla es puramente decorativa.
+  // ───────────────────────────────────────────────────────────
+  if (isQuinceanera) {
+    const chairTop = seatPosition === "bottom" ? height + 6 : -54;
+
+    return (
+      <div
+        className="relative w-full h-full sweethearts-wrapper"
+        style={{ overflow: "visible" }}
+      >
+        {/* Silla decorativa CENTRADA — Quinceañera (Crown).
+            Mismo estilo rosa (rose) que la silla de la Novia en
+            sweethearts_table: bg #FCE7F3, border #F472B6, icon #BE185D. */}
+        <div
+          className="absolute flex items-center justify-center rounded-full shadow-md pointer-events-none"
+          style={{
+            top: chairTop,
+            left: "50%",
+            transform: "translateX(-50%)",
+            width: 48,
+            height: 48,
+            backgroundColor: "#FCE7F3",
+            border: "2.5px solid #F472B6",
+            zIndex: 3,
+          }}
+          aria-hidden
+        >
+          <ChessQueen size={28} strokeWidth={2} color="#BE185D" />
         </div>
 
         <div className="table-element-inner sweethearts-table w-full h-full flex items-center justify-center relative">

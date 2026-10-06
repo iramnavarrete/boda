@@ -77,6 +77,7 @@ export function ElementShape({
     type === "cocktail_table" ||
     type === "head_table" ||
     type === "sweethearts_table" ||
+    type === "quinceanera_table" ||
     type === "lounge_table"
   ) {
     return (
