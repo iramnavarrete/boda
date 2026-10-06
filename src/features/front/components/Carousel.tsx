@@ -1,15 +1,13 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import useEmblaCarousel from "embla-carousel-react";
+import React, { useCallback, useEffect, useState } from "react";
 import PhotoSwipeLightbox from "photoswipe/lightbox";
 import Image from "next/image";
 import ArrowLeftIcon from "@/icons/arrow-left-icon";
 import AnimatedEntrance from "./AnimatedEntrance";
 import { GalleryImage } from "@/types";
-import Autoplay from "embla-carousel-autoplay";
 import { cn } from "@heroui/theme";
-import { useInView } from "framer-motion";
+import { useEmblaCarouselWithAutoplay } from "@/features/front/hooks/useEmblaCarouselWithAutoplay";
 
 export type CarouselSlide = GalleryImage & {
   objectPosition?: string;
@@ -115,43 +113,28 @@ export default function SimpleSlider({
   height?: string | number;
   dynamicHeight?: boolean;
 }) {
-  const autoplayPlugin = useRef(
-    Autoplay({
+  // Hook compartido: Embla + autoplay + in-view + drag detection.
+  // Mismo comportamiento que el carrusel XV (ver `useEmblaCarouselWithAutoplay`).
+  const {
+    emblaRef,
+    emblaApi,
+    ref: wrapperRef,
+    isInView: _isInView,
+    isLightboxOpen,
+    setIsLightboxOpen,
+    scrollPrev,
+    scrollNext,
+  } = useEmblaCarouselWithAutoplay({
+    emblaOptions: { loop: true },
+    autoplay: {
       delay: 2000,
-      // 🔥 Volvemos a true para que Embla no intente manejar esto por su cuenta.
-      // Nosotros tomaremos el control manual.
       stopOnInteraction: true,
       stopOnMouseEnter: true,
       playOnInit: false,
-    }),
-  );
-
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
-    autoplayPlugin.current,
-  ]);
+    },
+  });
 
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-
-  const wrapperRef = useRef<HTMLDivElement>(null);
-  const galleryRef = useRef<HTMLDivElement>(null);
-
-  const isInView = useInView(wrapperRef, { amount: 0.5 });
-
-  // 🔥 Control manual en las flechas: Resetea el tiempo y sigue reproduciendo
-  const scrollPrev = useCallback(() => {
-    if (!emblaApi) return;
-    emblaApi.plugins().autoplay?.reset();
-    emblaApi.plugins().autoplay?.play();
-    emblaApi.scrollPrev();
-  }, [emblaApi]);
-
-  const scrollNext = useCallback(() => {
-    if (!emblaApi) return;
-    emblaApi.plugins().autoplay?.reset();
-    emblaApi.plugins().autoplay?.play();
-    emblaApi.scrollNext();
-  }, [emblaApi]);
 
   const onSelect = useCallback(() => {
     if (!emblaApi) return;
@@ -163,37 +146,6 @@ export default function SimpleSlider({
     onSelect();
     emblaApi.on("select", onSelect);
   }, [emblaApi, onSelect]);
-
-  // 🔥 CONTROL MANUAL DE ARRASTRE (DRAG)
-  useEffect(() => {
-    if (!emblaApi) return;
-    const autoplay = emblaApi.plugins().autoplay;
-    if (!autoplay) return;
-
-    // 1. Cuando el usuario toca la foto, paramos en seco el temporizador
-    emblaApi.on("pointerDown", () => {
-      autoplay.stop();
-    });
-
-    // 2. Cuando el usuario suelta la foto, reiniciamos el temporizador a 0 y lo iniciamos
-    emblaApi.on("pointerUp", () => {
-      autoplay.reset();
-      autoplay.play();
-    });
-  }, [emblaApi]);
-
-  // CONTROL MAESTRO DE VISIBILIDAD Y LIGHTBOX
-  useEffect(() => {
-    if (!emblaApi) return;
-    const autoplay = emblaApi.plugins().autoplay;
-    if (!autoplay) return;
-
-    if (isInView && !isLightboxOpen) {
-      autoplay.play();
-    } else {
-      autoplay.stop();
-    }
-  }, [isInView, isLightboxOpen, emblaApi]);
 
   useEffect(() => {
     if (!emblaApi) return;
@@ -250,7 +202,7 @@ export default function SimpleSlider({
           ref={wrapperRef}
           className="transition-opacity duration-300 ease-in-out w-full"
         >
-          <div id="pswp-gallery-container" ref={galleryRef}>
+          <div id="pswp-gallery-container">
             <div className="overflow-hidden" ref={emblaRef}>
               <div className="flex items-start">
                 {" "}

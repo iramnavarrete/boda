@@ -30,6 +30,7 @@ import { useInvitationStore } from "@/features/front/stores/invitationStore";
 export function useWeddingAdmin() {
   // ── Datos de invitación ─────────────────────────────────────────────────
   const invitationId = useInvitationStore((state) => state.invitationData?.id);
+  const invitationTipo = useInvitationStore((state) => state.invitationData?.tipo);
   const { toast } = useToast();
 
   // ── Familias (suscripción en tiempo real) ───────────────────────────────
@@ -106,6 +107,7 @@ export function useWeddingAdmin() {
       edition: editionCounts,
     },
   } = useEventStats(filteredFamilies, {
+    tipo: invitationTipo,
     filters: {
       whatsapp: whatsappFilter,
       tag: tagFilter,

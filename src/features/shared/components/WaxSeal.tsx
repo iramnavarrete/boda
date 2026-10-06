@@ -8,7 +8,21 @@ interface WaxSealProps {
   textColor?: string;
   className?: string;
   size?: number;
+  /**
+   * SVG personalizado para el CENTRO del sello (sobre el wax shape).
+   * Se renderiza en la zona interior, encima del border.
+   */
   customSvg?: React.ReactNode;
+  /**
+   * SVG personalizado para el BORDE/ARREGLOCIRCULAR del sello.
+   * Cuando se pasa, REEMPLAZA el `SealDecoration` (el arreglo floral
+   * por defecto). El wax shape (`sello-gris.png`) y la textura siguen
+   * intactos — solo cambia el ornamento del borde.
+   *
+   * Útil cuando una invitación tiene un emblema distintivo en el
+   * borde que no encaja con el floral genérico.
+   */
+  borderSvg?: React.ReactNode;
 }
 
 export default function WaxSeal({
@@ -18,6 +32,7 @@ export default function WaxSeal({
   className,
   size = 130,
   customSvg,
+  borderSvg,
 }: WaxSealProps) {
   // Separamos las iniciales (Ej: "J & Y")
   const parts = (initials || "J & Y").split("&").map((s) => s.trim());
@@ -35,8 +50,8 @@ export default function WaxSeal({
         height: size,
       }}
     >
-      {/* 1. CAPA DE COLOR CON MÁSCARA 
-        Esto recorta el color exactamente con la forma irregular del sello, 
+      {/* 1. CAPA DE COLOR CON MÁSCARA
+        Esto recorta el color exactamente con la forma irregular del sello,
         evitando el feo círculo perfecto de fondo.
       */}
       <div
@@ -77,16 +92,29 @@ export default function WaxSeal({
         className="relative z-10 flex items-center justify-center w-full h-full opacity-80"
         style={{ color: textColor || "#1e241b" }}
       >
-        {/* Aro floral minimalista y elegante (réplica de tu diseño) */}
-        <SealDecoration
-          className={`absolute text-[${textColor || "#1e241b"}]`}
-          style={{
-            width: size * 0.5,
-            height: size * 0.5,
-            transform: `translate(0, -${size * 0.01}px)`,
-          }}
-        />
+        {/* 3a. Border — `borderSvg` (custom) o `SealDecoration` (default) */}
+        {borderSvg ? (
+          <div
+            className="absolute flex justify-center items-center"
+            style={{
+              width: size * 0.55,
+              height: size * 0.55,
+            }}
+          >
+            {borderSvg}
+          </div>
+        ) : (
+          <SealDecoration
+            className={`absolute text-[${textColor || "#1e241b"}]`}
+            style={{
+              width: size * 0.5,
+              height: size * 0.5,
+              transform: `translate(0, -${size * 0.01}px)`,
+            }}
+          />
+        )}
 
+        {/* 3b. Centro — customSvg o iniciales */}
         {customSvg ? (
           <div
             className="absolute flex justify-center items-center"

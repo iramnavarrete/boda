@@ -1,6 +1,7 @@
 import { Family, FilterCounts as FilterCountsStatus } from "@/types";
 import { SeatingElement } from "@/types/seating";
 import { useMemo } from "react";
+import { getEtiquetaOptions } from "@/features/admin/utils/etiquetaPorTipo";
 
 export interface EventStats {
   invitados: {
@@ -31,16 +32,26 @@ export interface EventStats {
 
 export interface FilterCounts {
   whatsapp: { all: number; sent: number; not_sent: number; empty: number };
-  etiquetas: { all: number; Novia: number; Novio: number; Ambos: number };
+  /**
+   * Conteos por etiqueta. Las keys son los `value` canónicos del helper
+   * `etiquetaPorTipo` (dependen del `tipo` de la invitación): "Novia",
+   * "Novio", "Ambos" para bodas; "Familia Paterna", "Familia Materna",
+   * "Amigos", "Otros" para XV. Se mantiene `all` siempre presente
+   * en runtime — solo el tipado lo declara como Record<string, number>
+   * para aceptar cualquier set dinámico de tags.
+   */
+  etiquetas: Record<string, number>;
   status: FilterCountsStatus & { unopened?: number };
   edition: { all: number; locked: number; unlocked: number };
 }
 
 interface UseEventStatsOptions {
+  /** Tipo de invitación — condiciona qué tags se cuentan. */
+  tipo?: string;
   elements?: SeatingElement[];
   filters?: {
     whatsapp?: "all" | "sent" | "not_sent" | "empty" | string;
-    tag?: "all" | "Novia" | "Novio" | "Ambos" | string;
+    tag?: "all" | string;
     edition?: "all" | "locked" | "unlocked" | string; // 🔥 Agregamos edition a las opciones
   };
 }
@@ -53,7 +64,7 @@ export const useEventStats = (
   families: Family[],
   options: UseEventStatsOptions = {},
 ) => {
-  const { elements = [], filters } = options;
+  const { tipo, elements = [], filters } = options;
 
   const stats = useMemo(() => {
     const s: EventStats = {
@@ -199,12 +210,20 @@ export const useEventStats = (
         ).length,
         empty: filteredFamilies.filter((g) => !g.tieneTelefono).length,
       },
-      etiquetas: {
-        all: filteredFamilies.length,
-        Novia: filteredFamilies.filter((g) => g.etiqueta === "Novia").length,
-        Novio: filteredFamilies.filter((g) => g.etiqueta === "Novio").length,
-        Ambos: filteredFamilies.filter((g) => g.etiqueta === "Ambos").length,
-      },
+      etiquetas: (() => {
+        // Conteos dinámicos por etiqueta según el `tipo` de invitación.
+        // Empezamos con `all` y agregamos un contador por cada opción.
+        const specs = getEtiquetaOptions(tipo);
+        const counts: Record<string, number> = {
+          all: filteredFamilies.length,
+        };
+        specs.forEach(({ value }) => {
+          counts[value] = filteredFamilies.filter(
+            (g) => g.etiqueta === value,
+          ).length;
+        });
+        return counts;
+      })(),
       edition: {
         all: filteredFamilies.length,
         unlocked: filteredFamilies.filter((g) => !!g.cambiosPermitidos).length,
@@ -237,7 +256,7 @@ export const useEventStats = (
         },
       ),
     };
-  }, [filteredFamilies]);
+  }, [filteredFamilies, tipo]);
 
   return { stats, filteredFamilies, filterCounts };
 };

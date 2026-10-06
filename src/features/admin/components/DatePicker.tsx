@@ -21,6 +21,21 @@ const DAYS = ["Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa"];
 interface CustomDatePickerProps {
   value: string; // Formato YYYY-MM-DD
   onChange: (value: string) => void;
+  /**
+   * Posición del popover del calendario respecto al input trigger.
+   *
+   * - `"bottom"` (default): popover debajo del input. Útil cuando el
+   *   input está cerca del top del viewport (ej. modal con espacio
+   *   debajo).
+   * - `"top"`: popover encima del input. Útil cuando el input está
+   *   cerca del bottom del viewport (ej. modal con poco espacio
+   *   abajo, donde el popover quedaría tapado por los botones).
+   *
+   * El default se mantiene en `"bottom"` por compatibilidad con los
+   * consumidores existentes; si necesitamos `"top"` en algún modal
+   * concreto, lo pasamos explícito.
+   */
+  popoverPosition?: "bottom" | "top";
 }
 
 // 🔥 Helper para detectar montaje en el cliente sin causar renders en cascada
@@ -33,7 +48,11 @@ function useIsMounted() {
   );
 }
 
-export default function DatePicker({ value, onChange }: CustomDatePickerProps) {
+export default function DatePicker({
+  value,
+  onChange,
+  popoverPosition = "bottom",
+}: CustomDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -140,7 +159,14 @@ export default function DatePicker({ value, onChange }: CustomDatePickerProps) {
 
       {/* Popover del Calendario */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-[280px] bg-white border border-[#EBE5DA] rounded-2xl shadow-xl z-50 p-4 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div
+          className={cn(
+            "absolute left-0 w-[280px] bg-white border border-[#EBE5DA] rounded-2xl shadow-xl z-50 p-4 animate-in fade-in duration-200",
+            popoverPosition === "top"
+              ? "bottom-full mb-2 slide-in-from-bottom-2"
+              : "top-full mt-2 slide-in-from-top-2",
+          )}
+        >
           {/* Header del Calendario */}
           <div className="flex items-center justify-between mb-4">
             <button

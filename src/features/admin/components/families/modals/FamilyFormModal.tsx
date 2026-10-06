@@ -8,16 +8,15 @@ import {
   MinusCircle,
   ChevronDown,
   Tag,
-  Calendar,
   Settings,
 } from "lucide-react";
 import Modal from "@/features/shared/components/Modal";
 import { cn } from "@heroui/theme";
+import DatePicker from "../../DatePicker";
 import { FamilyFormData } from "@/types";
 import { useFamilyFormModal } from "../../../hooks/useFamilyFormModal";
-
-// Opciones predefinidas de etiquetas
-const TAG_OPTIONS = ["Novia", "Novio", "Ambos"];
+import { useInvitationStore } from "@/features/front/stores/invitationStore";
+import { getEtiquetaOptions } from "@/features/admin/utils/etiquetaPorTipo";
 
 interface FamilyFormModalProps {
   isOpen: boolean;
@@ -36,6 +35,13 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
   isEdit,
   onBackdropPress,
 }) => {
+  // Etiquetas según el tipo de invitación (boda: Novia/Novio/Ambos,
+  // XV Años: Fam. Paterna/Fam. Materna/Amigos/Otros, etc.). El
+  // helper retorna `[{value, label}]`; mostramos `label` y guardamos
+  // `value` canónico en Firestore.
+  const tipo = useInvitationStore((s) => s.invitationData?.tipo);
+  const TAG_OPTIONS = getEtiquetaOptions(tipo);
+
   // Inyectamos nuestro hook personalizado
   const {
     formData,
@@ -241,19 +247,19 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
                   </span>
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {TAG_OPTIONS.map((tag) => (
+                  {TAG_OPTIONS.map(({ value, label }) => (
                     <button
-                      key={tag}
+                      key={value}
                       type="button"
-                      onClick={() => handleTagToggle(tag)}
+                      onClick={() => handleTagToggle(value)}
                       className={cn(
                         "px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 border",
-                        formData.etiqueta === tag
+                        formData.etiqueta === value
                           ? "bg-gold border-gold text-white shadow-sm shadow-gold/20"
                           : "bg-white border-sand text-stone-500 hover:border-gold/40 hover:text-charcoal hover:bg-sand-light/50",
                       )}
                     >
-                      {tag}
+                      {label}
                     </button>
                   ))}
                 </div>
@@ -413,41 +419,22 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
 
                     {formData.cambiosPermitidos && (
                       <div className="pl-11 pr-4 pb-4 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <label className="block text-[10px] font-bold text-stone-500 uppercase tracking-wider mb-1.5">
+                        <label className="block text-[10px] font-bold text-stone-500 tracking-wider mb-1.5">
                           Fecha límite de confirmación{" "}
                           <span className="font-normal normal-case text-stone-400">
                             (Opcional)
                           </span>
                         </label>
-                        <div className="relative flex items-center">
-                          <Calendar
-                            size={14}
-                            className="absolute left-3 text-stone-400 pointer-events-none"
-                          />
-                          <input
-                            type="date"
-                            className="w-full pl-9 pr-10 py-2.5 rounded-lg border border-sand bg-[#FDFBF7] text-stone-custom focus:bg-white focus:ring-2 focus:ring-gold/20 focus:border-gold outline-none transition-all shadow-sm text-sm"
-                            value={formData.fechaLimiteConfirmacion || ""}
-                            onChange={(e) =>
-                              handleTextChange(
-                                "fechaLimiteConfirmacion",
-                                e.target.value !== "" ? e.target.value : null,
-                              )
-                            }
-                          />
-                          {formData.fechaLimiteConfirmacion && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleTextChange("fechaLimiteConfirmacion", null)
-                              }
-                              className="absolute right-3 p-1 rounded-full text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                              title="Quitar fecha límite"
-                            >
-                              <X size={14} />
-                            </button>
-                          )}
-                        </div>
+                        <DatePicker
+                          value={formData.fechaLimiteConfirmacion ?? ""}
+                          onChange={(v) =>
+                            handleTextChange(
+                              "fechaLimiteConfirmacion",
+                              v === "" ? null : v,
+                            )
+                          }
+                          popoverPosition="top"
+                        />
                       </div>
                     )}
                   </div>

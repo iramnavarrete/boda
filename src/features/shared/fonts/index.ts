@@ -25,7 +25,11 @@ export type FontKey =
   | "autography"
   | "comprehensionDark"
   | "comprehensionSemiBold"
-  | "aboveBeyondScript";
+  | "aboveBeyondScript"
+  // ─── XV Años (Emerald & Gold Luxury) ──────────────────────────────────
+  | "cormorant"
+  | "cinzel"
+  | "montserrat";
 
 // ─── Fuentes (declaraciones, sin cambios) ───────────────────────────────────
 
@@ -133,6 +137,58 @@ export const tangerineBold = localFont({
   display: "swap",
 });
 
+// ─── Cormorant Garamond (Google Fonts, OFL) ─────────────────────────────────
+
+export const cormorant = localFont({
+  src: [
+    {
+      path: "../../../../src/fonts/CormorantGaramond-Regular.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../../../src/fonts/CormorantGaramond-Medium.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../../../../src/fonts/CormorantGaramond-SemiBold.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../../../../src/fonts/CormorantGaramond-Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../../../../src/fonts/CormorantGaramond-Italic.woff2",
+      weight: "400",
+      style: "italic",
+    },
+  ],
+  variable: "--font-cormorant",
+  display: "swap",
+});
+
+// ─── Cinzel (Google Fonts, OFL) ─────────────────────────────────────────────
+// Variable: todas las weights (400–700) usan el mismo subset latin.
+
+export const cinzel = localFont({
+  src: "../../../../src/fonts/Cinzel-Latin.woff2",
+  variable: "--font-cinzel",
+  display: "swap",
+});
+
+// ─── Montserrat (Google Fonts, OFL) ────────────────────────────────────────
+// Variable: todas las weights (200–600) usan el mismo subset latin.
+
+export const montserrat = localFont({
+  src: "../../../../src/fonts/Montserrat-Latin.woff2",
+  variable: "--font-montserrat",
+  display: "swap",
+});
+
 // ─── Mapa nombre → instancia + helpers ──────────────────────────────────────
 
 /**
@@ -160,6 +216,10 @@ const FONT_MAP = {
   comprehensionDark,
   comprehensionSemiBold,
   aboveBeyondScript,
+  // ─── XV Años ─────────────────────────────────────────────────────────
+  cormorant,
+  cinzel,
+  montserrat,
 } satisfies Record<FontKey, FontInstance>;
 
 /**

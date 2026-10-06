@@ -17,6 +17,7 @@ import { isPartialConfirmation } from "@/utils/family";
 import { FamilyActionButtons, FamilyLockButton } from "./FamilyActionButtons";
 import { useWeddingAdminContext } from "../context/WeddingAdminContext";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { getEtiquetaLabel } from "@/features/admin/utils/etiquetaPorTipo";
 
 interface FamilyRowProps {
   family: Family;
@@ -101,7 +102,7 @@ const FamilyRow = memo(
               {f.etiqueta && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#EBE5DA] bg-[#FDFBF7] text-[#C5A669]">
                   <Tag size={10} />
-                  {f.etiqueta}
+                  {getEtiquetaLabel(f.etiqueta)}
                 </span>
               )}
               <PartialConfirmationBadge family={f} />

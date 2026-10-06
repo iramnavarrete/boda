@@ -31,6 +31,12 @@ export type ElementType =
   | "head_table"
   | "sweethearts_table"
   | "lounge_table"
+  // ─── XV Años ───────────────────────────────────────────
+  // Equivalentes de boda: mesa/cuarto de la quinceañera en lugar
+  // de mesa de novios / cuarto de novia-novio. Solo se muestran en
+  // el palette cuando `invitationData.tipo === "xv_anos"`.
+  | "quinceanera_table"
+  | "quinceanera_room"
   // ─── Estructurales (siempre al fondo) ───────────────────
   | "wall"
   | "door"
@@ -89,7 +95,7 @@ export function getElementLayer(type: ElementType): ElementLayer {
   if (STRUCTURAL_TYPES.has(type)) return "structural";
   if (UTILITY_TYPES.has(type)) return "utility";
 
-  // Mesas
+  // Mesas (incluye la mesa de la quinceañera — XV)
   if (
     type === "round_table" ||
     type === "rectangular_table" ||
@@ -98,7 +104,8 @@ export function getElementLayer(type: ElementType): ElementLayer {
     type === "cocktail_table" ||
     type === "head_table" ||
     type === "sweethearts_table" ||
-    type === "lounge_table"
+    type === "lounge_table" ||
+    type === "quinceanera_table"
   ) {
     return "table";
   }

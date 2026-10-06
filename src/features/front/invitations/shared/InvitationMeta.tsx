@@ -16,6 +16,13 @@ interface InvitationMetaProps {
    *                              (description, og:description, twitter:description).
    */
   description?: string | null;
+  /**
+   * URL del favicon a inyectar. Si se omite, se deriva del id de la
+   * invitación (`/favicons/<id>.ico`) — comportamiento por defecto que
+   * ya funciona para las bodas. Útil para XV Años donde el favicon
+   * se comparte por theme (ej. `/favicons/xv/sapphire.ico`).
+   */
+  faviconUrl?: string;
   children?: ReactNode;
 }
 
@@ -28,12 +35,15 @@ interface InvitationMetaProps {
 export default function InvitationMeta({
   invitationData,
   description,
+  faviconUrl: faviconUrlOverride,
   children,
 }: InvitationMetaProps) {
   const eventName = invitationData.nombre;
   const coverImage = invitationData.imagenPortada;
   const eventUrl = invitationData.eventUrl;
-  const faviconUrl = `/favicons/${invitationData.id}.ico`;
+  // Fallback por defecto: una .ico por id (patrón bodas). Si el caller
+  // pasa `faviconUrl`, gana ese override (patrón XV por theme).
+  const faviconUrl = faviconUrlOverride ?? `/favicons/${invitationData.id}.ico`;
   const showDescription = description !== null && description !== "";
   const finalDescription = description || DEFAULT_DESCRIPTION;
 

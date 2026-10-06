@@ -836,3 +836,139 @@ body.is-dragging-active * {
 *:not(html):not(body)::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* ==========================================================================
+   XV AÑOS — Sistema de THEMING por variables CSS
+   ==========================================================================
+   Las componentes del módulo `xv-anos` están escritas con clases
+   semánticas (`bg-xv-bg-deepest`, `text-xv-accent-primary`, etc.)
+   que internamente apuntan a CSS variables. Cambiando el atributo
+   `data-xv-theme` en el wrapper raíz se swapea toda la paleta
+   sin tocar componentes ni animaciones.
+
+   Themes disponibles:
+     - "emerald" (default): verde esmeralda + dorado
+     - "sapphire"          : azul navy + plata/sky
+   ========================================================================== */
+
+:root,
+[data-xv-theme="emerald"] {
+  /* Backgrounds (darkest → lightest) — RGB triplets para que Tailwind
+     pueda aplicar el modifier de alpha (e.g. `bg-xv-bg-deepest/40`). */
+  --xv-bg-deepest: 6 19 14;            /* page bg */
+  --xv-bg-deep: 10 28 21;              /* section bg */
+  --xv-bg-mid: 20 45 36;               /* card border accent */
+  --xv-bg-mid-soft: 26 56 45;          /* card surfaces */
+  --xv-bg-card-from: 20 45 36;
+  --xv-bg-card-to: 10 28 21;
+
+  /* Gradientes del botón WhatsApp (theme-aware) */
+  --xv-whatsapp-top: 26 56 45;          /* deep emerald — el "azul/verde" del theme */
+
+  /* Accents — RGB triplets para alpha modifier */
+  --xv-accent-primary: 212 171 89;     /* CTA, monogram, gold-400 */
+  --xv-accent-soft: 223 190 125;       /* highlights, gold-300 */
+  --xv-accent-text: 248 242 226;        /* light text on dark, gold-100 */
+  --xv-accent-muted: 163 124 45;        /* muted borders, gold-600 */
+  --xv-accent-light: 235 217 176;       /* softer text, gold-200 */
+  --xv-accent-dark: 6 19 14;            /* text on gold bg, forest-950 */
+
+  /* Borders — RGB triplets */
+  --xv-border-soft: 223 190 125;
+  --xv-border-medium: 223 190 125;
+
+  /* Shadows / glows */
+  --xv-shadow-glow: 0 0 60px rgba(223, 190, 125, 0.45);
+  --xv-shadow-glow-cta: 0 10px 40px -10px rgba(223, 190, 125, 0.6);
+  --xv-shadow-text-glow: 0 0 16px rgba(223, 190, 125, 0.45);
+}
+
+[data-xv-theme="sapphire"] {
+  /* Backgrounds — azul navy profundo (RGB triplets) */
+  --xv-bg-deepest: 3 8 20;
+  --xv-bg-deep: 5 11 24;
+  --xv-bg-mid: 11 31 76;
+  --xv-bg-mid-soft: 27 53 102;
+  --xv-bg-card-from: 11 31 76;
+  --xv-bg-card-to: 5 11 24;
+
+  /* Gradientes del botón WhatsApp (theme-aware) */
+  --xv-whatsapp-top: 27 53 102;          /* deep sapphire blue — el "azul" del theme */
+
+  /* Accents — azul sky vibrante (RGB triplets) */
+  --xv-accent-primary: 56 189 248;      /* CTA, monogram — sky-400 */
+  --xv-accent-soft: 125 211 252;        /* highlights, preTitle — sky-300 */
+  --xv-accent-text: 240 244 255;         /* light text on dark */
+  --xv-accent-muted: 59 130 246;         /* muted borders */
+  --xv-accent-light: 219 234 254;        /* softer text */
+  --xv-accent-dark: 3 8 20;             /* text on light bg */
+
+  /* Borders — RGB triplets */
+  --xv-border-soft: 125 211 252;
+  --xv-border-medium: 125 211 252;
+
+  /* Shadows / glows */
+  --xv-shadow-glow: 0 0 60px rgba(56, 189, 248, 0.55);
+  --xv-shadow-glow-cta: 0 10px 40px -10px rgba(56, 189, 248, 0.65);
+  --xv-shadow-text-glow: 0 0 16px rgba(125, 211, 252, 0.55);
+}
+
+/* Halo dorado/plata suave detrás de títulos destacados (usa var). */
+.xv-glow {
+  text-shadow: var(--xv-shadow-text-glow);
+}
+/* Compat: el nombre original `.gold-glow` sigue funcionando. */
+.gold-glow {
+  text-shadow: var(--xv-shadow-text-glow);
+}
+
+/* Rotación lenta del vinilo (18s lineal infinita). */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 18s linear infinite;
+}
+
+/* Bounce sutil del CTA scroll del cover. */
+@keyframes bounceSubtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(6px); }
+}
+.animate-bounce-subtle {
+  animation: bounceSubtle 2.2s infinite ease-in-out;
+}
+
+/* Respeta prefers-reduced-motion apagando animaciones decorativas. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin-slow,
+  .animate-bounce-subtle,
+  .animate-shimmer,
+  .animate-float-1,
+  .animate-float-2,
+  .animate-float-3,
+  .animate-fade-in-up {
+    animation: none !important;
+  }
+}
+
+/* Fade-in genérico para botones del XV (revelado tras el sobre).
+   Se activa con `animationDelay` inline según el tiempo del sobre.
+   Al terminar (`100%`) reactiva el `pointer-events: auto` para que
+   el botón sea clickeable. */
+@keyframes xv-fade-in {
+  0% {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.9);
+  }
+  99% {
+    pointer-events: none;
+  }
+  100% {
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+  }
+}

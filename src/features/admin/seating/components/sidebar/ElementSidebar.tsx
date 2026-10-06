@@ -372,11 +372,10 @@ function ColumnShapeControl({ element }: { element: SeatingElement }) {
 // ─────────────────────────────────────────────────────────────
 
 const SEAT_POSITIONABLE_TYPES = new Set([
-  "rectangular_table",
   "head_table",
   "half_moon_table",
-  "square_table",
   "sweethearts_table",
+  "quinceanera_table",
 ]);
 
 function SeatPositionControl({ element }: { element: SeatingElement }) {
@@ -1089,7 +1088,9 @@ export function ElementSidebar({
         {canEditSize && <SizeControl element={element} />}
 
         {SEAT_POSITIONABLE_TYPES.has(element.type) &&
-          (hasSeatList || element.type === "sweethearts_table") && (
+          (hasSeatList ||
+            element.type === "sweethearts_table" ||
+            element.type === "quinceanera_table") && (
             <SeatPositionControl element={element} />
           )}
 

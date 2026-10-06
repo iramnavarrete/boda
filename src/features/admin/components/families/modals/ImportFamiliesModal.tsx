@@ -12,13 +12,12 @@ import Modal from "@/features/shared/components/Modal";
 import { cn } from "@heroui/theme";
 import { ImportedFamily } from "@/types";
 import { downloadEmptyFamiliesTemplate } from "@/services/excelService";
-
-/**
- * Valores canónicos que aceptamos en la columna "Etiqueta".
- * Comparamos normalizando (lowercase + sin acentos) contra estas claves.
- */
-const ETIQUETA_KEYS = ["novio", "novia", "ambos"] as const;
-type EtiquetaCanonica = "Novio" | "Novia" | "Ambos";
+import { useInvitationStore } from "@/features/front/stores/invitationStore";
+import {
+  getEtiquetaOptions,
+  getEtiquetaValueList,
+  type EtiquetaPorTipo,
+} from "@/features/admin/utils/etiquetaPorTipo";
 
 /** Normaliza un texto para comparar etiquetas (lowercase + sin acentos). */
 const normalizeForCompare = (s: string): string =>
@@ -29,11 +28,14 @@ const normalizeForCompare = (s: string): string =>
  * Devuelve la forma canónica con mayúscula inicial o `null` si no
  * coincide con ninguno de los valores aceptados.
  */
-const parseEtiqueta = (raw: string): EtiquetaCanonica | null => {
+const parseEtiqueta = (
+  raw: string,
+  tipo: string | undefined,
+): EtiquetaPorTipo | null => {
   const normalized = normalizeForCompare(raw);
-  if (ETIQUETA_KEYS.includes(normalized as (typeof ETIQUETA_KEYS)[number])) {
-    return (normalized.charAt(0).toUpperCase() +
-      normalized.slice(1)) as EtiquetaCanonica;
+  const opciones = getEtiquetaOptions(tipo ?? "boda");
+  for (const { value } of opciones) {
+    if (normalizeForCompare(value) === normalized) return value;
   }
   return null;
 };
@@ -99,6 +101,13 @@ const ImportFamiliesModal: React.FC<ImportFamiliesModalProps> = ({
   isImporting,
 }) => {
   const [rawText, setRawText] = useState("");
+  // Tipo de invitación actual — condiciona qué tags aceptamos en la
+  // columna "Etiqueta" del import (Novia/Novio/Ambos para boda,
+  // Familia Paterna/Familia Materna/Amigos/Otros para XV, etc.).
+  const tipo = useInvitationStore((s) => s.invitationData?.tipo);
+  // Lista de tags válidos formateada para mostrar en la UI
+  // (descripción de la columna y ejemplos).
+  const etiquetaValues = getEtiquetaValueList(tipo);
 
   const { parsedFamilies, errors } = useMemo<{
     parsedFamilies: ImportedFamily[];
@@ -176,9 +185,10 @@ const ImportFamiliesModal: React.FC<ImportFamiliesModalProps> = ({
       // "sÍ", "sí" se acepten igual. Cualquier otro valor (incluido vacío) = false.
       const ninosPermitidos = normalizeForCompare(ingresoNinosStr) === "si";
 
-      // Etiqueta: solo "novio" / "novia" / "ambos" (case + accent
-      // insensitive). Se guarda con mayúscula inicial o null.
-      const etiqueta = parseEtiqueta(etiquetaStr);
+      // Etiqueta: valores válidos según el tipo de invitación
+      // (case + accent insensitive). Se guarda con la forma canónica
+      // completa o null si no matchea.
+      const etiqueta = parseEtiqueta(etiquetaStr, tipo);
 
       newFamilies.push({
         nombre,
@@ -193,7 +203,7 @@ const ImportFamiliesModal: React.FC<ImportFamiliesModalProps> = ({
     });
 
     return { parsedFamilies: newFamilies, errors: newErrors };
-  }, [rawText]);
+  }, [rawText, tipo]);
 
   const handleClose = () => {
     // `parsedFamilies` y `errors` son derivados de `rawText`, así que
@@ -241,7 +251,7 @@ const ImportFamiliesModal: React.FC<ImportFamiliesModalProps> = ({
                 <strong className="text-[#C5A669]">
                   Nombre | Cupos | Teléfono (Opcional) | Ingreso Niños
                   (Opcional: &quot;si&quot; / &quot;no&quot;) | Etiqueta
-                  (Opcional: Novio/Novia/Ambos) | Nota (Opcional)
+                  (Opcional: {etiquetaValues}) | Nota (Opcional)
                 </strong>
               </li>
               <li>
@@ -276,7 +286,7 @@ const ImportFamiliesModal: React.FC<ImportFamiliesModalProps> = ({
             <button
               type="button"
               onClick={() => {
-                void downloadEmptyFamiliesTemplate();
+                void downloadEmptyFamiliesTemplate(tipo);
               }}
               disabled={isImporting}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#EBE5DA] bg-white text-[#5A5A5A] hover:border-[#C5A669]/50 hover:text-[#C5A669] hover:bg-[#FDFBF7] text-xs font-bold tracking-wide transition-all disabled:opacity-50 shadow-sm"
@@ -290,7 +300,7 @@ const ImportFamiliesModal: React.FC<ImportFamiliesModalProps> = ({
           <div>
             <textarea
               className="w-full h-40 p-4 rounded-2xl border border-[#EBE5DA] bg-white text-[#5A5A5A] focus:ring-2 focus:ring-[#C5A669]/20 focus:border-[#C5A669] outline-none transition-all shadow-inner resize-none font-mono text-sm whitespace-pre"
-              placeholder={`Ejemplo:\nfamilia de ejemplo    3    0000000000    si    Ambos    no olviden los anillos\nfamilia de ejemplo EUA    3    +1 0000000000    si    Novia    no olvides las botellas`}
+              placeholder={tipo === "xv_anos" ? "Ejemplo:\nFamilia Hernández    3    0000000000    si    Familia Paterna    no olviden los anillos\nFamilia Castro        2    +1 0000000000    si    Amigos    favor de confirmar antes del evento" : "Ejemplo:\nfamilia de ejemplo    3    0000000000    si    Ambos    no olviden los anillos\nfamilia de ejemplo EUA    3    +1 0000000000    si    Novia    no olvides las botellas"}
               value={rawText}
               onChange={(e) => setRawText(e.target.value)}
               disabled={isImporting}
