@@ -14,6 +14,7 @@ import {
   Tag,
 } from "lucide-react";
 import { useBotanicLevel, useElementRef } from "../hooks/useBotanicLevel";
+import { getEtiquetaLabel } from "@/features/admin/utils/etiquetaPorTipo";
 
 const getInitials = (name: string) => {
   let parts = name.trim().split(" ");
@@ -134,7 +135,7 @@ function FamilyQuoteCardImpl({ msg, onManualToggle }: FamilyQuoteCardProps) {
                 {parentesco && parentesco !== "Invitado" && (
                   <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold border bg-[#FDFBF7] text-gold border-gold/30 normal-case tracking-wider shrink-0">
                     <Tag size={9} className="shrink-0" />
-                    {parentesco}
+                    {getEtiquetaLabel(parentesco)}
                   </span>
                 )}
               </h3>

@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Family } from "@/types";
 import { memo, useEffect, useRef, useState } from "react";
+import { getEtiquetaLabel } from "@/features/admin/utils/etiquetaPorTipo";
 import DashedSeparator from "../../DashedSeparator";
 import { cn } from "@heroui/theme";
 import { useRouter } from "next/router";
@@ -114,7 +115,7 @@ const FamilyCard = memo(
                 {f.etiqueta && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold tracking-wide border border-[#EBE5DA] bg-[#FDFBF7] text-[#C5A669]">
                     <Tag size={10} />
-                    {f.etiqueta}
+                    {getEtiquetaLabel(f.etiqueta)}
                   </span>
                 )}
                 <PartialConfirmationBadge family={f} />

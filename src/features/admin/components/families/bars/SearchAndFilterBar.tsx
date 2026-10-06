@@ -25,6 +25,11 @@ import {
 import { cn } from "@heroui/theme";
 import TextureButton from "@/features/shared/components/TextureButton";
 import { useWeddingAdminContext } from "@/features/admin/context/WeddingAdminContext";
+import { useInvitationStore } from "@/features/front/stores/invitationStore";
+import {
+  getEtiquetaOptions,
+  getEtiquetaStyle,
+} from "@/features/admin/utils/etiquetaPorTipo";
 
 // ============================================================================
 // 1. INTERFACES ESTRICTAS (Cero 'any')
@@ -361,7 +366,6 @@ export default function SearchAndFilterBar() {
     whatsappCounts,
     tagFilter,
     setTagFilter,
-    tagCounts,
     editionFilter,
     setEditionFilter,
     editionCounts,
@@ -378,6 +382,19 @@ export default function SearchAndFilterBar() {
     clearFilters,
     containerRef,
   } = useSearchAndFilterBar();
+
+  const tipo = useInvitationStore((s) => s.invitationData?.tipo);
+
+  // Tags dinámicos según tipo de invitación. Computamos el count
+  // localmente desde `finalFilteredFamilies` para no depender del
+  // `tagCounts` del context (que está tipado a Novia/Novio/Ambos).
+  const dynamicTagSpecs = getEtiquetaOptions(tipo);
+  const dynamicTagCounts: Record<string, number> = { all: finalFilteredFamilies.length };
+  dynamicTagSpecs.forEach(({ value }) => {
+    dynamicTagCounts[value] = finalFilteredFamilies.filter(
+      (f) => f.etiqueta === value,
+    ).length;
+  });
 
   const disabled = selectedFamilies.size > 0;
 
@@ -476,36 +493,20 @@ export default function SearchAndFilterBar() {
     {
       value: "all",
       label: "Todas",
-      count: tagCounts?.all || 0,
+      count: dynamicTagCounts.all,
       icon: LayoutList,
     },
-    {
-      value: "Novia",
-      label: "Novia",
-      count: tagCounts?.Novia || 0,
-      icon: Tag,
-      iconColor: "text-rose-400",
-      activeColorClass:
-        "bg-rose-50 border-rose-200 text-rose-700 ring-1 ring-rose-100",
-    },
-    {
-      value: "Novio",
-      label: "Novio",
-      count: tagCounts?.Novio || 0,
-      icon: Tag,
-      iconColor: "text-blue-400",
-      activeColorClass:
-        "bg-blue-50 border-blue-200 text-blue-700 ring-1 ring-blue-100",
-    },
-    {
-      value: "Ambos",
-      label: "Ambos",
-      count: tagCounts?.Ambos || 0,
-      icon: Tag,
-      iconColor: "text-purple-400",
-      activeColorClass:
-        "bg-purple-50 border-purple-200 text-purple-700 ring-1 ring-purple-100",
-    },
+    ...dynamicTagSpecs.map(({ value, label }) => {
+      const styles = getEtiquetaStyle(value);
+      return {
+        value,
+        label,
+        count: dynamicTagCounts[value] ?? 0,
+        icon: Tag,
+        iconColor: styles.iconColor,
+        activeColorClass: styles.activeColorClass,
+      };
+    }),
   ];
 
   // 🔥 Nuevas opciones para el filtro de Edición
