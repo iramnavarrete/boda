@@ -25,7 +25,7 @@ import { useSeatingStore } from "../../stores/useSeatingStore";
 import Tooltip from "@/features/shared/components/Tooltip";
 import { UnassignOptions } from "@/types/seating";
 
-const DECLINED_STATUSES = new Set(["declined", "declinado", "rechazado"]);
+// const DECLINED_STATUSES = new Set(["declined", "declinado", "rechazado"]);
 
 type IndicatorColor = "green" | "orange" | "yellow";
 
