@@ -2,6 +2,7 @@ import ExcelJS from "exceljs";
 import { saveAs } from "file-saver";
 import { Family, GuestSeat } from "@/types";
 import { SeatingElement } from "@/types/seating";
+import { getEtiquetaValueList } from "@/features/admin/utils/etiquetaPorTipo";
 
 /** Opciones para personalizar la exportación a Excel. */
 export interface ExportFamiliesOptions {
@@ -227,16 +228,20 @@ export const exportFamiliesToExcel = async (
  * El sufijo `(Opcional)` en el header marca los campos que pueden
  * quedar vacíos al pegar/importar.
  */
-export const IMPORT_TEMPLATE_COLUMNS: ReadonlyArray<{
-  key: string;
-  header: string;
-  width: number;
-}> = [
+/**
+ * Fábrica del header de la plantilla. El campo `etiqueta` se adapta
+ * al tipo de invitación (boda: Novia/Novio/Ambos; XV: Familia
+ * Paterna/Familia Materna/Amigos/Otros) para que el usuario vea los
+ * valores exactos que el importador aceptará.
+ */
+export const getImportTemplateColumns = (
+  tipo: string | null | undefined,
+): ReadonlyArray<{ key: string; header: string; width: number }> => [
   { key: "nombre", header: "Nombre", width: 32 },
   { key: "cupos", header: "Cupos", width: 8 },
   { key: "telefono", header: "Teléfono (Opcional)", width: 22 },
   { key: "ingresoNinos", header: "Ingreso Niños (Opcional: si/no)", width: 34 },
-  { key: "etiqueta", header: "Etiqueta (Opcional: Novio/Novia/Ambos)", width: 40 },
+  { key: "etiqueta", header: `Etiqueta (Opcional: ${getEtiquetaValueList(tipo)})`, width: 40 },
   { key: "nota", header: "Nota (Opcional)", width: 36 },
 ];
 
@@ -249,43 +254,92 @@ export const IMPORT_TEMPLATE_COLUMNS: ReadonlyArray<{
  * El formato internacional usado es `+<código> <número>` para
  * que el país sea detectable de forma inequívoca al parsear.
  */
-const TEMPLATE_EXAMPLE_ROWS: ReadonlyArray<Record<string, string | number>> = [
-  {
-    nombre: "familia de ejemplo",
-    cupos: 3,
-    telefono: "0000000000",
-    ingresoNinos: "si",
-    etiqueta: "Ambos",
-    nota: "no olviden los anillos",
-  },
-  {
-    nombre: "familia de ejemplo EUA",
-    cupos: 3,
-    telefono: "+1 0000000000",
-    ingresoNinos: "si",
-    etiqueta: "Novia",
-    nota: "no olvides las botellas",
-  },
-  {
-    nombre: "familia de ejemplo MX",
-    cupos: 2,
-    telefono: "+52 6141234567",
-    ingresoNinos: "no",
-    etiqueta: "Novio",
-    nota: "mesa con vista al jardín",
-  },
-];
+/**
+ * Fábrica de filas de ejemplo para la plantilla. Adapta etiquetas y
+ * nombres al tipo de invitación:
+ *   - boda      → "Familia de ejemplo", "Novia"/"Novio"/"Ambos"
+ *   - xv_anos   → "Familia Hernández/Castro", "Fam. Paterna"/etc.
+ *
+ * El formato internacional del teléfono es `+<código> <número>` para
+ * que el país sea detectable de forma inequívoca al parsear.
+ */
+const getTemplateExampleRows = (
+  tipo: string | null | undefined,
+): ReadonlyArray<Record<string, string | number>> => {
+  if (tipo === "xv_anos") {
+    return [
+      {
+        nombre: "Familia Hernández",
+        cupos: 3,
+        telefono: "0000000000",
+        ingresoNinos: "si",
+        etiqueta: "Familia Paterna",
+        nota: "no olviden los anillos",
+      },
+      {
+        nombre: "Familia Castro",
+        cupos: 2,
+        telefono: "+1 0000000000",
+        ingresoNinos: "si",
+        etiqueta: "Amigos",
+        nota: "favor de confirmar antes del evento",
+      },
+      {
+        nombre: "Familia Mendoza",
+        cupos: 4,
+        telefono: "+52 6141234567",
+        ingresoNinos: "no",
+        etiqueta: "Familia Materna",
+        nota: "mesa con vista al jardín",
+      },
+    ];
+  }
+  // Default: boda
+  return [
+    {
+      nombre: "familia de ejemplo",
+      cupos: 3,
+      telefono: "0000000000",
+      ingresoNinos: "si",
+      etiqueta: "Ambos",
+      nota: "no olviden los anillos",
+    },
+    {
+      nombre: "familia de ejemplo EUA",
+      cupos: 3,
+      telefono: "+1 0000000000",
+      ingresoNinos: "si",
+      etiqueta: "Novia",
+      nota: "no olvides las botellas",
+    },
+    {
+      nombre: "familia de ejemplo MX",
+      cupos: 2,
+      telefono: "+52 6141234567",
+      ingresoNinos: "no",
+      etiqueta: "Novio",
+      nota: "mesa con vista al jardín",
+    },
+  ];
+};
 
 /**
  * Genera y descarga un archivo `.xlsx` con los encabezados de la
  * plantilla de importación **y una fila de ejemplo** lista para
  * que el usuario la borre o la use como guía al completar datos.
  */
-export const downloadEmptyFamiliesTemplate = async (): Promise<void> => {
+/**
+ * Genera y descarga un archivo `.xlsx` con los encabezados de la
+ * plantilla de importación y filas de ejemplo, adaptado al tipo de
+ * invitación.
+ */
+export const downloadEmptyFamiliesTemplate = async (
+  tipo: string | null | undefined = "boda",
+): Promise<void> => {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Invitados");
 
-  worksheet.columns = IMPORT_TEMPLATE_COLUMNS.map(({ key, header, width }) => ({
+  worksheet.columns = getImportTemplateColumns(tipo).map(({ key, header, width }) => ({
     key,
     header,
     width,
@@ -299,7 +353,7 @@ export const downloadEmptyFamiliesTemplate = async (): Promise<void> => {
 
   // Filas de ejemplo con datos completos para mostrar el formato
   // esperado al pegar (incluye caso con y sin código de país).
-  TEMPLATE_EXAMPLE_ROWS.forEach((rowData) => {
+  getTemplateExampleRows(tipo).forEach((rowData) => {
     const row = worksheet.addRow(rowData);
     styleBaseRow(row);
     row.commit();
