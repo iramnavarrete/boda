@@ -42,6 +42,27 @@ export const LOTTIE_CONFIG = {
   jn_logo: {
     main: "[0.35,0.38,0.31,1]",
     secondary: "[0.345,0.384,0.31]",
+    jnLogo: "[0,0,0,1]",
+  },
+  /**
+   * Sobre — versión mobile (`envolpe.json`).
+   *  - `body`: el cuerpo del sobre + la hoja/carta interior (mismo color en el JSON).
+   *  - `border`: las solapas/bordes del sobre.
+   * El color transparente `[0,0,0,0]` no se reemplaza.
+   */
+  envelope: {
+    body: "[0.961,0.937,0.902]",
+    border: "[0.761,0.741,0.714]",
+  },
+  /**
+   * Sobre — versión desktop (`envolpeDesktop.json`).
+   * Las strings de color son casi idénticas al mobile pero con ligeras
+   * variaciones en los decimales (0.937 vs 0.933, 0.741 vs 0.737). Por eso
+   * las declaramos aparte y aplicamos `colorizeLottie` por separado.
+   */
+  envelopeDesktop: {
+    body: "[0.961,0.933,0.902]",
+    border: "[0.761,0.737,0.714]",
   },
 } as const;
 

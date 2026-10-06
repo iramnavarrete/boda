@@ -16,6 +16,7 @@ import {
 import { db } from "@/lib/firebase/config";
 import { Invitation } from "@/types";
 import { UserProfile } from "@/stores/authStore";
+import { getDevInvitation } from "./devInvitations";
 
 export const invitationsCollectionName = "invitations";
 
@@ -126,6 +127,15 @@ export const InvitationsService = {
     invitation: Invitation | null;
     error: FirestoreErrorCode | null;
   }> => {
+    // ─── DEV: short-circuit para invitaciones fake (sin Firestore) ────
+    // Si el slug está en `devInvitations.ts`, devolvemos el mock
+    // directamente para no pegar contra Firestore en desarrollo.
+    // Borra el slug del array cuando el documento real exista.
+    const devInvitation = getDevInvitation(invitationId);
+    if (devInvitation) {
+      return { invitation: devInvitation, error: null };
+    }
+
     try {
       const privateRef = invitationPaths.invitation(invitationId);
       const snapshot = await getDoc(privateRef);
