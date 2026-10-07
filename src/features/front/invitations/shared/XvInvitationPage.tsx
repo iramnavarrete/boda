@@ -8,6 +8,7 @@ import FrontLayout from "@/features/shared/layouts/front";
 import { FamilyProvider } from "@/features/front/components/FamilyContext";
 import EnvelopeSplash from "@/features/front/components/openingAnimations/EnvelopeSplash";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
+import { useInvitationViewTracking } from "@/features/front/hooks/useInvitationViewTracking";
 import type { Invitation } from "@/types";
 import type { FontInstance, FontKey } from "@/features/shared/fonts";
 import { getFontsByKey } from "@/features/shared/fonts";
@@ -323,6 +324,7 @@ function XvInvitationFrame({
     useInvitationStore.setState({ invitationData });
   }, [invitationData]);
 
+
   const finalSealConfig = (() => {
     if (!sealConfig) return undefined;
     if (sealConfig.customSvg) return sealConfig;
@@ -536,6 +538,16 @@ function XvBody({
   isEnvelopeOpened: boolean;
 }) {
   const { audio } = config;
+
+  // Registro de vista al abrir el sobre (mismo hook que bodas).
+  // El hook debe estar dentro de <FamilyProvider> para que
+  // useFamilyContext retorne la familia real (no el default no-op).
+  // Loguea en activity + marca invitacionVista en el doc de la
+  // familia, salvo si es preview (query param ?preview=...).
+  useInvitationViewTracking({
+    enabled: isEnvelopeOpened,
+    invitationId: invitationData?.id ?? null,
+  });
   /**
    * Mergea `invitationData` (Firestore) sobre `config.sections`.
    *

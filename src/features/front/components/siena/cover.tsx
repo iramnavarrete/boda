@@ -4,14 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import useMusicStore from "@/stores/musicStore";
 import { useInvitationStore } from "../../stores/invitationStore";
 import { formatToEventDate } from "@/utils/formatters";
-import { useSearchParams } from "next/navigation";
-import { ActivityService } from "@/services/activityService";
-import { FamiliesService } from "@/services/familiesService";
+
+
+
 import Image from "next/image";
 import { cn } from "@heroui/theme";
 import Music from "../sections/music";
-import { useFamilyContext } from "../FamilyContext";
 import SwipeUpGesture from "@/icons/swipe-up-gesture";
+import { useInvitationViewTracking } from "@/features/front/hooks/useInvitationViewTracking";
 
 type ImageConfig = {
   src: string;
@@ -68,18 +68,17 @@ export default function Cover({
   scrollIndicatorDelay = 2600,
 }: Props) {
   const invitationData = useInvitationStore((state) => state.invitationData);
-  const { family, setFamily } = useFamilyContext();
+  
   const { toggleAudio } = useMusicStore();
   const [index, setIndex] = useState(0);
   const [isTriggerInView, setIsTriggerInView] = useState(true);
   const [scrollOpacity, setScrollOpacity] = useState(1);
 
   const triggerRef = useRef<HTMLDivElement>(null);
-  const searchParams = useSearchParams();
-  const preview = searchParams?.get("preview");
-  const token = searchParams?.get("token");
 
-  const hasLoggedRef = useRef(false);
+  
+
+  
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -113,30 +112,13 @@ export default function Cover({
     }
   }, [isSealVisible, toggleAudio]);
 
-  useEffect(() => {
-    if (!isSealVisible && family && invitationData) {
-      if (!preview && !token) {
-        if (!hasLoggedRef.current) {
-          hasLoggedRef.current = true;
-          ActivityService.logActivity(invitationData.id, {
-            action: "view",
-            familyId: family.id,
-            familyName: family.nombre,
-          }).catch(console.error);
-
-          if (!family.invitacionVista) {
-            FamiliesService.markInvitationAsViewed(
-              invitationData.id,
-              family.id,
-            ).catch(console.error);
-            setFamily((prev) =>
-              prev ? { ...prev, invitacionVista: true } : prev,
-            );
-          }
-        }
-      }
-    }
-  }, [isSealVisible, family, preview, token, invitationData, setFamily]);
+  // Registro de vista al abrir el sobre (mismo hook que XV).
+  // Loguea en activity + marca invitacionVista en el doc de la
+  // familia, salvo si es preview (query param ?preview=...).
+  useInvitationViewTracking({
+    enabled: !isSealVisible,
+    invitationId: invitationData?.id ?? null,
+  });
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
