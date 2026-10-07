@@ -138,7 +138,7 @@ const ivannaXvConfig: XvInvitationConfig = {
           description: "Recibimiento de los invitados para la celebración.",
         },
         {
-          time: "09:15 PM",
+          time: "9:15 PM",
           title: "Vals de Ivanna",
           subtitle: "El Momento Más Soñado",
           icon: "Music",
