@@ -104,7 +104,7 @@ const ivannaXvConfig: XvInvitationConfig = {
       preTitle: "El Escenario",
       heading: "Un Lugar de Encanto",
       receptionBadgeText: "Recepción y fiesta",
-      venueImage: "/img/salon/quinta-la-isla.jpg",
+      venueImage: "/img/salon/quinta-la-isla-1.jpg",
       venueName: "Salón Cristal Aguascalientes",
       address:
         "Av. Universidad 1002, Trojes de Alonso, 20123 Aguascalientes, Ags.",
