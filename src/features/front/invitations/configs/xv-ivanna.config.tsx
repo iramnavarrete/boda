@@ -177,10 +177,10 @@ const ivannaXvConfig: XvInvitationConfig = {
       preTitle: "Código de Vestimenta",
       heading: "Formal / Vaquero",
       description:
-        "Damas · Vestido largo o midi  \nCaballeros · Traje formal o atuendo vaquero",
+        "Caballeros · Traje formal o atuendo vaquero \nDamas · Vestido largo o corto evitando esta gama de colores (ver paleta abajo)",
       reservedColorsPreTitle: "Colores Reservados",
       respectfulNote:
-        "Les pedimos a las damas evitar vestir prendas de esta gama de colores.\nAgradecemos a todos su comprensión y apoyo respetando el código de vestimenta.",
+        "Agradecemos a las DAMAS su comprensión y apoyo respetando el código de vestimenta.",
       colorPaletteColumns: 5,
       colorPalette: [
         { hex: "#5389af", name: "Azul Cielo" },
