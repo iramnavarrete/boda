@@ -131,14 +131,14 @@ const ivannaXvConfig: XvInvitationConfig = {
       heading: "La Celebración",
       items: [
         {
-          time: "9:00 HRS",
+          time: "9:00 PM",
           title: "Recepción",
           subtitle: "Bienvenida",
           icon: "Martini",
           description: "Recibimiento de los invitados para la celebración.",
         },
         {
-          time: "21:15 HRS",
+          time: "09:15 PM",
           title: "Vals de Ivanna",
           subtitle: "El Momento Más Soñado",
           icon: "Music",
@@ -146,7 +146,7 @@ const ivannaXvConfig: XvInvitationConfig = {
             "Ivanna comparte su vals con su familia, el momento que siempre soñó.",
         },
         {
-          time: "22:00 HRS",
+          time: "10:00 PM",
           title: "¡A Bailar!",
           subtitle: "Pista de Baile",
           icon: "PartyPopper",
@@ -154,20 +154,20 @@ const ivannaXvConfig: XvInvitationConfig = {
             "¡La pista se abre! Música, luces y baile para celebrar juntos.",
         },
         {
-          time: "23:00 HRS",
-          title: "Trasnochados",
-          subtitle: "Fiesta Continúa",
-          icon: "Sandwich",
-          description:
-            "El snack perfecto para revivir la noche y continuar la fiesta.",
-        },
-        {
-          time: "23:45 HRS",
+          time: "11:45 PM",
           title: "Brindis y Pastel",
           subtitle: "Momento Especial",
           icon: "Cake",
           description:
             "Brindis de honor con los seres queridos y corte del pastel.",
+        },
+        {
+          time: "12:45 AM",
+          title: "Trasnochados",
+          subtitle: "Fiesta Continúa",
+          icon: "Sandwich",
+          description:
+            "El snack perfecto para revivir la noche y continuar la fiesta.",
         },
       ],
     },
@@ -175,11 +175,12 @@ const ivannaXvConfig: XvInvitationConfig = {
     // 8. DressCodeSection — colores reservados para la quinceañera
     dressCode: {
       preTitle: "Código de Vestimenta",
-      heading: "Formal / Elegante",
-      description: "Damas · Vestido largo \nCaballeros · Traje oscuro",
+      heading: "Formal / Vaquero",
+      description:
+        "Damas · Vestido largo o midi  \nCaballeros · Traje formal o atuendo vaquero",
       reservedColorsPreTitle: "Colores Reservados",
       respectfulNote:
-        "Agradecemos a nuestros invitados EVITAR vestir prendas en esta gama de tonalidades y respetar el código de vestimenta.",
+        "Les pedimos a las damas evitar vestir prendas de esta gama de colores.\nAgradecemos a todos su comprensión y apoyo respetando el código de vestimenta.",
       colorPaletteColumns: 5,
       colorPalette: [
         { hex: "#5389af", name: "Azul Cielo" },
@@ -224,12 +225,7 @@ const ivannaXvConfig: XvInvitationConfig = {
     // 11. Gifts (CashGiftCard + TransferAccordion)
     gifts: {
       description:
-        "Tu presencia es mi mayor obsequio. Si deseas hacerme un detalle, dispondremos de un buzón para sobres el día del evento o vía transferencia.",
-      transfer: {
-        bank: "Santander",
-        beneficiary: "Ivanna Medrano",
-        cardNumber: "0000 0000 0000 0000",
-      },
+        "Tu presencia es mi mayor obsequio. Si deseas hacerme un detalle, dispondremos de un buzón para sobres el día del evento.",
     },
 
     // 12. EnchantedFooter
@@ -249,7 +245,7 @@ const ivannaXvConfig: XvInvitationConfig = {
 
   // ─── Audio (placeholder: track existente hasta que llegue vals-estrellas.mp3) ───
   audio: {
-    musicPath: "/music/congratulations.mp3",
+    musicPath: "/music/photograph.mp3",
     fadeMs: 1000,
     mediaMetadata: {
       title: "XV · Ivanna",

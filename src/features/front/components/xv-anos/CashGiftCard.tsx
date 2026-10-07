@@ -46,7 +46,7 @@ interface Props {
  */
 export default function CashGiftCard({
   preTitle = "Mesa de Regalos",
-  heading = "Lluvia de Sobres / Deseos",
+  heading = "Lluvia de Sobres",
   description = "Tu presencia es mi mayor obsequio. Si deseas hacerme un detalle, dispondremos de un buzón de estrellas para sobres el día del evento o vía transferencia.",
   transfer,
 }: Props) {
