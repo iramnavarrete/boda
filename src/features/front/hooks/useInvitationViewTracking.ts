@@ -54,21 +54,12 @@ export function useInvitationViewTracking({
   const hasLoggedRef = useRef(false);
 
   useEffect(() => {
-    console.log(
-      "SE DISPARA EFECTO PARA LOG DE VISTA",
-      invitationId,
-      family?.id,
-      preview,
-      enabled,
-    );
     // Guard común: no disparar si no aplica.
     if (!enabled) return;
     if (!invitationId) return;
     if (!family) return;
     if (preview) return; // preview del admin
     if (hasLoggedRef.current) return;
-
-    console.log("SE EJECUTA LOG DE VISTA");
 
     hasLoggedRef.current = true;
 
