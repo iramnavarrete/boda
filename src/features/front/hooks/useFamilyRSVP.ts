@@ -8,6 +8,7 @@ import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import { FamiliesService } from "@/services/familiesService";
 import { FamilyQuotesService } from "@/services/familyQuotesService";
 import { ActivityService } from "@/services/activityService";
+import { isDateInPast } from "@/features/admin/utils/dateComparison";
 
 /**
  * Default "Invitado genérico" — usado cuando NO hay `?family=` en la URL
@@ -46,11 +47,7 @@ export function useFamilyRSVP() {
   const [isFormSubmitted, setIsFormSubmitted] = useState(false);
   const [isDisabled, setIsDisabled] = useState(false);
 
-  const isExpiredLocal = () => {
-    if (!familyData?.fechaLimiteConfirmacion) return false;
-    const dateFormatted = new Date().toLocaleDateString("en-CA");
-    return familyData.fechaLimiteConfirmacion < dateFormatted;
-  };
+  const isExpiredLocal = () => isDateInPast(familyData?.fechaLimiteConfirmacion);
 
   const isFormLocked =
     familyData.cambiosPermitidos === false || isExpiredLocal();
