@@ -64,13 +64,22 @@ export const useFamilyFormModal = (
     () => parsePhoneData(initialData.telefono).num,
   );
 
-  // 2. PATRÓN REACT 18: Derived State (Reemplazo total del useEffect)
+  // 2. Reset de estado al abrir el modal. Usamos el patrón
+  // "adjusting state during render" de los docs de React
+  // (https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes):
+  // cuando `isOpen` pasa de false a true, sincronizamos los 3
+  // estados con `initialData`. Este patrón es SEGURO porque:
+  //   - Los 4 setState se batchean en React 18 → 1 sola pasada
+  //     de reconciliación (no 4 como haría useEffect secuencial).
+  //   - La condición `isOpen !== prevIsOpen` se vuelve false en
+  //     el siguiente render (porque ya sincronizamos prevIsOpen),
+  //     así que NO se produce un loop infinito.
+  //   - Si `initialData` cambia mientras el modal está abierto
+  //     (re-render del padre), no reseteamos — preservamos los
+  //     edits del usuario.
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
-
   if (isOpen !== prevIsOpen) {
-    setPrevIsOpen(isOpen); // Sincronizamos la memoria
-
-    // Solo reseteamos los datos si el modal se está ABRIENDO
+    setPrevIsOpen(isOpen);
     if (isOpen) {
       setFormData(initialData);
       const { code, num } = parsePhoneData(initialData.telefono);
