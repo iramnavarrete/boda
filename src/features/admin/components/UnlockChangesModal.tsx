@@ -1,7 +1,9 @@
 import Modal from "@/features/shared/components/Modal";
 import { Family } from "@/types";
-import { Unlock } from "lucide-react";
+import { Unlock, Info } from "lucide-react";
 import { useState } from "react";
+import DatePicker from "./DatePicker";
+import { isDateInPast } from "@/features/admin/utils/dateComparison";
 
 interface UnlockChangesModalProps {
   isOpen: boolean;
@@ -20,6 +22,15 @@ const UnlockChangesModal = ({
 }: UnlockChangesModalProps) => {
   const [limitDate, setLimitDate] = useState("");
 
+  const isDateInvalid = isDateInPast(limitDate);
+
+  // Si hay fecha y está en el pasado, bloqueamos (validación).
+  // Si NO hay fecha, desbloqueamos sin deadline (botón sigue activo).
+  const handleConfirm = () => {
+    if (limitDate && isDateInvalid) return;
+    onConfirm(limitDate || null);
+  };
+
   return (
     <Modal isOpen={isOpen} onBackdropPress={onClose}>
       <div className="p-8">
@@ -30,7 +41,7 @@ const UnlockChangesModal = ({
           Habilitar Edición
         </h3>
         <p className="text-sm text-[#5A5A5A] mb-6 leading-relaxed">
-          Para permitir que{" "}
+          ¿Deseas permitir que{" "}
           {isBulk ? (
             "las familias seleccionadas modifiquen su"
           ) : (
@@ -38,18 +49,37 @@ const UnlockChangesModal = ({
               <b>{family?.nombre}</b> modifique su
             </>
           )}{" "}
-          respuesta, asigna una nueva fecha límite de confirmación.
+          respuesta?
         </p>
         <div className="mb-6">
           <label className="block text-[10px] font-bold text-[#C5A669] uppercase tracking-widest mb-2">
-            Nueva Fecha Límite
+            Nueva Fecha Límite{" "}
+            <span className="font-normal normal-case text-[#A8A29E]">
+              (Opcional)
+            </span>
           </label>
-          <input
-            type="date"
+          <DatePicker
             value={limitDate}
-            onChange={(e) => setLimitDate(e.target.value)}
-            className="w-full px-4 py-3 bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl text-[#2C2C29] focus:outline-none focus:ring-2 focus:ring-[#C5A669]/20 focus:border-[#C5A669] transition-all shadow-sm"
+            onChange={setLimitDate}
+            hasError={isDateInvalid}
           />
+          {isDateInvalid ? (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex gap-2 mt-2">
+              <Info size={14} className="text-red-500 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-red-700 leading-relaxed">
+                La fecha seleccionada ya pasó. Elige una fecha futura
+                o déjala vacía para desbloquear sin límite.
+              </p>
+            </div>
+          ) : (
+            <div className="bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl p-3 flex gap-2 mt-2">
+              <Info size={14} className="text-[#C5A669] shrink-0 mt-0.5" />
+              <p className="text-[11px] text-[#5A5A5A] leading-relaxed">
+                Si configuras la fecha límite, se bloquearán los cambios
+                automáticamente al pasar la fecha indicada.
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-3">
@@ -61,19 +91,13 @@ const UnlockChangesModal = ({
               Cancelar
             </button>
             <button
-              onClick={() => onConfirm(limitDate)}
-              disabled={!limitDate}
-              className="flex-1 px-4 py-3.5 rounded-xl text-white font-bold shadow-lg transition-all disabled:opacity-50 disabled:pointer-events-none text-sm bg-[#C5A669] hover:bg-[#B39358] shadow-[#C5A669]/20"
+              onClick={handleConfirm}
+              disabled={!!limitDate && isDateInvalid}
+              className="flex-1 px-4 py-3.5 rounded-xl text-white font-bold shadow-lg transition-all text-sm bg-[#C5A669] hover:bg-[#B39358] shadow-[#C5A669]/20 disabled:opacity-50 disabled:pointer-events-none"
             >
               Confirmar
             </button>
           </div>
-          <button
-            onClick={() => onConfirm(null)}
-            className="w-full py-2.5 text-xs font-bold text-[#A8A29E] hover:text-[#5A5A5A] uppercase tracking-widest transition-colors active:scale-95"
-          >
-            Omitir fecha y desbloquear
-          </button>
         </div>
       </div>
     </Modal>
