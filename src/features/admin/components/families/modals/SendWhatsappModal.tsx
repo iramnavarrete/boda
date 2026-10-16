@@ -1,4 +1,4 @@
-import { BellRing, Info, Unlock, Check } from "lucide-react";
+import { BellRing, Info } from "lucide-react";
 import { IconBrandWhatsapp } from "@tabler/icons-react";
 import { useState } from "react";
 import Modal from "@/features/shared/components/Modal";
@@ -9,7 +9,7 @@ interface SendWhatsappModalProps {
   type: "initial" | "reminder";
   familyName: string;
   onClose: () => void;
-  onConfirm: (dateStr: string | null, autoBlock: boolean) => void;
+  onConfirm: (dateStr: string | null) => void;
   loadingPhone?: boolean;
   phoneError?: string | null;
 }
@@ -29,14 +29,21 @@ export default function SendWhatsappModal({
   const [limitDate, setLimitDate] = useState(
     () => localStorage.getItem(storageKey) || "",
   );
-  const [isAutoBlockEnabled, setIsAutoBlockEnabled] = useState(true);
 
   const isInitial = type === "initial";
 
+  const isDateInPast = (dateStr: string) => {
+    if (!dateStr) return false;
+    const today = new Date().toLocaleDateString("en-CA");
+    return dateStr < today;
+  };
+
   const handleConfirm = () => {
-    if (!limitDate) return;
-    localStorage.setItem(storageKey, limitDate);
-    onConfirm(limitDate, isAutoBlockEnabled);
+    // Si hay fecha y está en el pasado, bloqueamos (validación).
+    // Si NO hay fecha, enviamos sin deadline (botón sigue activo).
+    if (limitDate && isDateInPast(limitDate)) return;
+    if (limitDate) localStorage.setItem(storageKey, limitDate);
+    onConfirm(limitDate || null);
   };
 
   return (
@@ -69,8 +76,7 @@ export default function SendWhatsappModal({
         {/* Descripción */}
         <p className="text-sm text-[#5A5A5A] mb-4 leading-relaxed">
           Se enviará un {isInitial ? "mensaje" : "recordatorio"} a{" "}
-          <b className="text-[#2C2C29]">{familyName}</b>. Selecciona la fecha
-          límite de respuesta:
+          <b className="text-[#2C2C29]">{familyName}</b>.
         </p>
 
         {/* Error del pre-fetch del teléfono */}
@@ -92,52 +98,33 @@ export default function SendWhatsappModal({
         {/* Fecha límite (Componente personalizado) */}
         <div className="mb-4">
           <label className="block text-[10px] font-bold text-[#C5A669] uppercase tracking-widest mb-2">
-            Fecha Límite
-          </label>
-          <DatePicker value={limitDate} onChange={setLimitDate} />
-        </div>
-
-        {/* Checkbox de bloqueo automático */}
-        <div className="flex items-center justify-between gap-3 mb-6 relative">
-          <label className="flex items-start gap-3 cursor-pointer group select-none flex-1">
-            <div className="relative flex items-center justify-center shrink-0 mt-0.5">
-              <input
-                type="checkbox"
-                checked={isAutoBlockEnabled}
-                onChange={(e) => setIsAutoBlockEnabled(e.target.checked)}
-                className="peer appearance-none w-5 h-5 border border-[#EBE5DA] rounded bg-[#FDFBF7] checked:bg-[#C5A669] checked:border-[#C5A669] transition-colors cursor-pointer"
-              />
-              <Check
-                size={14}
-                className="absolute text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"
-                strokeWidth={3}
-              />
-            </div>
-            <span className="text-sm text-[#5A5A5A] group-hover:text-[#2C2C29] transition-colors leading-snug self-center">
-              Bloquear edición automáticamente al pasar la fecha
+            Fecha Límite{" "}
+            <span className="font-normal normal-case text-[#A8A29E]">
+              (Opcional)
             </span>
           </label>
-
-          {/* Tooltip */}
-          <div className="relative group/tooltip flex items-center justify-center cursor-help shrink-0 p-1">
-            <Info
-              size={18}
-              className="text-[#C5A669] hover:text-[#B39358] transition-colors"
-            />
-            <div className="absolute bottom-full -right-1.5 mb-2 w-64 p-4 bg-white border border-[#EBE5DA] shadow-[0_10px_40px_-10px_rgba(44,44,41,0.2)] rounded-2xl text-xs text-[#5A5A5A] opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-50 pointer-events-none">
-              <p className="leading-relaxed mb-2">
-                El día siguiente de la fecha que selecciones, se bloquearán las
-                ediciones de la familia automáticamente.
+          <DatePicker
+            value={limitDate}
+            onChange={setLimitDate}
+            hasError={isDateInPast(limitDate)}
+          />
+          {isDateInPast(limitDate) ? (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex gap-2 mt-2">
+              <Info size={14} className="text-red-500 shrink-0 mt-0.5" />
+              <p className="text-[11px] text-red-700 leading-relaxed">
+                La fecha seleccionada ya pasó. Elige una fecha futura
+                o déjala vacía para enviar sin límite.
               </p>
-              <p className="leading-relaxed">
-                Para habilitarla de nuevo, haz clic en{" "}
-                <Unlock size={10} className="inline mb-0.5" />{" "}
-                <b>Cambios bloqueados</b> desde tu panel.
-              </p>
-              <div className="absolute top-full right-3 border-[6px] border-transparent border-t-white" />
-              <div className="absolute top-full right-3 border-[7px] border-transparent border-t-[#EBE5DA] -z-10 mt-[1px]" />
             </div>
-          </div>
+          ) : (
+            <div className="bg-[#FDFBF7] border border-[#EBE5DA] rounded-xl p-3 flex gap-2 mt-2">
+              <Info size={14} className="text-[#C5A669] shrink-0 mt-0.5" />
+              <p className="text-[11px] text-[#5A5A5A] leading-relaxed">
+                Si configuras la fecha límite, se bloquearán los cambios
+                automáticamente al pasar la fecha indicada.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Botones */}
@@ -151,7 +138,11 @@ export default function SendWhatsappModal({
             </button>
             <button
               onClick={handleConfirm}
-              disabled={!limitDate || loadingPhone || !!phoneError}
+              disabled={
+                (limitDate && isDateInPast(limitDate)) ||
+                loadingPhone ||
+                !!phoneError
+              }
               className={`flex-1 px-4 py-3.5 rounded-xl text-white font-bold shadow-lg transition-all disabled:opacity-50 disabled:pointer-events-none text-sm flex items-center justify-center gap-2 ${
                 isInitial
                   ? "bg-[#C5A669] hover:bg-[#B39358] shadow-[#C5A669]/20"
@@ -161,12 +152,6 @@ export default function SendWhatsappModal({
               {loadingPhone ? "Cargando…" : "Enviar"}
             </button>
           </div>
-          <button
-            onClick={() => onConfirm(null, false)}
-            className="w-full py-2.5 text-xs font-bold text-[#A8A29E] hover:text-[#5A5A5A] uppercase tracking-widest transition-colors active:scale-95"
-          >
-            Omitir fecha y enviar
-          </button>
         </div>
       </div>
     </Modal>
