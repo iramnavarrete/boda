@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Family } from "@/types";
 import { FamiliesService } from "@/services/familiesService";
+import { isDateInPast } from "@/features/admin/utils/dateComparison";
 
 export function useExpiredFamiliesWatcher(
   families: Family[] | undefined,
@@ -9,13 +10,11 @@ export function useExpiredFamiliesWatcher(
   useEffect(() => {
     if (!families?.length || !invitationId) return;
 
-    const today = new Date().toLocaleDateString("en-CA");
     const expiredIds = families
       .filter(
         (g) =>
           g.cambiosPermitidos === true &&
-          g.fechaLimiteConfirmacion &&
-          g.fechaLimiteConfirmacion < today,
+          isDateInPast(g.fechaLimiteConfirmacion),
       )
       .map((g) => g.id);
 

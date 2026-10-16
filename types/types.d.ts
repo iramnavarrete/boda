@@ -174,8 +174,18 @@ export interface Invitation {
    * reemplazan al mensaje por defecto. Aceptan variables que se
    * sustituyen al enviar (ver `replaceWhatsappVariables`).
    */
+  /** Mensaje INITIAL (con fecha límite). Se usa cuando el admin envía
+   *  el WhatsApp con fecha. El sistema bloquea al pasar la fecha. */
   mensajeInicial?: string;
+  /** Mensaje REMINDER (con fecha límite). Similar a mensajeInicial pero
+   *  para el recordatorio. Bloquea al pasar la fecha. */
   mensajeRecordatorio?: string;
+  /** Mensaje INITIAL (SIN fecha límite). Variante persuasiva para pedir
+   *  la confirmación sin bloquear al invitado. */
+  mensajeInicialSinFechaLimite?: string;
+  /** Mensaje REMINDER (SIN fecha límite). Variante persuasiva para
+   *  recordatorio sin asignar deadline. */
+  mensajeRecordatorioSinFechaLimite?: string;
 
   // ─── XV AÑOS ────────────────────────────────────────────────────────────
   /** Papás de la quinceañera (XV). `padresNovio` se ignora en XV. */
