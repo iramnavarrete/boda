@@ -438,6 +438,39 @@ export const FamiliesService = {
       await batch.commit();
     }
   },
+  /**
+   * Aplica una fecha limite de confirmacion a un lote de familias.
+   * Si alsoLock es true, ademas bloquea los cambios de asistencia.
+   * Si dateStr es null, limpia la fecha.
+   */
+  bulkUpdateDeadline: async (
+    invitationId: string | null,
+    familyIds: string[],
+    dateStr: string | null,
+  ) => {
+    if (!invitationId) return;
+
+    for (let i = 0; i < familyIds.length; i += BATCH_CHUNK_SIZE) {
+      const batch = writeBatch(db);
+      const chunk = familyIds.slice(i, i + BATCH_CHUNK_SIZE);
+
+      chunk.forEach((familyId) => {
+        const payload: Partial<Family> = {
+          fechaLimiteConfirmacion: dateStr,
+          // Tanto al aplicar como al quitar la fecha, reactivamos
+          // los cambios de asistencia (alineado con el envío
+          // individual de WhatsApp — ver `markWhatsAppSent`/
+          // `markReminderAsSent`). El bloqueo efectivo al pasar
+          // la fecha lo dispara el watcher.
+          cambiosPermitidos: true,
+          ultimaModificacion: serverTimestamp(),
+        };
+        batch.update(familyPaths.family(invitationId, familyId), payload);
+      });
+
+      await batch.commit();
+    }
+  },
 
   batchDeleteFamilies: async (invitationId: string, familyIds: string[]) => {
     for (let i = 0; i < familyIds.length; i += BATCH_CHUNK_SIZE) {
