@@ -17,6 +17,7 @@ import { FamiliesService } from "@/services/familiesService";
 import { useInvitationStore } from "../../stores/invitationStore";
 import { FamilyQuotesService } from "@/services/familyQuotesService";
 import { ActivityService } from "@/services/activityService";
+import { isDateInPast } from "@/features/admin/utils/dateComparison";
 import { cn } from "@heroui/theme";
 import { colorizeLottie } from "@/utils/lottie";
 
@@ -71,11 +72,7 @@ const Assistants: FC<Props> = ({
   const searchParams = useSearchParams();
   const id = searchParams?.get("family");
 
-  const isExpiredLocal = () => {
-    if (!familyData?.fechaLimiteConfirmacion) return false;
-    const dateFormatted = new Date().toLocaleDateString("en-CA");
-    return familyData.fechaLimiteConfirmacion < dateFormatted;
-  };
+  const isExpiredLocal = () => isDateInPast(familyData?.fechaLimiteConfirmacion);
 
   const isFormLocked =
     familyData.cambiosPermitidos === false || isExpiredLocal();

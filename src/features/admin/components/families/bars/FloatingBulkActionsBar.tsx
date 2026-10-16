@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
-import { X, Lock, Unlock, Trash2, ChevronUp, CheckSquare } from "lucide-react";
+import {
+  X, Lock, Unlock, Trash2, ChevronUp, CheckSquare, Calendar,
+} from "lucide-react";
 import { cn } from "@heroui/theme";
 import DashedSeparator from "../../DashedSeparator";
+import BulkDeadlineModal from "../modals/BulkDeadlineModal";
 import { useWeddingAdminContext } from "@/features/admin/context/WeddingAdminContext";
 
 interface BulkActionsProps {
@@ -15,6 +18,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({ className }) => {
     handleSelectAll,
     clearSelection,
     handleBulkUpdateLock,
+    handleBulkUpdateDeadline,
     handleBulkDelete,
   } = useWeddingAdminContext();
 
@@ -22,6 +26,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({ className }) => {
   const isSelectedAll = count > 0 && count === finalFilteredFamilies.length;
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isDeadlineModalOpen, setIsDeadlineModalOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -40,6 +45,7 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({ className }) => {
   };
 
   return (
+    <>
     <div
       data-state={count > 0 ? "open" : "closed"}
       className={cn(
@@ -148,6 +154,22 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({ className }) => {
                   <span>Permitir Edición</span>
                 </button>
 
+                {/* Fecha límite — abre `BulkDeadlineModal` (similar a
+                    SendWhatsappModal). El modal gestiona datepicker +
+                    botón "Quitar fecha" + toggle de bloqueo. */}
+                <button
+                  onClick={() => {
+                    setIsOpen(false);
+                    setIsDeadlineModalOpen(true);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-stone-600 hover:bg-sand-light/50 hover:text-gold hover:border hover:border-gold/30 border border-transparent transition-all text-left group"
+                >
+                  <div className="text-stone-300 group-hover:text-gold transition-colors">
+                    <Calendar size={18} strokeWidth={2} />
+                  </div>
+                  <span>Fecha límite de confirmación</span>
+                </button>
+
                 <DashedSeparator />
 
                 <div className="px-3 py-1.5 text-[10px] font-bold text-danger-300 uppercase tracking-wider">
@@ -183,6 +205,17 @@ const FloatingBulkActionsBar: React.FC<BulkActionsProps> = ({ className }) => {
         </div>
       </div>
     </div>
+
+    {/* Modal de fecha límite — controlado por `isDeadlineModalOpen`.
+        Al confirmar (o fecha + alsoLock), llama al batch update que
+        actualiza Firestore y refresca el state local. */}
+    <BulkDeadlineModal
+      isOpen={isDeadlineModalOpen}
+      count={count}
+      onClose={() => setIsDeadlineModalOpen(false)}
+      onConfirm={handleBulkUpdateDeadline}
+    />
+    </>
   );
 };
 

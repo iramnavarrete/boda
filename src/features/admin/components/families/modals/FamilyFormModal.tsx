@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   CheckCircle2,
   XCircle as XCircleIcon,
@@ -17,6 +17,7 @@ import { FamilyFormData } from "@/types";
 import { useFamilyFormModal } from "../../../hooks/useFamilyFormModal";
 import { useInvitationStore } from "@/features/front/stores/invitationStore";
 import { getEtiquetaOptions } from "@/features/admin/utils/etiquetaPorTipo";
+import { isDateInPast } from "@/features/admin/utils/dateComparison";
 
 interface FamilyFormModalProps {
   isOpen: boolean;
@@ -40,7 +41,10 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
   // helper retorna `[{value, label}]`; mostramos `label` y guardamos
   // `value` canónico en Firestore.
   const tipo = useInvitationStore((s) => s.invitationData?.tipo);
-  const TAG_OPTIONS = getEtiquetaOptions(tipo);
+  const TAG_OPTIONS = useMemo(
+    () => getEtiquetaOptions(tipo),
+    [tipo],
+  );
 
   // Inyectamos nuestro hook personalizado
   const {
@@ -55,6 +59,37 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
     handleTextChange,
     handleSubmit,
   } = useFamilyFormModal(isOpen, initialData, onSubmit);
+
+  // Valida la combinación "Permitir cambios de asistencia" + fecha
+  // límite. Si el checkbox está activo, la fecha debe ser válida
+  // (presente + no pasada). Inválido → bloqueamos el guardado y
+  // mostramos el error en el DatePicker.
+  const isDeadlineInvalid = useMemo(
+    () =>
+      formData.cambiosPermitidos === true &&
+      isDateInPast(formData.fechaLimiteConfirmacion ?? undefined),
+    [formData.cambiosPermitidos, formData.fechaLimiteConfirmacion],
+  );
+  const deadlineErrorMessage = useMemo(() => {
+    if (formData.cambiosPermitidos !== true) return undefined;
+    if (isDateInPast(formData.fechaLimiteConfirmacion ?? undefined)) {
+      return "La fecha seleccionada ya pasó. Elige una fecha futura para activar el bloqueo automático.";
+    }
+    return undefined;
+  }, [formData.cambiosPermitidos, formData.fechaLimiteConfirmacion]);
+
+  // Estabiliza el callback del DatePicker para evitar que el
+  // componente se re-renderice con un `onChange` nuevo en cada
+  // keystroke del formulario.
+  const handleDeadlineChange = useCallback(
+    (v: string) => {
+      handleTextChange(
+        "fechaLimiteConfirmacion",
+        v === "" ? null : v,
+      );
+    },
+    [handleTextChange],
+  );
 
   return (
     <Modal
@@ -427,13 +462,10 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
                         </label>
                         <DatePicker
                           value={formData.fechaLimiteConfirmacion ?? ""}
-                          onChange={(v) =>
-                            handleTextChange(
-                              "fechaLimiteConfirmacion",
-                              v === "" ? null : v,
-                            )
-                          }
+                          onChange={handleDeadlineChange}
                           popoverPosition="top"
+                          hasError={isDeadlineInvalid}
+                          errorMessage={deadlineErrorMessage}
                         />
                       </div>
                     )}
@@ -454,7 +486,8 @@ const FamilyFormModal: React.FC<FamilyFormModalProps> = ({
           </button>
           <button
             type="submit"
-            className="flex-1 px-4 py-2.5 bg-gold text-white rounded-xl hover:bg-gold-600 font-medium shadow-lg shadow-gold/20 transition-all flex items-center justify-center gap-2"
+            disabled={isDeadlineInvalid}
+            className="flex-1 px-4 py-2.5 bg-gold text-white rounded-xl hover:bg-gold-600 font-medium shadow-lg shadow-gold/20 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gold"
           >
             <Save size={18} />
             {isEdit ? "Guardar" : "Crear"}

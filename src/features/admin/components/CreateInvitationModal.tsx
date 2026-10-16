@@ -120,6 +120,8 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
     },
     mensajeInicial: "",
     mensajeRecordatorio: "",
+    mensajeInicialSinFechaLimite: "",
+    mensajeRecordatorioSinFechaLimite: "",
     // ─── XV Años (defaults vacíos) ──────────────────────────────────────
     padresQuinceanera: { mama: "", papa: "" },
     padrinos: { nombre1: "", nombre2: "" },
@@ -157,6 +159,10 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
           initialState.configuracionVisual,
         mensajeInicial: invitationToEdit.mensajeInicial || "",
         mensajeRecordatorio: invitationToEdit.mensajeRecordatorio || "",
+        mensajeInicialSinFechaLimite:
+          invitationToEdit.mensajeInicialSinFechaLimite || "",
+        mensajeRecordatorioSinFechaLimite:
+          invitationToEdit.mensajeRecordatorioSinFechaLimite || "",
         // ─── XV Años ──────────────────────────────────────────────────
         padresQuinceanera: invitationToEdit.padresQuinceanera || {
           mama: "",
@@ -201,6 +207,10 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
         configuracionVisual: formData.configuracionVisual,
         mensajeInicial: formData.mensajeInicial || "",
         mensajeRecordatorio: formData.mensajeRecordatorio || "",
+        mensajeInicialSinFechaLimite:
+          formData.mensajeInicialSinFechaLimite || "",
+        mensajeRecordatorioSinFechaLimite:
+          formData.mensajeRecordatorioSinFechaLimite || "",
         // ─── XV Años ──────────────────────────────────────────────────
         padresQuinceanera: formData.padresQuinceanera,
         padrinos: formData.padrinos,
@@ -1140,6 +1150,45 @@ const CreateInvitationModal: React.FC<CreateInvitationModalProps> = ({
                     value={formData.mensajeRecordatorio}
                     onChange={(e) =>
                       handleChange("mensajeRecordatorio", e.target.value)
+                    }
+                  />
+                </div>
+
+                {/* Separador: variantes SIN fecha límite */}
+                <div className="flex items-center gap-2 my-1 text-[10px] font-bold text-[#5A5A5A] uppercase tracking-widest">
+                  <div className="flex-1 h-px bg-sand-200" />
+                  <span>Sin fecha límite (no bloquea)</span>
+                  <div className="flex-1 h-px bg-sand-200" />
+                </div>
+
+                {/* Mensaje inicial SIN fecha límite */}
+                <div>
+                  <label className="text-[10px] font-bold text-[#5A5A5A] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                    <MessageCircle size={12} /> Mensaje Inicial (sin deadline)
+                  </label>
+                  <textarea
+                    rows={6}
+                    placeholder="Ej: ¡Hola {nombreFamilia}! Confirma por favor..."
+                    className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-[#FDFBF7] focus:border-gold-500 outline-none transition-all shadow-sm text-sm resize-y leading-relaxed"
+                    value={formData.mensajeInicialSinFechaLimite}
+                    onChange={(e) =>
+                      handleChange("mensajeInicialSinFechaLimite", e.target.value)
+                    }
+                  />
+                </div>
+
+                {/* Mensaje recordatorio SIN fecha límite */}
+                <div>
+                  <label className="text-[10px] font-bold text-[#5A5A5A] uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                    <BellRing size={12} /> Mensaje de Recordatorio (sin deadline)
+                  </label>
+                  <textarea
+                    rows={6}
+                    placeholder="Ej: ✨ Queridos {nombreFamilia}, aún no hemos..."
+                    className="w-full px-4 py-3 rounded-xl border border-sand-200 bg-[#FDFBF7] focus:border-gold-500 outline-none transition-all shadow-sm text-sm resize-y leading-relaxed"
+                    value={formData.mensajeRecordatorioSinFechaLimite}
+                    onChange={(e) =>
+                      handleChange("mensajeRecordatorioSinFechaLimite", e.target.value)
                     }
                   />
                 </div>

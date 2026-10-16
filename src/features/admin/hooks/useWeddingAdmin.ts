@@ -149,7 +149,11 @@ export function useWeddingAdmin() {
   });
 
   // ── Acciones de bloqueo / desbloqueo ────────────────────────────────────
-  const { handleLockToggle, handleBulkUpdateLock } = useLockActions({
+  const {
+    handleLockToggle,
+    handleBulkUpdateLock,
+    handleBulkUpdateDeadline,
+  } = useLockActions({
     invitationId,
     selectedFamilies,
     clearSelection,
@@ -240,6 +244,7 @@ export function useWeddingAdmin() {
     handleBulkDelete,
     handleLockToggle,
     handleBulkUpdateLock,
+    handleBulkUpdateDeadline,
     handleExportExcel: () => handleExportExcel(families),
     handleSelectAll: () => _selectAllFromStore(finalFilteredFamilies),
   } as const;

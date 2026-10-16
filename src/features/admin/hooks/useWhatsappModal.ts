@@ -223,7 +223,7 @@ export function useWhatsappModal(invitationId: string | undefined) {
   );
 
   const handleSubmit = useCallback(
-    async (dateStr: string | null, autoBlock: boolean) => {
+    async (dateStr: string | null) => {
       const { family, type, phone, phoneError } = modal;
       if (!family || !invitationId) return;
 
@@ -235,12 +235,34 @@ export function useWhatsappModal(invitationId: string | undefined) {
       }
       if (!phone) return;
 
-      const shouldSaveDate = autoBlock && !!dateStr;
+      const shouldSaveDate = !!dateStr;
 
-      const customTemplate =
+      // Selección del template según tipo y disponibilidad:
+      //
+      //   - con-fecha-límite: el template "principal" (con-fecha)
+      //     del admin para este tipo (initial | reminder).
+      //   - sin-fecha-límite: si el admin llenó la variante
+      //     explícita `*SinFechaLimite`, usamos esa; si NO, caemos
+      //     al template "con-fecha" (retrocompat). Las variables
+      //     `{fechaLimite}` se sustituyen por "" en
+      //     `replaceWhatsappVariables` cuando no hay fecha, así
+      //     que el template con-fecha sigue funcionando — solo que
+      //     con la coletilla de fecha vacía.
+      //   - default: si ambos están vacíos, `buildMessage` usa el
+      //     mensaje hardcodeado del sistema.
+      const conFechaTemplate =
         type === "initial"
           ? invitationData?.mensajeInicial
           : invitationData?.mensajeRecordatorio;
+      const sinFechaTemplate =
+        type === "initial"
+          ? invitationData?.mensajeInicialSinFechaLimite
+          : invitationData?.mensajeRecordatorioSinFechaLimite;
+
+      const hasDeadline = !!dateStr;
+      const customTemplate = hasDeadline
+        ? conFechaTemplate
+        : sinFechaTemplate || conFechaTemplate;
 
       const msg = buildMessage(
         type,
