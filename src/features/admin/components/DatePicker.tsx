@@ -22,6 +22,17 @@ interface CustomDatePickerProps {
   value: string; // Formato YYYY-MM-DD
   onChange: (value: string) => void;
   /**
+   * Si true, marca el input con borde rojo pastel + texto del valor
+   * en rojo. Útil para errores de validación (ej. fecha pasada).
+   * Default: false.
+   */
+  hasError?: boolean;
+  /**
+   * Mensaje de error a mostrar debajo del input (opcional).
+   * Si está presente, se renderiza como un texto pequeño en rojo.
+   */
+  errorMessage?: string;
+  /**
    * Posición del popover del calendario respecto al input trigger.
    *
    * - `"bottom"` (default): popover debajo del input. Útil cuando el
@@ -52,6 +63,8 @@ export default function DatePicker({
   value,
   onChange,
   popoverPosition = "bottom",
+  hasError = false,
+  errorMessage,
 }: CustomDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -125,15 +138,32 @@ export default function DatePicker({
         className={cn(
           "w-full pl-4 pr-3 py-2.5 bg-[#FDFBF7] border rounded-xl transition-all shadow-sm flex items-center justify-between cursor-pointer select-none",
           isOpen
-            ? "border-[#C5A669] ring-2 ring-[#C5A669]/20"
-            : "border-[#EBE5DA] hover:border-[#C5A669]/50",
+            ? hasError
+              ? "border-red-300 ring-2 ring-red-200"
+              : "border-[#C5A669] ring-2 ring-[#C5A669]/20"
+            : hasError
+              ? "border-red-300 hover:border-red-400"
+              : "border-[#EBE5DA] hover:border-[#C5A669]/50",
         )}
       >
         <span
-          className={value ? "text-[#2C2C29] font-medium" : "text-[#A8A29E]"}
+          className={cn(
+            hasError
+              ? "text-red-500 font-medium"
+              : value
+                ? "text-[#2C2C29] font-medium"
+                : "text-[#A8A29E]",
+          )}
         >
           {formattedVisualDate}
         </span>
+
+        {/* Mensaje de error opcional bajo el input */}
+        {errorMessage && (
+          <p className="absolute -bottom-5 left-1 text-[10px] text-red-500 font-medium">
+            {errorMessage}
+          </p>
+        )}
 
         {/* Contenedor lateral derecho */}
         <div className="flex items-center gap-2">
