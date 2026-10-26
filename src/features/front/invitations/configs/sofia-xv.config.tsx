@@ -106,7 +106,7 @@ const sofiaXvConfig: XvInvitationConfig = {
       preTitle: "El Escenario",
       heading: "Un Lugar de Encanto",
       receptionBadgeText: "Recepción y fiesta",
-      venueImage: "/img/salon/quinta-la-isla.jpg",
+      venueImage: "/img/salon/quinta-la-isla-1.jpg",
       venueName: "Quinta Real Aguascalientes",
       address:
         "Av. Aguascalientes Sur 801, Jardines de la Asunción, 20270 Aguascalientes, Ags.",
@@ -118,7 +118,7 @@ const sofiaXvConfig: XvInvitationConfig = {
       // Card opcional de ceremonia (misma imagen de placeholder por ahora).
       // Quitar este bloque si la invitación no tiene ceremonia separada.
       ceremony: {
-        venueImage: "/img/salon/quinta-la-isla.jpg",
+        venueImage: "/img/salon/quinta-la-isla-1.jpg",
         venueName: "Parroquia San Juan Bautista",
         address: "Av. Luis Donaldo Colosio 203, Trojes de Alonso, Ags.",
         eventTime: "16:00 HRS",
@@ -223,8 +223,8 @@ const sofiaXvConfig: XvInvitationConfig = {
           subcaption: "Bosque Encantado",
         },
         {
-          src: "/img/salon/quinta-la-isla.jpg",
-          thumb: "/img/salon/quinta-la-isla.jpg",
+          src: "/img/salon/quinta-la-isla-1.jpg",
+          thumb: "/img/salon/quinta-la-isla-1.jpg",
           alt: "Quinta Real · jardín principal",
           caption: "El escenario perfecto",
           subcaption: "Quinta Real Aguascalientes",

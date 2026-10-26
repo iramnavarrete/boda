@@ -503,7 +503,7 @@ function mergeInvitationData(
       venueImage:
         sections.venue.ceremony?.venueImage ||
         sections.venue.venueImage ||
-        "/img/salon/quinta-la-isla.jpg",
+        "/img/salon/quinta-la-isla-1.jpg",
       venueName: data.ceremonia.nombreTemplo || "",
       address: data.ceremonia.direccion || "",
       eventTime: formatHoraWithHRS(data.ceremonia.hora),

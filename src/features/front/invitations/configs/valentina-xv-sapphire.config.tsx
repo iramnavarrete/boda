@@ -100,7 +100,7 @@ const valentinaXvConfig: XvInvitationConfig = {
       preTitle: "El Escenario",
       heading: "Un Lugar de Encanto",
       receptionBadgeText: "Recepción y fiesta",
-      venueImage: "/img/salon/quinta-la-isla.jpg",
+      venueImage: "/img/salon/quinta-la-isla-1.jpg",
       venueName: "Salón Cristal Aguascalientes",
       address:
         "Av. Universidad 1002, Trojes de Alonso, 20123 Aguascalientes, Ags.",
@@ -112,7 +112,7 @@ const valentinaXvConfig: XvInvitationConfig = {
       // Card opcional de ceremonia (misma imagen de placeholder por ahora).
       // Quitar este bloque si la invitación no tiene ceremonia separada.
       ceremony: {
-        venueImage: "/img/salon/quinta-la-isla.jpg",
+        venueImage: "/img/salon/quinta-la-isla-1.jpg",
         venueName: "Catedral Basílica de Aguascalientes",
         address: "Plaza de la Patria, Centro, 20000 Aguascalientes, Ags.",
         eventTime: "19:00 HRS",
@@ -196,8 +196,8 @@ const valentinaXvConfig: XvInvitationConfig = {
         "Detrás de cada instante congelado en el tiempo, vibra la dulce magia de un momento que perdura para siempre.",
       slides: [
         {
-          src: "/img/xv/sapphire/cover.png",
-          thumb: "/img/xv/sapphire/cover.png",
+          src: "/img/valentina-xv/cover.png",
+          thumb: "/img/valentina-xv/cover.png",
           alt: "Valentina · portada principal",
           caption: "Un sueño hecho realidad",
           subcaption: "Gala de Quinceañera",
@@ -210,8 +210,8 @@ const valentinaXvConfig: XvInvitationConfig = {
           subcaption: "Noche Estrellada",
         },
         {
-          src: "/img/salon/quinta-la-isla.jpg",
-          thumb: "/img/salon/quinta-la-isla.jpg",
+          src: "/img/salon/quinta-la-isla-1.jpg",
+          thumb: "/img/salon/quinta-la-isla-1.jpg",
           alt: "Salón Cristal · salón principal",
           caption: "El escenario perfecto",
           subcaption: "Salón Cristal Aguascalientes",
