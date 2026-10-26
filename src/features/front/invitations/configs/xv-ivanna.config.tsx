@@ -116,7 +116,7 @@ const ivannaXvConfig: XvInvitationConfig = {
       // Card opcional de ceremonia (misma imagen de placeholder por ahora).
       // Quitar este bloque si la invitación no tiene ceremonia separada.
       ceremony: {
-        venueImage: "/img/salon/quinta-la-isla.jpg",
+        venueImage: "/img/salon/quinta-la-isla-1.jpg",
         venueName: "Catedral Basílica de Aguascalientes",
         address: "Plaza de la Patria, Centro, 20000 Aguascalientes, Ags.",
         eventTime: "19:00 HRS",
