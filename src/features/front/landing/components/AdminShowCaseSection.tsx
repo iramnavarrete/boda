@@ -4,15 +4,31 @@ import Autoplay from "embla-carousel-autoplay";
 import useEmblaCarousel from "embla-carousel-react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Activity,
+  ArrowUpDown,
   BarChart3,
+  CalendarClock,
+  CheckCheck,
   ChevronLeft,
   ChevronRight,
-  FileSpreadsheet,
+  ClipboardCheck,
+  Download,
+  EyeOff,
   Filter,
-  Lock,
-  MousePointerClick,
-  RotateCcw,
-  Send,
+  History,
+  LayoutGrid,
+  ListFilter,
+  LockKeyhole,
+  MessageCircle,
+  MessageCircleHeart,
+  Move,
+  QrCode,
+  ScanLine,
+  Search,
+  Settings2,
+  Tags,
+  Ticket,
+  UserCheck,
   UserPen,
   Users,
 } from "lucide-react";
@@ -50,73 +66,204 @@ const AdminFeatureItem: React.FC<
 const ADMIN_SLIDES = [
   {
     id: "resumen",
-    image: "/img/landing/dashboard.png",
+    image: "/img/landing/dashboard.webp",
     title: "Dashboard Central",
     description:
-      "Visualiza el estado de tu evento en tiempo real. Gráficas de confirmación, actividad reciente y accesos rápidos.",
+      "Todo tu evento en un vistazo: métricas en vivo, actividad reciente y cuenta regresiva.",
     features: [
       {
         icon: <BarChart3 size={20} />,
-        title: "Estadísticas en Vivo",
-        text: "Confirmados, pendientes y declinados.",
+        title: "Métricas del Evento",
+        text: "Confirmadas, declinadas y sin responder por invitados, familias o logística.",
       },
       {
-        icon: <RotateCcw size={20} />,
+        icon: <Activity size={20} />,
         title: "Actividad Reciente",
-        text: "Historial de cambios y confirmaciones.",
+        text: "Los últimos movimientos de tus invitados, al instante.",
       },
       {
-        icon: <Lock size={20} />,
-        title: "Seguridad",
-        text: "Controla quién puede editar su respuesta.",
+        icon: <MessageCircleHeart size={20} />,
+        title: "Muro de Deseos",
+        text: "Los mensajes de cariño que te dejan en la invitación.",
+      },
+      {
+        icon: <CalendarClock size={20} />,
+        title: "Cuenta Regresiva",
+        text: "Días, horas y minutos que faltan para el gran día.",
       },
     ],
   },
   {
     id: "lista",
-    image: "/img/landing/lista-invitados.png",
-    title: "Gestión de Invitados",
+    image: "/img/landing/lista-invitados.webp",
+    title: "Gestión de Familias",
     description:
-      "Tu base de datos completa. Filtra, busca, edita y organiza a tus invitados por familias o grupos.",
+      "Tu base de datos completa. Busca, filtra y organiza a tus invitados por familias, etiquetas o estado.",
     features: [
       {
+        icon: <Users size={20} />,
+        title: "Familias e Invitados",
+        text: "Total, confirmados, pendientes y rechazados de un vistazo.",
+      },
+      {
         icon: <Filter size={20} />,
-        title: "Filtros Inteligentes",
-        text: "Encuentra rápidamente por estado o nombre.",
+        title: "Filtros y Búsqueda",
+        text: "Filtra por WhatsApp enviado, etiqueta o edición permitida.",
       },
       {
-        icon: <Send size={20} />,
-        title: "Envío WhatsApp",
-        text: "Comparte la invitación con un solo clic.",
+        icon: <MessageCircle size={20} />,
+        title: "Envío por WhatsApp",
+        text: "Comparte la invitación y los recordatorios con un clic.",
       },
       {
-        icon: <FileSpreadsheet size={20} />,
-        title: "Exportar Datos",
-        text: "Descarga tu lista para proveedores.",
+        icon: <LockKeyhole size={20} />,
+        title: "Cambios Bloqueados",
+        text: "Tú decides si la familia puede editar o no su respuesta.",
       },
     ],
   },
   {
     id: "formulario",
-    image: "/img/landing/formulario-invitado.png",
-    title: "Registro Familiar",
+    image: "/img/landing/formulario-invitado.webp",
+    title: "Registro de Familias",
     description:
-      "Agrega familias completas fácilmente, asigna pases y personaliza mensajes de bienvenida.",
+      "Agrega familias completas, asigna pases y personaliza el mensaje de bienvenida.",
     features: [
       {
-        icon: <Users size={20} />,
-        title: "Agrupación Familiar",
-        text: "Gestiona pases por grupo o familia.",
-      },
-      {
         icon: <UserPen size={20} />,
-        title: "Acceso personalizado",
-        text: "Cada grupo ve su propia invitación con información y mensaje exclusivo.",
+        title: "Registro en un Click",
+        text: "Ajusta la información de la familia en un solo click.",
       },
       {
-        icon: <MousePointerClick size={20} />,
-        title: "Edición Fácil",
-        text: "Interfaz intuitiva y rápida.",
+        icon: <Ticket size={20} />,
+        title: "Límite de pases",
+        text: "Define los pases totales y permiso de ingreso de niños.",
+      },
+      {
+        icon: <Tags size={20} />,
+        title: "Etiquetas",
+        text: "Asigna etiquetas a familias para una mejor organización.",
+      },
+      {
+        icon: <CalendarClock size={20} />,
+        title: "Fecha Límite",
+        text: "Controla hasta cuándo pueden confirmar su asistencia.",
+      },
+    ],
+  },
+  {
+    id: "mesas",
+    image: "/img/landing/gestion-mesas.webp",
+    title: "Planificador de Mesas",
+    description:
+      "Diseña el salón a tu medida. Crea mesas, asigna invitados y exporta el plano final.",
+    features: [
+      {
+        icon: <LayoutGrid size={20} />,
+        title: "Mesas y Asientos",
+        text: "Crea cada mesa con el número de asientos que necesites.",
+      },
+      {
+        icon: <Move size={20} />,
+        title: "Arrastrar y Soltar",
+        text: "Asigna familias e invitados a las mesas con un clic.",
+      },
+      {
+        icon: <Settings2 size={20} />,
+        title: "Tamaño y Rotación",
+        text: "Ajusta las dimensiones y la orientación de cada mesa.",
+      },
+      {
+        icon: <Download size={20} />,
+        title: "Exportar Plano",
+        text: "Descarga el plano final para compartirlo o imprimirlo.",
+      },
+    ],
+  },
+  {
+    id: "acceso",
+    image: "/img/landing/accesos-evento.webp",
+    title: "Control de Acceso",
+    description:
+      "Registra los ingresos en la puerta. Escáner QR, directorio y control de pases en tiempo real.",
+    features: [
+      {
+        icon: <ScanLine size={20} />,
+        title: "Escáner QR",
+        text: "Registra el ingreso con la cámara del dispositivo.",
+      },
+      {
+        icon: <ClipboardCheck size={20} />,
+        title: "Directorio de Invitados",
+        text: "Busca y filtra por estado de acceso en el momento.",
+      },
+      {
+        icon: <QrCode size={20} />,
+        title: "Pase de Acceso",
+        text: "Cada invitado lleva su QR listo en el teléfono.",
+      },
+      {
+        icon: <UserCheck size={20} />,
+        title: "Control de Ingreso",
+        text: "Registra el número de personas que ingresan en cada ocasión.",
+      },
+    ],
+  },
+  {
+    id: "actividad",
+    image: "/img/landing/actividad-invitados.webp",
+    title: "Actividad de Invitados",
+    description:
+      "Sigue paso a paso todo lo que hacen tus invitados, desde que abren su invitación.",
+    features: [
+      {
+        icon: <History size={20} />,
+        title: "Historial por Familia",
+        text: "Aperturas, confirmaciones y rechazos en una línea de tiempo.",
+      },
+      {
+        icon: <ListFilter size={20} />,
+        title: "Filtros por Tipo",
+        text: "Confirmaciones, visualizaciones y rechazos por separado.",
+      },
+      {
+        icon: <EyeOff size={20} />,
+        title: "Vistas sin Responder",
+        text: "Visualiza las familias que no han abierto su invitación.",
+      },
+      {
+        icon: <ArrowUpDown size={20} />,
+        title: "Ordenar y Buscar",
+        text: "Ordena por más recientes o más antiguos y localiza a cualquier invitado.",
+      },
+    ],
+  },
+  {
+    id: "mensajes",
+    image: "/img/landing/mensajes-especiales.webp",
+    title: "Mensajes y Bendiciones",
+    description:
+      "El muro de mensajes de tus invitados. Bendiciones, bromas y tradiciones en un solo lugar.",
+    features: [
+      {
+        icon: <MessageCircleHeart size={20} />,
+        title: "Muro de Mensajes",
+        text: "Mira todos los mensajes y buenos deseos que tus invitados te envían.",
+      },
+      {
+        icon: <Search size={20} />,
+        title: "Búsqueda Rápida",
+        text: "Encuentra cualquier mensaje al instante.",
+      },
+      {
+        icon: <CheckCheck size={20} />,
+        title: "Marcar como Leídos",
+        text: "Limpia el muro de un solo toque.",
+      },
+      {
+        icon: <MessageCircle size={20} />,
+        title: "Nuevos y Leídos",
+        text: "Separa lo pendiente de lo que ya has visto.",
       },
     ],
   },
