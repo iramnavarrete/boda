@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   LogOut,
+  LogIn,
   Menu,
   X,
   User as UserIcon,
@@ -141,7 +142,7 @@ const Header = ({
     if (variant !== "landing") return;
 
     const handleScroll = () => {
-      const sections = ["inicio", "demo", "paquetes", "dashboard"];
+      const sections = ["inicio", "demo", "trabajo", "paquetes", "dashboard"];
       const scrollPosition = window.scrollY + 100;
 
       for (const section of sections) {
@@ -175,10 +176,12 @@ const Header = ({
           active: activeSection === "inicio",
         },
         {
-          label: "Demo",
+          // Un solo item cubre el video demo y la galería "Nuestro trabajo",
+          // que va justo debajo.
+          label: "Nuestro trabajo",
           href: "/#demo",
           icon: <Play size={18} />,
-          active: activeSection === "demo",
+          active: activeSection === "demo" || activeSection === "trabajo",
         },
         {
           label: "Panel de control",
@@ -519,11 +522,9 @@ const DesktopNavLink = ({
       href={href}
       title={withTooltip ? undefined : label}
       className={cn(
-        "flex items-center justify-center rounded-full font-medium transition-all border border-transparent",
+        "flex items-center justify-center rounded-full font-medium transition-all border border-transparent whitespace-nowrap",
         // Padding: compacto (icon-only) vs extendido (icon + label)
-        compact && !showLabel
-          ? "p-2"
-          : "gap-2 px-4 py-2 text-sm",
+        compact && !showLabel ? "p-2" : "gap-2 px-4 py-2 text-sm",
         baseClassName,
         active && activeClassName,
       )}

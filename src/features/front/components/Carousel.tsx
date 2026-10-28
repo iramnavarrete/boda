@@ -119,16 +119,15 @@ export default function SimpleSlider({
     emblaRef,
     emblaApi,
     ref: wrapperRef,
-    isInView: _isInView,
-    isLightboxOpen,
     setIsLightboxOpen,
     scrollPrev,
     scrollNext,
+    scrollTo,
   } = useEmblaCarouselWithAutoplay({
     emblaOptions: { loop: true },
     autoplay: {
       delay: 2000,
-      stopOnInteraction: true,
+      stopOnInteraction: false,
       stopOnMouseEnter: true,
       playOnInit: false,
     },
@@ -257,12 +256,7 @@ export default function SimpleSlider({
             {slides.map((_, idx) => (
               <button
                 key={idx}
-                onClick={() => {
-                  // 🔥 También reseteamos el tiempo si tocan un puntito
-                  emblaApi?.plugins().autoplay?.reset();
-                  emblaApi?.plugins().autoplay?.play();
-                  emblaApi?.scrollTo(idx);
-                }}
+                onClick={() => scrollTo(idx)}
                 className={`w-1 h-1 rounded-full transition-colors duration-300 ${
                   idx === selectedIndex
                     ? cn("bg-primary", activeDotClassName)

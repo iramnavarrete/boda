@@ -1,24 +1,50 @@
 "use client";
 import TextureButton from "@/features/shared/components/TextureButton";
-import Autoplay from "embla-carousel-autoplay";
-import useEmblaCarousel from "embla-carousel-react";
+import { useEmblaCarouselWithAutoplay } from "@/features/front/hooks/useEmblaCarouselWithAutoplay";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  Activity,
+  ArrowUpDown,
   BarChart3,
+  CalendarClock,
+  CheckCheck,
   ChevronLeft,
   ChevronRight,
-  FileSpreadsheet,
+  ClipboardCheck,
+  Download,
+  EyeOff,
   Filter,
-  Lock,
-  MousePointerClick,
-  RotateCcw,
-  Send,
+  History,
+  LayoutGrid,
+  ListFilter,
+  LockKeyhole,
+  MessageCircle,
+  MessageCircleHeart,
+  Move,
+  QrCode,
+  ScanLine,
+  Search,
+  Settings2,
+  Tags,
+  Ticket,
+  UserCheck,
   UserPen,
   Users,
 } from "lucide-react";
 import Image from "next/image";
-import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import SectionTitle from "./SectionTitle";
+
+// `useLayoutEffect` no debe ejecutarse en el servidor (Next.js avisa).
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 interface FeatureItemProps {
   icon: ReactNode;
@@ -47,127 +73,294 @@ const AdminFeatureItem: React.FC<
   </div>
 );
 
-const ADMIN_SLIDES = [
+interface AdminSlide {
+  id: string;
+  image: string;
+  title: string;
+  description: string;
+  features: { icon: ReactNode; title: string; text: string }[];
+}
+
+const ADMIN_SLIDES: AdminSlide[] = [
   {
     id: "resumen",
-    image: "/img/landing/dashboard.png",
+    image: "/img/landing/dashboard.webp",
     title: "Dashboard Central",
     description:
-      "Visualiza el estado de tu evento en tiempo real. Gráficas de confirmación, actividad reciente y accesos rápidos.",
+      "Todo tu evento en un vistazo: métricas en vivo, actividad reciente y cuenta regresiva.",
     features: [
       {
         icon: <BarChart3 size={20} />,
-        title: "Estadísticas en Vivo",
-        text: "Confirmados, pendientes y declinados.",
+        title: "Métricas del Evento",
+        text: "Confirmadas, declinadas y sin responder por invitados, familias o logística.",
       },
       {
-        icon: <RotateCcw size={20} />,
+        icon: <Activity size={20} />,
         title: "Actividad Reciente",
-        text: "Historial de cambios y confirmaciones.",
+        text: "Los últimos movimientos de tus invitados, al instante.",
       },
       {
-        icon: <Lock size={20} />,
-        title: "Seguridad",
-        text: "Controla quién puede editar su respuesta.",
+        icon: <MessageCircleHeart size={20} />,
+        title: "Muro de Deseos",
+        text: "Los mensajes de cariño que te dejan en la invitación.",
+      },
+      {
+        icon: <CalendarClock size={20} />,
+        title: "Cuenta Regresiva",
+        text: "Días, horas y minutos que faltan para el gran día.",
       },
     ],
   },
   {
     id: "lista",
-    image: "/img/landing/lista-invitados.png",
-    title: "Gestión de Invitados",
+    image: "/img/landing/lista-invitados.webp",
+    title: "Gestión de Familias",
     description:
-      "Tu base de datos completa. Filtra, busca, edita y organiza a tus invitados por familias o grupos.",
+      "Tu base de datos completa. Busca, filtra y organiza a tus invitados por familias, etiquetas o estado.",
     features: [
       {
+        icon: <Users size={20} />,
+        title: "Familias e Invitados",
+        text: "Total, confirmados, pendientes y rechazados de un vistazo.",
+      },
+      {
         icon: <Filter size={20} />,
-        title: "Filtros Inteligentes",
-        text: "Encuentra rápidamente por estado o nombre.",
+        title: "Filtros y Búsqueda",
+        text: "Filtra por WhatsApp enviado, etiqueta o edición permitida.",
       },
       {
-        icon: <Send size={20} />,
-        title: "Envío WhatsApp",
-        text: "Comparte la invitación con un solo clic.",
+        icon: <MessageCircle size={20} />,
+        title: "Envío por WhatsApp",
+        text: "Comparte la invitación y los recordatorios con un clic.",
       },
       {
-        icon: <FileSpreadsheet size={20} />,
-        title: "Exportar Datos",
-        text: "Descarga tu lista para proveedores.",
+        icon: <LockKeyhole size={20} />,
+        title: "Cambios Bloqueados",
+        text: "Tú decides si la familia puede editar o no su respuesta.",
       },
     ],
   },
   {
     id: "formulario",
-    image: "/img/landing/formulario-invitado.png",
-    title: "Registro Familiar",
+    image: "/img/landing/formulario-invitado.webp",
+    title: "Registro de Familias",
     description:
-      "Agrega familias completas fácilmente, asigna pases y personaliza mensajes de bienvenida.",
+      "Agrega familias completas, asigna pases y personaliza el mensaje de bienvenida.",
     features: [
       {
-        icon: <Users size={20} />,
-        title: "Agrupación Familiar",
-        text: "Gestiona pases por grupo o familia.",
-      },
-      {
         icon: <UserPen size={20} />,
-        title: "Acceso personalizado",
-        text: "Cada grupo ve su propia invitación con información y mensaje exclusivo.",
+        title: "Registro en un Click",
+        text: "Ajusta la información de la familia en un solo click.",
       },
       {
-        icon: <MousePointerClick size={20} />,
-        title: "Edición Fácil",
-        text: "Interfaz intuitiva y rápida.",
+        icon: <Ticket size={20} />,
+        title: "Límite de pases",
+        text: "Define los pases totales y permiso de ingreso de niños.",
+      },
+      {
+        icon: <Tags size={20} />,
+        title: "Etiquetas",
+        text: "Asigna etiquetas a familias para una mejor organización.",
+      },
+      {
+        icon: <CalendarClock size={20} />,
+        title: "Fecha Límite",
+        text: "Controla hasta cuándo pueden confirmar su asistencia.",
+      },
+    ],
+  },
+  {
+    id: "mesas",
+    image: "/img/landing/gestion-mesas.webp",
+    title: "Planificador de Mesas",
+    description:
+      "Diseña el salón a tu medida. Crea mesas, asigna invitados y exporta el plano final.",
+    features: [
+      {
+        icon: <LayoutGrid size={20} />,
+        title: "Mesas y Asientos",
+        text: "Crea cada mesa con el número de asientos que necesites.",
+      },
+      {
+        icon: <Move size={20} />,
+        title: "Arrastrar y Soltar",
+        text: "Asigna familias e invitados a las mesas con un clic.",
+      },
+      {
+        icon: <Settings2 size={20} />,
+        title: "Tamaño y Rotación",
+        text: "Ajusta las dimensiones y la orientación de cada mesa.",
+      },
+      {
+        icon: <Download size={20} />,
+        title: "Exportar Plano",
+        text: "Descarga el plano final para compartirlo o imprimirlo.",
+      },
+    ],
+  },
+  {
+    id: "acceso",
+    image: "/img/landing/accesos-evento.webp",
+    title: "Control de Acceso",
+    description:
+      "Registra los ingresos en la puerta. Escáner QR, directorio y control de pases en tiempo real.",
+    features: [
+      {
+        icon: <ScanLine size={20} />,
+        title: "Escáner QR",
+        text: "Registra el ingreso con la cámara del dispositivo.",
+      },
+      {
+        icon: <ClipboardCheck size={20} />,
+        title: "Directorio de Invitados",
+        text: "Busca y filtra por estado de acceso en el momento.",
+      },
+      {
+        icon: <QrCode size={20} />,
+        title: "Pase de Acceso",
+        text: "Cada invitado lleva su QR listo en el teléfono.",
+      },
+      {
+        icon: <UserCheck size={20} />,
+        title: "Control de Ingreso",
+        text: "Registra el número de personas que ingresan en cada ocasión.",
+      },
+    ],
+  },
+  {
+    id: "actividad",
+    image: "/img/landing/actividad-invitados.webp",
+    title: "Actividad de Invitados",
+    description:
+      "Sigue paso a paso todo lo que hacen tus invitados, desde que abren su invitación.",
+    features: [
+      {
+        icon: <History size={20} />,
+        title: "Historial por Familia",
+        text: "Aperturas, confirmaciones y rechazos en una línea de tiempo.",
+      },
+      {
+        icon: <ListFilter size={20} />,
+        title: "Filtros por Tipo",
+        text: "Confirmaciones, visualizaciones y rechazos por separado.",
+      },
+      {
+        icon: <EyeOff size={20} />,
+        title: "Vistas sin Responder",
+        text: "Visualiza las familias que no han abierto su invitación.",
+      },
+      {
+        icon: <ArrowUpDown size={20} />,
+        title: "Ordenar y Buscar",
+        text: "Ordena por más recientes o más antiguos y localiza a cualquier invitado.",
+      },
+    ],
+  },
+  {
+    id: "mensajes",
+    image: "/img/landing/mensajes-especiales.webp",
+    title: "Mensajes y Bendiciones",
+    description:
+      "El muro de mensajes de tus invitados. Bendiciones, bromas y tradiciones en un solo lugar.",
+    features: [
+      {
+        icon: <MessageCircleHeart size={20} />,
+        title: "Muro de Mensajes",
+        text: "Mira todos los mensajes y buenos deseos que tus invitados te envían.",
+      },
+      {
+        icon: <Search size={20} />,
+        title: "Búsqueda Rápida",
+        text: "Encuentra cualquier mensaje al instante.",
+      },
+      {
+        icon: <CheckCheck size={20} />,
+        title: "Marcar como Leídos",
+        text: "Limpia el muro de un solo toque.",
+      },
+      {
+        icon: <MessageCircle size={20} />,
+        title: "Nuevos y Leídos",
+        text: "Separa lo pendiente de lo que ya has visto.",
       },
     ],
   },
 ];
 
+/**
+ * Cuerpo de un slide. Se reutiliza en la versión visible y en la copia
+ * oculta que sirve para medir la altura de cada slide.
+ */
+const SlideContent: React.FC<{ slide: AdminSlide; animated?: boolean }> = ({
+  slide,
+  animated = false,
+}) => (
+  <>
+    <div className="space-y-2">
+      <h3 className="font-serif text-3xl md:text-4xl text-primary">
+        {slide.title}
+      </h3>
+      <p className="text-charcoal-400 text-base leading-relaxed">
+        {slide.description}
+      </p>
+    </div>
+
+    <div className="space-y-3 overflow-hidden pb-3">
+      {slide.features.map((feature, idx) => {
+        const item = (
+          <AdminFeatureItem
+            icon={feature.icon}
+            title={feature.title}
+            text={feature.text}
+          />
+        );
+
+        if (!animated) return <div key={idx}>{item}</div>;
+
+        return (
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: idx * 0.1, duration: 0.3 }}
+          >
+            {item}
+          </motion.div>
+        );
+      })}
+    </div>
+  </>
+);
+
 const AdminShowcase: React.FC = () => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 30 }, [
-    Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true }),
-  ]);
+  /**
+   * Mismo hook y mismas reglas que el carrusel de la galería de las
+   * invitaciones: el autoplay sólo corre con el carrusel a la vista, se
+   * detiene al interactuar y reinicia el contador en cada acción (flechas,
+   * puntitos y drag).
+   */
+  const {
+    emblaRef,
+    emblaApi,
+    ref: wrapperRef,
+    scrollPrev,
+    scrollNext,
+    scrollTo,
+  } = useEmblaCarouselWithAutoplay({
+    emblaOptions: { loop: true },
+    autoplay: {
+      delay: 2000,
+      stopOnInteraction: false,
+      stopOnMouseEnter: true,
+      playOnInit: false,
+      // La raíz del autoplay es toda la sección: así el hover sobre la lista
+      // de características también pausa, no sólo el de las imágenes.
+      rootNode: (root) => root.closest("#dashboard") ?? root,
+    },
+  });
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
-
-  const handleMouseEnter = () => {
-    if (emblaApi) emblaApi.plugins().autoplay?.stop();
-  };
-
-  const handleMouseLeave = () => {
-    if (emblaApi) emblaApi.plugins().autoplay?.play();
-  };
-
-  // --- INTERSECTION OBSERVER PARA CONTROLAR AUTOPLAY ---
-  useEffect(() => {
-    if (!emblaApi) return;
-
-    const autoplay = emblaApi.plugins().autoplay;
-    if (!autoplay) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          // Si la sección es visible, inicia (o reanuda) el autoplay
-          autoplay.play();
-        } else {
-          // Si la sección sale de pantalla, detiene el autoplay para ahorrar recursos
-          autoplay.stop();
-        }
-      },
-      { threshold: 0.2 }, // Se activa cuando el 20% de la sección es visible
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => {
-      observer.disconnect();
-      // Limpieza opcional: asegurar que se detenga al desmontar
-      autoplay.stop();
-    };
-  }, [emblaApi]);
 
   // Sincronizar estado de selección
   const onSelect = useCallback(() => {
@@ -177,28 +370,47 @@ const AdminShowcase: React.FC = () => {
 
   useEffect(() => {
     if (!emblaApi) return;
-    onSelect();
     emblaApi.on("select", onSelect);
     return () => {
       emblaApi.off("select", onSelect);
     };
   }, [emblaApi, onSelect]);
 
-  const scrollTo = useCallback(
-    (index: number) => emblaApi && emblaApi.scrollTo(index),
-    [emblaApi],
-  );
-
-  const scrollPrev = useCallback(
-    () => emblaApi && emblaApi.scrollPrev(),
-    [emblaApi],
-  );
-  const scrollNext = useCallback(
-    () => emblaApi && emblaApi.scrollNext(),
-    [emblaApi],
-  );
-
   const activeSlide = ADMIN_SLIDES[selectedIndex];
+
+  /**
+   * Altura reservada para el bloque de contenido.
+   *
+   * Los slides tienen textos de distinta longitud, así que su altura varía y
+   * el botón de abajo daría un salto brusco al cambiar de slide. Para evitarlo
+   * se miden todos los slides en una copia oculta (que tiene exactamente el
+   * mismo ancho) y se reserva siempre la altura del más alto: el bloque
+   * mantiene su tamaño y el botón nunca se desplaza.
+   */
+  const measureRef = useRef<HTMLDivElement>(null);
+  const [reservedHeight, setReservedHeight] = useState<number | undefined>(
+    undefined,
+  );
+
+  const measureSlides = useCallback(() => {
+    const el = measureRef.current;
+    if (!el) return;
+    const tallest = Math.max(
+      ...Array.from(el.children).map((child) =>
+        Math.round(child.getBoundingClientRect().height),
+      ),
+    );
+    if (!tallest) return;
+    setReservedHeight((prev) => (prev === tallest ? prev : tallest));
+  }, []);
+
+  useIsomorphicLayoutEffect(measureSlides);
+
+  // Al redimensionar cambia el ancho y con él el alto de los textos.
+  useEffect(() => {
+    window.addEventListener("resize", measureSlides);
+    return () => window.removeEventListener("resize", measureSlides);
+  }, [measureSlides]);
 
   return (
     <section
@@ -222,7 +434,10 @@ const AdminShowcase: React.FC = () => {
         {/* --- GRID DE CONTENIDO --- */}
         <div className="flex flex-col px-2 sm:px-6 md:px-8 xl:flex-row gap-12 lg:gap-20 items-center min-h-[500px]">
           {/* COLUMNA IZQUIERDA: CARRUSEL DE IMÁGENES */}
-          <div className="relative flex-[3] w-full aspect-[16/9] xl:h-[400px]">
+          <div
+            ref={wrapperRef}
+            className="relative flex-[3] w-full aspect-[16/9] xl:h-[400px]"
+          >
             {/* Marco Decorativo */}
             <div className="absolute inset-0 bg-gold/5 transform translate-x-4 translate-y-4 -z-10 rounded-3xl"></div>
 
@@ -296,46 +511,37 @@ const AdminShowcase: React.FC = () => {
             </div>
 
             {/* Contenedor de contenido cambiante con AnimatePresence */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                onHoverEnd={handleMouseLeave}
-                onHoverStart={handleMouseEnter}
-                key={activeSlide.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="space-y-6"
+            <div
+              className="relative flex flex-col justify-center"
+              style={{ minHeight: reservedHeight }}
+            >
+              {/* Copia oculta: mide la altura de cada slide para reservar
+                  siempre la del más alto y que el botón no salte. */}
+              <div
+                ref={measureRef}
+                aria-hidden
+                className="invisible absolute inset-x-0 top-0 h-0 overflow-hidden pointer-events-none"
               >
-                {/* Título y Descripción */}
-                <div className="space-y-2">
-                  <h3 className="font-serif text-3xl md:text-4xl text-primary">
-                    {activeSlide.title}
-                  </h3>
-                  <p className="text-charcoal-400 text-base leading-relaxed">
-                    {activeSlide.description}
-                  </p>
-                </div>
+                {ADMIN_SLIDES.map((slide) => (
+                  <div key={slide.id} className="space-y-6">
+                    <SlideContent slide={slide} />
+                  </div>
+                ))}
+              </div>
 
-                {/* Lista de Features */}
-                <div className="space-y-3 overflow-hidden pb-3">
-                  {activeSlide.features.map((feature, idx) => (
-                    <motion.div
-                      key={`${activeSlide.id}-${idx}`}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.1, duration: 0.3 }}
-                    >
-                      <AdminFeatureItem
-                        icon={feature.icon}
-                        title={feature.title}
-                        text={feature.text}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            </AnimatePresence>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeSlide.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="space-y-6"
+                >
+                  <SlideContent slide={activeSlide} animated />
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
         </div>
         <div className="mx-auto">

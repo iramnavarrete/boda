@@ -1,6 +1,7 @@
 import AdminShowcase from "@/features/front/landing/components/AdminShowCaseSection";
 import DemoSection from "@/features/front/landing/components/DemoSection";
 import Hero from "@/features/front/landing/components/HeroSection";
+import OurWorkSection from "@/features/front/landing/components/OurWorkSection";
 import Pricing from "@/features/front/landing/components/PricingSection";
 import LandingLayout from "@/features/shared/layouts/landing";
 import Head from "next/head";
@@ -53,6 +54,7 @@ export default function AppCurvedTextured() {
       <LandingLayout>
         <Hero />
         <DemoSection />
+        <OurWorkSection />
         <AdminShowcase />
         <Pricing />
       </LandingLayout>
