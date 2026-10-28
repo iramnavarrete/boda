@@ -12,6 +12,27 @@ const josueYanethConfig: InvitationConfig = {
     // Defaults del tema.
   },
 
+  timeline: {
+    items: [
+      { time: "4:00 PM", title: "Ceremonia religiosa", iconKey: "ceremonia" },
+      { time: "7:45 PM", title: "Recepción", iconKey: "recepcion" },
+      { time: "8:00 PM", title: "Rompehielos", iconKey: "cocktails" },
+      { time: "9:15 PM", title: "Banquete", iconKey: "banquete" },
+      { time: "9:45 PM", title: "Vals", iconKey: "vals" },
+      { time: "10:00 PM", title: "Desarrollo de la fiesta", iconKey: "baile" },
+      { time: "2:00 AM", title: "Fin del evento", iconKey: "despedida" },
+    ],
+    title: "Itinerario",
+    subtitle: "Nuestro gran día",
+    accentColor: "#58624f",
+    styles: {
+      eventTitleClassName: "text-[#58624f]",
+      timeClassName: "text-[#58624f]/70",
+      sectionSubtitle: "text-[#58624f]/80",
+      sectionTitle: "text-[#58624f]",
+    },
+  },
+
   sections: {
     cover: {
       isSealVisible: false, // se sobreescribe en runtime según el sobre
@@ -104,8 +125,7 @@ const josueYanethConfig: InvitationConfig = {
       stores: [
         {
           type: "amazon",
-          link:
-            "https://www.amazon.com.mx/hz/wishlist/ls/3Z8K9QG2X7V1?ref_=wl_share",
+          link: "https://www.amazon.com.mx/hz/wishlist/ls/3Z8K9QG2X7V1?ref_=wl_share",
           label: "Ver lista",
         },
       ],
