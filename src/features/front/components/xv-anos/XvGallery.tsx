@@ -91,7 +91,7 @@ export default function XvGallery({
     },
     autoplay: {
       delay: 2500,
-      stopOnInteraction: true,
+      stopOnInteraction: false,
       stopOnMouseEnter: true,
       playOnInit: true,
     },

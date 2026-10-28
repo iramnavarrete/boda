@@ -1,7 +1,6 @@
 "use client";
 import TextureButton from "@/features/shared/components/TextureButton";
-import Autoplay from "embla-carousel-autoplay";
-import useEmblaCarousel from "embla-carousel-react";
+import { useEmblaCarouselWithAutoplay } from "@/features/front/hooks/useEmblaCarouselWithAutoplay";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Activity,
@@ -334,51 +333,34 @@ const SlideContent: React.FC<{ slide: AdminSlide; animated?: boolean }> = ({
 );
 
 const AdminShowcase: React.FC = () => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 30 }, [
-    Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true }),
-  ]);
+  /**
+   * Mismo hook y mismas reglas que el carrusel de la galería de las
+   * invitaciones: el autoplay sólo corre con el carrusel a la vista, se
+   * detiene al interactuar y reinicia el contador en cada acción (flechas,
+   * puntitos y drag).
+   */
+  const {
+    emblaRef,
+    emblaApi,
+    ref: wrapperRef,
+    scrollPrev,
+    scrollNext,
+    scrollTo,
+  } = useEmblaCarouselWithAutoplay({
+    emblaOptions: { loop: true },
+    autoplay: {
+      delay: 2000,
+      stopOnInteraction: false,
+      stopOnMouseEnter: true,
+      playOnInit: false,
+      // La raíz del autoplay es toda la sección: así el hover sobre la lista
+      // de características también pausa, no sólo el de las imágenes.
+      rootNode: (root) => root.closest("#dashboard") ?? root,
+    },
+  });
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
-
-  const handleMouseEnter = () => {
-    if (emblaApi) emblaApi.plugins().autoplay?.stop();
-  };
-
-  const handleMouseLeave = () => {
-    if (emblaApi) emblaApi.plugins().autoplay?.play();
-  };
-
-  // --- INTERSECTION OBSERVER PARA CONTROLAR AUTOPLAY ---
-  useEffect(() => {
-    if (!emblaApi) return;
-
-    const autoplay = emblaApi.plugins().autoplay;
-    if (!autoplay) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          // Si la sección es visible, inicia (o reanuda) el autoplay
-          autoplay.play();
-        } else {
-          // Si la sección sale de pantalla, detiene el autoplay para ahorrar recursos
-          autoplay.stop();
-        }
-      },
-      { threshold: 0.2 }, // Se activa cuando el 20% de la sección es visible
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => {
-      observer.disconnect();
-      // Limpieza opcional: asegurar que se detenga al desmontar
-      autoplay.stop();
-    };
-  }, [emblaApi]);
 
   // Sincronizar estado de selección
   const onSelect = useCallback(() => {
@@ -388,26 +370,11 @@ const AdminShowcase: React.FC = () => {
 
   useEffect(() => {
     if (!emblaApi) return;
-    onSelect();
     emblaApi.on("select", onSelect);
     return () => {
       emblaApi.off("select", onSelect);
     };
   }, [emblaApi, onSelect]);
-
-  const scrollTo = useCallback(
-    (index: number) => emblaApi && emblaApi.scrollTo(index),
-    [emblaApi],
-  );
-
-  const scrollPrev = useCallback(
-    () => emblaApi && emblaApi.scrollPrev(),
-    [emblaApi],
-  );
-  const scrollNext = useCallback(
-    () => emblaApi && emblaApi.scrollNext(),
-    [emblaApi],
-  );
 
   const activeSlide = ADMIN_SLIDES[selectedIndex];
 
@@ -467,7 +434,10 @@ const AdminShowcase: React.FC = () => {
         {/* --- GRID DE CONTENIDO --- */}
         <div className="flex flex-col px-2 sm:px-6 md:px-8 xl:flex-row gap-12 lg:gap-20 items-center min-h-[500px]">
           {/* COLUMNA IZQUIERDA: CARRUSEL DE IMÁGENES */}
-          <div className="relative flex-[3] w-full aspect-[16/9] xl:h-[400px]">
+          <div
+            ref={wrapperRef}
+            className="relative flex-[3] w-full aspect-[16/9] xl:h-[400px]"
+          >
             {/* Marco Decorativo */}
             <div className="absolute inset-0 bg-gold/5 transform translate-x-4 translate-y-4 -z-10 rounded-3xl"></div>
 
@@ -561,8 +531,6 @@ const AdminShowcase: React.FC = () => {
 
               <AnimatePresence mode="wait">
                 <motion.div
-                  onHoverEnd={handleMouseLeave}
-                  onHoverStart={handleMouseEnter}
                   key={activeSlide.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}

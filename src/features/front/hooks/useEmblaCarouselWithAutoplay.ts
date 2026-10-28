@@ -17,6 +17,9 @@ type EmblaOptions = Parameters<typeof useEmblaCarousel>[0];
 /** API de Embla (segundo elemento de la tupla retornada). */
 type EmblaApi = NonNullable<ReturnType<typeof useEmblaCarousel>[1]>;
 
+/** Opción `rootNode` del plugin de autoplay. */
+type RootNodeOption = AutoplayOptionsType["rootNode"];
+
 export interface UseEmblaCarouselWithAutoplayOptions {
   /** Opciones de Embla (`loop`, `align`, `containScroll`, `skipSnaps`…). */
   emblaOptions?: EmblaOptions;
@@ -51,26 +54,44 @@ export interface UseEmblaCarouselWithAutoplayReturn {
 }
 
 /**
+ * Raíz sobre la que el plugin de autoplay escucha el mouse.
+ * Replica la lógica interna del plugin (`rootNode` o, si no se define, la
+ * raíz de Embla) para que el hook y el plugin compartan exactamente el
+ * mismo elemento.
+ */
+function getAutoplayRoot(
+  emblaApi: EmblaApi,
+  rootNode?: RootNodeOption,
+): HTMLElement {
+  const emblaRoot = emblaApi.rootNode();
+  return rootNode?.(emblaRoot) ?? emblaRoot;
+}
+
+/**
  * Hook compartido: Embla + Autoplay + in-view + drag-detection.
  *
  * Encapsula EXACTAMENTE el patrón que usa el carrusel de Siena
  * (gallery + melissa-santiago + vianey-omar):
  *
- *  - Crea el plugin de Autoplay (`stopOnInteraction: true`,
+ *  - Crea el plugin de Autoplay (`stopOnInteraction: false`,
  *    `stopOnMouseEnter: true`, `playOnInit: false` por default).
  *  - Detecta con `useInView(..., { amount: 0.5 })` si el wrapper está
  *    en pantalla — sólo entonces corre el autoplay.
- *  - Pausa el autoplay cuando se abre un lightbox (PhotoSwipe).
+ *  - Pausa el autoplay cuando se abre una lightbox (PhotoSwipe).
  *  - En `pointerDown` para el autoplay; en `pointerUp` lo resetea y
  *    reanuda (así el drag no se "pelea" con el auto-advance).
  *  - `scrollPrev/Next/To` resetean el timer antes de avanzar.
+ *  - Con el puntero encima de la raíz el autoplay queda pausado y las
+ *    acciones del usuario sólo reinician el contador (no lo reanudan);
+ *    al salir el puntero se reanuda solo.
  *
  * Usado por:
  *  - `features/front/components/Carousel.tsx` (siena: bodas)
  *  - `features/front/components/xv-anos/XvGallery.tsx` (xv años)
+ *  - `features/front/landing/components/AdminShowCaseSection.tsx` (landing)
  *
  * DRY: cualquier ajuste futuro al comportamiento del autoplay se hace
- * UNA sola vez acá y se propaga a ambos.
+ * UNA sola vez acá y se propaga a todos.
  */
 export function useEmblaCarouselWithAutoplay(
   options: UseEmblaCarouselWithAutoplayOptions = {},
@@ -82,11 +103,14 @@ export function useEmblaCarouselWithAutoplay(
     disableAutoplay = false,
   } = options;
 
-  /* Plugin de autoplay (memoizado — vive durante todo el mount) */
+  /* Plugin de autoplay (memoizado — vive durante todo el mount).
+     `stopOnInteraction: false` es lo que permite que el plugin registre su
+     listener `mouseleave`: con `true` nunca se registra y el autoplay se
+     quedaba pausado para siempre al quitar el puntero. */
   const autoplayPlugin = useRef(
     Autoplay({
       delay: 2000,
-      stopOnInteraction: true,
+      stopOnInteraction: false,
       stopOnMouseEnter: true,
       playOnInit: false,
       ...autoplay,
@@ -106,22 +130,53 @@ export function useEmblaCarouselWithAutoplay(
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, inView);
 
-  /* Estado del lightbox (PhotoSwipe). El consumer lo controla. */
+  /* Estado de la lightbox (PhotoSwipe). El consumer lo controla. */
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
-  /* Play/pause en función de inView + lightbox */
+  /* `rootNode` suele llegar como función inline (se recrea en cada render),
+     por eso lo guardamos en un ref: así no re-escuchamos el mouse en cada
+     render. */
+  const rootNodeOption = useRef<RootNodeOption>(autoplay?.rootNode);
+  useEffect(() => {
+    rootNodeOption.current = autoplay?.rootNode;
+  });
+
+  /* ¿El puntero está encima de la raíz del autoplay? */
+  const isPointerOver = useRef(false);
+
+  useEffect(() => {
+    if (!emblaApi) return;
+    const root = getAutoplayRoot(emblaApi, rootNodeOption.current);
+    if (!root) return;
+
+    const enter = () => {
+      isPointerOver.current = true;
+    };
+    const leave = () => {
+      isPointerOver.current = false;
+    };
+
+    root.addEventListener("mouseenter", enter);
+    root.addEventListener("mouseleave", leave);
+    return () => {
+      root.removeEventListener("mouseenter", enter);
+      root.removeEventListener("mouseleave", leave);
+    };
+  }, [emblaApi]);
+
+  /* Play/pause en función de inView + lightbox + puntero encima */
   useEffect(() => {
     if (!emblaApi) return;
     const ap = emblaApi.plugins().autoplay;
     if (!ap) return;
-    if (isInView && !isLightboxOpen) {
+    if (isInView && !isLightboxOpen && !isPointerOver.current) {
       ap.play();
     } else {
       ap.stop();
     }
   }, [isInView, isLightboxOpen, emblaApi]);
 
-  /* Drag detection — pause en pointerDown, reset+play en pointerUp */
+  /* Drag detection — pausa en pointerDown, reset+play en pointerUp */
   useEffect(() => {
     if (!emblaApi) return;
     const ap = emblaApi.plugins().autoplay;
@@ -129,29 +184,32 @@ export function useEmblaCarouselWithAutoplay(
     emblaApi.on("pointerDown", () => ap.stop());
     emblaApi.on("pointerUp", () => {
       ap.reset();
-      ap.play();
+      if (!isPointerOver.current) ap.play();
     });
   }, [emblaApi]);
 
   const scrollPrev = useCallback(() => {
     if (!emblaApi) return;
-    emblaApi.plugins().autoplay?.reset();
-    emblaApi.plugins().autoplay?.play();
+    const ap = emblaApi.plugins().autoplay;
+    ap?.reset();
+    if (!isPointerOver.current) ap?.play();
     emblaApi.scrollPrev();
   }, [emblaApi]);
 
   const scrollNext = useCallback(() => {
     if (!emblaApi) return;
-    emblaApi.plugins().autoplay?.reset();
-    emblaApi.plugins().autoplay?.play();
+    const ap = emblaApi.plugins().autoplay;
+    ap?.reset();
+    if (!isPointerOver.current) ap?.play();
     emblaApi.scrollNext();
   }, [emblaApi]);
 
   const scrollTo = useCallback(
     (idx: number) => {
       if (!emblaApi) return;
-      emblaApi.plugins().autoplay?.reset();
-      emblaApi.plugins().autoplay?.play();
+      const ap = emblaApi.plugins().autoplay;
+      ap?.reset();
+      if (!isPointerOver.current) ap?.play();
       emblaApi.scrollTo(idx);
     },
     [emblaApi],
