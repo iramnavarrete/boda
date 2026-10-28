@@ -33,8 +33,19 @@ import {
   Users,
 } from "lucide-react";
 import Image from "next/image";
-import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import SectionTitle from "./SectionTitle";
+
+// `useLayoutEffect` no debe ejecutarse en el servidor (Next.js avisa).
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 interface FeatureItemProps {
   icon: ReactNode;
@@ -63,7 +74,15 @@ const AdminFeatureItem: React.FC<
   </div>
 );
 
-const ADMIN_SLIDES = [
+interface AdminSlide {
+  id: string;
+  image: string;
+  title: string;
+  description: string;
+  features: { icon: ReactNode; title: string; text: string }[];
+}
+
+const ADMIN_SLIDES: AdminSlide[] = [
   {
     id: "resumen",
     image: "/img/landing/dashboard.webp",
@@ -269,6 +288,51 @@ const ADMIN_SLIDES = [
   },
 ];
 
+/**
+ * Cuerpo de un slide. Se reutiliza en la versión visible y en la copia
+ * oculta que sirve para medir la altura de cada slide.
+ */
+const SlideContent: React.FC<{ slide: AdminSlide; animated?: boolean }> = ({
+  slide,
+  animated = false,
+}) => (
+  <>
+    <div className="space-y-2">
+      <h3 className="font-serif text-3xl md:text-4xl text-primary">
+        {slide.title}
+      </h3>
+      <p className="text-charcoal-400 text-base leading-relaxed">
+        {slide.description}
+      </p>
+    </div>
+
+    <div className="space-y-3 overflow-hidden pb-3">
+      {slide.features.map((feature, idx) => {
+        const item = (
+          <AdminFeatureItem
+            icon={feature.icon}
+            title={feature.title}
+            text={feature.text}
+          />
+        );
+
+        if (!animated) return <div key={idx}>{item}</div>;
+
+        return (
+          <motion.div
+            key={idx}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: idx * 0.1, duration: 0.3 }}
+          >
+            {item}
+          </motion.div>
+        );
+      })}
+    </div>
+  </>
+);
+
 const AdminShowcase: React.FC = () => {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 30 }, [
     Autoplay({ delay: 5000, stopOnInteraction: false, stopOnMouseEnter: true }),
@@ -346,6 +410,40 @@ const AdminShowcase: React.FC = () => {
   );
 
   const activeSlide = ADMIN_SLIDES[selectedIndex];
+
+  /**
+   * Altura reservada para el bloque de contenido.
+   *
+   * Los slides tienen textos de distinta longitud, así que su altura varía y
+   * el botón de abajo daría un salto brusco al cambiar de slide. Para evitarlo
+   * se miden todos los slides en una copia oculta (que tiene exactamente el
+   * mismo ancho) y se reserva siempre la altura del más alto: el bloque
+   * mantiene su tamaño y el botón nunca se desplaza.
+   */
+  const measureRef = useRef<HTMLDivElement>(null);
+  const [reservedHeight, setReservedHeight] = useState<number | undefined>(
+    undefined,
+  );
+
+  const measureSlides = useCallback(() => {
+    const el = measureRef.current;
+    if (!el) return;
+    const tallest = Math.max(
+      ...Array.from(el.children).map((child) =>
+        Math.round(child.getBoundingClientRect().height),
+      ),
+    );
+    if (!tallest) return;
+    setReservedHeight((prev) => (prev === tallest ? prev : tallest));
+  }, []);
+
+  useIsomorphicLayoutEffect(measureSlides);
+
+  // Al redimensionar cambia el ancho y con él el alto de los textos.
+  useEffect(() => {
+    window.addEventListener("resize", measureSlides);
+    return () => window.removeEventListener("resize", measureSlides);
+  }, [measureSlides]);
 
   return (
     <section
@@ -443,46 +541,39 @@ const AdminShowcase: React.FC = () => {
             </div>
 
             {/* Contenedor de contenido cambiante con AnimatePresence */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                onHoverEnd={handleMouseLeave}
-                onHoverStart={handleMouseEnter}
-                key={activeSlide.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="space-y-6"
+            <div
+              className="relative flex flex-col justify-center"
+              style={{ minHeight: reservedHeight }}
+            >
+              {/* Copia oculta: mide la altura de cada slide para reservar
+                  siempre la del más alto y que el botón no salte. */}
+              <div
+                ref={measureRef}
+                aria-hidden
+                className="invisible absolute inset-x-0 top-0 h-0 overflow-hidden pointer-events-none"
               >
-                {/* Título y Descripción */}
-                <div className="space-y-2">
-                  <h3 className="font-serif text-3xl md:text-4xl text-primary">
-                    {activeSlide.title}
-                  </h3>
-                  <p className="text-charcoal-400 text-base leading-relaxed">
-                    {activeSlide.description}
-                  </p>
-                </div>
+                {ADMIN_SLIDES.map((slide) => (
+                  <div key={slide.id} className="space-y-6">
+                    <SlideContent slide={slide} />
+                  </div>
+                ))}
+              </div>
 
-                {/* Lista de Features */}
-                <div className="space-y-3 overflow-hidden pb-3">
-                  {activeSlide.features.map((feature, idx) => (
-                    <motion.div
-                      key={`${activeSlide.id}-${idx}`}
-                      initial={{ opacity: 0, x: 20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.1, duration: 0.3 }}
-                    >
-                      <AdminFeatureItem
-                        icon={feature.icon}
-                        title={feature.title}
-                        text={feature.text}
-                      />
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-            </AnimatePresence>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  onHoverEnd={handleMouseLeave}
+                  onHoverStart={handleMouseEnter}
+                  key={activeSlide.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="space-y-6"
+                >
+                  <SlideContent slide={activeSlide} animated />
+                </motion.div>
+              </AnimatePresence>
+            </div>
           </div>
         </div>
         <div className="mx-auto">

@@ -1,3 +1,4 @@
+import PhoneFrame from "@/features/shared/components/PhoneFrame";
 import TextureButton from "@/features/shared/components/TextureButton";
 import {
   ExternalLink,
@@ -71,48 +72,36 @@ function DemoSection() {
               className="relative z-20 transform transition-all duration-700 cursor-pointer group"
               onClick={() => setIsPlaying(!isPlaying)}
             >
-              <div className="relative mx-auto w-[280px] h-[580px] bg-charcoal-900 rounded-[45px] shadow-[0_30px_60px_-15px_rgba(88,98,79,0.3)] border-[8px] border-charcoal-900 ring-1 ring-black/10">
-                <div className="absolute top-24 -left-[10px] w-[3px] h-[32px] bg-charcoal-900 rounded-l-md" />
-                <div className="absolute top-36 -left-[10px] w-[3px] h-[50px] bg-charcoal-900 rounded-l-md" />
-                <div className="absolute top-36 -right-[10px] w-[3px] h-[80px] bg-charcoal-900 rounded-r-md" />
-
-                <div className="relative w-full h-full rounded-[42px] overflow-hidden bg-black">
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[100px] h-[22px] bg-charcoal-900 rounded-b-[16px] z-30 flex justify-center pt-1">
-                    <div className="w-12 h-1 rounded-full bg-stone-950" />
-                  </div>
-
-                  <div className="relative w-full h-full">
-                    <video
-                      ref={videoRef}
-                      src="/video/example.mp4"
-                      poster="/img/example.jpg"
-                      className="w-full h-full object-cover"
-                      muted
-                      loop
-                      playsInline
+              <PhoneFrame>
+                <video
+                  ref={videoRef}
+                  src="/video/example.mp4"
+                  poster="/img/example.jpg"
+                  className="w-full h-full object-cover"
+                  muted
+                  loop
+                  playsInline
+                />
+                <div
+                  className={`absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm z-20 transition-opacity duration-500 ${isPlaying ? "opacity-0 pointer-events-none" : "opacity-100"}`}
+                >
+                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 text-white shadow-xl animate-pulse">
+                    <PlayCircle
+                      size={32}
+                      fill="currentColor"
+                      className="opacity-90"
                     />
-                    <div
-                      className={`absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm z-20 transition-opacity duration-500 ${isPlaying ? "opacity-0 pointer-events-none" : "opacity-100"}`}
-                    >
-                      <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/50 text-white shadow-xl animate-pulse">
-                        <PlayCircle
-                          size={32}
-                          fill="currentColor"
-                          className="opacity-90"
-                        />
-                      </div>
-                    </div>
-                    <button
-                      onClick={handleRestart}
-                      className="absolute bottom-4 left-3 z-30 p-2.5 rounded-full bg-black/20 hover:bg-black/40 text-white/70 hover:text-white backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 transform hover:scale-110 active:scale-95"
-                      title="Reiniciar video"
-                    >
-                      <RotateCcw size={16} />
-                    </button>
-                    <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent opacity-40 pointer-events-none z-40 rounded-[48px]" />
                   </div>
                 </div>
-              </div>
+                <button
+                  onClick={handleRestart}
+                  className="absolute bottom-4 left-3 z-30 p-2.5 rounded-full bg-black/20 hover:bg-black/40 text-white/70 hover:text-white backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 transform hover:scale-110 active:scale-95"
+                  title="Reiniciar video"
+                >
+                  <RotateCcw size={16} />
+                </button>
+                <div className="absolute inset-0 bg-gradient-to-tr from-white/20 via-transparent to-transparent opacity-40 pointer-events-none z-40 rounded-[48px]" />
+              </PhoneFrame>
               <div className="flex flex-1 items-center justify-center mt-16">
                 <TextureButton
                   className="lg:hidden"
